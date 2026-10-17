@@ -34,7 +34,7 @@ Garantire il controllo dei flussi aziendali, la tracciabilità delle decisioni e
   "task_id": "FTL-[AREA]-[NNN]",
   "title": "string — titolo sintetico e descrittivo",
   "description": "string — descrizione dettagliata dell'obiettivo e del contesto",
-  "status": "backlog | todo | in_progress | review | done | blocked | cancelled",
+  "status": "backlog | todo | in_progress | review | done | blocked | paused_ai_quota | cancelled",
   "priority": "critical | high | medium | low",
   "assignee_role": "CEO | CTO | CPO | CRO | CGO | CMO",
   "assignee_agent": "string | null — ID specifico dell'agente se applicabile",
@@ -68,10 +68,10 @@ Garantire il controllo dei flussi aziendali, la tracciabilità delle decisioni e
 ### Transizioni di Stato Consentite
 ```
 backlog → todo → in_progress → review → done
-                    ↓                ↓
-                  blocked         in_progress (rework)
-                    ↓
-               in_progress (unblock)
+                    ↓   ↑            ↓
+                 blocked             in_progress (rework)
+                    ↓   ↑
+             paused_ai_quota (attesa reset crediti)
 
 Qualsiasi stato → cancelled (solo con approvazione CEO o Founder)
 ```
@@ -116,13 +116,14 @@ Qualsiasi stato → cancelled (solo con approvazione CEO o Founder)
 ## Soglie di Escalation Automatica
 | Condizione | Azione | Destinatario |
 |---|---|---|
-| Task in stato `blocked` > 48h | Notifica automatica | CEO |
-| Task in stato `blocked` > 5 giorni lavorativi | Escalation formale | Founder |
-| Budget deviation > 15% su qualsiasi voce | Escalation immediata | Founder |
-| Rischio sicurezza dati (qualsiasi severity) | Escalation immediata | CTO + Founder |
-| Conflitto di priorità cross-team irrisolto > 24h | Escalation | CEO |
-| Task `critical` non preso in carico entro 4h | Notifica | CEO + assignee_role |
-| ≥3 task `blocked` contemporaneamente sullo stesso ruolo | Alert | CEO + CGO |
+| Richiesta impegno finanziario reale (> €0: server, domini, SaaS, ads) | Escalation esclusiva (Livello L2) | **Founder** |
+| Task in stato `blocked` > 48h | Notifica automatica di sollecito | CEO |
+| Task in stato `blocked` > 5 giorni lavorativi | Escalation formale per arbitraggio | **Founder** |
+| Rischio sicurezza dati o conformità GDPR (qualsiasi severity) | Escalation immediata (Livello L6) | CTO + **Founder** |
+| Conflitto di priorità cross-team irrisolto > 24h | Escalation operativa | CEO |
+| Task `critical` non preso in carico entro 4h | Notifica immediata | CEO + assignee_role |
+| ≥3 task `blocked` contemporaneamente sullo stesso ruolo | Alert sovraccarico/stallo | CEO + CGO |
+| Esaurimento quote/token del piano AI (Google AI Pro) | Transizione automatica a `paused_ai_quota` | Nessuna (attesa reset ciclo) |
 
 ## Interazioni e Dipendenze
 - **Riceve da:**
@@ -164,3 +165,12 @@ Qualsiasi stato → cancelled (solo con approvazione CEO o Founder)
 - **Output atteso:** (1) Registro ADR inizializzato con ADR-001 "Adozione Task Object Schema v1.0", (2) Template operativo validato dal CTO, (3) Documento di regole di processo distribuito a tutti i C-Level.
 - **Effort stimato:** M (1-3 giorni)
 - **Priorità:** critical
+
+---
+
+## Approvazione Formale del Ruolo
+
+- **Versione:** 1.0 (Approvata)
+- **Data di Approvazione:** 17 Ottobre 2026
+- **Approvato da:** Founder
+- **Stato:** Attivo e vincolante per l'orchestrazione dei processi su OpenClaw
