@@ -59,17 +59,17 @@ Le attività degli agenti sono alimentate dal piano AI del Founder (es. Google A
 - I task in corso mantengono il loro stato persistente su GitHub/OpenClaw.
 - Le attività riprendono regolarmente non appena le quote del piano vengono ripristinate nel nuovo ciclo di fatturazione, senza che ciò costituisca un'anomalia di processo o richieda procedure di emergenza.
 
-### 6.3 Livelli di Escalation
+### 6.3 Tabella dei Livelli di Autonomia ed Escalation
 
-| Livello | Tipo Decisione | Criterio / Soglia | Chi Approva | Escalation a |
-|---------|---------------|-------------------|-------------|--------------|
-| L0 | Operativa quotidiana | Task ordinario (< 2gg effort), nessun impatto esterno | C-Level competente | — |
-| L1 | Tattica cross-team | Coordinamento tra dipartimenti (2–10gg effort) | CEO | — |
-| L2 | Impegno finanziario | Qualsiasi spesa reale esterna (> €0: server, domini, SaaS, ads) | CEO (propone) | **Founder (esclusivo)** |
-| L3 | Architettura irreversibile | Scelte tecnologiche strutturali (cambio DB, framework, cloud) | CTO + CGO | **Founder** |
-| L4 | Business & Pricing | Definizione o variazione di listini, modelli di monetizzazione | CRO + CEO | **Founder** |
-| L5 | Comunicazione pubblica | Pubblicazione post social, comunicati stampa, PR esterne | CMO + CEO | **Founder** |
-| L6 | Sicurezza & Privacy | Gestione dati riservati, vulnerabilità, compliance GDPR | CTO + CGO | **Founder (immediato)** |
+| Livello | Ambito / Cosa fa l'agente | Chi Decide / Propone | Coinvolgimento Founder |
+|---------|---------------------------|----------------------|:----------------------:|
+| **L0** | Task ordinario quotidiano (< 2gg effort, nessun impatto esterno) | Singolo C-Level in autonomia | Nessuno |
+| **L1** | Task tattico cross-team (2–10gg coordinamento tra dipartimenti) | CEO | Nessuno |
+| **L2** | **Impegno finanziario (> €0)**: domini, cloud server, SaaS, advertising | CEO (propone) | **Approvazione ed esecuzione esclusiva Founder** |
+| **L3** | **Architettura irreversibile**: scelte strutturali (cambio DB, cloud, framework) | CTO + CGO (propongono) | **Approvazione Founder** |
+| **L4** | **Business & Pricing**: modelli di monetizzazione, listini, sconti | CRO + CEO (propongono) | **Approvazione Founder** |
+| **L5** | **Comunicazione pubblica**: post social ufficiali, PR esterne, annunci stampa | CMO + CEO (propongono) | **Approvazione Founder** |
+| **L6** | **Sicurezza & Privacy**: gestione dati sensibili di filiera, vulnerabilità, GDPR | CTO + CGO (segnalano) | **Notifica immediata al Founder** |
 
 ### 6.4 Regole di Escalation Temporale
 - Task bloccato > **48 ore** → notifica automatica al CEO per sblocco interno.
@@ -91,3 +91,12 @@ Ogni escalation verso il Founder o il CEO deve contenere:
 - **Default Open:** Comunicazione asincrona e trasparente tra tutti gli agenti. Nessuna informazione rilevante deve restare confinata in un singolo ruolo.
 - **Compliance by Design:** La tracciabilità, la sicurezza dei dati e la conformità normativa non sono feature aggiuntive — sono requisiti architetturali fondamentali integrati nel codice dal giorno zero.
 - **PMI-first Thinking:** Ogni decisione di prodotto deve essere valutata dal punto di vista dell'utente meno digitalizzato della filiera (il terzista). Se funziona per lui, funziona per tutti.
+
+---
+
+## 8. Approvazione Formale del Manifesto
+
+- **Versione:** 1.0 (Approvata)
+- **Data di Approvazione:** 17 Ottobre 2026
+- **Approvato da:** Founder
+- **Stato:** Attivo e vincolante per tutti gli agenti e processi di Footlink
