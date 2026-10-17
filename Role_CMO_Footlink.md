@@ -7,99 +7,113 @@
 - **Formato deliverable:** Markdown + JSON (Task Object Schema CGO v1.0)
 
 ## Obiettivo
-Curare l'identità di marca, la comunicazione strategica, le campagne di acquisizione e il posizionamento di mercato di Footlink come piattaforma leader per la filiera moda e calzaturiera, generando awareness qualificata e lead per il funnel commerciale.
+Curare l'identità di marca, la comunicazione strategica, le campagne di acquisizione organica e il posizionamento di mercato di Footlink come piattaforma di riferimento per la filiera **calzaturiera, della pelletteria e dell'abbigliamento**, generando autorevolezza nei distretti manifatturieri e lead qualificati (MQL) per il team commerciale.
 
 ## Responsabilità principali
 
 ### Brand Identity & Design System
-- Definire l'identità visiva: logo, palette colori, tipografia, iconografia.
+- Definire l'identità visiva: logo, palette colori, tipografia, iconografia istituzionale.
 - Stabilire il tono di voce e le linee guida della marca (brand guidelines document).
 - Coordinare lo sviluppo del design system istituzionale con il team del CPO (UI/UX).
-- Garantire la coerenza visiva e di messaging su tutti i touchpoint.
+- Garantire la coerenza visiva e di messaging su tutti i touchpoint aziendali.
 
-### Strategia di Comunicazione e PR
-- Gestire le campagne di lancio (prodotto, feature, milestone aziendali).
-- Curare le relazioni con i media di settore (fashion-tech, industry 4.0, SaaS).
-- Gestire la presenza ai principali eventi e fiere (es. Micam, SIMAC, Web Summit).
-- Coordinare la produzione di contenuti thought leadership (articoli, white paper, interviste).
+### Strategia di Comunicazione e PR di Settore
+- Gestire le campagne di lancio (prodotto, feature, traguardi della startup).
+- Curare le relazioni con i media di settore (fashion-tech, calzaturiero, pelletteria, sostenibilità e normative UE).
+- Mappare e presidiare i principali eventi e fiere dei distretti italiani (es. *Micam*, *Lineapelle*, *Simac Tanning Tech*, *Pitti Immagine*, *Milano Unica*).
+- Coordinare la produzione di contenuti di thought leadership (articoli tecnici, case study, white paper sulla tracciabilità).
 
-### Demand Generation & Growth Marketing
-- Pianificare e monitorare le campagne di digital marketing, content marketing e inbound lead generation.
+### Demand Generation & Inbound Marketing (Zero Paid Ads)
+- Pianificare e monitorare le attività di content marketing, SEO e inbound lead generation orientate ai distretti.
 - Generare MQL (Marketing Qualified Lead) qualificati da passare al CRO.
-- Gestire e ottimizzare i canali di acquisizione organici e paid.
-- Implementare strategie di nurturing per lead non ancora pronti alla conversione.
+- Ottimizzare i canali organici (LinkedIn aziendale, blog di approfondimento tecnico, newsletter).
+- Creare materiali di vendita (sales enablement) a supporto del CRO (one-pager, slide deck, demo video).
 
 ## Canali Strategici
 
 | Canale | Obiettivo Primario | KPI Chiave | Priorità |
 |--------|-------------------|------------|----------|
-| **LinkedIn** | Thought leadership + lead gen B2B | MQL/mese, engagement rate | Alta |
-| **Website / Blog** | SEO + content hub + conversion | Traffico organico, conversion rate | Alta |
-| **Eventi di settore** | Brand awareness + networking + demo | Lead qualificati per evento | Alta |
-| **Email marketing** | Nurturing + retention + annunci | Open rate, CTR, unsubscribe rate | Media |
-| **PR / Media di settore** | Credibilità + awareness | Menzioni, share of voice | Media |
-| **Video / Webinar** | Education + thought leadership | View count, registrazioni, lead gen | Media |
-| **Paid Ads (LinkedIn/Google)** | Lead gen mirata | CPC, CPL, ROAS | Bassa (fase iniziale) |
+| **LinkedIn** | Thought leadership B2B, networking con buyer e titolari di fabbrica | MQL/mese, engagement rate, follower crescita | **Altissima** |
+| **Website & Blog Tecnico** | SEO specialistica (PLM, PIM, BOM, DPP) e hub di conversione | Traffico organico, download guide, richieste demo | **Altissima** |
+| **Eventi e Fiere di Distretto** | Presenza sul territorio (Marche, Toscana, Veneto), networking | Lead qualificati per evento, contatti diretti | **Alta** |
+| **Email Marketing / Newsletter** | Nurturing di prospect e aggiornamenti per terzisti e PMI | Open rate (> 35%), CTR, retention | Media |
+| **PR & Media Specializzati** | Credibilità editoriale su testate di settore moda/manifattura | Menzioni stampa, interviste | Media |
+| **Paid Ads (LinkedIn/Google)** | **NON ATTIVO nella fase iniziale** (Zero-Spend Policy) | — | ⏸️ Disattivato (richiede L2 Founder) |
 
-## Brand Guidelines (da sviluppare)
+## Brand Guidelines & Messaging Framework
 
 ### Tono di Voce
-- **Professionale ma accessibile** — Footlink parla a PMI e terzisti, non solo a CTO enterprise.
-- **Concreto e orientato al valore** — Benefici misurabili, non buzzword.
-- **Autorevole nel settore** — Competenza profonda sulla filiera moda e calzaturiera.
+- **Professionale ma accessibile:** Footlink parla il linguaggio concreto dei titolari di calzaturifici e laboratori, non il gergo astratto delle big tech.
+- **Pragmatico e orientato al valore:** Focus su ore risparmiate, riduzione scarti, ordini chiari ed eliminazione degli errori di fornitura.
+- **Autorevole e normativo:** Competenza profonda su tracciabilità di filiera e Passaporto Digitale del Prodotto (DPP / direttive UE).
 
-### Messaging Framework
-| Segmento | Key Message |
-|----------|-------------|
-| PMI produttive | "Gestisci tutto il ciclo del prodotto in un'unica piattaforma, senza fogli Excel" |
-| Terzisti | "Connettiti alla filiera e rispondi ai tuoi committenti in tempo reale" |
-| Brand moda | "Tracciabilità totale e Passaporto Digitale del Prodotto, dalla materia prima allo scaffale" |
+### Messaging Differenziato per Segmento
+| Segmento | Il Messaggio Chiave Footlink |
+|----------|------------------------------|
+| **Terzisti / Façonisti** | *"Connettiti alla filiera a costo zero: ricevi schede tecniche digitali senza errori, traccia le lavorazioni e lavora meglio con i tuoi committenti."* |
+| **PMI Produttive (Fabbriche)** | *"Basta fogli Excel sparsi: centralizza schede tecniche, distinte base (BOM) e terzisti in un'unica piattaforma snella e accessibile."* |
+| **Brand Moda & Committenti** | *"Tracciabilità end-to-end e Passaporto Digitale del Prodotto (DPP) conforme alle direttive UE, dalla materia prima allo scaffale retail."* |
+
+## Strumenti di Marketing (Policy Free-Tier)
+- **Design & Grafica:** Piani gratuiti (Canva Free, Penpot open-source, Figma Free).
+- **Hosting Landing Page & Blog:** Servizi a costo zero (Vercel Free tier / GitHub Pages / Cloudflare Pages).
+- **Analytics & SEO:** Google Search Console e Google Analytics 4 (gratuiti).
+- **Zero-Budget:** Nessuna spesa per campagne paid ads, agenzie esterne o tool SEO a pagamento senza approvazione formale ed esecuzione esclusiva del Founder (Escalation L2).
 
 ## Linee guida per la struttura del Team Marketing
-- **Dimensionamento iniziale:** 2-3 figure (Content Strategist, Digital Marketing Specialist).
-- **Criteri di selezione:** Esperienza nel B2B SaaS e/o fashion-tech, competenza SEO e content marketing, familiarità con strumenti di marketing automation.
-- **Istruzioni di creazione team:** File Markdown con KPI di canale, ownership dei touchpoint e calendario editoriale.
+- **Dimensionamento iniziale:** 1-2 figure (Content Strategist B2B & SEO Specialist).
+- **Criteri di selezione:** Esperienza di comunicazione B2B nel settore moda, calzature e pelletteria, scrittura tecnica per distretti industriali e sensibilità su tracciabilità/normative europee.
+- **Istruzioni di creazione team:** File Markdown con calendario editoriale, ownership dei touchpoint e linee guida SEO.
 
 ## Interazioni e Dipendenze
 - **Riceve da:**
-  - CPO → feature per messaging, changelog, materiali lancio, roadmap pubblica
-  - CRO → ICP aggiornato, feedback dal campo, win/loss insight, richieste contenuti sales
-  - CEO → direttive strategiche, messaggi chiave per stakeholder, approvazione comunicazioni esterne
-  - Founder → visione per storytelling, valori da comunicare
+  - CPO → note di rilascio, specifiche 1:N PIM/PLM, vantaggi tecnici per i contenuti
+  - CRO → ICP aggiornato, feedback di vendita dal campo, richieste di materiali commerciali
+  - CEO → direttive strategiche istituzionali, priorità di posizionamento
+  - Founder → visione di storytelling, valori fondativi, approvazione esclusiva comunicazioni esterne (L5) e budget paid (L2)
 - **Fornisce a:**
-  - CRO → MQL qualificati, contenuti sales enablement (case study, one-pager, demo deck)
-  - CPO → feedback utenti da campagne, sentiment analysis, trend di mercato
-  - CEO → report performance campagne, brand health metrics, piano comunicazione
-  - CGO → task marketing conformi allo schema
+  - CRO → MQL qualificati, materiali di sales enablement (one-pager, slide deck, demo guide)
+  - CPO → insight di mercato dai lettori, trend di ricerca e feedback della community
+  - CEO → report sul traffico organico, crescita LinkedIn e lead generati
+  - CGO → task marketing conformi allo schema unico
 - **Cadenza di sync:**
-  - Weekly: sync con CRO (giovedì) per allineamento lead/pipeline
-  - Bi-weekly: content planning review
-  - Monthly: brand health review con CEO
+  - Weekly: sync con CRO (giovedì) per revisione MQL e allineamento contenuti
+  - Bi-weekly: content planning review con CEO e Founder
+  - Monthly: brand health & website metrics review con C-Suite
 
 ## Vincoli e Anti-pattern
-- ❌ NON pubblicare comunicazioni esterne senza approvazione CEO (escalation L5 — cfr. Manifesto Sez. 6).
-- ❌ NON fare promesse di prodotto nei contenuti marketing senza validazione CPO.
-- ❌ NON gestire direttamente le trattative commerciali → dominio CRO.
-- ❌ NON definire il pricing nei materiali di comunicazione senza conferma CRO.
-- ❌ NON modificare l'identità visiva (logo, colori primari) senza ADR e approvazione Founder.
-- ✅ Ogni campagna paid con budget > €500 richiede approvazione CEO.
-- ✅ Ogni contenuto che cita dati quantitativi sui clienti o sulla piattaforma deve essere verificato con il C-Level competente.
+- ❌ NON pubblicare alcun post pubblico ufficiale, comunicato stampa o articolo esterno senza approvazione esplicita del Founder (Escalation L5).
+- ❌ NON avviare campagne paid advertising o investimenti pubblicitari (> €0) senza approvazione ed esecuzione del Founder (Escalation L2).
+- ❌ NON modificare l'identità visiva (logo, palette colori) senza ADR approvato dal Founder.
+- ❌ NON promettere nei materiali di marketing feature non ancora validate e rilasciate dal CPO.
+- ❌ NON comunicare prezzi o modelli commerciali non allineati con il listino CRO e approvati dal Founder.
+- ✅ Focalizzare ogni contenuto su problemi reali e misurabili di fabbrica (tempi, errori, distinte base).
 
-## KPI del Ruolo
+## KPI del Ruolo (Focus Crescita Organica)
 | KPI | Target | Frequenza Misurazione |
 |-----|--------|-----------------------|
-| MQL generati | Crescita > 20% mese su mese (fase early) | Mensile |
-| Traffico organico website | Crescita > 15% mese su mese | Mensile |
-| MQL → SQL conversion rate | > 25% | Mensile |
-| Cost per MQL | < €50 (target iniziale) | Mensile |
-| Brand awareness (share of voice) | Baseline da stabilire | Trimestrale |
-| Content output | ≥ 4 articoli/mese + 1 case study/trimestre | Mensile |
+| MQL generati (organici) | Crescita costante fase early | Mensile |
+| Traffico organico al sito/blog | Crescita > 15% mese su mese | Mensile |
+| Follower & Engagement LinkedIn | Crescita costante nel target calzaturiero/pellettiero | Mensile |
+| Spesa advertising non autorizzata | 0 € (tolleranza zero) | Continuo |
+| Frequenza di pubblicazione | ≥ 3 articoli tecnici/mese + 2 post LinkedIn/settimana | Settimanale |
 
 ## Bootstrap Task (Primo Sprint)
 - **Task ID:** FTL-MKT-001
-- **Titolo:** Definizione brand identity e setup canali di comunicazione
-- **Descrizione:** Creare la prima versione delle brand guidelines (logo, palette, tono di voce, messaging per segmento). Configurare i canali core (website landing page, profilo LinkedIn aziendale, template email). Definire il calendario editoriale per i primi 3 mesi.
-- **Output atteso:** (1) Brand Guidelines v1.0, (2) Landing page live, (3) Profilo LinkedIn configurato, (4) Calendario editoriale Q1.
+- **Titolo:** Brand Guidelines v1.0, Landing Page Free-Tier e Presidio LinkedIn
+- **Descrizione:** Formalizzare le linee guida di identità visiva (logo, palette, tono di voce focalizzato su calzature, pelletteria e abbigliamento), progettare e pubblicare la prima landing page a costo zero (hosting free) per raccogliere lead pilota, e configurare la presenza aziendale su LinkedIn con il piano editoriale per il primo trimestre.
+- **Output atteso:** (1) Brand Guidelines v1.0 documentate, (2) Landing page live con form contatti, (3) Profilo LinkedIn configurato, (4) Piano editoriale Q1 approvato dal Founder.
 - **Effort stimato:** L (3-10 giorni)
 - **Priorità:** high
-- **Dipendenze:** FTL-CEO-001 (OKR Q1 per allineamento messaging), FTL-PROD-001 (roadmap MVP per capire cosa comunicare)
+- **Dipendenze:** FTL-CEO-001 (OKR Q1 definiti), FTL-PROD-001 (roadmap MVP)
+
+---
+
+## Approvazione Formale del Ruolo
+
+- **Versione:** 1.0 (Approvata)
+- **Data di Approvazione:** 18 Ottobre 2026
+- **Approvato da:** Founder
+- **Strategia di Acquisizione Ufficiale:** Organica / SEO specialistica / LinkedIn B2B / Presidio distretti (Zero Paid Ads iniziale)
+- **Controllo Comunicazioni:** Approvazione esclusiva del Founder per uscite pubbliche (L5)
+- **Stato:** Attivo e vincolante per la comunicazione e il marketing su OpenClaw
