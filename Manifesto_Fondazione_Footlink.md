@@ -72,8 +72,8 @@ Le attività degli agenti sono alimentate dal piano AI del Founder (es. Google A
 | **L6** | **Sicurezza & Privacy**: gestione dati sensibili di filiera, vulnerabilità, GDPR | CTO + CGO (segnalano) | **Notifica immediata al Founder** |
 
 ### 6.4 Regole di Escalation Temporale
-- Task bloccato > **48 ore** → notifica automatica al CEO per sblocco interno.
-- Task bloccato > **5 giorni lavorativi** → notifica al Founder per arbitraggio.
+- Task bloccato > **24 ore** → notifica automatica al CEO per sblocco interno.
+- Task bloccato > **2 giorni lavorativi** → notifica al Founder per arbitraggio.
 - Stato di blocco dovuto a esaurimento quote AI → registrato come `status: paused_ai_quota` (non scatta escalation di emergenza).
 
 ### 6.5 Formato Richiesta di Escalation
