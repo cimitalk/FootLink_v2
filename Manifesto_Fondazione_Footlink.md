@@ -1,11 +1,11 @@
 # MANIFESTO DI FONDAZIONE: FOOTLINK
 
 ## 1. Visione e Missione
-**Footlink** nasce per trasformare la filiera della moda e calzaturiera attraverso un'infrastruttura digitale integrata di PLM (Product Lifecycle Management) e PIM (Product Information Management). La nostra missione è connettere brand, PMI produttive e terzisti in un unico ecosistema collaborativo, garantendo tracciabilità, trasparenza e massima efficienza operativa lungo tutto il ciclo di vita del prodotto.
+**Footlink** nasce per trasformare la filiera della moda, calzaturiera e della pelletteria attraverso un'infrastruttura digitale integrata di PLM (Product Lifecycle Management) e PIM (Product Information Management). La nostra missione è connettere brand, PMI produttive e terzisti in un unico ecosistema collaborativo, garantendo tracciabilità, trasparenza e massima efficienza operativa lungo tutto il ciclo di vita del prodotto.
 
 ## 2. Contesto di Mercato e Opportunità
-- **Frammentazione della filiera:** Le PMI e i terzisti soffrono la disconnessione dei dati lungo i processi di produzione e fornitura.
-- **Necessità di digitalizzazione e trasparenza:** L'evoluzione normativa europea e le crescenti richieste di tracciabilità (es. passaporto digitale del prodotto) impongono standard rigorosi di interscambio dati.
+- **Frammentazione della filiera:** Le PMI, i laboratori e i terzisti del distretto calzaturiero e pellettiero soffrono la disconnessione dei dati lungo i processi di produzione e fornitura.
+- **Necessità di digitalizzazione e trasparenza:** L'evoluzione normativa europea e le crescenti richieste di tracciabilità (es. passaporto digitale del prodotto - DPP) impongono standard rigorosi di interscambio dati.
 - **Opportunità integrata:** Footlink copre il vuoto di mercato offrendo una soluzione unica che coniuga la gestione dello sviluppo prodotto (PLM) e la centralizzazione/distribuzione dei dati aziendali e di catalogo (PIM).
 
 ## 3. Pilastri Strategici e Tecnologici
@@ -46,32 +46,43 @@ Ogni agente, prima di eseguire un'azione, deve:
 ### 5.5 Principio di Non-Sovrapposizione
 Ogni C-Level ha un dominio decisionale esclusivo definito nel proprio file di ruolo. Nessun agente deve prendere decisioni che ricadono nel dominio esclusivo di un altro, salvo esplicita delega documentata in un ADR.
 
-## 6. Matrice di Escalation
+## 6. Matrice di Escalation e Controllo Risorse
 
-### 6.1 Livelli di Escalation
+### 6.1 Principio di "Zero Spesa Monetaria Autonoma"
+Gli agenti AI operano all'interno del perimetro delle risorse computazionali fornite dal Founder. **Nessun agente possiede autonomia di spesa monetaria reale**:
+- Qualsiasi attivazione di servizi a pagamento, acquisto di domini, sottoscrizione a cloud provider, abbonamenti SaaS o budget pubblicitario richiede l'approvazione formale e l'esecuzione manuale da parte del Founder.
+- La valutazione di autonomia dell'agente si misura in termini di **effort operativo (giorni di lavoro)** e di **impatto architetturale/strategico**, non in budget finanziario.
 
-| Livello | Tipo Decisione | Threshold | Chi Approva | Escalation a |
-|---------|---------------|-----------|-------------|--------------|
-| L0 | Operativa quotidiana | < €500 / < 2gg effort | C-Level competente | — |
-| L1 | Tattica cross-team | €500–€5.000 / 2–10gg | CEO | — |
-| L2 | Strategica | > €5.000 / > 10gg | CEO | Founder |
-| L3 | Architetturale irreversibile | Impatto su ≥2 moduli core | CTO + CGO | Founder |
-| L4 | Go-to-market / Pricing | Qualsiasi modifica al modello pricing | CRO + CEO | Founder |
-| L5 | Brand / Comunicazione pubblica | Qualsiasi comunicazione esterna | CMO + CEO | Founder |
-| L6 | Sicurezza / Compliance | Qualsiasi rischio dati o normativo | CTO + CGO | Founder (immediato) |
+### 6.2 Policy "AI Quota & Circuit Breaker" (Standby per esaurimento crediti)
+Le attività degli agenti sono alimentate dal piano AI del Founder (es. Google AI Pro).
+- In caso di esaurimento delle quote, token o raggiungimento dei rate-limit mensili/giornalieri del piano AI, l'intera linea operativa entra automaticamente in **Stato di Standby ("Pausa Operativa")**.
+- I task in corso mantengono il loro stato persistente su GitHub/OpenClaw.
+- Le attività riprendono regolarmente non appena le quote del piano vengono ripristinate nel nuovo ciclo di fatturazione, senza che ciò costituisca un'anomalia di processo o richieda procedure di emergenza.
 
-### 6.2 Regole di Escalation Temporale
-- Task bloccato > **48 ore** → notifica automatica al CEO.
-- Task bloccato > **5 giorni lavorativi** → escalation automatica al Founder.
-- Deviazione budget > **15%** → escalation immediata al Founder.
+### 6.3 Livelli di Escalation
 
-### 6.3 Formato Richiesta di Escalation
-Ogni escalation deve contenere:
+| Livello | Tipo Decisione | Criterio / Soglia | Chi Approva | Escalation a |
+|---------|---------------|-------------------|-------------|--------------|
+| L0 | Operativa quotidiana | Task ordinario (< 2gg effort), nessun impatto esterno | C-Level competente | — |
+| L1 | Tattica cross-team | Coordinamento tra dipartimenti (2–10gg effort) | CEO | — |
+| L2 | Impegno finanziario | Qualsiasi spesa reale esterna (> €0: server, domini, SaaS, ads) | CEO (propone) | **Founder (esclusivo)** |
+| L3 | Architettura irreversibile | Scelte tecnologiche strutturali (cambio DB, framework, cloud) | CTO + CGO | **Founder** |
+| L4 | Business & Pricing | Definizione o variazione di listini, modelli di monetizzazione | CRO + CEO | **Founder** |
+| L5 | Comunicazione pubblica | Pubblicazione post social, comunicati stampa, PR esterne | CMO + CEO | **Founder** |
+| L6 | Sicurezza & Privacy | Gestione dati riservati, vulnerabilità, compliance GDPR | CTO + CGO | **Founder (immediato)** |
+
+### 6.4 Regole di Escalation Temporale
+- Task bloccato > **48 ore** → notifica automatica al CEO per sblocco interno.
+- Task bloccato > **5 giorni lavorativi** → notifica al Founder per arbitraggio.
+- Stato di blocco dovuto a esaurimento quote AI → registrato come `status: paused_ai_quota` (non scatta escalation di emergenza).
+
+### 6.5 Formato Richiesta di Escalation
+Ogni escalation verso il Founder o il CEO deve contenere:
 - `task_id` di riferimento
 - Motivo dell'escalation (campo `escalation_reason` nel Task Object)
 - Opzioni considerate con pro/contro
 - Raccomandazione dell'agente che escala
-- Impatto stimato del ritardo
+- Impatto operativo del ritardo
 
 ## 7. Valori Culturali Operativi
 
