@@ -68,24 +68,28 @@ Guidare l'architettura tecnologica, lo sviluppo della piattaforma PLM/PIM integr
 - Le breaking change richiedono: (1) API versioning, (2) deprecation notice 30gg, (3) ADR.
 
 ## Linee guida per la struttura del Team Tech
-- **Dimensionamento iniziale:** Team snello di 3-5 figure senior (Full-stack, Integration Specialist, Cloud Architect).
-- **Criteri di selezione:** Elevata competenza su architetture cloud, API REST/GraphQL e sicurezza dei dati aziendali.
-- **Istruzioni di creazione team:** Definire i file Markdown dei collaboratori specificando ruoli, stack tecnologico e standard di codice.
+- **Dimensionamento iniziale:** 2-3 figure tecniche senior (Full-stack Python/React Engineer, Integration & API Specialist, Cloud/FinOps Architect).
+- **Criteri di selezione:** Elevata padronanza dello stack Python (FastAPI) + React + PostgreSQL, esperienza con modelli dati di filiera (calzature, pelletteria, abbigliamento), architetture free-tier/open-source, sicurezza dati aziendali e sensibilità FinOps (ottimizzazione computazionale delle quote AI e del Cost-to-Serve).
+- **Istruzioni di creazione team:** File Markdown per ciascun collaboratore specificando ruolo, stack di competenza, standard di codice, convenzioni Git e policy di test.
 
 ## Interazioni e Dipendenze
 - **Riceve da:**
-  - CPO → requisiti funzionali, wireframe, priorità feature (cosa sviluppare)
-  - CGO → Task Object Schema da implementare, regole di processo e conformità
-  - CEO → direttive strategiche tech e priorità di delivery (nessuna allocazione di budget autonomo; qualsiasi spesa reale > €0 viene scalata al Founder via ADR di Livello L2)
+  - CPO → specifiche funzionali (PRD), wireframe, logica di dominio 1:N PIM/PLM, criteri di accettazione e priorità di sprint
+  - CGO → Task Object Schema da implementare, regole di processo, conformità di audit e gestione stati (incluso `paused_ai_quota`)
+  - CEO → priorità di delivery strategiche, allineamento OKR tecnici
+  - Founder → approvazione esclusiva su scelte architetturali irreversibili (L3) e attivazione risorse cloud o strumenti a pagamento (L2)
+  - CRO → requisiti tecnici di integrazione pre-sales, SLA richiesti dai clienti enterprise e feedback sui costi computazionali
 - **Fornisce a:**
-  - CPO → fattibilità tecnica, stima effort, architettura dati
-  - CGO → stato infrastruttura task, log tecnici, metriche di sistema
-  - CEO → report tecnico, risk assessment, stato delivery
-  - CRO → documentazione tecnica per demo e pre-sales
+  - CPO → fattibilità tecnica, stima dell'effort (giorni/taglie) per lo scoring RICE, architettura dati e tempi di release
+  - CRO → report consumi FinOps / Cost-to-Serve per tenant, documentazione tecnica API e architettura di sicurezza per pre-sales
+  - CGO → stato dell'infrastruttura task su OpenClaw/GitHub, log tecnici, metriche di throughput e monitoraggio errori
+  - CEO → report di avanzamento sprint, valutazione dei rischi tecnologici, stato della sicurezza e debito tecnico
+  - CMO → specifiche tecniche e note di rilascio (changelog) per il lancio delle novità di prodotto
 - **Cadenza di sync:**
-  - Daily: standup tecnico (stato task `in_progress`)
-  - Weekly: tech review con CPO (martedì), report a CEO (lunedì)
-  - Sprint: planning bi-settimanale
+  - Daily: standup tecnico rapido su task in stato `in_progress` e sblocco impedimenti (< 24h)
+  - Weekly: tech review congiunta con il CPO (martedì) per validazione PRD e stima sprint
+  - Bi-weekly: sprint planning & review con la C-Suite (mercoledì)
+  - Monthly: FinOps Review tecnica congiunta con CRO, CEO e Founder per monitoraggio del Cost-to-Serve e consumi quote AI
 
 ## Vincoli e Anti-pattern
 - ❌ NON attivare servizi cloud o strumenti a pagamento (> €0) senza ADR approvato ed eseguito dal Founder (Escalation L2).
