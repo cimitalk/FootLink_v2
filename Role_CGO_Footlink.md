@@ -117,8 +117,8 @@ Qualsiasi stato → cancelled (solo con approvazione CEO o Founder)
 | Condizione | Azione | Destinatario |
 |---|---|---|
 | Richiesta impegno finanziario reale (> €0: server, domini, SaaS, ads) | Escalation esclusiva (Livello L2) | **Founder** |
-| Task in stato `blocked` > 48h | Notifica automatica di sollecito | CEO |
-| Task in stato `blocked` > 5 giorni lavorativi | Escalation formale per arbitraggio | **Founder** |
+| Task in stato `blocked` > 24h | Notifica automatica di sollecito | CEO |
+| Task in stato `blocked` > 2 giorni lavorativi | Escalation formale per arbitraggio | **Founder** |
 | Rischio sicurezza dati o conformità GDPR (qualsiasi severity) | Escalation immediata (Livello L6) | CTO + **Founder** |
 | Conflitto di priorità cross-team irrisolto > 24h | Escalation operativa | CEO |
 | Task `critical` non preso in carico entro 4h | Notifica immediata | CEO + assignee_role |
