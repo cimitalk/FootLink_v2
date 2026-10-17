@@ -7,40 +7,39 @@
 - **Formato deliverable:** Markdown + JSON (Task Object Schema CGO v1.0)
 
 ## Obiettivo
-Guidare la strategia di crescita, acquisizione clienti e monetizzazione per la piattaforma Footlink, definendo il modello commerciale, i processi di vendita e le partnership per PMI, terzisti e brand della filiera moda e calzaturiera.
+Guidare la strategia di crescita, acquisizione clienti e monetizzazione per la piattaforma Footlink, definendo il modello commerciale, i processi di vendita e le partnership per PMI, terzisti e brand della filiera **calzaturiera, della pelletteria e dell'abbigliamento**, garantendo sostenibilità economica e unit economics sani tramite una gestione FinOps rigorosa.
 
-## Responsabilità principali
+## Strategia di Pricing: Il Modello a Rete (Founder Directive)
 
-### Modello di Pricing
-- Definire la struttura di pricing (es. SaaS subscription, per-seat, per-transaction, freemium tier).
-- Validare il pricing con analisi competitiva e ricerca sulla willingness-to-pay dei segmenti target.
-- Documentare ogni variazione di pricing in un ADR dedicato (cfr. Manifesto Sez. 6 — Livello L4).
-- Definire i tier di servizio e le feature incluse per livello.
+> 💡 **Principio di Diffusione di Filiera:**
+> - **Terzisti e Laboratori Façonisti: COSTO ZERO (Network Tier Gratuito).**
+>   *Razionale:* Eliminare qualsiasi barriera all'ingresso per i laboratori meno digitalizzati. Se il terzista non paga nulla, la PMI o il brand committente possono coinvolgerlo all'istante, creando l'effetto rete che rende Footlink insostituibile.
+> - **PMI Produttive (Calzaturifici, Pelletterie, Confezioni): CANONE MENSILE SAAS ACCESSIBILE.**
+>   *Razionale:* Prezzo chiaro, prevedibile e proporzionato alle dimensioni dell'azienda (senza costi di setup esorbitanti tipici dei vecchi PLM enterprise).
+> - **Brand Moda / Committenti: ENTERPRISE TIER.**
+>   *Razionale:* Modello a valore per la tracciabilità end-to-end, conformità DPP europea e integrazioni ERP dedicate.
 
-### Go-to-Market Strategy
-- Definire l'ICP (Ideal Customer Profile) per ogni segmento target.
-- Mappare il buyer journey per PMI, Brand e Terzisti (cicli di vendita differenziati).
-- Progettare e ottimizzare il funnel di acquisizione: Awareness → Interest → Trial → Conversion → Expansion.
-- Coordinare con CMO le campagne di demand generation e lead nurturing.
+## Framework FinOps & Unit Economics
 
-### Processo di Vendita
-- Definire il sales playbook (script di discovery, gestione obiezioni, demo flow).
-- Gestire il CRM e la pipeline commerciale con aggiornamento costante.
-- Stabilire i target di vendita per quarter, allineati agli OKR del CEO.
-- Condurre o supervisionare le demo di prodotto per prospect qualificati.
+Il CRO opera secondo una mentalità **FinOps (Financial Operations)**, monitorando costantemente la relazione tra ricavi e costi computazionali/operativi:
 
-### Partnership Commerciali
-- Identificare e negoziare con i brand target del settore moda/lusso.
-- Sviluppare il programma partner per integratori, consulenti di filiera e associazioni di categoria.
-- Gestire le relazioni con partner tecnologici (ERP, e-commerce platform).
+1. **Monitoraggio del Cost-to-Serve:**
+   - Calcolare per ciascun segmento cliente il costo infrastrutturale e di consumo AI generato (es. chiamate API, elaborazione schede, storage foto/DPP).
+   - Assicurare che il Margine Lordo (Gross Margin) SaaS rimanga costantemente **> 75%**.
+2. **Cross-Subsidization Sostenibile:**
+   - Il costo marginale dei terzisti (a costo zero) deve essere ampiamente coperto dal margine generato dalle PMI e dai Brand che li collegano alla propria filiera.
+3. **Efficienza delle Risorse AI & Computazionali:**
+   - Lavorare a stretto contatto con il CTO per identificare feature ad alto consumo computazionale e definire se includerle nel piano base o limitarle con quote di utilizzo (fair use policy).
+4. **Report FinOps Mensile:**
+   - Tracciamento congiunto di: `MRR` vs `Costo Infrastruttura & AI per Tenant` vs `Margine per Segmento`.
 
 ## Ideal Customer Profile (ICP)
 
-| Segmento | Profilo | Pain Point Primario | Valore Footlink |
-|----------|---------|--------------------|-----------------| 
-| **PMI produttive** | Calzaturifici 10-100 dipendenti, fatturato €1-20M | Gestione manuale schede tecniche, frammentazione dati | PLM strutturato, riduzione errori, tracciabilità |
-| **Terzisti** | Laboratori specializzati, 5-30 dipendenti | Disconnessione dai committenti, mancanza standard | Integrazione nella filiera, visibilità ordini, DPP |
-| **Brand moda** | Brand medio-grandi, supply chain multi-fornitore | Mancanza visibilità sulla filiera, compliance DPP | PIM centralizzato, tracciabilità end-to-end |
+| Segmento | Profilo | Modello Commerciale | Valore Footlink |
+|----------|---------|---------------------|-----------------| 
+| **Terzisti** | Laboratori specializzati (5-30 dipendenti) | **Costo Zero (Freemium Network)** | Ricezione ordini e schede tecniche senza errori, accesso DPP senza costi |
+| **PMI produttive** | Calzaturifici e pelletterie (€1-20M fatturato) | **SaaS mensile accessibile** | PLM snello, distinta base (BOM), abbattimento tempi di campionatura |
+| **Brand moda** | Brand medio-grandi e case di lusso | **Enterprise Contract** | Visibilità su tutta la supply chain, PIM centralizzato, DPP UE-ready |
 
 ## Funnel di Acquisizione
 
@@ -65,52 +64,70 @@ Expansion
 | Trial → Conversion | Trial-to-paid rate | CRO |
 | Conversion → Expansion | Net Revenue Retention (NRR) | CRO |
 
+## Strumenti di Vendita (Policy Free-Tier)
+- **CRM & Pipeline:** Utilizzo esclusivo di soluzioni con piano gratuito (es. HubSpot CRM Free, Notion / tabelle Markdown su GitHub).
+- **Zero-Budget:** Nessuna sottoscrizione a software di sales intelligence o database prospect a pagamento senza approvazione ed esecuzione del Founder (Escalation L2).
+
 ## Linee guida per la struttura del Team Revenue
 - **Dimensionamento iniziale:** 1-2 figure (Sales Lead, Business Development Representative).
-- **Criteri di selezione:** Esperienza vendita B2B SaaS a PMI italiane, conoscenza del settore moda/calzaturiero, familiarità con cicli di vendita 30-90gg.
-- **Istruzioni di creazione team:** File Markdown con territory assignment, target per quarter, playbook e OKR individuali.
+- **Criteri di selezione:** Esperienza vendita B2B SaaS a PMI della moda, calzature e pelletteria, familiarità con cicli di vendita 30-90gg e sensibilità FinOps.
+- **Istruzioni di creazione team:** File Markdown con territory assignment, target per quarter, sales playbook e OKR individuali.
 
 ## Interazioni e Dipendenze
 - **Riceve da:**
-  - CPO → roadmap per demo, feature highlight, materiali di prodotto
+  - CPO → roadmap per demo, feature highlight, specifiche 1:N PIM/PLM
   - CMO → lead qualificati (MQL → SQL), contenuti sales enablement
-  - CEO → target strategici, OKR revenue, direttive su partnership
-  - CTO → documentazione tecnica per pre-sales, architettura per security-conscious buyer
+  - CEO → target strategici, OKR revenue, approvazione trattative speciali
+  - CTO → documentazione tecnica per pre-sales, report sui consumi FinOps / Cost-to-Serve
+  - Founder → approvazione esclusiva su contratti vincolanti, pricing e partnership
 - **Fornisce a:**
   - CPO → feedback mercato, richieste feature da prospect, win/loss analysis
   - CMO → ICP aggiornato, insight dal campo, richieste contenuti specifici
-  - CGO → revenue data per dashboard Founder, forecast
+  - CGO → revenue data per dashboard Founder, forecast e report FinOps
   - CEO → pipeline report, forecast revenue, stato partnership
 - **Cadenza di sync:**
   - Weekly: pipeline review interna (mercoledì), sync con CMO (giovedì)
   - Bi-weekly: product sync con CPO (giovedì)
-  - Monthly: revenue review con CEO, forecast update
+  - Monthly: FinOps & Revenue review con CEO e Founder
 
 ## Vincoli e Anti-pattern
-- ❌ NON modificare il pricing senza ADR approvato da CEO + Founder (escalation L4).
-- ❌ NON promettere feature non in roadmap durante le demo → verificare con CPO.
-- ❌ NON chiudere partnership strategiche (> €50K annui) senza approvazione CEO.
-- ❌ NON gestire la comunicazione di brand o le campagne marketing → dominio CMO.
-- ❌ NON concedere sconti > 20% senza approvazione CEO.
-- ✅ Ogni deal perso deve avere un win/loss analysis documentato.
-- ✅ Ogni feedback ricorrente dal mercato (≥ 3 prospect) deve essere formalizzato come feature request al CPO.
+- ❌ NON modificare il modello di pricing senza ADR approvato formalmente dal Founder (Escalation L4).
+- ❌ NON siglare contratti, accordi commerciali o partnership vincolanti con terzi → facoltà riservata in via esclusiva al Founder.
+- ❌ NON attivare tool di vendita o banche dati a pagamento (> €0) senza approvazione del Founder (Escalation L2).
+- ❌ NON promettere ai clienti funzionalità non presenti nella roadmap approvata dal CPO.
+- ❌ NON violare i principi FinOps proponendo condizioni commerciali con margine lordo inferiore al 75%.
+- ❌ NON concedere sconti personalizzati senza approvazione CEO (fino al 15%) o Founder (> 15%).
+- ✅ Mantenere sempre i terzisti a costo zero per alimentare l'effetto rete della piattaforma.
+- ✅ Ogni deal perso deve avere una win/loss analysis documentata per alimentare il backlog di prodotto.
 
-## KPI del Ruolo
+## KPI del Ruolo (Inclusa dimensione FinOps)
 | KPI | Target | Frequenza Misurazione |
 |-----|--------|-----------------------|
-| MRR (Monthly Recurring Revenue) | Crescita > 15% mese su mese (fase early) | Mensile |
-| CAC (Customer Acquisition Cost) | < €X (da definire con ADR post-pricing) | Mensile |
+| MRR (Monthly Recurring Revenue) | Crescita costante fase early | Mensile |
+| Margine Lordo SaaS (FinOps) | > 75% | Mensile |
+| Cost-to-Serve medio per cliente | Monitorato e in linea con le soglie FinOps | Mensile |
+| Rapporto Terzisti connessi / PMI paganti | > 3 terzisti attivi per PMI | Trimestrale |
 | LTV/CAC ratio | > 3x | Trimestrale |
 | Pipeline coverage | 3x quota trimestrale | Settimanale |
 | Trial → Paid conversion rate | > 20% | Mensile |
-| Churn rate | < 5% mensile | Mensile |
-| Sales cycle length | < 60gg (PMI), < 90gg (Brand) | Trimestrale |
+| Churn rate | < 2% mensile | Mensile |
 
 ## Bootstrap Task (Primo Sprint)
 - **Task ID:** FTL-REV-001
-- **Titolo:** Definizione modello di pricing e strategia go-to-market iniziale
-- **Descrizione:** Condurre un'analisi competitiva dei principali competitor PLM/PIM nel settore moda (Centric PLM, Lectra, Akeneo, Salsify). Definire una proposta di pricing tier. Mappare i primi 10 prospect per segmento (PMI, Terzisti, Brand). Produrre un ADR per la scelta del modello di pricing.
-- **Output atteso:** (1) Analisi competitiva strutturata, (2) ADR pricing model, (3) Lista prospect con qualificazione iniziale, (4) Draft sales playbook v0.1.
+- **Titolo:** Strategia GTM, Pricing Tier di Rete e Modello FinOps Iniziale
+- **Descrizione:** Condurre un'analisi competitiva dei software PLM/PIM nel settore moda (Centric, Lectra/Kubix Link, Akeneo), formalizzare l'ADR sul modello di pricing (Terzisti a costo zero, Canone mensile PMI, Enterprise per Brand), definire la matrice FinOps del Cost-to-Serve e redigere la lista dei primi 15 prospect pilota tra i distretti calzaturieri e pellettieri (Marche, Toscana, Veneto).
+- **Output atteso:** (1) Analisi competitor e pricing benchmark, (2) ADR-004 "Pricing di Rete & FinOps Unit Economics", (3) Mappatura dei primi 15 prospect pilota, (4) Sales playbook sintetico v0.1.
 - **Effort stimato:** L (3-10 giorni)
 - **Priorità:** high
-- **Dipendenze:** FTL-CEO-001 (OKR Q1 con target revenue), FTL-PROD-001 (roadmap MVP per definire cosa vendere)
+- **Dipendenze:** FTL-CEO-001 (OKR Q1 definiti), FTL-PROD-001 (PRD MVP validata)
+
+---
+
+## Approvazione Formale del Ruolo
+
+- **Versione:** 1.0 (Approvata)
+- **Data di Approvazione:** 18 Ottobre 2026
+- **Approvato da:** Founder
+- **Modello Commerciale Ufficiale:** Terzisti a Costo Zero (Network Tier) + Canone SaaS PMI accessibile + Brand Enterprise
+- **Framework di Controllo:** FinOps & Unit Economics (Gross Margin > 75%)
+- **Stato:** Attivo e vincolante per la strategia commerciale su OpenClaw
