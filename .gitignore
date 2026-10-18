@@ -28,3 +28,12 @@ yarn-debug.log*
 yarn-error.log*
 scratch/
 tmp/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Suspended OpenClaw artifacts
+DREAMS.md

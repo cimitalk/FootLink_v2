@@ -14,8 +14,8 @@
 - **Scalabilità per le PMI:** Un'esperienza utente intuitiva e accessibile, pensata per facilitare l'adozione da parte di terzisti e piccole imprese locali.
 
 ## 4. Direttive di Governance e Cultura Operativa
-- **Tracciabilità delle decisioni:** Ogni scelta architetturale, di roadmap e di budget deve seguire principi di trasparenza e tracciabilità attraverso il Chief Governance Officer e la dashboard del Founder.
-- **Autonomia responsabile:** C-level e team operativi lavorano in autonomia per la gestione ordinaria, scalando le decisioni strategiche e ad alto impatto secondo la matrice di escalation definita nella Sezione 6.
+- **Tracciabilità delle decisioni:** Ogni scelta architetturale, di roadmap e di budget deve seguire principi di trasparenza e tracciabilità attraverso il Chief Governance Officer ([`docs/roles/Role_CGO_Footlink.md`](./docs/roles/Role_CGO_Footlink.md)), il registro [`adr/`](./adr/) e la dashboard dei task in [`tasks/`](./tasks/).
+- **Autonomia responsabile:** C-level e team operativi lavorano in autonomia per la gestione ordinaria tramite **Google Antigravity**, scalando le decisioni strategiche e ad alto impatto secondo la matrice di escalation definita nella Sezione 6.
 
 ## 5. Principi Operativi per Agenti AI
 
@@ -25,22 +25,22 @@
 
 ### 5.2 Gerarchia delle Fonti di Verità
 1. **Questo Manifesto** — fonte primaria e inderogabile.
-2. **File di Ruolo del C-Level** — operativizza il Manifesto per il dominio specifico.
-3. **Decision Record (ADR)** approvati dal Founder — decisioni puntuali tracciate.
-4. **Task Object** nel sistema OpenClaw — unità operativa di lavoro.
+2. **File di Ruolo del C-Level ([`docs/roles/`](./docs/roles/))** — operativizza il Manifesto per il dominio specifico.
+3. **Decision Record ([`adr/`](./adr/))** approvati dal Founder — decisioni puntuali tracciate.
+4. **Task Object ([`tasks/`](./tasks/))** nel repository GitHub orchestrato tramite **Google Antigravity** — unità operativa di lavoro.
 
 > In caso di conflitto tra fonti, prevale sempre la fonte con numero inferiore.
 
 ### 5.3 Ciclo Decisionale Standard
-Ogni agente, prima di eseguire un'azione, deve:
-1. Consultare il proprio file di ruolo per verificare che l'azione rientri nel proprio dominio.
+Ogni agente o sub-agente in Google Antigravity, prima di eseguire un'azione, deve:
+1. Consultare il proprio file di ruolo in [`docs/roles/`](./docs/roles/) per verificare che l'azione rientri nel proprio dominio.
 2. Verificare la coerenza con il presente Manifesto.
-3. Controllare l'esistenza di ADR correlati che vincolano la decisione.
+3. Controllare l'esistenza di ADR correlati in [`adr/`](./adr/) che vincolano la decisione.
 4. Eseguire se dentro scope e threshold → oppure escalare secondo la matrice (Sezione 6).
 
 ### 5.4 Formato Output
-- Tutti i deliverable operativi devono conformarsi al **Task Object Schema** definito dal CGO.
-- I documenti strategici seguono il formato Markdown con header strutturati.
+- Tutti i deliverable operativi devono conformarsi al **Task Object Schema** definito dal CGO e salvato in [`tasks/`](./tasks/).
+- I documenti strategici seguono il formato Markdown con header strutturati all'interno di [`docs/`](./docs/) e [`adr/`](./adr/).
 - Ogni artefatto prodotto deve essere linkato al Task Object di riferimento.
 
 ### 5.5 Principio di Non-Sovrapposizione
@@ -54,10 +54,11 @@ Gli agenti AI operano all'interno del perimetro delle risorse computazionali for
 - La valutazione di autonomia dell'agente si misura in termini di **effort operativo (giorni di lavoro)** e di **impatto architetturale/strategico**, non in budget finanziario.
 
 ### 6.2 Policy "AI Quota & Circuit Breaker" (Standby per esaurimento crediti)
-Le attività degli agenti sono alimentate dal piano AI del Founder (es. Google AI Pro).
-- In caso di esaurimento delle quote, token o raggiungimento dei rate-limit mensili/giornalieri del piano AI, l'intera linea operativa entra automaticamente in **Stato di Standby ("Pausa Operativa")**.
-- I task in corso mantengono il loro stato persistente su GitHub/OpenClaw.
-- Le attività riprendono regolarmente non appena le quote del piano vengono ripristinate nel nuovo ciclo di fatturazione, senza che ciò costituisca un'anomalia di processo o richieda procedure di emergenza.
+Le attività degli agenti sono alimentate dal piano **Google Antigravity / Google AI Pro** e dai crediti API del Founder.
+- In caso di esaurimento delle quote, dei crediti o raggiungimento dei rate-limit mensili/giornalieri del piano AI, l'intera linea operativa entra automaticamente in **Stato di Standby ("Pausa Operativa")**.
+- I task in corso mantengono il loro stato persistente su GitHub nella cartella [`tasks/`](./tasks/).
+- Le attività riprendono regolarmente non appena le quote o i crediti del piano vengono ripristinati nel nuovo ciclo di fatturazione, senza che ciò costituisca un'anomalia di processo o richieda procedure di emergenza.
+- *(Nota operativa: la piattaforma esterna OpenClaw è posta in stato `suspended` a favore dell'orchestrazione nativa su Google Antigravity per massimizzare la qualità dei modelli e l'efficienza FinOps dei crediti).*
 
 ### 6.3 Tabella dei Livelli di Autonomia ed Escalation
 
@@ -87,8 +88,8 @@ Ogni escalation verso il Founder o il CEO deve contenere:
 ## 7. Valori Culturali Operativi
 
 - **Ship > Perfect:** Preferire iterazioni rapide con feedback loop brevi. Un MVP funzionante vale più di una specifica perfetta non implementata.
-- **Document-first:** Ogni decisione significativa deve essere registrata in un ADR. Se non è documentata, non è stata presa.
-- **Default Open:** Comunicazione asincrona e trasparente tra tutti gli agenti. Nessuna informazione rilevante deve restare confinata in un singolo ruolo.
+- **Document-first:** Ogni decisione significativa deve essere registrata in un ADR in [`adr/`](./adr/). Se non è documentata, non è stata presa.
+- **Default Open:** Comunicazione asincrona e trasparente tra tutti gli agenti tramite il repository GitHub. Nessuna informazione rilevante deve restare confinata in un singolo ruolo.
 - **Compliance by Design:** La tracciabilità, la sicurezza dei dati e la conformità normativa non sono feature aggiuntive — sono requisiti architetturali fondamentali integrati nel codice dal giorno zero.
 - **PMI-first Thinking:** Ogni decisione di prodotto deve essere valutata dal punto di vista dell'utente meno digitalizzato della filiera (il terzista). Se funziona per lui, funziona per tutti.
 
@@ -96,7 +97,7 @@ Ogni escalation verso il Founder o il CEO deve contenere:
 
 ## 8. Approvazione Formale del Manifesto
 
-- **Versione:** 1.0 (Approvata)
-- **Data di Approvazione:** 17 Ottobre 2026
+- **Versione:** 1.1 (Aggiornata con orchestrazione nativa Google Antigravity + GitHub; OpenClaw `suspended`)
+- **Data di Approvazione:** 18 Ottobre 2026
 - **Approvato da:** Founder
 - **Stato:** Attivo e vincolante per tutti gli agenti e processi di Footlink

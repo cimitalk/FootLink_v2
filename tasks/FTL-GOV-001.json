@@ -1,0 +1,36 @@
+{
+  "task_id": "FTL-GOV-001",
+  "title": "Setup del framework di governance e creazione del primo ADR",
+  "description": "Creare il registro ADR iniziale in adr/, configurare il JSON Schema e i file Task Object nella cartella tasks/ per l'orchestrazione su Google Antigravity (con OpenClaw suspended), validare lo schema e pubblicare le regole di processo alla C-Suite in docs/governance/.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CGO",
+  "assignee_agent": "footlink-cgo",
+  "created_by": "Founder",
+  "created_at": "2026-10-18T02:00:00+02:00",
+  "updated_at": "2026-10-18T02:23:00+02:00",
+  "due_date": "2026-10-20T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2h)",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "adr/README.md",
+    "adr/ADR-000-template.md",
+    "adr/ADR-001-antigravity-orchestration-and-task-schema.md",
+    "tasks/schema/task-object-v1.schema.json",
+    "docs/governance/process_rules_v1.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": "ADR-001",
+  "tags": ["governance", "infra"],
+  "acceptance_criteria": [
+    "Registro ADR inizializzato con ADR-001 approvato",
+    "JSON Schema v1.0 presente in tasks/schema/task-object-v1.schema.json",
+    "Regole di processo distribuite in docs/governance/process_rules_v1.md",
+    "Tutti i 6 bootstrap task inizializzati in tasks/"
+  ],
+  "notes": "Completato durante il setup iniziale della governance su Google Antigravity."
+}

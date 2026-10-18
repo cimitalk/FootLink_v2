@@ -1,0 +1,42 @@
+{
+  "task_id": "FTL-TECH-001",
+  "title": "Setup architettura core (Python / React / PostgreSQL) e pipeline CI/CD",
+  "description": "Formalizzare l'ADR-002 per confermare l'architettura applicativa basata su Python (FastAPI), React e PostgreSQL su piano free-tier. Predisporre la configurazione iniziale del repository (workflow di GitHub Actions per linting, test e validazione JSON task, e scaffolding iniziale backend/frontend).",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder",
+  "created_at": "2026-10-18T02:00:00+02:00",
+  "updated_at": "2026-10-18T09:04:31+02:00",
+  "due_date": "2026-10-25T23:59:59+02:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": "M (1gg)",
+  "dependencies": [
+    "FTL-GOV-001",
+    "FTL-CEO-001"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "adr/ADR-002-core-architecture-free-tier.md",
+    ".github/workflows/ci.yml",
+    "backend/",
+    "frontend/"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Richiede approvazione L3 del Founder sull'ADR-002 (Architettura Core & Hosting Free-Tier).",
+  "escalation_level": "L3",
+  "decision_record_id": "ADR-002",
+  "tags": [
+    "infra",
+    "PLM",
+    "PIM",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "ADR-002 redatto con analisi hosting free-tier a costo 0 €",
+    "Workflow GitHub Actions configurato per CI e validazione task",
+    "Scaffolding iniziale Python FastAPI (backend/) e React TypeScript (frontend/)"
+  ],
+  "notes": "Completato da CTO (footlink-cto): redatto ADR-002 con analisi FinOps Cost-to-Serve (Terzisti 0 €, PMI, Brand, Margine Lordo >75%), configurata pipeline CI in .github/workflows/ci.yml e creato scaffolding backend FastAPI (1 PIM <-> N PLM, BOM multi-livello, DPP UE) + frontend React TypeScript. In stato 'review' per approvazione L3 del Founder nella Founder Control Dashboard."
+}

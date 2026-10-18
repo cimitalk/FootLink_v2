@@ -1,0 +1,32 @@
+{
+  "task_id": "FTL-CEO-001",
+  "title": "Definizione OKR Q1 e Kick-off Ufficiale della C-Suite",
+  "description": "Formalizzare il documento degli OKR per il primo trimestre di Footlink in coerenza con il Manifesto approvato (sviluppo MVP PLM/PIM con modello 1:N, stack Python/React/PostgreSQL su free-tier, modello commerciale a rete e marketing organico nei distretti). Convocare il primo C-Suite sync e sbloccare i task di CTO, CPO, CRO e CMO.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder",
+  "created_at": "2026-10-18T02:00:00+02:00",
+  "updated_at": "2026-10-18T02:49:00+02:00",
+  "due_date": "2026-10-21T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2h)",
+  "dependencies": ["FTL-GOV-001"],
+  "blocked_by": [],
+  "output_artifacts": [
+    "docs/okr/OKR-2026-Q4-2027-Q1.md",
+    "docs/okr/c-suite-kickoff-minutes.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-001",
+  "tags": ["governance", "product", "sales", "marketing"],
+  "acceptance_criteria": [
+    "Documento OKR trimestrale redatto con KPI misurabili per ogni C-Level",
+    "Verbale operativo del primo C-Suite sync con assegnazione mandati",
+    "Calendario dei sync ricorrenti definito per Google Antigravity"
+  ],
+  "notes": "Completato: formalizzati OKR trimestrali (docs/okr/OKR-2026-Q4-2027-Q1.md) e verbale di kick-off C-Suite con calendario sync (docs/okr/c-suite-kickoff-minutes.md). Sbloccati i task dipendenti FTL-TECH-001, FTL-PROD-001, FTL-REV-001 e FTL-MKT-001."
+}

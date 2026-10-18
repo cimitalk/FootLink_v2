@@ -1,0 +1,4 @@
+[main/sessions/main/58b1f859-9858-43b9-83b0-7db593eee7f8#L16] User: Ciao! Confermi che la tua directory di lavoro è FootLink_v2 e che riesci a vedere i file dei ruoli C-Level e il Manifesto?
+[main/sessions/main/58b1f859-9858-43b9-83b0-7db593eee7f8#L20] User: Ciao! Confermi che la tua directory di lavoro è FootLink_v2 e che riesci a vedere i file dei ruoli C-Level e il Manifesto?
+[main/sessions/main/58b1f859-9858-43b9-83b0-7db593eee7f8#L25] User: Ciao! Confermi che la tua directory di lavoro è FootLink_v2 e che riesci a vedere i file dei ruoli C-Level e il Manifesto?
+[main/sessions/main/58b1f859-9858-43b9-83b0-7db593eee7f8#L51] Assistant: Ciao Andrea! Ciao! Confermo: 1. **Directory di lavoro:** `/Users/a.ciminaritodsgroup.com/Projects/FootLink_v2` (`FootLink_v2`). 2. **File del Manifesto presenti e accessibili:** - `Manifesto_Fondazione_Footlink.md` 3. **File dei ruoli C-Level presenti e accessibili:** 
