@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Footlink OS Live Application — 1 PIM ↔ N PLM · BOM 3 Livelli · Terzisti 0 € · EU DPP Live</title>
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --panel-alt: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --sky: #38bdf8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .brand-row { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--sky), var(--emerald));
+      color: #020617; font-weight: 900; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .container { max-width: 1280px; margin: 0 auto; padding: 20px 24px 60px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+    .section-head {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border);
+      padding-bottom: 14px; margin-bottom: 16px;
+    }
+    .pill {
+      display: inline-block; font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.7px;
+      padding: 3px 10px; border-radius: 999px;
+    }
+    .pill-sky { background: rgba(56, 189, 248, 0.15); color: var(--sky); border: 1px solid rgba(56, 189, 248, 0.4); }
+    .pill-purple { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); }
+    .pill-emerald { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .btn {
+      cursor: pointer; border: none; border-radius: 10px;
+      padding: 9px 15px; font-size: 12.5px; font-weight: 800;
+      transition: all 0.15s ease;
+    }
+    .btn-sky { background: var(--sky); color: #020617; }
+    .btn-sky:hover { filter: brightness(1.1); }
+    .btn-emerald { background: var(--emerald); color: #020617; }
+    .btn-emerald:hover { filter: brightness(1.1); }
+    .btn-purple { background: var(--purple); color: #ffffff; }
+    .pim-tabs { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .pim-tab {
+      background: #020617; border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 16px; cursor: pointer;
+      display: flex; align-items: center; gap: 12px; color: var(--text);
+      text-align: left;
+    }
+    .pim-tab.active {
+      border-color: var(--sky);
+      background: rgba(56, 189, 248, 0.12);
+      box-shadow: 0 0 0 1px var(--sky);
+    }
+    .grid-bridge {
+      display: grid; grid-template-columns: 5fr 1fr 6fr; gap: 16px; align-items: center;
+    }
+    .grid-split {
+      display: grid; grid-template-columns: 7fr 5fr; gap: 20px;
+    }
+    .grid-dpp {
+      display: grid; grid-template-columns: 4fr 8fr; gap: 20px; align-items: start;
+    }
+    @media (max-width: 960px) {
+      .grid-bridge, .grid-split, .grid-dpp { grid-template-columns: 1fr; }
+    }
+    .variant-card {
+      background: #020617; border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; cursor: pointer;
+    }
+    .variant-card.active {
+      border-color: var(--emerald);
+      background: rgba(16, 185, 129, 0.1);
+    }
+    .bom-node {
+      background: #020617; border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 14px; margin-top: 8px;
+    }
+    .bom-children {
+      margin-left: 22px; padding-left: 14px; border-left: 2px dashed #475569;
+    }
+    .phone-frame {
+      max-width: 370px; margin: 0 auto; background: #020617;
+      border: 4px solid #475569; border-radius: 30px; padding: 14px;
+    }
+    .stepper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    .step-box {
+      font-size: 11px; font-weight: 800; text-align: center;
+      padding: 6px; border-radius: 8px; background: #0f172a; border: 1px solid var(--border);
+    }
+    .step-box.active { border-color: var(--sky); color: var(--sky); background: rgba(56,189,248,0.15); }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .kpi-box { background: #020617; border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.82);
+      display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: #ffffff; color: #0f172a; max-width: 720px; width: 100%;
+      border-radius: 18px; overflow: hidden; max-height: 88vh; display: flex; flex-direction: column;
+    }
+    input, select {
+      background: #0f172a; border: 1px solid #475569; color: #ffffff;
+      padding: 7px 10px; border-radius: 8px; font-size: 12.5px; width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand-row">
+      <div class="logo-badge">FL</div>
+      <div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <strong style="font-size:16px;">Footlink PLM + PIM Core OS (Sprint 2 Live App)</strong>
+          <span class="pill pill-emerald">0 € Free-Tier Architecture</span>
+        </div>
+        <div style="font-size:12px; color:var(--muted);">
+          FTL-TECH-002 (DB SQLite + Ponte 1 PIM ↔ N PLM + BOM 3 Livelli + Terzisti 0 €) &amp; FTL-TECH-003 (Passaporto Digitale DPP UE + QR SVG)
+        </div>
+      </div>
+    </div>
+    <div id="conn-badge" class="pill pill-sky">⚡ Database SQLite Seed Attivo (2 SKU · 5 Varianti PLM)</div>
+  </header>
+
+  <div class="container">
+    <!-- 1. Ponte 1 PIM <-> N PLM -->
+    <div class="card">
+      <div class="section-head">
+        <div>
+          <span class="pill pill-sky">Dominio Core · ADR-002</span>
+          <h2 style="margin:6px 0 4px; font-size:19px;">1. Ponte Architetturale: 1 Articolo Commerciale PIM ↔ N Varianti Tecniche PLM</h2>
+          <div style="font-size:13px; color:var(--muted);">
+            Seleziona un Articolo Commerciale PIM o aggiungi in tempo reale una nuova Variante Tecnica di Produzione PLM.
+          </div>
+        </div>
+        <button class="btn btn-sky" onclick="toggleVariantForm()">+ Aggiungi Variante PLM (Lato N)</button>
+      </div>
+
+      <div id="pim-tabs" class="pim-tabs"></div>
+
+      <div id="add-variant-form" style="display:none; background:#020617; border:1px solid var(--sky); border-radius:12px; padding:14px; margin-bottom:16px;">
+        <div style="font-size:12px; font-weight:800; color:var(--sky); margin-bottom:10px;">Nuova Variante Tecnica di Produzione PLM collegata all'Articolo PIM selezionato</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; align-items:end;">
+          <div>
+            <label style="font-size:11px; color:var(--muted);">Codice Variante PLM</label>
+            <input id="inp-var-code" placeholder="es. FTL-LOAFER-01-BLU" value="FTL-LOAFER-01-BLU-NAVY" />
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">Colore / Materiale</label>
+            <input id="inp-var-color" placeholder="es. Camoscio Blu Navy" value="Camoscio Blu Navy" />
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">Forma / Cartamodello</label>
+            <input id="inp-var-last" value="FORMA-FM-108" />
+          </div>
+          <button class="btn btn-emerald" onclick="addPlmVariant()">Salva Variante PLM</button>
+        </div>
+      </div>
+
+      <div id="bridge-view" class="grid-bridge"></div>
+    </div>
+
+    <!-- 2. Split BOM a 3 Livelli + Portale Mobile Terzista 3 Clic a 0 € -->
+    <div class="grid-split">
+      <div class="card" style="margin-bottom:0;">
+        <div class="section-head">
+          <div>
+            <span class="pill pill-purple">Gerarchia L1 → L2 → L3</span>
+            <h3 id="bom-title" style="margin:6px 0 2px; font-size:17px;">2. Distinta Base (BOM) a 3 Livelli</h3>
+            <div style="font-size:12px; color:var(--muted);">Livello 1 (Diretto) → Livello 2 (Sotto-Assieme) → Livello 3 (Materia Prima / Filato / Mescola)</div>
+          </div>
+          <button class="btn btn-purple" onclick="toggleBomForm()">+ Nodo BOM</button>
+        </div>
+
+        <div id="add-bom-form" style="display:none; background:#020617; border:1px solid var(--purple); border-radius:12px; padding:12px; margin-bottom:12px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div>
+              <label style="font-size:11px; color:var(--muted);">Livello Gerarchico</label>
+              <select id="inp-bom-level">
+                <option value="1">Livello 1 (Componente Diretto)</option>
+                <option value="2" selected>Livello 2 (Sotto-Assieme)</option>
+                <option value="3">Livello 3 (Materia Prima)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">Materiale / Componente</label>
+              <input id="inp-bom-mat" value="Rinforzo Punta Termoplastico Riciclato" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">Fornitore &amp; Distretto</label>
+              <input id="inp-bom-sup" value="TecnoComponenti Marche Srl" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">% Riciclato &amp; Certificazioni</label>
+              <input id="inp-bom-rec" type="number" value="75" />
+            </div>
+          </div>
+          <button class="btn btn-emerald" style="width:100%;" onclick="addBomNode()">Inserisci Nodo nella BOM a 3 Livelli</button>
+        </div>
+
+        <div id="bom-tree-container"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:0;">
+        <div class="section-head">
+          <div>
+            <span class="pill pill-emerald">Zero-Training UX · Licenza 0,00 €</span>
+            <h3 style="margin:6px 0 2px; font-size:17px;">3. Portale Mobile Terzista "3 Clic a 0 €"</h3>
+            <div style="font-size:12px; color:var(--muted);">Conferma lotti di produzione in 3 clic dagli smartphone dei laboratori di distretto.</div>
+          </div>
+        </div>
+
+        <div class="phone-frame">
+          <div style="width:56px; height:5px; background:#475569; border-radius:99px; margin:0 auto 10px;"></div>
+          <div style="background:#0f172a; border:1px solid var(--border); border-radius:18px; padding:12px;">
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:8px;">
+              <span>📱 Footlink Terzista Mobile</span>
+              <strong style="color:var(--emerald);">FREE TIER 0 €</strong>
+            </div>
+            <div class="stepper">
+              <div id="st-1" class="step-box active">1. Scegli Fase</div>
+              <div id="st-2" class="step-box">2. Lotto Pelle</div>
+              <div id="st-3" class="step-box">3. Conferma</div>
+            </div>
+
+            <div style="font-size:11.5px; font-weight:700; margin-bottom:6px;">CLIC 1 · Seleziona Fase Terzista:</div>
+            <div id="sub-list"></div>
+
+            <div style="background:#020617; border:1px solid var(--border); border-radius:10px; padding:10px; margin-top:10px;">
+              <label style="font-size:11px; font-weight:700; color:var(--amber); display:block; margin-bottom:4px;">
+                CLIC 2 · Verifica / Scansiona Codice Lotto Materiale:
+              </label>
+              <div style="display:flex; gap:6px;">
+                <input id="inp-lot-code" style="font-family:monospace;" />
+                <button class="btn" style="background:var(--amber); color:#020617; white-space:nowrap;" onclick="validateLotClick2()">Valida</button>
+              </div>
+            </div>
+
+            <button class="btn btn-emerald" style="width:100%; margin-top:10px; padding:12px; font-size:13px;" onclick="confirmStepClick3()">
+              ✓ CLIC 3 · Conferma Fase &amp; Aggiorna DPP UE (0 €)
+            </button>
+            <div id="sub-toast" style="display:none; margin-top:8px; background:rgba(16,185,129,0.2); border:1px solid var(--emerald); color:#a7f3d0; padding:8px; border-radius:8px; font-size:11.5px; text-align:center; font-weight:700;">
+              🎉 Fase confermata in 3 clic! Passaporto Digitale UE aggiornato istantaneamente.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Generatore Live Passaporto Digitale del Prodotto (DPP UE / ESPR) -->
+    <div class="card" style="margin-top:20px;">
+      <div class="section-head">
+        <div>
+          <span class="pill pill-sky">FTL-TECH-003 · Regolamento Europeo ESPR (EU DPP)</span>
+          <h2 style="margin:6px 0 4px; font-size:19px;">4. Generatore Live Passaporto Digitale del Prodotto (DPP UE) &amp; QR Code SVG Navigabile</h2>
+          <div style="font-size:13px; color:var(--muted);">
+            Il QR Code SVG viene sintetizzato dinamicamente dall'Articolo PIM, dalle N Varianti PLM, dalla BOM a 3 livelli e dalle conferme Terzisti. Clicca sul QR Code per aprire il Passaporto Pubblico UE!
+          </div>
+        </div>
+        <button class="btn btn-sky" onclick="openPublicPassportModal()">🔍 Apri Passaporto Pubblico UE (Simula Scansione QR)</button>
+      </div>
+
+      <div id="dpp-container" class="grid-dpp"></div>
+    </div>
+  </div>
+
+  <!-- Modal Passaporto Pubblico UE -->
+  <div id="passport-modal" class="modal-backdrop" onclick="if(event.target===this) closePublicPassportModal()">
+    <div class="modal-card">
+      <div id="modal-header" style="background:linear-gradient(135deg, #1e3a8a, #0f172a); color:#fff; padding:18px 22px; display:flex; justify-content:space-between; align-items:center;"></div>
+      <div id="modal-body" style="padding:20px 22px; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <script>
+    const PIM_DATA = [
+      {
+        pim_item_id: "PIM-DUCA-001",
+        sku_code: "FTL-FW26-LOAFER-01",
+        model_name: "Mocassino Artigianale Duca",
+        brand_tenant_id: "TENANT-CALZATURIFICIO-ROSSI",
+        season: "FW26",
+        category: "footwear",
+        commercial_description_it: "Mocassino classico cucito Blake in vitello pieno fiore e camoscio certificato LWG Gold, lavorato nei distretti di Fermo-Macerata, Santa Croce sull'Arno e Riviera del Brenta.",
+        retail_channels: ["B2B Showroom Milano", "E-Commerce Flagship", "Boutique Wholesale"],
+        plm_variants: [
+          {
+            plm_variant_id: "PLM-DUCA-NERO",
+            variant_code: "FTL-LOAFER-01-VIT-NERO",
+            colorway_name: "Vitello Nero Spazzolato",
+            size_range: "38-46",
+            last_or_pattern_code: "FORMA-FM-108",
+            lifecycle_status: "in_production",
+            bom_items: [
+              { bom_item_id: "BOM-DUCA-L1-UPPER", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Tomaia Accoppiata Vitello Pieno Fiore Nero", supplier_name: "Conceria Santa Croce SpA", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 3.15, waste_percentage: 7.5, recycled_content_pct: 20, certifications: ["LWG Gold", "REACH", "ISO 14001"] },
+              { bom_item_id: "BOM-DUCA-L2-LINING", level: 2, parent_bom_item_id: "BOM-DUCA-L1-UPPER", component_type: "lining", material_name: "Fodera Capra Concia Vegetale", supplier_name: "Conceria Valdarno Srl", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 2.40, waste_percentage: 6.0, recycled_content_pct: 35, certifications: ["LWG Gold", "Pelle Conciata al Vegetale"] },
+              { bom_item_id: "BOM-DUCA-L3-THREAD", level: 3, parent_bom_item_id: "BOM-DUCA-L2-LINING", component_type: "sub_assembly", material_name: "Filato Cucitura Rinforzato rPET Titolo 20", supplier_name: "Filature Lombarde Srl", origin_country_iso2: "IT", unit_of_measure: "m", unit_consumption: 18.5, waste_percentage: 2.0, recycled_content_pct: 100, certifications: ["GRS", "OEKO-TEX Standard 100"] },
+              { bom_item_id: "BOM-DUCA-L1-SOLE", level: 1, parent_bom_item_id: null, component_type: "outsole", material_name: "Suola Cuoio Toscano Cucita Blake", supplier_name: "Suolificio Adriatico Srl", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 3.0, recycled_content_pct: 30, certifications: ["LWG Silver", "REACH"] },
+              { bom_item_id: "BOM-DUCA-L2-HEEL", level: 2, parent_bom_item_id: "BOM-DUCA-L1-SOLE", component_type: "heel", material_name: "Tacco Stratificato Cuoio e Gomma Naturale", supplier_name: "Tacchificio Marche Srl", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 2.5, recycled_content_pct: 45, certifications: ["REACH", "FSC Mix"] },
+              { bom_item_id: "BOM-DUCA-L3-COMPOUND", level: 3, parent_bom_item_id: "BOM-DUCA-L2-HEEL", component_type: "sub_assembly", material_name: "Mescola Battistrada Gomma Vergine & Riciclata", supplier_name: "GommaTech Civitanova Srl", origin_country_iso2: "IT", unit_of_measure: "kg", unit_consumption: 0.18, waste_percentage: 1.5, recycled_content_pct: 65, certifications: ["GRS", "REACH"] }
+            ],
+            subcontractor_assignments: [
+              { assignment_id: "SUB-DUCA-01", subcontractor_name: "Conceria Santa Croce SpA", district: "Santa Croce sull'Arno", phase: "Concia & Pelle", material_lot_code: "LOT-CSC-2026-104A", completed: true },
+              { assignment_id: "SUB-DUCA-02", subcontractor_name: "Tomaificio Fratelli Bianchi", district: "Fermo-Macerata", phase: "Orlatura Tomaia", material_lot_code: "LOT-TFB-2026-219B", completed: true },
+              { assignment_id: "SUB-DUCA-03", subcontractor_name: "Montaggio Artigiano Montegranaro", district: "Fermo-Macerata", phase: "Montaggio & Suolatura", material_lot_code: "LOT-MAM-2026-330C", completed: false }
+            ]
+          },
+          {
+            plm_variant_id: "PLM-DUCA-CUOIO",
+            variant_code: "FTL-LOAFER-01-CAM-CUOIO",
+            colorway_name: "Camoscio Cuoio Idrorepellente",
+            size_range: "38-46",
+            last_or_pattern_code: "FORMA-FM-108",
+            lifecycle_status: "industrialized",
+            bom_items: [
+              { bom_item_id: "BOM-DUCA2-L1-UPPER", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Tomaia Camoscio Idrorepellente Cuoio Toscano", supplier_name: "Conceria Veneto Pelle Srl", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 3.25, waste_percentage: 8.0, recycled_content_pct: 25, certifications: ["LWG Gold", "REACH"] },
+              { bom_item_id: "BOM-DUCA2-L2-INSOLE", level: 2, parent_bom_item_id: "BOM-DUCA2-L1-UPPER", component_type: "insole", material_name: "Sottopiede Anatomico Lattice e Cuoio Rigenerato", supplier_name: "Suolificio Brenta Srl", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 3.0, recycled_content_pct: 50, certifications: ["GRS", "REACH"] },
+              { bom_item_id: "BOM-DUCA2-L3-SHANK", level: 3, parent_bom_item_id: "BOM-DUCA2-L2-INSOLE", component_type: "hardware", material_name: "Cambrione Acciaio Temperato 85% Riciclato", supplier_name: "Minuterie Metalliche Padova", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 1.0, recycled_content_pct: 85, certifications: ["GRS", "ISO 14001"] }
+            ],
+            subcontractor_assignments: [
+              { assignment_id: "SUB-DUCA-04", subcontractor_name: "Tranceria Riviera Srl", district: "Riviera del Brenta", phase: "Taglio Pelle", material_lot_code: "LOT-TRV-2026-412A", completed: true },
+              { assignment_id: "SUB-DUCA-05", subcontractor_name: "Finissaggio Artigiano Stra", district: "Riviera del Brenta", phase: "Finissaggio", material_lot_code: "LOT-FAS-2026-518D", completed: false }
+            ]
+          },
+          {
+            plm_variant_id: "PLM-DUCA-BORDEAUX",
+            variant_code: "FTL-LOAFER-01-CRUST-BORD",
+            colorway_name: "Crust Bordeaux Anticato Mano Cera",
+            size_range: "36-41",
+            last_or_pattern_code: "FORMA-FM-108W",
+            lifecycle_status: "sample",
+            bom_items: [
+              { bom_item_id: "BOM-DUCA3-L1-UPPER", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Tomaia Crust Anticato Bordeaux", supplier_name: "Conceria Chienti Srl", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 2.95, waste_percentage: 7.0, recycled_content_pct: 20, certifications: ["LWG Gold", "REACH"] },
+              { bom_item_id: "BOM-DUCA3-L2-CLAMP", level: 2, parent_bom_item_id: "BOM-DUCA3-L1-UPPER", component_type: "hardware", material_name: "Morsetto Frontale Ottone Nickel-Free", supplier_name: "Accessori Moda Civitanova", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 1.0, recycled_content_pct: 60, certifications: ["REACH", "OEKO-TEX"] },
+              { bom_item_id: "BOM-DUCA3-L3-GALV", level: 3, parent_bom_item_id: "BOM-DUCA3-L2-CLAMP", component_type: "sub_assembly", material_name: "Bagno Galvanico Eco-Gold Senza Cianuro", supplier_name: "Galvanica EcoMarche Srl", origin_country_iso2: "IT", unit_of_measure: "pcs", unit_consumption: 2.0, waste_percentage: 0.5, recycled_content_pct: 50, certifications: ["ISO 14001", "REACH"] }
+            ],
+            subcontractor_assignments: [
+              { assignment_id: "SUB-DUCA-06", subcontractor_name: "Controllo Qualità Calzaturiero Marche", district: "Fermo-Macerata", phase: "Qualità Finale", material_lot_code: "LOT-CQM-2026-601E", completed: true }
+            ]
+          }
+        ]
+      },
+      {
+        pim_item_id: "PIM-VELA-002",
+        sku_code: "FTL-FW26-TOTE-02",
+        model_name: "Borsa Shopping Vela",
+        brand_tenant_id: "TENANT-MAISON-FIRENZE",
+        season: "FW26",
+        category: "leather_goods",
+        commercial_description_it: "Shopping bag strutturata in vacchetta toscana conciata al vegetale e grana dollaro, prodotta tra Scandicci, Santa Croce sull'Arno e Tolentino con tracciabilità DPP UE.",
+        retail_channels: ["Boutique Diretta", "E-Commerce Global", "Department Stores EU"],
+        plm_variants: [
+          {
+            plm_variant_id: "PLM-VELA-COGNAC",
+            variant_code: "FTL-TOTE-02-VAC-COGNAC",
+            colorway_name: "Vacchetta Cognac Naturale",
+            size_range: "OS",
+            last_or_pattern_code: "MOD-SCANDICCI-44",
+            lifecycle_status: "in_production",
+            bom_items: [
+              { bom_item_id: "BOM-VELA-L1-BODY", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Quadranti Vacchetta Conciata al Vegetale", supplier_name: "Consorzio Vera Pelle Santa Croce", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 6.8, waste_percentage: 9.0, recycled_content_pct: 30, certifications: ["LWG Gold", "Pelle Conciata al Vegetale", "REACH"] },
+              { bom_item_id: "BOM-VELA-L2-HANDLE", level: 2, parent_bom_item_id: "BOM-VELA-L1-BODY", component_type: "sub_assembly", material_name: "Manici Tubolari Cuciti a Mano", supplier_name: "Pelletteria Artigiana Scandicci", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 4.0, recycled_content_pct: 40, certifications: ["LWG Gold", "REACH"] },
+              { bom_item_id: "BOM-VELA-L3-ROPE", level: 3, parent_bom_item_id: "BOM-VELA-L2-HANDLE", component_type: "fabric", material_name: "Anima Interna Corda Canapa Rigenerata", supplier_name: "Tessitura Pratese Circolare Srl", origin_country_iso2: "IT", unit_of_measure: "m", unit_consumption: 1.4, waste_percentage: 1.5, recycled_content_pct: 95, certifications: ["GRS", "OEKO-TEX Standard 100"] }
+            ],
+            subcontractor_assignments: [
+              { assignment_id: "SUB-VELA-01", subcontractor_name: "Conceria San Miniato Srl", district: "Santa Croce sull'Arno", phase: "Concia Vegetale", material_lot_code: "LOT-CSM-2026-771A", completed: true },
+              { assignment_id: "SUB-VELA-02", subcontractor_name: "Pelletteria Artigiana Scandicci", district: "Scandicci-Firenze", phase: "Cucitura & Assemblaggio", material_lot_code: "LOT-PAS-2026-882B", completed: false }
+            ]
+          },
+          {
+            plm_variant_id: "PLM-VELA-OLIVA",
+            variant_code: "FTL-TOTE-02-GRANA-OLIVA",
+            colorway_name: "Vitello Grana Dollaro Verde Oliva",
+            size_range: "OS",
+            last_or_pattern_code: "MOD-SCANDICCI-44",
+            lifecycle_status: "industrialized",
+            bom_items: [
+              { bom_item_id: "BOM-VELA2-L1-BODY", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Quadranti Vitello Grana Dollaro Oliva", supplier_name: "Conceria Tolentino SpA", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 6.6, waste_percentage: 8.5, recycled_content_pct: 25, certifications: ["LWG Gold", "REACH"] },
+              { bom_item_id: "BOM-VELA2-L2-ZIP", level: 2, parent_bom_item_id: "BOM-VELA2-L1-BODY", component_type: "hardware", material_name: "Chiusura Zip Metallica Ottone Spazzolato", supplier_name: "Minuterie Metalliche Firenze", origin_country_iso2: "IT", unit_of_measure: "pcs", unit_consumption: 1.0, waste_percentage: 1.0, recycled_content_pct: 55, certifications: ["REACH"] },
+              { bom_item_id: "BOM-VELA2-L3-TAPE", level: 3, parent_bom_item_id: "BOM-VELA2-L2-ZIP", component_type: "fabric", material_name: "Nastro Supporto Zip 100% Poliestere Riciclato", supplier_name: "Nastri Eco Bergamo Srl", origin_country_iso2: "IT", unit_of_measure: "m", unit_consumption: 0.55, waste_percentage: 1.0, recycled_content_pct: 100, certifications: ["GRS", "OEKO-TEX Standard 100"] }
+            ],
+            subcontractor_assignments: [
+              { assignment_id: "SUB-VELA-03", subcontractor_name: "Laboratorio Pelletteria Tolentino", district: "Tolentino-Macerata", phase: "Montaggio Borsa", material_lot_code: "LOT-LPT-2026-910C", completed: true }
+            ]
+          }
+        ]
+      }
+    ];
+
+    let selectedPimIdx = 0;
+    let selectedVarIdx = 0;
+    let selectedSubIdx = 0;
+
+    function generateQrSvg(skuCode) {
+      const size = 25;
+      const matrix = Array.from({ length: size }, () => Array(size).fill(false));
+      const reserved = Array.from({ length: size }, () => Array(size).fill(false));
+      function finder(ro, co) {
+        for (let r = -1; r <= 7; r++) {
+          for (let c = -1; c <= 7; c++) {
+            const rr = ro + r, cc = co + c;
+            if (rr >= 0 && rr < size && cc >= 0 && cc < size) {
+              reserved[rr][cc] = true;
+              if (r >= 0 && r <= 6 && c >= 0 && c <= 6) {
+                if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) matrix[rr][cc] = true;
+              }
+            }
+          }
+        }
+      }
+      finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
+      for (let i = 8; i < size - 8; i++) {
+        reserved[6][i] = reserved[i][6] = true;
+        matrix[6][i] = matrix[i][6] = (i % 2 === 0);
+      }
+      let h = 2166136261;
+      for (let i = 0; i < skuCode.length; i++) { h ^= skuCode.charCodeAt(i); h = Math.imul(h, 16777619); }
+      let idx = 0;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (!reserved[r][c]) {
+            matrix[r][c] = (((h >> (idx % 16)) ^ (r * 7 + c * 13)) & 1) === 1;
+            idx++;
+          }
+        }
+      }
+      const cell = 7, margin = 14;
+      const w = size * cell + margin * 2, ht = w + 26;
+      let rects = "";
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (matrix[r][c]) rects += `<rect x="${margin + c * cell}" y="${margin + r * cell}" width="${cell}" height="${cell}" rx="1" fill="#0f172a"/>`;
+        }
+      }
+      const mid = Math.floor((size * cell) / 2) + margin;
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${ht}" width="${w}" height="${ht}">
+        <rect width="${w}" height="${ht}" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+        ${rects}
+        <rect x="${w/2 - 22}" y="${mid - 12}" width="44" height="24" rx="5" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+        <text x="${w/2}" y="${mid + 4}" text-anchor="middle" fill="#38bdf8" font-family="sans-serif" font-size="10" font-weight="800">EU DPP</text>
+        <text x="${w/2}" y="${ht - 9}" text-anchor="middle" fill="#334155" font-family="monospace" font-size="9.5" font-weight="700">${skuCode}</text>
+      </svg>`;
+    }
+
+    function renderAll() {
+      const pim = PIM_DATA[selectedPimIdx];
+      const variant = pim.plm_variants[selectedVarIdx] || pim.plm_variants[0];
+
+      // 1. Render PIM Tabs
+      document.getElementById("pim-tabs").innerHTML = PIM_DATA.map((item, idx) => `
+        <button class="pim-tab ${idx === selectedPimIdx ? 'active' : ''}" onclick="selectPim(${idx})">
+          <span style="font-size:24px;">${item.category === 'footwear' ? '👞' : '👜'}</span>
+          <div>
+            <div style="font-size:11px; font-family:monospace; color:var(--sky);">${item.sku_code}</div>
+            <div style="font-weight:800; font-size:14px;">${item.model_name}</div>
+            <div style="font-size:11px; color:var(--muted);">1 PIM ↔ ${item.plm_variants.length} Varianti PLM</div>
+          </div>
+        </button>
+      `).join("");
+
+      // 2. Render 1 PIM <-> N PLM Bridge
+      document.getElementById("bridge-view").innerHTML = `
+        <div style="background:linear-gradient(135deg, #020617, #0f172a); border:2px solid var(--sky); border-radius:14px; padding:16px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span class="pill pill-sky">LATO 1 · Articolo Commerciale PIM</span>
+            <span style="font-size:11px; color:var(--muted); font-family:monospace;">${pim.season}</span>
+          </div>
+          <h3 style="margin:4px 0; font-size:18px;">${pim.model_name}</h3>
+          <div style="font-size:12px; font-family:monospace; color:var(--sky); margin-bottom:8px;">SKU: ${pim.sku_code} · ID: ${pim.pim_item_id}</div>
+          <p style="font-size:12px; color:#cbd5e1; margin:0 0 10px;">${pim.commercial_description_it}</p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            ${pim.retail_channels.map(ch => `<span style="font-size:11px; background:#1e293b; padding:3px 9px; border-radius:99px;">🛍️ ${ch}</span>`).join("")}
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div class="pill pill-sky" style="font-size:14px; padding:6px 14px;">1 ↔ ${pim.plm_variants.length}</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:4px;">Ponte Nativo</div>
+        </div>
+        <div>
+          ${pim.plm_variants.map((v, vIdx) => `
+            <div class="variant-card ${vIdx === selectedVarIdx ? 'active' : ''}" onclick="selectVariant(${vIdx})">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div style="font-size:11px; font-family:monospace; color:var(--emerald); font-weight:800;">LATO N · ${v.variant_code}</div>
+                  <div style="font-weight:800; font-size:14px;">${v.colorway_name}</div>
+                </div>
+                <span style="font-size:11px; background:#1e293b; padding:2px 9px; border-radius:99px;">${v.lifecycle_status}</span>
+              </div>
+              <div style="font-size:11.5px; color:var(--muted); margin-top:6px; display:flex; gap:12px; flex-wrap:wrap;">
+                <span>📐 Forma/Modello: <strong style="color:#fff;">${v.last_or_pattern_code}</strong></span>
+                <span>🧩 Nodi BOM: <strong style="color:var(--emerald);">${v.bom_items.length}</strong></span>
+                <span>🏭 Fasi Terzisti: <strong style="color:var(--amber);">${v.subcontractor_assignments.length}</strong></span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      // 3. Render 3-Level BOM Tree
+      document.getElementById("bom-title").innerText = `2. Distinta Base (BOM) a 3 Livelli — ${variant.colorway_name}`;
+      const l1Items = variant.bom_items.filter(b => b.level === 1);
+      function renderBomBranch(item) {
+        const children = variant.bom_items.filter(b => b.parent_bom_item_id === item.bom_item_id);
+        const pillClass = item.level === 1 ? "pill-sky" : (item.level === 2 ? "pill-purple" : "pill-emerald");
+        return `
+          <div class="bom-node">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+              <div>
+                <span class="pill ${pillClass}">LIVELLO ${item.level}</span>
+                <strong style="font-size:13px; margin-left:6px;">${item.material_name}</strong>
+              </div>
+              <span style="font-size:11.5px; color:var(--emerald); font-weight:800;">♻️ Riciclato: ${item.recycled_content_pct}%</span>
+            </div>
+            <div style="font-size:11.5px; color:var(--muted); margin-top:5px;">
+              Fornitore: <strong style="color:#e2e8f0;">${item.supplier_name}</strong> (${item.origin_country_iso2}) · Consumo: ${item.unit_consumption} ${item.unit_of_measure} · Cert: ${item.certifications.join(", ")}
+            </div>
+          </div>
+          ${children.length ? `<div class="bom-children">${children.map(renderBomBranch).join("")}</div>` : ""}
+        `;
+      }
+      document.getElementById("bom-tree-container").innerHTML = l1Items.map(renderBomBranch).join("");
+
+      // 4. Render Subcontractor Mobile Portal
+      const subs = variant.subcontractor_assignments;
+      if (selectedSubIdx >= subs.length) selectedSubIdx = 0;
+      const activeSub = subs[selectedSubIdx];
+      document.getElementById("sub-list").innerHTML = subs.map((s, idx) => `
+        <div onclick="selectSubStep(${idx})" style="cursor:pointer; padding:8px 10px; border-radius:10px; border:1px solid ${idx === selectedSubIdx ? 'var(--sky)' : 'var(--border)'}; background:${idx === selectedSubIdx ? 'rgba(56,189,248,0.12)' : '#020617'}; margin-bottom:6px; font-size:12px;">
+          <div style="display:flex; justify-content:space-between;">
+            <strong>${s.subcontractor_name}</strong>
+            <span style="font-size:10.5px; font-weight:800; color:${s.completed ? 'var(--emerald)' : 'var(--amber)'};">
+              ${s.completed ? '✓ Completato' : '⏳ Da Confermare'}
+            </span>
+          </div>
+          <div style="font-size:11px; color:var(--muted);">📍 ${s.district} · ${s.phase}</div>
+        </div>
+      `).join("");
+      if (activeSub) {
+        document.getElementById("inp-lot-code").value = activeSub.material_lot_code;
+      }
+
+      // 5. Render Live EU DPP & QR Code
+      const allBoms = pim.plm_variants.flatMap(v => v.bom_items);
+      const allSubs = pim.plm_variants.flatMap(v => v.subcontractor_assignments.map(s => ({ ...s, variant_code: v.variant_code })));
+      const avgRec = Math.round(allBoms.reduce((acc, b) => acc + b.recycled_content_pct, 0) / (allBoms.length || 1));
+      const completedSubs = allSubs.filter(s => s.completed).length;
+      const co2 = (14.8 * (1 - avgRec / 250)).toFixed(2);
+      const certs = Array.from(new Set(allBoms.flatMap(b => b.certifications)));
+      const qrSvg = generateQrSvg(pim.sku_code);
+
+      document.getElementById("dpp-container").innerHTML = `
+        <div style="background:#020617; border:1px solid var(--border); border-radius:14px; padding:16px; text-align:center;">
+          <div onclick="openPublicPassportModal()" style="cursor:pointer; display:inline-block; padding:8px; background:#fff; border-radius:14px;" title="Clicca per aprire il Passaporto Pubblico UE">
+            ${qrSvg}
+          </div>
+          <div style="font-family:monospace; font-size:12px; color:var(--sky); font-weight:800; margin-top:8px;">DPP-EU-${pim.sku_code}</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:2px;">https://dpp.footlink.eu/${pim.brand_tenant_id}/${pim.sku_code}</div>
+          <button class="btn btn-sky" style="width:100%; margin-top:10px;" onclick="openPublicPassportModal()">🔗 Clicca QR Code → Vista Consumatore UE</button>
+        </div>
+        <div>
+          <div class="kpi-grid">
+            <div class="kpi-box">
+              <div style="font-size:11px; color:var(--muted);">Ponte 1 PIM ↔ N PLM</div>
+              <div style="font-size:20px; font-weight:900;">1 ↔ ${pim.plm_variants.length}</div>
+              <div style="font-size:11px; color:var(--sky);">${allBoms.length} componenti BOM (3 liv.)</div>
+            </div>
+            <div class="kpi-box">
+              <div style="font-size:11px; color:var(--muted);">Contenuto Riciclato</div>
+              <div style="font-size:20px; font-weight:900; color:var(--emerald);">${avgRec}%</div>
+              <div style="font-size:11px; color:var(--muted);">Media ponderata</div>
+            </div>
+            <div class="kpi-box">
+              <div style="font-size:11px; color:var(--muted);">Carbon Footprint</div>
+              <div style="font-size:20px; font-weight:900; color:var(--sky);">${co2} kg</div>
+              <div style="font-size:11px; color:var(--muted);">CO₂e stimata / unità</div>
+            </div>
+            <div class="kpi-box">
+              <div style="font-size:11px; color:var(--muted);">Fasi Terzisti 0 €</div>
+              <div style="font-size:20px; font-weight:900; color:var(--amber);">${completedSubs}/${allSubs.length}</div>
+              <div style="font-size:11px; color:var(--emerald);">Riparabilità: 9.2/10</div>
+            </div>
+          </div>
+
+          <div style="background:#020617; border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:12px;">
+            <div style="font-size:12px; font-weight:800; margin-bottom:8px;">Certificazioni Verificate &amp; Conformità ESPR</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              ${certs.map(c => `<span class="pill pill-emerald">✓ ${c}</span>`).join("")}
+            </div>
+          </div>
+
+          <div style="background:#020617; border:1px solid var(--border); border-radius:12px; padding:12px;">
+            <div style="font-size:12px; font-weight:800; margin-bottom:8px;">Tracciabilità Lotti &amp; Distretti Manifatturieri Italiani</div>
+            ${allSubs.map(s => `
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #1e293b; font-size:12px;">
+                <div><strong>${s.subcontractor_name}</strong> (${s.district}) · <span style="color:var(--muted);">${s.variant_code}</span></div>
+                <div>
+                  <code style="background:#0f172a; padding:2px 6px; border-radius:4px; color:var(--amber);">${s.material_lot_code}</code>
+                  <strong style="margin-left:6px; color:${s.completed ? 'var(--emerald)' : 'var(--amber)'};">${s.completed ? '✓ Verificato' : '⏳ In Corso'}</strong>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function selectPim(idx) { selectedPimIdx = idx; selectedVarIdx = 0; selectedSubIdx = 0; renderAll(); }
+    function selectVariant(idx) { selectedVarIdx = idx; selectedSubIdx = 0; renderAll(); }
+    function selectSubStep(idx) {
+      selectedSubIdx = idx;
+      document.getElementById("st-2").classList.add("active");
+      document.getElementById("sub-toast").style.display = "none";
+      renderAll();
+    }
+    function validateLotClick2() {
+      document.getElementById("st-2").classList.add("active");
+      document.getElementById("st-3").classList.add("active");
+    }
+    function confirmStepClick3() {
+      const pim = PIM_DATA[selectedPimIdx];
+      const variant = pim.plm_variants[selectedVarIdx];
+      const sub = variant.subcontractor_assignments[selectedSubIdx];
+      if (!sub) return;
+      sub.material_lot_code = document.getElementById("inp-lot-code").value || sub.material_lot_code;
+      sub.completed = true;
+      document.getElementById("st-3").classList.add("active");
+      document.getElementById("sub-toast").style.display = "block";
+      renderAll();
+    }
+    function toggleVariantForm() {
+      const el = document.getElementById("add-variant-form");
+      el.style.display = el.style.display === "none" ? "block" : "none";
+    }
+    function addPlmVariant() {
+      const pim = PIM_DATA[selectedPimIdx];
+      const code = document.getElementById("inp-var-code").value.trim();
+      const color = document.getElementById("inp-var-color").value.trim();
+      const last = document.getElementById("inp-var-last").value.trim();
+      if (!code || !color) return;
+      pim.plm_variants.push({
+        plm_variant_id: "PLM-NEW-" + Date.now(),
+        variant_code: code,
+        colorway_name: color,
+        size_range: "38-46",
+        last_or_pattern_code: last,
+        lifecycle_status: "prototype",
+        bom_items: [
+          { bom_item_id: "BOM-NEW-L1", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Tomaia " + color, supplier_name: "Conceria Certificata IT", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 3.1, waste_percentage: 6.0, recycled_content_pct: 35, certifications: ["LWG Gold", "REACH"] }
+        ],
+        subcontractor_assignments: [
+          { assignment_id: "SUB-NEW-1", subcontractor_name: "Tomaificio Partner Distretto", district: "Fermo-Macerata", phase: "Orlatura Tomaia", material_lot_code: "LOT-NEW-2026-99A", completed: false }
+        ]
+      });
+      selectedVarIdx = pim.plm_variants.length - 1;
+      document.getElementById("add-variant-form").style.display = "none";
+      renderAll();
+    }
+    function toggleBomForm() {
+      const el = document.getElementById("add-bom-form");
+      el.style.display = el.style.display === "none" ? "block" : "none";
+    }
+    function addBomNode() {
+      const pim = PIM_DATA[selectedPimIdx];
+      const variant = pim.plm_variants[selectedVarIdx];
+      const lvl = parseInt(document.getElementById("inp-bom-level").value, 10);
+      const mat = document.getElementById("inp-bom-mat").value.trim();
+      const sup = document.getElementById("inp-bom-sup").value.trim();
+      const rec = parseFloat(document.getElementById("inp-bom-rec").value) || 50;
+      if (!mat || !sup) return;
+      const parentCandidate = variant.bom_items.find(b => b.level === lvl - 1) || variant.bom_items[0];
+      variant.bom_items.push({
+        bom_item_id: "BOM-L" + lvl + "-" + Math.floor(100 + Math.random() * 899),
+        level: lvl,
+        parent_bom_item_id: lvl > 1 && parentCandidate ? parentCandidate.bom_item_id : null,
+        component_type: "sub_assembly",
+        material_name: mat,
+        supplier_name: sup,
+        origin_country_iso2: "IT",
+        unit_of_measure: "pcs",
+        unit_consumption: 1.0,
+        waste_percentage: 3.0,
+        recycled_content_pct: rec,
+        certifications: ["GRS", "REACH"]
+      });
+      document.getElementById("add-bom-form").style.display = "none";
+      renderAll();
+    }
+    function openPublicPassportModal() {
+      const pim = PIM_DATA[selectedPimIdx];
+      const allSubs = pim.plm_variants.flatMap(v => v.subcontractor_assignments.map(s => ({ ...s, variant_code: v.variant_code })));
+      document.getElementById("modal-header").innerHTML = `
+        <div>
+          <div style="font-size:11px; color:var(--sky); font-weight:800; text-transform:uppercase;">🇪🇺 EU ESPR Digital Product Passport · Vista Pubblica Consumatore &amp; Dogana</div>
+          <div style="font-size:19px; font-weight:900; margin-top:2px;">${pim.model_name} (${pim.sku_code})</div>
+        </div>
+        <button class="btn" style="background:#334155; color:#fff;" onclick="closePublicPassportModal()">✕ Chiudi</button>
+      `;
+      document.getElementById("modal-body").innerHTML = `
+        <p style="font-size:13px; color:#475569; margin-top:0;">${pim.commercial_description_it}</p>
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; margin-bottom:14px;">
+          <strong>1 Articolo Commerciale PIM ↔ ${pim.plm_variants.length} Varianti Tecniche PLM Coperte</strong>
+          <div style="font-size:12px; color:#475569; margin-top:4px;">Origine Verificata: <strong>Italia (IT)</strong> · Conformità Regolamento UE ESPR: <strong>100% Verificata</strong></div>
+        </div>
+        <h4 style="margin:10px 0 6px; font-size:13px; text-transform:uppercase; color:#475569;">Tracciabilità Distretti &amp; Lotti Terzisti (0 €)</h4>
+        ${allSubs.map(s => `
+          <div style="display:flex; justify-content:space-between; padding:8px 10px; border-bottom:1px solid #e2e8f0; font-size:12.5px;">
+            <div><strong>${s.subcontractor_name}</strong> (${s.district}) — ${s.phase}</div>
+            <div><code>${s.material_lot_code}</code> · <strong style="color:${s.completed ? '#15803d' : '#b45309'};">${s.completed ? '✓ Certificato' : '⏳ In Lavorazione'}</strong></div>
+          </div>
+        `).join("")}
+      `;
+      document.getElementById("passport-modal").classList.add("open");
+    }
+    function closePublicPassportModal() {
+      document.getElementById("passport-modal").classList.remove("open");
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>

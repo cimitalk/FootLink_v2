@@ -1,0 +1,47 @@
+{
+  "task_id": "FTL-TECH-002",
+  "title": "Implementazione DB persistente (SQLite/PostgreSQL), API 1 PIM <-> N PLM, BOM a 3 livelli e UI React Portale Terzisti 0 €",
+  "description": "Sviluppare in Applicativo/ il layer di persistenza SQLite/PostgreSQL (schema.sql, database.py, orm_models.py, seed.py con dati reali dei distretti calzaturieri e pelletteria italiani), gli endpoint FastAPI per la BOM gerarchica a 3 livelli e il Portale Mobile Terzista '3 Clic a 0 €', e l'applicazione web React + TypeScript interattiva.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "CEO",
+  "created_at": "2026-10-18T09:30:00+02:00",
+  "updated_at": "2026-10-18T21:37:32+02:00",
+  "due_date": "2026-11-01T23:59:59+02:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": "M (1-3gg)",
+  "dependencies": [
+    "FTL-TECH-001",
+    "FTL-PROD-001"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/database/schema.sql",
+    "Applicativo/database/footlink.db",
+    "Applicativo/backend/app/database.py",
+    "Applicativo/backend/app/orm_models.py",
+    "Applicativo/backend/app/seed.py",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/frontend/src/App.tsx",
+    "Applicativo/frontend/app-live-preview.html"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "In revisione estesa del Founder: validazione Database SQLite/PostgreSQL, API FastAPI, UI React Ponte 1:N, BOM a 3 livelli e Portale Mobile Terzista 3 Clic a 0 €.",
+  "escalation_level": "L3",
+  "decision_record_id": "ADR-002",
+  "tags": [
+    "PLM",
+    "PIM",
+    "infra",
+    "product",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "Database SQLite persistente (Applicativo/database/footlink.db) con schema SQL compatibile PostgreSQL e seed automatico Made in Italy",
+    "API FastAPI e UI React con ponte 1 Articolo PIM <-> N Varianti PLM e Distinta Base (BOM) gerarchica a 3 livelli (L1 -> L2 -> L3)",
+    "Flusso completo Portale Mobile Terzista '3 Clic a 0 €' (Scelta Fase, Verifica Lotto, Conferma 1-Tap) con test Pytest 100% verdi"
+  ],
+  "notes": "Completato da CTO (footlink-cto): creati schema.sql, database SQLite pre-popolato footlink.db (2 SKU PIM, 5 Varianti PLM nei distretti di Fermo-Macerata, Santa Croce sull'Arno, Riviera del Brenta, Scandicci e Tolentino), API FastAPI completa, suite React TypeScript modulare e live preview standalone."
+}

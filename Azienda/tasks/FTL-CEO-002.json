@@ -1,0 +1,32 @@
+{
+  "task_id": "FTL-CEO-002",
+  "title": "Direttiva Esecutiva Sprint 2, Allineamento OKR e Audit di Governance Manifesto",
+  "description": "Emettere la direttiva esecutiva dello Sprint 2 nel nuovo layout di repository a 3 pilastri (Azienda/, Applicativo/, Portale_Founder_Control/), mappando i task FTL-TECH-002, FTL-PROD-002, FTL-TECH-003, FTL-MKT-002, FTL-REV-002 e FTL-GOV-002 sugli OKR Q4 2026 - Q1 2027, certificando l'audit di conformità al Manifesto (1 PIM <-> N PLM, Terzisti a 0 €, Margine Lordo > 75%, Red Lines L0-L6) e risolvendo preventivamente le dipendenze incrociate CTO<->CPO e CTO<->CMO.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder",
+  "created_at": "2026-10-18T09:45:00+02:00",
+  "updated_at": "2026-10-18T09:52:00+02:00",
+  "due_date": "2026-10-25T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "XS (<2h)",
+  "dependencies": ["FTL-CEO-001", "FTL-GOV-002"],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/okr/sprint-2-kickoff-and-governance-audit.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-001",
+  "tags": ["governance", "product", "finops", "PIM", "PLM"],
+  "acceptance_criteria": [
+    "Mappatura completa degli obiettivi dello Sprint 2 (FTL-TECH-002, FTL-PROD-002, FTL-TECH-003, FTL-MKT-002, FTL-REV-002, FTL-GOV-002) sugli OKR Q4 2026 - Q1 2027",
+    "Audit formale di conformità al Manifesto di Fondazione (1 PIM <-> N PLM, Terzisti a 0 €, Margine Lordo SaaS > 75% con Cost-to-Serve DB 0 €/mese, Red Lines L0-L6)",
+    "Risoluzione preventiva delle dipendenze incrociate CTO<->CPO e CTO<->CMO con SLA < 24h",
+    "Aggiornamento di Azienda/docs/okr/README.md, Azienda/MEMORY.md e Azienda/memory/2026-10-18.md"
+  ],
+  "notes": "Completato: redatta e firmata la Direttiva Esecutiva Sprint 2 e l'Audit di Governance in Azienda/docs/okr/sprint-2-kickoff-and-governance-audit.md. Certificato il rispetto della regola 1 PIM <-> N PLM, della gratuità perpetua per i terzisti (0 €), del Margine Lordo SaaS > 75% (0 €/mese costo cloud free-tier) e dei gate L2/L3/L4/L5/L6."
+}

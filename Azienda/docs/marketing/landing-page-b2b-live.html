@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FOOTLINK — Il Sistema Operativo per la Moda Italiana. Dal Laboratorio al Passaporto Digitale UE.</title>
+  <meta name="description" content="Connetti i modelli in vendita con i laboratori dei distretti italiani. Distinta base semplificata in 3 livelli, Passaporto Digitale UE con QR Code istantaneo e Terzisti sempre a 0 €." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-white: #FFFFFF;
+      --bg-grey: #F5F5F5;
+      --bg-black: #111111;
+      --text-black: #111111;
+      --text-grey: #707072;
+      --border-light: #E5E5E5;
+      --border-mid: #CCCCCC;
+      --status-green: #10B981;
+      --radius-card: 16px;
+      --radius-pill: 999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background-color: var(--bg-white);
+      color: var(--text-black);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .display-title {
+      font-family: 'Barlow Condensed', 'Impact', 'Helvetica Neue', sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      line-height: 0.94;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Top Utility Bar (Nike Style) */
+    .utility-bar {
+      background-color: var(--bg-grey);
+      border-bottom: 1px solid var(--border-light);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-black);
+      padding: 8px 24px;
+    }
+
+    .utility-inner {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* Header & Navigation */
+    header {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .container {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 76px;
+    }
+
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-black);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-black);
+      font-weight: 600;
+      font-size: 0.92rem;
+      transition: opacity 0.15s;
+    }
+
+    .nav-links a:hover {
+      opacity: 0.65;
+    }
+
+    /* Pill Buttons (Nike Standard) */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      border: 1.5px solid transparent;
+      font-family: inherit;
+      line-height: 1;
+    }
+
+    .btn-black {
+      background-color: var(--bg-black);
+      color: var(--bg-white);
+    }
+
+    .btn-black:hover {
+      background-color: #333333;
+    }
+
+    .btn-white {
+      background-color: var(--bg-white);
+      color: var(--text-black);
+    }
+
+    .btn-white:hover {
+      background-color: #E5E5E5;
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      color: var(--text-black);
+      border-color: var(--border-mid);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--text-black);
+    }
+
+    /* HERO SECTION — EDITORIAL HIGH IMPACT */
+    .hero {
+      padding: 72px 0 80px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .hero-banner {
+      background-color: var(--bg-black);
+      color: var(--bg-white);
+      border-radius: 24px;
+      padding: 72px 64px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .eyebrow-tag {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      color: var(--text-grey);
+    }
+
+    .hero-banner .eyebrow-tag {
+      color: #A3A3A3;
+    }
+
+    .hero h1 {
+      font-size: clamp(3.4rem, 6.2vw, 5.6rem);
+      margin-bottom: 24px;
+      color: var(--bg-white);
+    }
+
+    .hero p.lead {
+      font-size: 1.15rem;
+      color: #D4D4D4;
+      max-width: 580px;
+      margin-bottom: 36px;
+      font-weight: 400;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .hero-metrics {
+      background: #1C1C1E;
+      border: 1px solid #2E2E30;
+      border-radius: 20px;
+      padding: 36px;
+      display: grid;
+      gap: 24px;
+    }
+
+    .metric-row {
+      border-bottom: 1px solid #2E2E30;
+      padding-bottom: 20px;
+    }
+
+    .metric-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .metric-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 0.95;
+      text-transform: uppercase;
+      color: var(--bg-white);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .metric-label {
+      font-size: 0.9rem;
+      color: #A3A3A3;
+    }
+
+    /* SECTION LAYOUT */
+    section.use-case-section {
+      padding: 96px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .section-head {
+      max-width: 780px;
+      margin-bottom: 48px;
+    }
+
+    .section-head h2 {
+      font-size: clamp(2.5rem, 4.5vw, 3.8rem);
+      margin-bottom: 16px;
+    }
+
+    .section-head p {
+      font-size: 1.12rem;
+      color: var(--text-grey);
+    }
+
+    /* Interactive Selector Pills (Nike Product Filter Style) */
+    .filter-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+
+    .pill-tab {
+      padding: 12px 24px;
+      border-radius: var(--radius-pill);
+      border: 1.5px solid var(--border-light);
+      background: var(--bg-white);
+      color: var(--text-black);
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .pill-tab:hover {
+      border-color: var(--text-black);
+    }
+
+    .pill-tab.active {
+      background: var(--bg-black);
+      color: var(--bg-white);
+      border-color: var(--bg-black);
+    }
+
+    /* ============================================================================
+       USE CASE 1: 1 PRODOTTO IN VENDITA -> N LABORATORI IN PRODUZIONE
+       ============================================================================ */
+    .uc1-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 32px;
+      align-items: stretch;
+    }
+
+    .clean-card {
+      background: var(--bg-grey);
+      border-radius: 20px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .clean-card.white-bordered {
+      background: var(--bg-white);
+      border: 1.5px solid var(--border-light);
+    }
+
+    .card-step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-grey);
+      margin-bottom: 16px;
+    }
+
+    .product-visual-stage {
+      background: var(--bg-white);
+      border-radius: 16px;
+      padding: 32px;
+      margin: 20px 0 24px;
+      text-align: center;
+      border: 1px solid var(--border-light);
+    }
+
+    .lot-switcher {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 18px 0 28px;
+    }
+
+    .lot-btn {
+      padding: 16px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border-light);
+      background: var(--bg-grey);
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .lot-btn.active {
+      background: var(--bg-black);
+      color: var(--bg-white);
+      border-color: var(--bg-black);
+    }
+
+    .lot-btn small {
+      display: block;
+      font-size: 0.78rem;
+      opacity: 0.75;
+      margin-top: 4px;
+    }
+
+    .bom-simple-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .bom-simple-row {
+      background: var(--bg-grey);
+      border-radius: 14px;
+      padding: 20px 22px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .bom-level-num {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-black);
+      color: var(--bg-white);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ============================================================================
+       USE CASE 2: PASSAPORTO DIGITALE UE & QR CODE IN 1 CLIC
+       ============================================================================ */
+    .uc2-section {
+      background-color: var(--bg-grey);
+    }
+
+    .uc2-grid {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 32px;
+      align-items: stretch;
+    }
+
+    .hangtag-card {
+      background: var(--bg-white);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      border: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hangtag-hole {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--bg-grey);
+      border: 2px solid var(--border-mid);
+      margin-bottom: 16px;
+    }
+
+    .qr-frame {
+      width: 210px;
+      height: 210px;
+      padding: 16px;
+      border: 2px solid var(--bg-black);
+      border-radius: 16px;
+      margin: 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s;
+      background: var(--bg-white);
+    }
+
+    .qr-frame:hover {
+      transform: scale(1.03);
+    }
+
+    .phone-passport-card {
+      background: var(--bg-white);
+      border-radius: 24px;
+      padding: 40px;
+      border: 1px solid var(--border-light);
+    }
+
+    .passport-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .verified-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-black);
+      color: var(--bg-white);
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--status-green);
+    }
+
+    .four-facts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .fact-box {
+      background: var(--bg-grey);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .fact-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-grey);
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .fact-box h4 {
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+
+    .fact-box p {
+      font-size: 0.92rem;
+      color: var(--text-grey);
+    }
+
+    /* ============================================================================
+       USE CASE 3: 3 CLIC A 0 € PER IL TERZISTA
+       ============================================================================ */
+    .uc3-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .three-steps-guide {
+      display: grid;
+      gap: 16px;
+    }
+
+    .guide-step-card {
+      padding: 24px 28px;
+      border-radius: 16px;
+      border: 1.5px solid var(--border-light);
+      background: var(--bg-white);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .guide-step-card.completed {
+      border-color: var(--bg-black);
+      background: var(--bg-grey);
+    }
+
+    .big-step-circle {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--bg-grey);
+      color: var(--text-black);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .guide-step-card.completed .big-step-circle {
+      background: var(--bg-black);
+      color: var(--bg-white);
+    }
+
+    .terzista-phone {
+      background: var(--bg-black);
+      color: var(--bg-white);
+      border-radius: 32px;
+      padding: 36px 32px;
+      max-width: 460px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .phone-step-group {
+      margin-bottom: 22px;
+    }
+
+    .phone-step-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #A3A3A3;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .phase-btn-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .phase-btn {
+      padding: 12px 10px;
+      border-radius: 10px;
+      border: 1px solid #333333;
+      background: #1C1C1E;
+      color: var(--bg-white);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .phase-btn.selected {
+      background: var(--bg-white);
+      color: var(--text-black);
+      border-color: var(--bg-white);
+    }
+
+    .lot-tap-btn {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1.5px solid #333333;
+      background: #1C1C1E;
+      color: var(--bg-white);
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: inherit;
+    }
+
+    .lot-tap-btn.selected {
+      background: var(--bg-white);
+      color: var(--text-black);
+      border-color: var(--bg-white);
+    }
+
+    .confirm-zero-btn {
+      width: 100%;
+      padding: 18px 24px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-white);
+      color: var(--text-black);
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .confirm-zero-btn:hover {
+      background: #E5E5E5;
+    }
+
+    .terzista-result-banner {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      background: #1C1C1E;
+      border: 1px solid #333333;
+      font-size: 0.88rem;
+      color: #E5E5E5;
+    }
+
+    /* PRICING SECTION */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .price-card {
+      background: var(--bg-grey);
+      border-radius: 20px;
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .price-card.featured-black {
+      background: var(--bg-black);
+      color: var(--bg-white);
+    }
+
+    .price-big {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 3.4rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 0.95;
+      margin: 16px 0 12px;
+    }
+
+    .price-list {
+      list-style: none;
+      margin: 24px 0 32px;
+      display: grid;
+      gap: 12px;
+      font-size: 0.92rem;
+    }
+
+    /* LEAD FORM */
+    .form-box {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--bg-grey);
+      border-radius: 24px;
+      padding: 48px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      padding: 14px 16px;
+      border: 1px solid var(--border-mid);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      background: var(--bg-white);
+      color: var(--text-black);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--bg-black);
+    }
+
+    footer {
+      background: var(--bg-black);
+      color: #A3A3A3;
+      padding: 64px 0;
+      font-size: 0.88rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-banner,
+      .uc1-grid,
+      .uc2-grid,
+      .uc3-grid,
+      .pricing-grid,
+      .four-facts-grid,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-banner {
+        padding: 44px 28px;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Utility Bar -->
+  <div class="utility-bar">
+    <div class="utility-inner">
+      <span>CALZATURE • PELLETTERIA • ABBIGLIAMENTO — DISTRETTI ITALIANI</span>
+      <span class="mono">GATE L5 REVIEW • TERZISTI SEMPRE A 0 €</span>
+    </div>
+  </div>
+
+  <!-- Main Header with New Iconic SVG Logo (Zero 1:N in Logo) -->
+  <header>
+    <div class="container nav-bar">
+      <a href="#top" class="brand-logo" aria-label="FOOTLINK Home">
+        <svg width="168" height="32" viewBox="0 0 168 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 24L14.5 5H24.5L14 24H4Z" fill="#111111"/>
+          <path d="M16 24L23.5 10.5H31.5L24 24H16Z" fill="#111111"/>
+          <path d="M4 26.5H30L28.5 29.5H2.5L4 26.5Z" fill="#111111"/>
+          <text x="39" y="24.5" fill="#111111" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-size="26" letter-spacing="-0.02em">FOOTLINK</text>
+        </svg>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#usecase-1">1. Dal Modello alla Fabbrica</a>
+        <a href="#usecase-2">2. Passaporto Digitale UE</a>
+        <a href="#usecase-3">3. Connessione Laboratori</a>
+        <a href="#pricing">Piani</a>
+        <a href="#pilota" class="btn btn-black">Richiedi Demo</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO SECTION — NIKE EDITORIAL MINIMALISM -->
+  <section class="hero" id="top">
+    <div class="container">
+      <div class="hero-banner">
+        <div>
+          <span class="eyebrow-tag">Sistema Operativo per la Filiera della Moda</span>
+          <h1 class="display-title">
+            UN SOLO PRODOTTO.<br/>
+            TUTTA LA TUA FILIERA.<br/>
+            ZERO FOGLI EXCEL.
+          </h1>
+          <p class="lead">
+            Collega ogni modello in vendita ai laboratori che lo producono nei distretti italiani. Genera in automatico il Passaporto Digitale Europeo con QR Code, con accesso partner gratuito per tutti i reparti esterni.
+          </p>
+          <div class="hero-ctas">
+            <a href="#usecase-1" class="btn btn-white">Esplora i 3 Use Case</a>
+            <a href="#pilota" class="btn btn-outline" style="color:#FFFFFF; border-color:#555555;">Attiva Pilota Distretti</a>
+          </div>
+        </div>
+
+        <div class="hero-metrics">
+          <div class="metric-row">
+            <span class="metric-num">ACCESSO PARTNER GRATUITO</span>
+            <span class="metric-label">Per tutti i tomaifici, suolifici, pelletterie e laboratori esterni della tua rete.</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-num">FILIERA IN TEMPO REALE</span>
+            <span class="metric-label">Avanzamento commesse e validazione lotti direttamente dal banco di lavoro.</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-num">100% PRONTO UE</span>
+            <span class="metric-label">Passaporto Digitale del Prodotto (ESPR) e QR Code generati automaticamente.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================
+       USE CASE 1: 1 PRODOTTO IN VENDITA -> N LABORATORI IN PRODUZIONE
+       ============================================================================ -->
+  <section class="use-case-section" id="usecase-1">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow-tag">Use Case 01 — Il Ponte Commerciale-Fabbrica</span>
+        <h2 class="display-title">1 PRODOTTO IN VENDITA. PIÙ LABORATORI IN PRODUZIONE.</h2>
+        <p>
+          In negozio o in showroom vendi <strong>un solo modello</strong>. Ma in fabbrica puoi produrlo in più lotti o in distretti diversi. Scegli il prodotto qui sotto e guarda come Footlink tiene tutto unito senza duplicare codici.
+        </p>
+      </div>
+
+      <!-- Product Filter Pills -->
+      <div class="filter-pills" role="tablist">
+        <button type="button" class="pill-tab active" id="uc1-tab-shoe" onclick="selectUc1Product('shoe')">
+          Calzatura — Mocassino "Brera"
+        </button>
+        <button type="button" class="pill-tab" id="uc1-tab-bag" onclick="selectUc1Product('bag')">
+          Pelletteria — Borsa Tote "Arno"
+        </button>
+        <button type="button" class="pill-tab" id="uc1-tab-jacket" onclick="selectUc1Product('jacket')">
+          Abbigliamento — Parka Tecnico "Dolomiti"
+        </button>
+      </div>
+
+      <div class="uc1-grid">
+        <!-- Left Column: What the Buyer / Showroom sees (1 Commercial Product) -->
+        <div class="clean-card">
+          <div>
+            <span class="card-step-badge">COSA VEDE IL BUYER / SHOWROOM (1 MODELLO UNICO)</span>
+            <h3 id="uc1-comm-title" style="font-size:1.75rem; font-weight:800; margin-bottom:6px;">Mocassino Penny "Brera"</h3>
+            <p id="uc1-comm-subtitle" style="color:var(--text-grey); font-size:0.95rem;">
+              Vitello Testa di Moro • Collezione Continuativa
+            </p>
+
+            <div class="product-visual-stage" id="uc1-svg-stage">
+              <!-- Minimalist Vector Product Illustration injected by JS -->
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid var(--border-mid);">
+              <div>
+                <span style="font-size:0.78rem; color:var(--text-grey); display:block;">CODICE VENDITA UNICO</span>
+                <strong class="mono" id="uc1-comm-sku" style="font-size:1rem;">BRERA-001</strong>
+              </div>
+              <div style="text-align:right;">
+                <span style="font-size:0.78rem; color:var(--text-grey); display:block;">PREZZO BOUTIQUE</span>
+                <strong id="uc1-comm-price" style="font-size:1.25rem;">390 €</strong>
+              </div>
+            </div>
+          </div>
+
+          <p style="font-size:0.86rem; color:var(--text-grey); margin-top:24px;">
+            Chi compra vede sempre una sola scheda pulita. Non deve sapere se hai prodotto il primo lotto nelle Marche e il riassortimento in Veneto.
+          </p>
+        </div>
+
+        <!-- Right Column: How you produce it in the Districts (N Lots + 3 Clear BOM Levels) -->
+        <div class="clean-card white-bordered">
+          <div>
+            <span class="card-step-badge">COME LO PRODUCI NEI DISTRETTI (CAMBIA LOTTO CON 1 CLIC)</span>
+            <h3 style="font-size:1.4rem; font-weight:800;">Scegli quale lotto di produzione ispezionare:</h3>
+
+            <div class="lot-switcher" id="uc1-lot-buttons">
+              <!-- Populated by JS -->
+            </div>
+
+            <div style="margin-bottom:14px; font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-grey);">
+              La Distinta Base spiegata in 3 semplici livelli:
+            </div>
+
+            <div class="bom-simple-stack" id="uc1-bom-levels">
+              <!-- 3 Simple Levels populated by JS -->
+            </div>
+          </div>
+
+          <div style="margin-top:24px; padding-top:16px; border-top:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:var(--text-grey);">
+            <span>I prezzi dei materiali sono visibili solo a te (mai ai laboratori esterni).</span>
+            <strong style="color:var(--text-black);">Riservatezza Garantita</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================
+       USE CASE 2: PASSAPORTO DIGITALE UE & QR CODE IN 1 CLIC
+       ============================================================================ -->
+  <section class="use-case-section uc2-section" id="usecase-2">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow-tag">Use Case 02 — Conformità Europea Semplificata</span>
+        <h2 class="display-title">PASSAPORTO DIGITALE UE &amp; QR CODE IN 1 CLIC.</h2>
+        <p>
+          La nuova legge europea (ESPR) richiede un QR Code su ogni prodotto per mostrarne origine, materiali e riparabilità. Con Footlink non devi compilare nulla a mano: il QR Code si crea da solo dai dati di fabbrica.
+        </p>
+      </div>
+
+      <!-- Product Selector -->
+      <div class="filter-pills">
+        <button type="button" class="pill-tab active" id="uc2-tab-marche" onclick="selectUc2Passport('marche')">
+          Calzatura Marche (Lotto #MC-881)
+        </button>
+        <button type="button" class="pill-tab" id="uc2-tab-toscana" onclick="selectUc2Passport('toscana')">
+          Borsa Toscana (Lotto #FI-402)
+        </button>
+        <button type="button" class="pill-tab" id="uc2-tab-veneto" onclick="selectUc2Passport('veneto')">
+          Sneaker Veneto (Lotto #TV-915)
+        </button>
+      </div>
+
+      <div class="uc2-grid">
+        <!-- Left: Physical Hangtag with Clickable QR Code -->
+        <div class="hangtag-card">
+          <div style="width:100%;">
+            <div class="hangtag-hole" style="margin:0 auto 16px;"></div>
+            <span class="card-step-badge" style="margin-bottom:6px;">CARTELLINO FISICO SUL PRODOTTO</span>
+            <h3 id="uc2-tag-title" style="font-size:1.35rem; font-weight:800;">Mocassino Penny "Brera"</h3>
+            <p class="mono" id="uc2-tag-lot" style="font-size:0.82rem; color:var(--text-grey); margin-top:4px;">LOTTO CERTIFICATO #MC-881</p>
+
+            <div class="qr-frame" onclick="triggerQrScanPulse()" title="Clicca per simulare la scansione con lo smartphone">
+              <div id="uc2-qr-svg"></div>
+            </div>
+
+            <p style="font-size:0.88rem; color:var(--text-grey); max-width:280px; margin:0 auto 18px;">
+              Inquadrando questo QR Code con il telefono si apre subito il Passaporto Digitale qui a fianco.
+            </p>
+          </div>
+
+          <button type="button" class="btn btn-black" style="width:100%;" onclick="triggerQrScanPulse()">
+            Simula Scansione QR Code →
+          </button>
+        </div>
+
+        <!-- Right: What Opens on the Smartphone (4 Crystal-Clear Facts) -->
+        <div class="phone-passport-card" id="uc2-phone-card">
+          <div class="passport-top-bar">
+            <div>
+              <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-grey); display:block;">
+                SCHERMO DELLO SMARTPHONE (PASSAPORTO DIGITALE UE)
+              </span>
+              <h3 id="uc2-pass-heading" style="font-size:1.55rem; font-weight:800; margin-top:4px;">
+                Mocassino Penny "Brera" — Lotto #MC-881
+              </h3>
+            </div>
+            <span class="verified-pill">
+              <span class="live-dot"></span>
+              Conforme Regolamento UE
+            </span>
+          </div>
+
+          <div class="four-facts-grid">
+            <div class="fact-box">
+              <span class="fact-num">1. DOVE È STATO FATTO</span>
+              <h4 id="uc2-fact-origin-title">100% Filiera Italiana Tracciata</h4>
+              <p id="uc2-fact-origin-desc">
+                Concia a Santa Croce sull'Arno (Toscana), taglio e cucitura a Monte Urano (Marche), montaggio finale a Fermo (Marche).
+              </p>
+            </div>
+
+            <div class="fact-box">
+              <span class="fact-num">2. MATERIALI E CERTIFICAZIONI</span>
+              <h4 id="uc2-fact-mat-title">Pelle Certificata LWG Gold</h4>
+              <p id="uc2-fact-mat-desc">
+                Tomaia in vitello pieno fiore controllato, fodera concia al vegetale senza metalli pesanti (REACH), suola in vero cuoio.
+              </p>
+            </div>
+
+            <div class="fact-box">
+              <span class="fact-num">3. IMPRONTA E MATERIALI RICICLATI</span>
+              <h4 id="uc2-fact-eco-title">38% Componenti Riciclati / Bio</h4>
+              <p id="uc2-fact-eco-desc">
+                Filati e rinforzi interni certificati GRS. Impronta carbonica misurata sul lotto reale: 6,4 kg CO₂e per paio.
+              </p>
+            </div>
+
+            <div class="fact-box">
+              <span class="fact-num">4. RIPARABILITÀ E AUTENTICITÀ</span>
+              <h4 id="uc2-fact-rep-title">Risuolabile • Indice 9,2 / 10</h4>
+              <p id="uc2-fact-rep-desc">
+                Costruzione pensata per durare nel tempo: la suola può essere sostituita fino a 3 volte. Codice unico anti-contraffazione.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================
+       USE CASE 3: CONNESSIONE LABORATORI & REPARTI ESTERNI
+       ============================================================================ -->
+  <section class="use-case-section" id="usecase-3">
+    <div class="container">
+      <div class="uc3-grid">
+        <div>
+          <span class="eyebrow-tag">USE CASE 03 · CONNESSIONE LABORATORI &amp; REPARTI ESTERNI</span>
+          <h2 class="display-title" style="font-size:clamp(2.5rem, 4.5vw, 3.8rem); margin-bottom:16px;">
+            DAL LABORATORIO AL BRAND. IN TEMPO REALE.
+          </h2>
+          <p style="font-size:1.1rem; color:var(--text-grey); margin-bottom:32px;">
+            Il portale mobile gratuito per i laboratori partner: conferma lavorazioni e lotti direttamente dal reparto produttivo, senza installazioni e senza formazione.
+          </p>
+
+          <div class="three-steps-guide">
+            <div class="guide-step-card completed" id="uc3-guide-1">
+              <div class="big-step-circle">1</div>
+              <div>
+                <h4 style="font-size:1.1rem; margin-bottom:4px;">Fase 1 — Selezione Reparto e Lavorazione</h4>
+                <p style="font-size:0.92rem; color:var(--text-grey);">Il laboratorio apre il link della commessa (o inquadra la bolla di lavoro) e seleziona il proprio reparto.</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card" id="uc3-guide-2">
+              <div class="big-step-circle">2</div>
+              <div>
+                <h4 style="font-size:1.1rem; margin-bottom:4px;">Fase 2 — Validazione Lotto Materiale</h4>
+                <p style="font-size:0.92rem; color:var(--text-grey);">Con un solo tocco valida il lotto di pelle o tessuto certificato già associato dal Brand alla commessa.</p>
+              </div>
+            </div>
+
+            <div class="guide-step-card" id="uc3-guide-3">
+              <div class="big-step-circle">3</div>
+              <div>
+                <h4 style="font-size:1.1rem; margin-bottom:4px;">Fase 3 — Conferma Fine Lavorazione</h4>
+                <p style="font-size:0.92rem; color:var(--text-grey);">Il Brand riceve l'avanzamento in tempo reale e il Passaporto Digitale UE acquisisce automaticamente la tracciabilità di reparto.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Guided Partner Portal Smartphone Simulator -->
+        <div>
+          <div class="terzista-phone">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:16px; border-bottom:1px solid #2E2E30; margin-bottom:22px;">
+              <div>
+                <span style="font-size:0.75rem; color:#A3A3A3; display:block;">PORTALE PARTNER DI FILIERA • ACCESSO PARTNER GRATUITO</span>
+                <strong style="font-size:1.05rem;">Bolla #881 — 120 Paia Mocassino Brera</strong>
+              </div>
+              <span class="live-dot"></span>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="phone-step-group">
+              <span class="phone-step-label">FASE 1 — SELEZIONA IL REPARTO DI LAVORAZIONE</span>
+              <div class="phase-btn-group">
+                <button type="button" class="phase-btn" id="phase-taglio" onclick="selectTerzistaPhase('Taglio')">Taglio</button>
+                <button type="button" class="phase-btn selected" id="phase-orlatura" onclick="selectTerzistaPhase('Orlatura')">Orlatura</button>
+                <button type="button" class="phase-btn" id="phase-montaggio" onclick="selectTerzistaPhase('Montaggio')">Montaggio</button>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="phone-step-group">
+              <span class="phone-step-label">FASE 2 — VALIDA IL LOTTO MATERIALE IMPIEGATO</span>
+              <button type="button" class="lot-tap-btn" id="lot-tap-btn" onclick="selectTerzistaLot()">
+                <span>Pelle Vitello Testa di Moro — Lotto #LWG-9921</span>
+                <span id="lot-check-icon">Valida lotto →</span>
+              </button>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="phone-step-group" style="margin-bottom:0;">
+              <span class="phone-step-label">FASE 3 — NOTIFICA AVANZAMENTO AL BRAND</span>
+              <button type="button" class="confirm-zero-btn" id="uc3-submit-btn" onclick="completeTerzistaThreeClicks()">
+                Conferma Fine Lavorazione — 120 Paia Pronte
+              </button>
+            </div>
+
+            <div class="terzista-result-banner" id="uc3-result-banner">
+              <strong style="color:#FFFFFF; display:block; margin-bottom:4px;">✓ Avanzamento di Reparto Registrato</strong>
+              Il Brand visualizza immediatamente lo stato aggiornato della commessa e il Passaporto Digitale UE acquisisce in automatico la prova di lotto.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================
+       PRICING TRASPARENTE DI FILIERA
+       ============================================================================ -->
+  <section class="use-case-section" id="pricing">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow-tag">Modello Trasparente di Rete</span>
+        <h2 class="display-title">CHI LAVORA IN CONTO TERZI NON PAGA MAI.</h2>
+        <p>
+          Azzeriamo ogni ostacolo nei distretti: i laboratori esterni entrano gratis per sempre, così PMI e Brand digitalizzano l'intera produzione in pochi giorni.
+        </p>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div>
+            <span class="eyebrow-tag" style="margin-bottom:8px;">Terzisti &amp; Façonisti</span>
+            <div class="price-big">0 € / SEMPRE</div>
+            <p style="color:var(--text-grey); font-size:0.95rem;">
+              Per tomaifici, suolifici, pelletterie e laboratori di confezione.
+            </p>
+            <ul class="price-list">
+              <li>✓ Accesso partner gratuito senza scadenza</li>
+              <li>✓ Nessun programma da installare</li>
+              <li>✓ Validazione lotti e lavorazioni da reparto</li>
+              <li>✓ Schede modello sempre aggiornate</li>
+            </ul>
+          </div>
+          <a href="#pilota" class="btn btn-outline" style="width:100%;">Attiva Accesso Partner</a>
+        </div>
+
+        <div class="price-card featured-black">
+          <div>
+            <span class="eyebrow-tag" style="color:#A3A3A3; margin-bottom:8px;">PMI Produttive &amp; Calzaturifici</span>
+            <div class="price-big">PIANO PMI</div>
+            <p style="color:#D4D4D4; font-size:0.95rem;">
+              Per aziende manifatturiere che gestiscono modelli, distinte base e terzisti.
+            </p>
+            <ul class="price-list" style="color:#E5E5E5;">
+              <li>✓ Ponte 1 Prodotto in Vendita → N Lotti</li>
+              <li>✓ Distinta Base semplice in 3 livelli</li>
+              <li>✓ Inviti gratuiti illimitati per i tuoi terzisti</li>
+              <li>✓ Generatore Passaporto Digitale UE &amp; QR</li>
+            </ul>
+          </div>
+          <a href="#pilota" class="btn btn-white" style="width:100%;">Richiedi Pilota PMI</a>
+        </div>
+
+        <div class="price-card">
+          <div>
+            <span class="eyebrow-tag" style="margin-bottom:8px;">Brand Moda &amp; Capofila</span>
+            <div class="price-big">ENTERPRISE</div>
+            <p style="color:var(--text-grey); font-size:0.95rem;">
+              Per Brand che coordinano collezioni multi-distretto e conformità UE.
+            </p>
+            <ul class="price-list">
+              <li>✓ Controllo multi-fornitore nei distretti</li>
+              <li>✓ Raccolta automatica certificati LWG / REACH</li>
+              <li>✓ Passaporto Digitale UE personalizzato</li>
+              <li>✓ Integrazione rapida con i sistemi aziendali</li>
+            </ul>
+          </div>
+          <a href="#pilota" class="btn btn-black" style="width:100%;">Prenota Demo Brand</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================
+       PILOT REQUEST FORM
+       ============================================================================ -->
+  <section class="use-case-section" id="pilota" style="border-bottom:none;">
+    <div class="container">
+      <div class="section-head" style="margin:0 auto 40px; text-align:center;">
+        <span class="eyebrow-tag">Attivazione Guidata nei Distretti</span>
+        <h2 class="display-title">PROVALO SU UN TUO PRODOTTO REALE.</h2>
+        <p>
+          Lascia i tuoi riferimenti: carichiamo insieme un tuo modello e generiamo il tuo primo Passaporto Digitale UE con QR Code funzionante.
+        </p>
+      </div>
+
+      <div class="form-box">
+        <form onsubmit="handleLeadSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="company">Nome Azienda o Laboratorio *</label>
+              <input type="text" id="company" required placeholder="es. Calzaturificio Rossi / Tomaificio Stella" />
+            </div>
+            <div class="form-group">
+              <label for="role">Chi sei nella filiera? *</label>
+              <select id="role" required>
+                <option value="PMI">PMI Produttiva (Calzaturificio / Pelletteria / Confezione)</option>
+                <option value="TERZISTA">Laboratorio Terzista (Piano Gratuito 0 € per sempre)</option>
+                <option value="BRAND">Brand Moda / Committente</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="district">Distretto *</label>
+              <select id="district" required>
+                <option value="MARCHE">Marche (Fermo, Macerata, Civitanova, Monte Urano)</option>
+                <option value="TOSCANA">Toscana (Firenze, Scandicci, Santa Croce, Arezzo)</option>
+                <option value="VENETO">Veneto (Riviera del Brenta, Montebelluna, Vicenza)</option>
+                <option value="ALTRO">Altro Distretto Italiano</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="contact">Email o Telefono WhatsApp *</label>
+              <input type="text" id="contact" required placeholder="nome@azienda.it oppure +39 335..." />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-black" style="width:100%; padding:18px;">
+            Richiedi Demo o Attiva Piano 0 €
+          </button>
+          <div id="lead-confirm" style="display:none; margin-top:18px; text-align:center; font-weight:600;">
+            ✓ Richiesta registrata. Ti contatteremo per mostrarti la demo sul tuo prodotto.
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-inner">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <svg width="140" height="28" viewBox="0 0 168 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 24L14.5 5H24.5L14 24H4Z" fill="#FFFFFF"/>
+          <path d="M16 24L23.5 10.5H31.5L24 24H16Z" fill="#FFFFFF"/>
+          <path d="M4 26.5H30L28.5 29.5H2.5L4 26.5Z" fill="#FFFFFF"/>
+          <text x="39" y="24.5" fill="#FFFFFF" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-size="26" letter-spacing="-0.02em">FOOTLINK</text>
+        </svg>
+        <span>Il Sistema Operativo per i Distretti della Moda Italiana.</span>
+      </div>
+      <div class="mono" style="font-size:0.78rem;">
+        FTL-MKT-002 • Gate L5 Review
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ============================================================================
+       USE CASE 1 DATA & INTERACTION (1 PRODOTTO -> N LABORATORI + 3 LIVELLI CHIARI)
+       ============================================================================ */
+    const UC1_PRODUCTS = {
+      shoe: {
+        title: 'Mocassino Penny "Brera"',
+        subtitle: 'Vitello Testa di Moro • Calzatura Uomo',
+        sku: 'BRERA-001',
+        price: '390 €',
+        svg: `
+          <svg width="220" height="110" viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 78 C20 52, 65 48, 95 34 L132 54 C162 58, 198 62, 202 78 Z" fill="#111111"/>
+            <rect x="16" y="82" width="188" height="12" rx="4" fill="#111111"/>
+            <rect x="16" y="88" width="52" height="10" rx="2" fill="#111111"/>
+          </svg>
+        `,
+        lots: [
+          {
+            label: 'Lotto A — Distretto Marche',
+            sub: 'Fermo & Monte Urano (Suola Cuoio)',
+            levels: [
+              {
+                name: 'Livello 1: Le Parti della Scarpa',
+                desc: 'Tomaia cucita dal Tomaificio San Crispino (0 €) + Suola preparata dal Suolificio Adriatico (0 €).'
+              },
+              {
+                name: 'Livello 2: I Materiali Scelti',
+                desc: 'Pelle Vitello Testa di Moro (2,15 Piedi Quadri al paio) + Fodera naturale + Suola in vero cuoio toscano.'
+              },
+              {
+                name: 'Livello 3: Lotti e Certificazioni',
+                desc: 'Lotto Pelle #LWG-9921 (Certificato Gold) e test assenza sostanze nocive (REACH) già collegati.'
+              }
+            ]
+          },
+          {
+            label: 'Lotto B — Distretto Veneto',
+            sub: 'Riviera del Brenta (Riassortimento Fondo Gomma)',
+            levels: [
+              {
+                name: 'Livello 1: Le Parti della Scarpa',
+                desc: 'Tomaia idrorepellente dalla Giunteria Brenta (0 €) + Fondo leggero dal Montaggio Dolo (0 €).'
+              },
+              {
+                name: 'Livello 2: I Materiali Scelti',
+                desc: 'Pelle Vitello Hydro (2,05 Piedi Quadri al paio) + Battistrada in gomma con il 40% di materiale riciclato.'
+              },
+              {
+                name: 'Livello 3: Lotti e Certificazioni',
+                desc: 'Lotto Pelle #LWG-7740 + Certificato Gomma Riciclata #GRS-552 pronti per il Passaporto UE.'
+              }
+            ]
+          }
+        ]
+      },
+      bag: {
+        title: 'Borsa Tote "Arno"',
+        subtitle: 'Vacchetta Naturale • Pelletteria Donna',
+        sku: 'ARNO-001',
+        price: '540 €',
+        svg: `
+          <svg width="180" height="120" viewBox="0 0 180 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M65 38 C65 14, 115 14, 115 38" stroke="#111111" stroke-width="7" stroke-linecap="round"/>
+            <rect x="35" y="38" width="110" height="72" rx="10" fill="#111111"/>
+            <circle cx="68" cy="54" r="4" fill="#FFFFFF"/>
+            <circle cx="112" cy="54" r="4" fill="#FFFFFF"/>
+          </svg>
+        `,
+        lots: [
+          {
+            label: 'Lotto A — Scandicci (Firenze)',
+            sub: 'Finitura Selleria Artigianale',
+            levels: [
+              {
+                name: 'Livello 1: Le Parti della Borsa',
+                desc: 'Quadranti e manici cuciti da Pelletteria Greve (0 €) + Accessori metallici da Galvanica Calenzano (0 €).'
+              },
+              {
+                name: 'Livello 2: I Materiali Scelti',
+                desc: 'Vacchetta conciata al vegetale (6,8 Piedi Quadri a borsa) + Fibbie in ottone + Vernici bordo ad acqua.'
+              },
+              {
+                name: 'Livello 3: Lotti e Certificazioni',
+                desc: 'Lotto Pelle #LWG-5501 + Test Galvanica Nickel-Free #GAL-908 registrati automaticamente.'
+              }
+            ]
+          },
+          {
+            label: 'Lotto B — Arezzo (Valdarno)',
+            sub: 'Edizione Fodera Cotone Biologico',
+            levels: [
+              {
+                name: 'Livello 1: Le Parti della Borsa',
+                desc: 'Corpo borsa e tracolla regolabile montati a banco dal Laboratorio Valdarno (0 €).'
+              },
+              {
+                name: 'Livello 2: I Materiali Scelti',
+                desc: 'Vitello martellato (6,5 Piedi Quadri) + Fodera interna in cotone 100% biologico.'
+              },
+              {
+                name: 'Livello 3: Lotti e Certificazioni',
+                desc: 'Certificato Cotone Biologico #GOTS-2190 collegato direttamente al QR Code della borsa.'
+              }
+            ]
+          }
+        ]
+      },
+      jacket: {
+        title: 'Parka Tecnico "Dolomiti"',
+        subtitle: 'Tessuto 3 Strati Riciclato • Capospalla',
+        sku: 'DOLOMITI-001',
+        price: '680 €',
+        svg: `
+          <svg width="180" height="120" viewBox="0 0 180 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M62 18 L118 18 L148 48 L132 62 L118 44 L118 106 L62 106 L62 44 L48 62 L32 48 Z" fill="#111111"/>
+            <line x1="90" y1="18" x2="90" y2="106" stroke="#FFFFFF" stroke-width="2.5"/>
+          </svg>
+        `,
+        lots: [
+          {
+            label: 'Lotto A — Montebelluna (Treviso)',
+            sub: 'Confezione Termonastrata Impermeabile',
+            levels: [
+              {
+                name: 'Livello 1: Le Parti del Capospalla',
+                desc: 'Guscio esterno tagliato da Confezioni Piave (0 €) + Cuciture sigillate da Termonastratura Asolo (0 €).'
+              },
+              {
+                name: 'Livello 2: I Materiali Scelti',
+                desc: 'Tessuto tecnico impermeabile (2,35 Metri a capo) + 3 Zip stagne + Nastro termosaldante.'
+              },
+              {
+                name: 'Livello 3: Lotti e Certificazioni',
+                desc: 'Tessuto 100% Riciclato Certificato #GRS-8832 e membrana priva di PFC verificata.'
+              }
+            ]
+          },
+          {
+            label: 'Lotto B — Vicenza',
+            sub: 'Serie Invernale con Imbottitura Termica',
+            levels: [
+              {
+                name: 'Livello 1: Le Parti del Capospalla',
+                desc: 'Guscio esterno + Trapuntatura interna termica assemblata a Vicenza (0 €).'
+              },
+              {
+                name: 'Livello 2: I Materiali Scelti',
+                desc: 'Tessuto antipioggia + Imbottitura leggera riciclata da fibre rigenerate.'
+              },
+              {
+                name: 'Livello 3: Lotti e Certificazioni',
+                desc: 'Certificato OEKO-TEX Standard 100 e tracciabilità completa di filiera.'
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    let uc1CurrentProduct = 'shoe';
+    let uc1CurrentLotIdx = 0;
+
+    function selectUc1Product(prodKey) {
+      uc1CurrentProduct = prodKey;
+      uc1CurrentLotIdx = 0;
+      ['shoe', 'bag', 'jacket'].forEach(function(k) {
+        document.getElementById('uc1-tab-' + k).classList.toggle('active', k === prodKey);
+      });
+      renderUc1();
+    }
+
+    function selectUc1Lot(idx) {
+      uc1CurrentLotIdx = idx;
+      renderUc1();
+    }
+
+    function renderUc1() {
+      const p = UC1_PRODUCTS[uc1CurrentProduct];
+      document.getElementById('uc1-comm-title').textContent = p.title;
+      document.getElementById('uc1-comm-subtitle').textContent = p.subtitle;
+      document.getElementById('uc1-comm-sku').textContent = p.sku;
+      document.getElementById('uc1-comm-price').textContent = p.price;
+      document.getElementById('uc1-svg-stage').innerHTML = p.svg;
+
+      const lotBtns = document.getElementById('uc1-lot-buttons');
+      lotBtns.innerHTML = '';
+      p.lots.forEach(function(lot, i) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'lot-btn' + (i === uc1CurrentLotIdx ? ' active' : '');
+        btn.onclick = function() { selectUc1Lot(i); };
+        btn.innerHTML = `<strong>${lot.label}</strong><small>${lot.sub}</small>`;
+        lotBtns.appendChild(btn);
+      });
+
+      const activeLot = p.lots[uc1CurrentLotIdx];
+      const levelsEl = document.getElementById('uc1-bom-levels');
+      levelsEl.innerHTML = '';
+      activeLot.levels.forEach(function(lvl, index) {
+        const row = document.createElement('div');
+        row.className = 'bom-simple-row';
+        row.innerHTML = `
+          <div class="bom-level-num">${index + 1}</div>
+          <div>
+            <h4 style="font-size:1.05rem; margin-bottom:4px;">${lvl.name}</h4>
+            <p style="font-size:0.9rem; color:var(--text-grey);">${lvl.desc}</p>
+          </div>
+        `;
+        levelsEl.appendChild(row);
+      });
+    }
+
+    /* ============================================================================
+       USE CASE 2 DATA & INTERACTION (PASSAPORTO DIGITALE UE & QR IN 1 CLIC)
+       ============================================================================ */
+    const UC2_PASS_DATA = {
+      marche: {
+        title: 'Mocassino Penny "Brera"',
+        lot: 'LOTTO CERTIFICATO #MC-881',
+        heading: 'Mocassino Penny "Brera" — Lotto #MC-881',
+        seed: 19,
+        originTitle: '100% Filiera Italiana Tracciata',
+        originDesc: 'Concia a Santa Croce sull\'Arno (Toscana), taglio e cucitura a Monte Urano (Marche), montaggio finale a Fermo (Marche).',
+        matTitle: 'Pelle Certificata LWG Gold',
+        matDesc: 'Tomaia in vitello pieno fiore controllato, fodera concia al vegetale senza metalli pesanti (REACH), suola in vero cuoio.',
+        ecoTitle: '38% Componenti Riciclati / Bio',
+        ecoDesc: 'Filati e rinforzi interni certificati GRS. Impronta carbonica misurata sul lotto reale: 6,4 kg CO₂e per paio.',
+        repTitle: 'Risuolabile • Indice 9,2 / 10',
+        repDesc: 'Costruzione pensata per durare nel tempo: la suola può essere sostituita fino a 3 volte. Codice unico anti-contraffazione.'
+      },
+      toscana: {
+        title: 'Borsa Tote "Arno"',
+        lot: 'LOTTO CERTIFICATO #FI-402',
+        heading: 'Borsa Tote "Arno" — Lotto #FI-402',
+        seed: 47,
+        originTitle: 'Distretto Toscano Certificato',
+        originDesc: 'Concia al vegetale a Ponte a Egola (Pisa), metalleria a Calenzano (Firenze), pelletteria e montaggio a Scandicci (Firenze).',
+        matTitle: 'Vacchetta Concia al Vegetale',
+        matDesc: 'Pelle lavorata con tannini naturali, accessori in ottone senza nichel (Nickel-Free) e fodera in cotone biologico GOTS.',
+        ecoTitle: '52% Materiali Biologici / Riciclati',
+        ecoDesc: 'Rinforzi interni rigenerati e vernici bordo 100% ad acqua. Impronta carbonica del lotto: 5,1 kg CO₂e.',
+        repTitle: 'Riparabile • Indice 9,5 / 10',
+        repDesc: 'Manici e moschettoni sostituibili singolarmente senza scucire il corpo della borsa.'
+      },
+      veneto: {
+        title: 'Sneaker Trail "Dolomiti"',
+        lot: 'LOTTO CERTIFICATO #TV-915',
+        heading: 'Sneaker Trail "Dolomiti" — Lotto #TV-915',
+        seed: 83,
+        originTitle: 'Distretto Sportsystem Veneto',
+        originDesc: 'Tessitura filato riciclato in Nord Italia, termonastratura ad Asolo (Treviso), assemblaggio finale a Montebelluna (Treviso).',
+        matTitle: 'Tessuto Tecnico Certificato GRS',
+        matDesc: 'Tomaia ad alta resistenza da polimeri riciclati post-consumo, membrana impermeabile priva di PFC/PFAS.',
+        ecoTitle: '64% Materiali Riciclati Tracciati',
+        ecoDesc: 'Certificato di transazione GRS allegato al lotto. Impronta carbonica ridotta: 4,8 kg CO₂e.',
+        repTitle: 'Battistrada Risuolabile • 8,8 / 10',
+        repDesc: 'Suola tecnica e plantare anatomico sostituibili per raddoppiare la vita utile della calzatura.'
+      }
+    };
+
+    function buildMonochromeQrSvg(seed) {
+      const size = 21;
+      let rects = '';
+      function isFinder(r, c) {
+        return (r < 7 && c < 7) || (r < 7 && c >= size - 7) || (r >= size - 7 && c < 7);
+      }
+      function finderSvg(ox, oy) {
+        return `
+          <rect x="${ox}" y="${oy}" width="7" height="7" fill="#111111"/>
+          <rect x="${ox+1}" y="${oy+1}" width="5" height="5" fill="#FFFFFF"/>
+          <rect x="${ox+2}" y="${oy+2}" width="3" height="3" fill="#111111"/>
+        `;
+      }
+      rects += finderSvg(0, 0) + finderSvg(size - 7, 0) + finderSvg(0, size - 7);
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (isFinder(r, c)) continue;
+          const h = (r * 29 + c * 17 + seed * 13) % 11;
+          if (h < 5) {
+            rects += `<rect x="${c}" y="${r}" width="0.9" height="0.9" fill="#111111"/>`;
+          }
+        }
+      }
+      return `<svg viewBox="0 0 ${size} ${size}" width="168" height="168" xmlns="http://www.w3.org/2000/svg" aria-label="QR Code Passaporto Digitale UE">${rects}</svg>`;
+    }
+
+    function selectUc2Passport(key) {
+      ['marche', 'toscana', 'veneto'].forEach(function(k) {
+        document.getElementById('uc2-tab-' + k).classList.toggle('active', k === key);
+      });
+      const d = UC2_PASS_DATA[key];
+      document.getElementById('uc2-tag-title').textContent = d.title;
+      document.getElementById('uc2-tag-lot').textContent = d.lot;
+      document.getElementById('uc2-qr-svg').innerHTML = buildMonochromeQrSvg(d.seed);
+      document.getElementById('uc2-pass-heading').textContent = d.heading;
+      document.getElementById('uc2-fact-origin-title').textContent = d.originTitle;
+      document.getElementById('uc2-fact-origin-desc').textContent = d.originDesc;
+      document.getElementById('uc2-fact-mat-title').textContent = d.matTitle;
+      document.getElementById('uc2-fact-mat-desc').textContent = d.matDesc;
+      document.getElementById('uc2-fact-eco-title').textContent = d.ecoTitle;
+      document.getElementById('uc2-fact-eco-desc').textContent = d.ecoDesc;
+      document.getElementById('uc2-fact-rep-title').textContent = d.repTitle;
+      document.getElementById('uc2-fact-rep-desc').textContent = d.repDesc;
+    }
+
+    function triggerQrScanPulse() {
+      const card = document.getElementById('uc2-phone-card');
+      card.style.borderColor = '#111111';
+      card.style.boxShadow = '0 0 0 3px #111111';
+      setTimeout(function() {
+        card.style.boxShadow = 'none';
+      }, 650);
+    }
+
+    /* ============================================================================
+       USE CASE 3 INTERACTION (3 CLIC A 0 € PER IL TERZISTA)
+       ============================================================================ */
+    let selectedPhaseName = 'Orlatura';
+
+    function selectTerzistaPhase(phaseName) {
+      selectedPhaseName = phaseName;
+      ['Taglio', 'Orlatura', 'Montaggio'].forEach(function(p) {
+        const btn = document.getElementById('phase-' + p.toLowerCase());
+        if (btn) btn.classList.toggle('selected', p === phaseName);
+      });
+      document.getElementById('uc3-guide-1').classList.add('completed');
+    }
+
+    function selectTerzistaLot() {
+      const btn = document.getElementById('lot-tap-btn');
+      btn.classList.add('selected');
+      document.getElementById('lot-check-icon').textContent = '✓ Confermato';
+      document.getElementById('uc3-guide-2').classList.add('completed');
+    }
+
+    function completeTerzistaThreeClicks() {
+      selectTerzistaLot();
+      document.getElementById('uc3-guide-3').classList.add('completed');
+      const submitBtn = document.getElementById('uc3-submit-btn');
+      submitBtn.textContent = '✓ ' + selectedPhaseName + ' Confermata (120 Paia Pronte)';
+      document.getElementById('uc3-result-banner').style.display = 'block';
+    }
+
+    function handleLeadSubmit(e) {
+      e.preventDefault();
+      document.getElementById('lead-confirm').style.display = 'block';
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      renderUc1();
+      selectUc2Passport('marche');
+    });
+  </script>
+</body>
+</html>

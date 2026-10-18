@@ -1,0 +1,41 @@
+{
+  "task_id": "FTL-REV-002",
+  "title": "Kit Operativo di Onboarding Design Partner Pilota nei Distretti (Marche, Toscana, Veneto) e Template LOI",
+  "description": "Redigere il Kit Operativo Completo di Onboarding Design Partner Pilota (30-60 Giorni) su misura per i 3 distretti industriali target (Marche, Toscana, Veneto), completo di Playbook di Attivazione in 48 Ore ('Protocollo 1 PMI -> 5 Terzisti a 0 EUR'), analisi FinOps Cost-to-Serve (< 1,50 EUR/mese con Margine Lordo SaaS > 88%) e Template di Lettera d'Intenti (LOI) pronto per l'approvazione e firma L4/L5 del Founder.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CRO",
+  "assignee_agent": "footlink-cro",
+  "created_by": "CEO",
+  "created_at": "2026-10-18T09:30:00+02:00",
+  "updated_at": "2026-10-18T21:39:20+02:00",
+  "due_date": "2026-11-05T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2-8h)",
+  "dependencies": [
+    "FTL-REV-001",
+    "FTL-PROD-001"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/finops/design-partner-onboarding-kit-v1.md",
+    "Azienda/docs/finops/pilot-loi-template-distretti.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Richiede approvazione L4 del Founder sulle condizioni commerciali Early-Adopter del Kit Design Partner Pilota e sul template LOI per i distretti Marche, Toscana e Veneto.",
+  "escalation_level": "L4",
+  "decision_record_id": "ADR-004",
+  "tags": [
+    "sales",
+    "finops",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Kit operativo completo configurato per i 3 distretti target: Marche (Calzatura/Componentistica), Toscana (Pelletteria/Concia LWG), Veneto (Calzatura Lusso Brenta e SportSystem Montebelluna)",
+    "Playbook di attivazione in 48 ore ('Protocollo 1 PMI -> 5 Terzisti a 0 EUR') dettagliato su Giorno 1 (2h), Giorno 2 (30min), Giorno 7 (1° DPP UE) e Giorno 30-60 (Review ROI -80% errori e raccolta DPP < 5 min)",
+    "Controllo FinOps verificato: 0,00 EUR durante il pilota, Cost-to-Serve < 1,50 EUR/mese (1,39 EUR/mese inclusi 10 terzisti a 0 EUR) e Margine Lordo SaaS > 88% (superiore alla soglia > 75%)",
+    "Template LOI / Accordo Design Partner Pilota (60 giorni) con clausola di gratuità perenne 0 EUR per i terzisti invitati e prelazione Early-Adopter (-20% anno 1), sottoposto ad approvazione L4/L5 del Founder"
+  ],
+  "notes": "Deliverable completati dal CRO in Azienda/docs/finops/design-partner-onboarding-kit-v1.md e Azienda/docs/finops/pilot-loi-template-distretti.md. In stato 'review' per approvazione L4 del Founder nella Founder Control Dashboard."
+}

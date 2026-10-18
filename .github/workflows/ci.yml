@@ -22,21 +22,27 @@ jobs:
       - name: Install jsonschema validator
         run: pip install jsonschema referencing
 
-      - name: Validate all tasks/*.json against task-object-v1.schema.json
+      - name: Validate 3-Pillar Root Structure & Azienda/tasks/*.json against task-object-v1.schema.json
         run: |
           python3 -c '
-          import glob, json, sys
+          import glob, json, os, sys
           from jsonschema import validate, ValidationError, Draft202012Validator
 
-          with open("tasks/schema/task-object-v1.schema.json", "r", encoding="utf-8") as sf:
+          for pillar in ("Azienda", "Applicativo", "Portale_Founder_Control"):
+              if not os.path.isdir(pillar):
+                  print(f"ERROR: Missing required root pillar directory: {pillar}/")
+                  sys.exit(1)
+
+          schema_path = "Azienda/tasks/schema/task-object-v1.schema.json"
+          with open(schema_path, "r", encoding="utf-8") as sf:
               schema = json.load(sf)
 
           Draft202012Validator.check_schema(schema)
           validator = Draft202012Validator(schema)
 
-          task_files = sorted(glob.glob("tasks/*.json"))
+          task_files = sorted(glob.glob("Azienda/tasks/FTL-*.json"))
           if not task_files:
-              print("ERROR: No task files found in tasks/*.json")
+              print("ERROR: No task files found in Azienda/tasks/FTL-*.json")
               sys.exit(1)
 
           errors = 0
@@ -49,11 +55,13 @@ jobs:
                   for err in file_errors:
                       print(f"FAIL: {path}: {err.message}")
               else:
-                  print(f"OK: {path} ({data.get(\"task_id\")} -> status={data.get(\"status\")})")
+                  tid = data.get("task_id")
+                  tst = data.get("status")
+                  print(f"OK: {path} ({tid} -> status={tst})")
 
           if errors > 0:
               sys.exit(1)
-          print(f"SUCCESS: Validated {len(task_files)} task files with 0 errors.")
+          print(f"SUCCESS: Validated {len(task_files)} task files across Sprint 1 & Sprint 2 with 0 errors.")
           '
 
   backend-tests:
@@ -61,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: Applicativo/backend
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

@@ -1,0 +1,43 @@
+{
+  "task_id": "FTL-TECH-003",
+  "title": "Generatore Live Passaporto Digitale del Prodotto (DPP UE / ESPR) con QR Code SVG navigabile",
+  "description": "Implementare il motore di sintesi live del Digital Product Passport (DPP UE conforme al regolamento ESPR) a partire da 1 Articolo PIM, N Varianti PLM, BOM a 3 livelli e conferme terzisti, includendo il generatore dinamico di QR Code SVG senza dipendenze pesanti e la pagina pubblica mobile-first del passaporto.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "CEO",
+  "created_at": "2026-10-18T09:30:00+02:00",
+  "updated_at": "2026-10-18T21:37:40+02:00",
+  "due_date": "2026-11-01T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2-8h)",
+  "dependencies": [
+    "FTL-TECH-001",
+    "FTL-TECH-002"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/app/models.py",
+    "Applicativo/frontend/src/components/LiveDppPassportGenerator.tsx",
+    "Applicativo/frontend/app-live-preview.html",
+    "Applicativo/backend/tests/test_main.py"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "In revisione estesa del Founder: validazione Generatore Live Passaporto Digitale del Prodotto (DPP UE / ESPR) con QR Code SVG navigabile.",
+  "escalation_level": "L3",
+  "decision_record_id": "ADR-002",
+  "tags": [
+    "PLM",
+    "PIM",
+    "product",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Endpoint GET /api/v1/pim-items/{id}/dpp-preview arricchito con checklist ESPR, stima CO2e, indice riparabilità e data URI SVG QR Code",
+    "Endpoint GET /api/v1/pim-items/{id}/dpp-qr.svg che genera dinamicamente un QR Code SVG navigabile a costo zero",
+    "Endpoint pubblico GET /dpp/{id} e vista modale React che visualizzano il Passaporto Digitale Europeo del Prodotto quando si clicca o scansiona il QR Code"
+  ],
+  "notes": "Completato da CTO (footlink-cto): implementato generatore deterministico QR Code SVG in puro Python e TypeScript, endpoint /dpp-qr.svg, pagina pubblica /dpp/{pim_item_id} e componente React LiveDppPassportGenerator.tsx. Verificato con suite Pytest 100% verde."
+}

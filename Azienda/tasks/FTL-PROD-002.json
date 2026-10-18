@@ -1,0 +1,41 @@
+{
+  "task_id": "FTL-PROD-002",
+  "title": "PRD v2.0: Gestione Visuale Ponte 1 PIM <-> N PLM, Distinta Base BOM a 3 Livelli, Portale Mobile Terzista '3 Clic a 0 EUR' e Specifica UX Passaporto Digitale DPP UE",
+  "description": "Redigere il Product Requirements Document di Sprint 2 (PRD-002) con la specifica UX e dei componenti React per il Visual Bridge 1 Articolo PIM (Vendita) <-> N Articoli PLM (Produzione), la modellazione della Distinta Base (BOM) gerarchica a 3 livelli (Macro-Componente, Semilavorato, Materia Prima/Chimico) per Calzature, Pelletteria e Abbigliamento, il Portale Mobile Terzista '3 Clic a 0 EUR' (375px mobile-first, touch >= 56px, < 10 secondi) e la copertura 100% dei campi obbligatori ESPR / DPP UE.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "Founder",
+  "created_at": "2026-10-18T09:45:00+02:00",
+  "updated_at": "2026-10-18T10:42:03+02:00",
+  "due_date": "2026-11-01T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2-8h)",
+  "dependencies": [
+    "FTL-PROD-001",
+    "FTL-TECH-001"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/PRD-002-visual-bridge-bom3-subcontractor-portal.md",
+    "Applicativo/frontend/"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "In revisione estesa del Founder: validazione specifica PRD-002 (UX Ponte 1:N, BOM 3 livelli e Portale Terzista 3 Clic a 0 €).",
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-003",
+  "tags": [
+    "PLM",
+    "PIM",
+    "product",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "Specifica Visual Bridge 1 Articolo PIM (Vendita) <-> N Articoli PLM (Produzione) con wireframe e struttura componenti React e azioni rapide senza duplicazione dati commerciali",
+    "Modellazione Distinta Base (BOM) gerarchica a 3 livelli (Livello 1 Assieme, Livello 2 Semilavorato, Livello 3 Materia Prima/Chimico) con calcolo automatico consumi, % scarto, % riciclato ponderato e certificazioni DPP",
+    "Specifica Portale Mobile Terzista '3 Clic a 0 EUR' (smartphone 375px, touch >= 56px, contrasto elevato, completamento < 10 secondi senza formazione)",
+    "Copertura 100% dei campi obbligatori ESPR / DPP UE generati automaticamente dalla BOM a 3 livelli e dalle conferme dei terzisti"
+  ],
+  "notes": "Completato PRD-002-visual-bridge-bom3-subcontractor-portal.md in Azienda/docs/prd/ e aggiornato Azienda/docs/prd/README.md. Definiti componenti React per Applicativo/frontend/, formule BOM a 3 livelli e UX mobile 375px (< 10s, 0 EUR sempre)."
+}

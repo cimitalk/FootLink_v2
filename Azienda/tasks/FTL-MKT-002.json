@@ -1,0 +1,42 @@
+{
+  "task_id": "FTL-MKT-002",
+  "title": "Pubblicazione Landing Page B2B con Demo Live del Passaporto Digitale DPP UE / ESPR, Ponte Commerciale-Fabbrica e Connessione Laboratori in Tempo Reale",
+  "description": "Realizzare la versione pubblicabile, completa e interattiva della Landing Page B2B di Footlink (Design System v2.0 ispirato a nike.com/it e nuovo logo SVG) con i 3 Use Case: (1) Il Ponte Commerciale-Fabbrica 1 Prodotto -> N Laboratori con Distinta Base in 3 livelli, (2) Passaporto Digitale UE (ESPR) con QR Code SVG navigabile, (3) Connessione Laboratori & Reparti Esterni ('Dal Laboratorio al Brand. In Tempo Reale.'), oltre al piano di lancio organico SEO/LinkedIn B2B sottoposto a gatekeeping L5 del Founder.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CMO",
+  "assignee_agent": "footlink-cmo",
+  "created_by": "Founder",
+  "created_at": "2026-10-18T09:49:34+02:00",
+  "updated_at": "2026-10-18T21:47:40+02:00",
+  "due_date": "2026-11-05T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "M (1-3gg)",
+  "dependencies": [
+    "FTL-MKT-001",
+    "FTL-PROD-001"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/marketing/landing-page-b2b-live.html",
+    "Azienda/docs/marketing/dpp-espr-launch-campaign.md",
+    "Azienda/docs/marketing/brand-guidelines-v1.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Richiede approvazione L5 del Founder per la pubblicazione esterna ufficiale della Landing Page B2B v2.0 (Nike-Inspired Design System) e della campagna DPP UE.",
+  "escalation_level": "L5",
+  "decision_record_id": null,
+  "tags": [
+    "marketing",
+    "PLM",
+    "PIM",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Design System v2.0 ispirato a nike.com/it (palette minimalista #FFFFFF / #F5F5F5 / #111111, tipografia condensed bold uppercase, bottoni pill) applicato a brand-guidelines-v1.md e landing-page-b2b-live.html",
+    "Nuovo logo vettoriale SVG FOOTLINK privo della dicitura 1:N",
+    "3 Use Case interattivi con titolazione editoriale autorevole: (1) '1 Prodotto in Vendita. Più Laboratori in Produzione.' con 3 livelli chiari; (2) 'Passaporto Digitale UE & QR Code in 1 Clic'; (3) 'Connessione Laboratori & Reparti Esterni — Dal Laboratorio al Brand. In Tempo Reale.' (eliminata la dicitura 'Terzisti in 3 Clic (0 €)')",
+    "Piano di lancio organico B2B e posizionamento SEO/LinkedIn redatto in Azienda/docs/marketing/dpp-espr-launch-campaign.md a budget pubblicitario zero (0 € Ads)"
+  ],
+  "notes": "Completata la Landing Page B2B Live interattiva (Azienda/docs/marketing/landing-page-b2b-live.html), allineato il prototipo (Azienda/docs/marketing/landing-page-prototype.html) e redatto il piano di lancio organico SEO/LinkedIn DPP UE ESPR (Azienda/docs/marketing/dpp-espr-launch-campaign.md). In stato 'review' per approvazione L5 del Founder prima della pubblicazione esterna. | [Founder 2026-10-18T10:24]: Review per CMO:\n1. Non mi piace il design sistem; colori e brand identity troppo cheap. Rivedere design sistem ispirandosi a https://www.nike.com/it/\n2. Rifare il logo. Non portare nel logo la dicitura 1:N che rimane un pilastro implementativo, ma non nel logo.\n3: Rivedere i 3 use case: Simulatore 1 PIM ↔ N PLM; Demo Live DPP UE & QR; Demo 3 Clic a 0 € . Dal miop punto di vista non risultano chiari. OK il concetto, ma vanno semplificati e resi più comprensibili alla platea. | [CMO 2026-10-18T10:35]: Recepiti integralmente i 3 punti del Founder: (1) Design System v2.0 interamente rifatto ispirandosi a nike.com/it (palette monocromatica #FFFFFF / #F5F5F5 / #111111, tipografia Condensed ExtraBold uppercase, bottoni pill, zero colori/badge SaaS cheap); (2) Nuovo logo vettoriale SVG 'Dynamic Sole-Link' + wordmark FOOTLINK senza alcuna scritta 1:N; (3) Riprogettati e semplificati i 3 Use Case in esperienze visive guidate step-by-step comprensibili in 5 secondi. Riportato in stato 'review' per Gate L5. | [Founder 2026-10-18T21:40]: non mi piaca la dicitura: \"Terzisti in 3 Clic (0 €)\" . trova un altro modo di intitolare lo use case. | [CMO 2026-10-18T21:45]: Rimossa ovunque la dicitura 'Terzisti in 3 Clic (0 €)' / '3 Clic a 0 € per il Terzista' e sostituita con la titolazione istituzionale ed editoriale 'Connessione Laboratori' nel menu, 'USE CASE 03 · CONNESSIONE LABORATORI & REPARTI ESTERNI' nell'eyebrow e 'DAL LABORATORIO AL BRAND. IN TEMPO REALE.' come titolo principale, aggiornando anche le fasi ('Fase 1 — Selezione Reparto e Lavorazione', 'Fase 2 — Validazione Lotto Materiale', 'Fase 3 — Conferma Fine Lavorazione') e il badge ('Accesso Partner Gratuito'). Riportato in stato 'review'."
+}

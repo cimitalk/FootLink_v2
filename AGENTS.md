@@ -1,55 +1,52 @@
 # AGENTS.md - Footlink Workspace & C-Suite Governance
 
-Keep workspace conventions here. Personality and tone belong in `SOUL.md`.
+Keep workspace conventions here. Personality and tone belong in `Azienda/SOUL.md`.
 
 ## Architettura Operativa: Google Antigravity + GitHub (OpenClaw Suspended)
 
 - **Piattaforma di Orchestrazione Primaria:** **Google Antigravity** (con stato persistente versionato su GitHub `cimitalk/FootLink_v2`).
 - **Stato OpenClaw:** `suspended` (disattivato su direttiva del Founder per privilegiare i modelli di ragionamento avanzati di Antigravity e ottimizzare il consumo dei crediti FinOps).
-- **Orchestrazione C-Suite:** I 6 ruoli esecutivi (**CEO, CGO, CTO, CPO, CRO, CMO**) operano come sub-agenti specializzati di Antigravity (`define_subagent` / `invoke_subagent`), guidati dalle rispettive specifiche in [`docs/roles/`](./docs/roles/) e dal [Manifesto di Fondazione](./Manifesto_Fondazione_Footlink.md).
+- **Orchestrazione C-Suite:** I 6 ruoli esecutivi (**CEO, CGO, CTO, CPO, CRO, CMO**) operano come sub-agenti specializzati di Antigravity (`define_subagent` / `invoke_subagent`), guidati dalle rispettive specifiche in [`Azienda/docs/roles/`](./Azienda/docs/roles/) e dal [Manifesto di Fondazione](./Azienda/Manifesto_Fondazione_Footlink.md).
 - **Allocazione FinOps dei Modelli AI:**
   - `inherit` / `pro`: scelte architetturali (CTO), PRD e modellazione 1:N PIM/PLM (CPO), strategia e OKR (CEO), unit economics FinOps (CRO).
   - `flash`: validazione formale JSON schema (CGO), formattazione report e task esecutivi leggeri.
 
-## Struttura del Repository
+## Struttura del Repository a 3 Pilastri ([ADR-005](./Azienda/adr/ADR-005-repository-three-pillars-restructuring.md))
 
-- [`Manifesto_Fondazione_Footlink.md`](./Manifesto_Fondazione_Footlink.md) — Fonte primaria (#1) e inderogabile di verità.
-- [`docs/roles/`](./docs/roles/) — Specifiche di ruolo approvate v1.0 per CEO, CGO, CTO, CPO, CRO, CMO.
-- [`adr/`](./adr/) — Architecture & Any Decision Records (Fonte #3 di verità).
-- [`tasks/`](./tasks/) — Unità operative di lavoro in formato JSON (Task Object Schema CGO v1.0, Fonte #4 di verità).
-- [`docs/`](./docs/) — Deliverable di dipartimento (`governance/`, `okr/`, `prd/`, `finops/`, `marketing/`).
-- [`.agents/skills/`](./.agents/skills/) — Skill native di Google Antigravity per l'orchestrazione della C-Suite.
+La root del repository è organizzata rigorosamente in **3 cartelle principali**:
+
+1. **[`Azienda/`](./Azienda/)** — Governance, Identità Agenti e Deliverable C-Suite:
+   - [`Azienda/Manifesto_Fondazione_Footlink.md`](./Azienda/Manifesto_Fondazione_Footlink.md) — Fonte primaria (#1) e inderogabile di verità.
+   - [`Azienda/docs/roles/`](./Azienda/docs/roles/) — Specifiche di ruolo approvate v1.1 per CEO, CGO, CTO, CPO, CRO, CMO (Fonte #2).
+   - [`Azienda/adr/`](./Azienda/adr/) — Architecture & Any Decision Records (Fonte #3).
+   - [`Azienda/tasks/`](./Azienda/tasks/) — Unità operative di lavoro in formato JSON (Task Object Schema CGO v1.0, Fonte #4).
+   - [`Azienda/docs/`](./Azienda/docs/) — Deliverable di dipartimento (`governance/`, `okr/`, `prd/`, `finops/`, `marketing/`).
+2. **[`Applicativo/`](./Applicativo/)** — Codice sorgente della piattaforma PLM+PIM:
+   - [`Applicativo/backend/`](./Applicativo/backend/) — API FastAPI, SQLAlchemy 2.0, Pydantic v2, Pytest.
+   - [`Applicativo/frontend/`](./Applicativo/frontend/) — SPA React 18 + TypeScript + Vite.
+   - [`Applicativo/database/`](./Applicativo/database/) — Schema PostgreSQL, migrazioni e seed dati.
+3. **[`Portale_Founder_Control/`](./Portale_Founder_Control/)** — Cabina di regia del Founder:
+   - [`Portale_Founder_Control/control_center.py`](./Portale_Founder_Control/control_center.py) — Dashboard web locale (`http://127.0.0.1:8080`) per approvazioni L1–L6 e sincronizzazione task.
 
 ## Session Startup
 
-Use runtime-provided startup context first. Read `IDENTITY.md`, `SOUL.md`, `USER.md`, `MEMORY.md`, and active tasks in `tasks/` when needed context is missing or a deeper follow-up read is required.
+Use runtime-provided startup context first. Read `Azienda/IDENTITY.md`, `Azienda/SOUL.md`, `Azienda/USER.md`, `Azienda/MEMORY.md`, and active tasks in `Azienda/tasks/` when needed context is missing or a deeper follow-up read is required.
 
 ## Memory
 
-Use files for continuity across sessions:
+Use files inside `Azienda/` for continuity across sessions:
 
-- **Daily notes:** `memory/YYYY-MM-DD.md` holds raw session logs.
-- **User model:** `USER.md` holds stable Founder preferences and directives.
-- **Long-term:** `MEMORY.md` holds durable architectural and business facts and decisions.
-
-### USER.md - Durable User Directives
-
-- Write stable preferences, communication style, relationships, and active-project context as imperative directives such as `Always`, `Never`, or `Prefer`.
-- Precede each directive with `<!-- observed: YYYY-MM-DD | status: active -->`.
-- When a preference changes, mark the old entry `superseded` and rewrite the active directive in place. Never leave contradictory active directives.
-
-### MEMORY.md - Durable Facts and Decisions
-
-- Read, edit, and update it in main sessions with the Founder.
-- Save significant events, decisions, lessons, and durable non-profile facts as a curated summary, not raw logs.
+- **Daily notes:** `Azienda/memory/YYYY-MM-DD.md` holds raw session logs.
+- **User model:** `Azienda/USER.md` holds stable Founder preferences and directives.
+- **Long-term:** `Azienda/MEMORY.md` holds durable architectural and business facts and decisions.
 
 ### Write It Down
 
 Before writing memory files, read them first. Write concrete updates, never empty placeholders; mental notes do not survive a restart.
 
-- Asked to "remember this": update the daily note or relevant file (`USER.md` / `MEMORY.md`).
-- Architectural or Governance decision approved by Founder: record an ADR in `adr/`.
-- Task state change: update the corresponding JSON file in `tasks/`.
+- Asked to "remember this": update the daily note or relevant file (`Azienda/USER.md` / `Azienda/MEMORY.md`).
+- Architectural or Governance decision approved by Founder: record an ADR in `Azienda/adr/`.
+- Task state change: update the corresponding JSON file in `Azienda/tasks/`.
 
 ## Red Lines & Escalation (L0–L6)
 
