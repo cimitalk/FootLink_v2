@@ -85,4 +85,6 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run pytest suite (1:N PIM-PLM, Multi-level BOM & EU DPP)
-        run: pytest -v
+        run: python3 -m pytest -v
+        env:
+          PYTHONPATH: .
