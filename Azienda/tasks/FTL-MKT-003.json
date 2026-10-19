@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-MKT-003",
+  "title": "Pacchetto Esecutivo Go-Live Comunicazione B2B, Dossier Gate L5 e Sequenza Primi 3 Post LinkedIn DPP UE",
+  "description": "Predisporre il pacchetto di lancio inbound organico a costo 0 EUR (Zero Paid Ads, conformità L2) con dossier formale di escalation L5 al Founder per il go-live della Landing Page B2B e la schedulazione dei primi 3 post tecnici LinkedIn su Passaporto Digitale del Prodotto (DPP UE) e connessione laboratori terzisti a 0 EUR.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CMO",
+  "assignee_agent": "footlink-cmo",
+  "created_by": "CEO",
+  "created_at": "2026-10-19T10:58:00+02:00",
+  "updated_at": "2026-10-19T14:33:19+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "XS (<2h)",
+  "dependencies": [
+    "FTL-MKT-002",
+    "FTL-CEO-004"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/marketing/go-live-launch-kit-and-founder-l5-package.md",
+    "Azienda/docs/marketing/README.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Approvazione formale Livello L5 richiesta al Founder prima di qualsiasi pubblicazione o diffusione pubblica esterna di post LinkedIn o della Landing Page B2B.",
+  "escalation_level": "L5",
+  "decision_record_id": null,
+  "tags": [
+    "marketing",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "Predisposizione del pacchetto di go-live a spesa pubblicitaria 0 EUR",
+    "Redazione dei primi 3 post tecnici LinkedIn conformi al tono di voce istituzionale",
+    "Predisposizione della scheda decisionale Gate L5 per il Founder Control Center"
+  ],
+  "notes": "Approvazione L5 formalmente deliberata dal Founder nel Control Center. Autorizzata la pubblicazione della Landing Page B2B e avviata la schedulazione dei primi 3 post tecnici LinkedIn su Passaporto Digitale del Prodotto (DPP UE) e connessione laboratori terzisti a 0 EUR."
+}

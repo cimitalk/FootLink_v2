@@ -1,4 +1,9 @@
-"""Seed Initial Made-in-Italy Supply Chain Data for Footlink (1 PIM <-> N PLM, 3-Level BOM, 0 EUR Subcontractors)."""
+"""Seed Initial Made-in-Italy Supply Chain Data for Footlink:
+- 1 PIM <-> N PLM across Footwear, Leather Goods, and Apparel
+- 3-Level Hierarchical BOM with L6 Brand Costing & Lot Certificates
+- Vertical Category Tech Specs & Size Grading Rules
+- 0 EUR District Subcontractor Assignments
+"""
 
 from __future__ import annotations
 
@@ -7,19 +12,28 @@ from typing import List
 
 from app.database import FootlinkSQLitePersistence, db_manager
 from app.models import (
+    AttributeFieldType,
+    AttributeTargetEntity,
     BomComponentType,
     BomItem,
+    CollectionCreate,
+    CollectionStatus,
+    DomainRegistryEntryCreate,
     PimCommercialItem,
     PlmLifecycleStatus,
     PlmProductionVariant,
     ProductCategory,
     ProductionPhase,
+    RegistryDomain,
+    SchemaAttributeDefinitionCreate,
+    SeasonCreate,
+    SeasonStatus,
     SubcontractorAssignment,
 )
 
 
 def build_initial_seed_items() -> List[PimCommercialItem]:
-    """Construct the canonical Made-in-Italy seed dataset with 1 PIM <-> N PLM and 3-level BOM trees."""
+    """Construct the canonical Made-in-Italy seed dataset across Footwear, Leather Goods, and Apparel."""
     now_dt = datetime(2026, 10, 18, 8, 30, 0, tzinfo=timezone.utc)
 
     # =========================================================================
@@ -31,7 +45,10 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
         sku_code="FTL-FW26-LOAFER-01",
         model_name="Mocassino Artigianale Duca",
         brand_tenant_id="TENANT-CALZATURIFICIO-ROSSI",
-        season="FW26",
+        season="P/E 2026",
+        season_id="SEASON-PE26",
+        collection_id="COLL-SEASON-PE26-MAIN26",
+        collection_name="Main Collection",
         category=ProductCategory.FOOTWEAR,
         commercial_description_it=(
             "Mocassino classico cucito Blake in vitello pieno fiore e camoscio certificato LWG Gold, "
@@ -42,6 +59,13 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
             "crafted across Fermo-Macerata, Santa Croce sull'Arno, and Riviera del Brenta districts."
         ),
         retail_channels=["B2B Showroom Milano", "E-Commerce Flagship", "Boutique Wholesale"],
+        wholesale_price_eur=165.0,
+        retail_price_eur=450.0,
+        hs_customs_code="6403.59.95",
+        gtin_ean="8050012026101",
+        publishing_status="PUBLISHED",
+        care_instructions="Spazzolare delicatamente dopo l'uso, applicare crema naturale certificata e inserire tendiscarpe in legno di cedro. Costruzione Blake risuolabile.",
+        end_of_life_guide="Restituzione gratuita tramite programma Take-Back Footlink per separazione tomaia in vitello, cambrione in acciaio e suola in cuoio.",
         created_at=now_dt,
         plm_variants=[
             # Variant 1A: Vitello Nero Spazzolato (Distretto Fermo-Macerata + Santa Croce)
@@ -53,9 +77,27 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                 size_range="38-46",
                 last_or_pattern_code="FORMA-FM-108",
                 lifecycle_status=PlmLifecycleStatus.IN_PRODUCTION,
+                bom_version="v2.1 (Locked)",
+                bom_snapshot_locked=True,
+                sample_base_size="42",
+                size_grading_step_pct=2.8,
+                standard_labor_cost_eur=31.50,
+                category_specific_specs={
+                    "last_code": "FORMA-FM-108",
+                    "last_fitting": "F (Regular Tailored)",
+                    "size_scale_system": "EU_38_46",
+                    "sample_base_size": "42",
+                    "construction_method": "BLAKE_RAPID",
+                    "upper_primary_material": "Vitello Pieno Fiore Spazzolato 1.4-1.6mm",
+                    "upper_cutting_method": "TAGLIO_CAD_LAMA",
+                    "lining_material": "Capra Concia Vegetale Metal-Free",
+                    "insole_texon_spec": "Cuoio Rigenerato 3.5mm + Cambrione Acciaio",
+                    "outsole_code_mold": "SUOLA-CUOIO-TOSC-45",
+                    "outsole_material": "LEATHER",
+                    "heel_code_height_mm": "TAC-22MM Cuoio Stratificato",
+                },
                 created_at=now_dt,
                 bom_items=[
-                    # Level 1 -> Level 2 -> Level 3 (Upper assembly branch)
                     BomItem(
                         bom_item_id="BOM-DUCA-L1-UPPER",
                         level=1,
@@ -69,6 +111,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=7.5,
                         recycled_content_pct=20.0,
                         certifications=["LWG Gold", "REACH", "ISO 14001"],
+                        unit_cost_eur=7.80,
+                        lot_certificate_id="CERT-LWG-CSC-8810",
                     ),
                     BomItem(
                         bom_item_id="BOM-DUCA-L2-LINING",
@@ -83,6 +127,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=6.0,
                         recycled_content_pct=35.0,
                         certifications=["LWG Gold", "Pelle Conciata al Vegetale"],
+                        unit_cost_eur=4.20,
+                        lot_certificate_id="CERT-VEG-VLD-4412",
                     ),
                     BomItem(
                         bom_item_id="BOM-DUCA-L3-THREAD",
@@ -97,8 +143,9 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=2.0,
                         recycled_content_pct=100.0,
                         certifications=["GRS", "OEKO-TEX Standard 100"],
+                        unit_cost_eur=0.12,
+                        lot_certificate_id="CERT-GRS-FLM-1902",
                     ),
-                    # Level 1 -> Level 2 -> Level 3 (Sole assembly branch)
                     BomItem(
                         bom_item_id="BOM-DUCA-L1-SOLE",
                         level=1,
@@ -112,6 +159,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=3.0,
                         recycled_content_pct=30.0,
                         certifications=["LWG Silver", "REACH"],
+                        unit_cost_eur=14.50,
+                        lot_certificate_id="CERT-LWG-SAD-3109",
                     ),
                     BomItem(
                         bom_item_id="BOM-DUCA-L2-HEEL",
@@ -126,6 +175,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=2.5,
                         recycled_content_pct=45.0,
                         certifications=["REACH", "FSC Mix"],
+                        unit_cost_eur=5.40,
+                        lot_certificate_id="CERT-FSC-TCM-7701",
                     ),
                     BomItem(
                         bom_item_id="BOM-DUCA-L3-COMPOUND",
@@ -140,6 +191,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=1.5,
                         recycled_content_pct=65.0,
                         certifications=["GRS", "REACH"],
+                        unit_cost_eur=6.00,
+                        lot_certificate_id="CERT-GRS-GTC-5504",
                     ),
                 ],
                 subcontractor_assignments=[
@@ -181,6 +234,25 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                 size_range="38-46",
                 last_or_pattern_code="FORMA-FM-108",
                 lifecycle_status=PlmLifecycleStatus.INDUSTRIALIZED,
+                bom_version="v2.0 (Locked)",
+                bom_snapshot_locked=True,
+                sample_base_size="42",
+                size_grading_step_pct=2.8,
+                standard_labor_cost_eur=29.00,
+                category_specific_specs={
+                    "last_code": "FORMA-FM-108",
+                    "last_fitting": "F (Regular Tailored)",
+                    "size_scale_system": "EU_38_46",
+                    "sample_base_size": "42",
+                    "construction_method": "BLAKE",
+                    "upper_primary_material": "Camoscio Idrorepellente Concia Mista",
+                    "upper_cutting_method": "TRANCIA_FUSTELLA",
+                    "lining_material": "Vitello Naturale Non Tinto",
+                    "insole_texon_spec": "Lattice Anatomico + Cuoio Rigenerato",
+                    "outsole_code_mold": "SUOLA-BRENTA-LIGHT",
+                    "outsole_material": "LEATHER",
+                    "heel_code_height_mm": "TAC-20MM Cuoio Naturale",
+                },
                 created_at=now_dt,
                 bom_items=[
                     BomItem(
@@ -196,6 +268,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=8.0,
                         recycled_content_pct=25.0,
                         certifications=["LWG Gold", "REACH"],
+                        unit_cost_eur=7.20,
+                        lot_certificate_id="CERT-LWG-CVP-2201",
                     ),
                     BomItem(
                         bom_item_id="BOM-DUCA2-L2-INSOLE",
@@ -210,6 +284,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=3.0,
                         recycled_content_pct=50.0,
                         certifications=["GRS", "REACH"],
+                        unit_cost_eur=6.80,
+                        lot_certificate_id="CERT-GRS-SBR-6120",
                     ),
                     BomItem(
                         bom_item_id="BOM-DUCA2-L3-SHANK",
@@ -224,6 +300,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=1.0,
                         recycled_content_pct=85.0,
                         certifications=["GRS", "ISO 14001"],
+                        unit_cost_eur=1.90,
+                        lot_certificate_id="CERT-GRS-MMP-9012",
                     ),
                 ],
                 subcontractor_assignments=[
@@ -256,6 +334,25 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                 size_range="36-41",
                 last_or_pattern_code="FORMA-FM-108W",
                 lifecycle_status=PlmLifecycleStatus.SAMPLE,
+                bom_version="v1.2 (Sample Draft)",
+                bom_snapshot_locked=False,
+                sample_base_size="37",
+                size_grading_step_pct=2.5,
+                standard_labor_cost_eur=33.00,
+                category_specific_specs={
+                    "last_code": "FORMA-FM-108W",
+                    "last_fitting": "E (Woman Tailored)",
+                    "size_scale_system": "EU_36_41",
+                    "sample_base_size": "37",
+                    "construction_method": "GOODYEAR",
+                    "upper_primary_material": "Vitello Crust Anticato a Mano",
+                    "upper_cutting_method": "MANO",
+                    "lining_material": "Capra Concia Vegetale",
+                    "insole_texon_spec": "Cuoio Scolpito per Guardolo Goodyear",
+                    "outsole_code_mold": "SUOLA-GOODYEAR-W37",
+                    "outsole_material": "LEATHER",
+                    "heel_code_height_mm": "TAC-25MM Cuoio Fasciato",
+                },
                 created_at=now_dt,
                 bom_items=[
                     BomItem(
@@ -271,6 +368,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=7.0,
                         recycled_content_pct=20.0,
                         certifications=["LWG Gold", "REACH"],
+                        unit_cost_eur=8.10,
+                        lot_certificate_id="CERT-LWG-CCH-3318",
                     ),
                     BomItem(
                         bom_item_id="BOM-DUCA3-L2-CLAMP",
@@ -285,6 +384,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=1.0,
                         recycled_content_pct=60.0,
                         certifications=["REACH", "OEKO-TEX"],
+                        unit_cost_eur=6.50,
+                        lot_certificate_id="CERT-RCH-AMC-7021",
                     ),
                     BomItem(
                         bom_item_id="BOM-DUCA3-L3-GALV",
@@ -299,6 +400,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=0.5,
                         recycled_content_pct=50.0,
                         certifications=["ISO 14001", "REACH"],
+                        unit_cost_eur=1.80,
+                        lot_certificate_id="CERT-ISO-GEM-1180",
                     ),
                 ],
                 subcontractor_assignments=[
@@ -325,7 +428,10 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
         sku_code="FTL-FW26-TOTE-02",
         model_name="Borsa Shopping Vela",
         brand_tenant_id="TENANT-MAISON-FIRENZE",
-        season="FW26",
+        season="P/E 2026",
+        season_id="SEASON-PE26",
+        collection_id="COLL-SEASON-PE26-FASH26",
+        collection_name="Fashion Runway",
         category=ProductCategory.LEATHER_GOODS,
         commercial_description_it=(
             "Shopping bag strutturata in vacchetta toscana conciata al vegetale e grana dollaro, "
@@ -336,6 +442,13 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
             "crafted across Scandicci, Santa Croce sull'Arno, and Tolentino with full EU DPP traceability."
         ),
         retail_channels=["Boutique Diretta", "E-Commerce Global", "Department Stores EU"],
+        wholesale_price_eur=240.0,
+        retail_price_eur=680.0,
+        hs_customs_code="4202.21.00",
+        gtin_ean="8050012026202",
+        publishing_status="PUBLISHED",
+        care_instructions="Proteggere da pioggia intensa, nutrire con balsamo neutro per vacchetta vegetale e riporre nella dustbag in cotone GOTS.",
+        end_of_life_guide="Servizio di rigenerazione costola/galvanica e ritiro garantito a fine vita presso Maison Firenze per recupero pellame e ottone.",
         created_at=now_dt,
         plm_variants=[
             # Variant 2A: Vacchetta Cognac Naturale (Scandicci + Santa Croce)
@@ -347,6 +460,22 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                 size_range="OS",
                 last_or_pattern_code="MOD-SCANDICCI-44",
                 lifecycle_status=PlmLifecycleStatus.IN_PRODUCTION,
+                bom_version="v2.0 (Locked)",
+                bom_snapshot_locked=True,
+                sample_base_size="OS (36x28x15 cm)",
+                size_grading_step_pct=0.0,
+                standard_labor_cost_eur=42.00,
+                category_specific_specs={
+                    "pattern_cad_code": "MOD-SCANDICCI-44-DXF",
+                    "bag_dimensions_lwh_cm": "36 × 28 × 15 cm (Drop manico 24 cm)",
+                    "leather_type_tanning": "VEGETABLE_TANNED (Consorzio Vera Pelle)",
+                    "splitting_thickness_mm": "Spacco in testa 1.6mm / Scarnitura bordi 0.7mm",
+                    "interlining_reinforcement": "Salpa Rigenerata Termoadesiva 0.9mm",
+                    "hardware_galvanic_finish": "Ottone Spazzolato Nickel-Free 0.5 micron",
+                    "closure_zip_spec": "Ponte magnetico invisibile + tasca zip passo 5",
+                    "edge_finishing_type": "TINGIBORDO_A_MANO_3_MANI (Vernice ad acqua)",
+                    "stitching_thread_step": "Filo Lino/rPET Tit. 20, passo 3.5 punti/cm",
+                },
                 created_at=now_dt,
                 bom_items=[
                     BomItem(
@@ -362,6 +491,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=9.0,
                         recycled_content_pct=30.0,
                         certifications=["LWG Gold", "Pelle Conciata al Vegetale", "REACH"],
+                        unit_cost_eur=8.40,
+                        lot_certificate_id="CERT-VPT-SC-9901",
                     ),
                     BomItem(
                         bom_item_id="BOM-VELA-L2-HANDLE",
@@ -376,6 +507,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=4.0,
                         recycled_content_pct=40.0,
                         certifications=["LWG Gold", "REACH"],
+                        unit_cost_eur=16.50,
+                        lot_certificate_id="CERT-PAS-FI-8820",
                     ),
                     BomItem(
                         bom_item_id="BOM-VELA-L3-ROPE",
@@ -390,6 +523,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=1.5,
                         recycled_content_pct=95.0,
                         certifications=["GRS", "OEKO-TEX Standard 100"],
+                        unit_cost_eur=2.10,
+                        lot_certificate_id="CERT-GRS-TPC-4410",
                     ),
                 ],
                 subcontractor_assignments=[
@@ -422,6 +557,22 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                 size_range="OS",
                 last_or_pattern_code="MOD-SCANDICCI-44",
                 lifecycle_status=PlmLifecycleStatus.INDUSTRIALIZED,
+                bom_version="v2.0 (Locked)",
+                bom_snapshot_locked=True,
+                sample_base_size="OS (36x28x15 cm)",
+                size_grading_step_pct=0.0,
+                standard_labor_cost_eur=39.50,
+                category_specific_specs={
+                    "pattern_cad_code": "MOD-SCANDICCI-44-DXF",
+                    "bag_dimensions_lwh_cm": "36 × 28 × 15 cm (Drop manico 24 cm)",
+                    "leather_type_tanning": "CHROME_FREE (LWG Gold Certified)",
+                    "splitting_thickness_mm": "Spacco 1.4mm / Scarnitura 0.6mm",
+                    "interlining_reinforcement": "Microfibra Rinforzata GRS 0.8mm",
+                    "hardware_galvanic_finish": "Palladio Spazzolato Nickel-Free",
+                    "closure_zip_spec": "Zip Metallica Passo 5 Ottone Riciclato",
+                    "edge_finishing_type": "RIMBOCCATO",
+                    "stitching_thread_step": "Filo Poliestere GRS Tit. 25, passo 4 punti/cm",
+                },
                 created_at=now_dt,
                 bom_items=[
                     BomItem(
@@ -437,6 +588,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=8.5,
                         recycled_content_pct=25.0,
                         certifications=["LWG Gold", "REACH"],
+                        unit_cost_eur=7.90,
+                        lot_certificate_id="CERT-LWG-CTO-5501",
                     ),
                     BomItem(
                         bom_item_id="BOM-VELA2-L2-ZIP",
@@ -451,6 +604,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=1.0,
                         recycled_content_pct=55.0,
                         certifications=["REACH"],
+                        unit_cost_eur=9.20,
+                        lot_certificate_id="CERT-RCH-MMF-3012",
                     ),
                     BomItem(
                         bom_item_id="BOM-VELA2-L3-TAPE",
@@ -465,6 +620,8 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
                         waste_percentage=1.0,
                         recycled_content_pct=100.0,
                         certifications=["GRS", "OEKO-TEX Standard 100"],
+                        unit_cost_eur=1.40,
+                        lot_certificate_id="CERT-GRS-NEB-7741",
                     ),
                 ],
                 subcontractor_assignments=[
@@ -485,10 +642,463 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
     return [pim_duca, pim_vela]
 
 
+def seed_seasons_and_collections(db: FootlinkSQLitePersistence) -> None:
+    """Seed Fashion Seasons and Collections (Sprint 5: 1 Season -> N Collections)."""
+    pe26 = SeasonCreate(
+        code="P/E 2026",
+        name="Primavera Estate 2026",
+        year=2026,
+        status=SeasonStatus.ACTIVE,
+        start_date="2026-03-01",
+        end_date="2026-08-31",
+        description="Stagione Primavera/Estate 2026: focus su traspirabilità, suole biodegradabili e pellami LWG Gold.",
+        initial_collections=[
+            CollectionCreate(
+                code="MAIN-26",
+                name="Main Collection",
+                target_market="Global Luxury",
+                status=CollectionStatus.APPROVED,
+                description="Linea continuativa core presentata alle fashion week di Milano e Parigi.",
+            ),
+            CollectionCreate(
+                code="FASH-26",
+                name="Fashion Runway",
+                target_market="B2B Showroom",
+                status=CollectionStatus.APPROVED,
+                description="Modelli di tendenza per showroom d'avanguardia e department store di fascia alta.",
+            ),
+            CollectionCreate(
+                code="CAPS-26",
+                name="Limited Edition / Capsule",
+                target_market="Exclusive Direct",
+                status=CollectionStatus.DRAFT,
+                description="Drop esclusivo in tiratura limitata con packaging 100% compostabile.",
+            ),
+        ],
+    )
+    db.save_season(pe26, season_id="SEASON-PE26")
+
+    ai26 = SeasonCreate(
+        code="A/I 2026-2027",
+        name="Autunno Inverno 2026/27",
+        year=2026,
+        status=SeasonStatus.PLANNING,
+        start_date="2026-09-01",
+        end_date="2027-02-28",
+        description="Stagione Autunno/Inverno 2026-2027: concia al vegetale toscana, fondi carrarmato e lane certificate.",
+        initial_collections=[
+            CollectionCreate(
+                code="MAIN-27",
+                name="Main Collection",
+                target_market="Global Luxury",
+                status=CollectionStatus.DRAFT,
+                description="Linea autunnale con stivaletti e calzature foderate in shearling certificato.",
+            ),
+            CollectionCreate(
+                code="CARR-27",
+                name="Carry Over Icons",
+                target_market="Omnichannel",
+                status=CollectionStatus.DRAFT,
+                description="Modelli iconici carry-over a produzione continuativa tutto l'anno.",
+            ),
+        ],
+    )
+    db.save_season(ai26, season_id="SEASON-AI26")
+
+
+def seed_domain_registries(db: FootlinkSQLitePersistence) -> None:
+    """Seed master data registries for PIM & PLM (Sprint 5)."""
+    registries = [
+        # PIM Registries
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="categories",
+            entry_code="footwear",
+            label_it="Calzature (Footwear)",
+            label_en="Footwear",
+            metadata={"default_hs_code": "6403.59.95", "icon": "👞"},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="categories",
+            entry_code="leather_goods",
+            label_it="Pelletteria (Leather Goods)",
+            label_en="Leather Goods",
+            metadata={"default_hs_code": "4202.21.00", "icon": "👜"},
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="categories",
+            entry_code="apparel",
+            label_it="Abbigliamento (Apparel)",
+            label_en="Apparel",
+            metadata={"default_hs_code": "6201.20.00", "icon": "🧥"},
+            sort_order=3,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="retail_channels",
+            entry_code="showroom",
+            label_it="B2B Showroom Milano",
+            label_en="B2B Showroom",
+            metadata={"priority": "high", "commission_pct": 8.0},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="retail_channels",
+            entry_code="ecommerce",
+            label_it="E-Commerce Flagship",
+            label_en="Direct E-Commerce",
+            metadata={"priority": "direct", "commission_pct": 0.0},
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="retail_channels",
+            entry_code="wholesale",
+            label_it="Boutique Wholesale EU",
+            label_en="Wholesale Boutiques EU",
+            metadata={"priority": "partner", "commission_pct": 12.0},
+            sort_order=3,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="certifications",
+            entry_code="lwg_gold",
+            label_it="Leather Working Group Gold",
+            label_en="LWG Gold Standard",
+            metadata={"auditor": "LWG", "category": "Leather"},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="certifications",
+            entry_code="reach",
+            label_it="Conforme Regolamento REACH UE",
+            label_en="EU REACH Compliant",
+            metadata={"regulation": "EC 1907/2006", "mandatory_eu": True},
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="certifications",
+            entry_code="grs",
+            label_it="Global Recycled Standard (GRS)",
+            label_en="GRS Recycled Content",
+            metadata={"min_recycled_pct": 20},
+            sort_order=3,
+        ),
+        # PLM Registries
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="production_phases",
+            entry_code="tanning_material",
+            label_it="Concia & Selezione Materie Prime",
+            label_en="Tanning & Material Selection",
+            metadata={"department": "Tannery", "lead_time_days": 14},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="production_phases",
+            entry_code="cutting",
+            label_it="Taglio CAD & Tranciatura",
+            label_en="CAD Cutting & Clicking",
+            metadata={"department": "Cutting Room", "lead_time_days": 4},
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="production_phases",
+            entry_code="stitching_upper",
+            label_it="Giunteria & Cucitura Tomaia",
+            label_en="Closing & Upper Stitching",
+            metadata={"department": "Stitching Room", "lead_time_days": 7},
+            sort_order=3,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="production_phases",
+            entry_code="lasting_assembly",
+            label_it="Montaggio su Forma & Suolatura",
+            label_en="Lasting & Bottom Assembly",
+            metadata={"department": "Making Room", "lead_time_days": 5},
+            sort_order=4,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="production_phases",
+            entry_code="finishing",
+            label_it="Finissaggio & Stiratura",
+            label_en="Finishing & Burnishing",
+            metadata={"department": "Finishing Room", "lead_time_days": 3},
+            sort_order=5,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="production_phases",
+            entry_code="quality_control",
+            label_it="Controllo Qualità & Confezionamento",
+            label_en="Quality Inspection & Boxing",
+            metadata={"department": "QA", "lead_time_days": 2},
+            sort_order=6,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="component_types",
+            entry_code="upper",
+            label_it="Tomaia Principale",
+            label_en="Upper Shell",
+            metadata={"bom_default_level": 1},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="component_types",
+            entry_code="lining",
+            label_it="Fodera Interna",
+            label_en="Inner Lining",
+            metadata={"bom_default_level": 2},
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="component_types",
+            entry_code="insole",
+            label_it="Sottopiede / Fusetto",
+            label_en="Insole / Shank Board",
+            metadata={"bom_default_level": 2},
+            sort_order=3,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="component_types",
+            entry_code="outsole",
+            label_it="Suola / Fondo",
+            label_en="Outsole",
+            metadata={"bom_default_level": 1},
+            sort_order=4,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="component_types",
+            entry_code="heel",
+            label_it="Tacco",
+            label_en="Heel",
+            metadata={"bom_default_level": 2},
+            sort_order=5,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="component_types",
+            entry_code="hardware",
+            label_it="Minuteria Metallica",
+            label_en="Metal Hardware",
+            metadata={"bom_default_level": 2},
+            sort_order=6,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="suppliers",
+            entry_code="conceria_chienti",
+            label_it="Conceria del Chienti Srl (Fermo)",
+            label_en="Chienti Tannery IT",
+            metadata={"district": "Fermo-Macerata", "country": "IT", "rating": "A+"},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="suppliers",
+            entry_code="conceria_santa_croce",
+            label_it="Conceria Santa Croce SpA (Pisa)",
+            label_en="Santa Croce Tannery IT",
+            metadata={"district": "Santa Croce sull'Arno", "country": "IT", "rating": "A+"},
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="suppliers",
+            entry_code="suolificio_marche",
+            label_it="Suolificio Marchigiano (Macerata)",
+            label_en="Marchigiano Sole Co IT",
+            metadata={"district": "Civitanova Marche", "country": "IT", "rating": "A"},
+            sort_order=3,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="subcontractors",
+            entry_code="laboratorio_fm01",
+            label_it="Laboratorio Giunteria FM-01 (Fermo)",
+            label_en="FM-01 Upper Lab",
+            metadata={"district": "Fermo", "specialty": "Blake / Goodyear", "license_fee_eur": 0.0},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="subcontractors",
+            entry_code="laboratorio_brenta",
+            label_it="Laboratorio Montaggio Brenta (VE)",
+            label_en="Brenta Lasting Lab",
+            metadata={"district": "Riviera del Brenta", "specialty": "Donna Lusso", "license_fee_eur": 0.0},
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="size_scales",
+            entry_code="eu_shoes_woman",
+            label_it="Calzature Donna EU 35-42",
+            label_en="Women Shoes EU 35-42",
+            metadata={"min": 35, "max": 42, "step": 1.0, "base": 37},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="size_scales",
+            entry_code="eu_shoes_man",
+            label_it="Calzature Uomo EU 38-46",
+            label_en="Men Shoes EU 38-46",
+            metadata={"min": 38, "max": 46, "step": 1.0, "base": 42},
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="units_of_measure",
+            entry_code="sqft",
+            label_it="Piedi quadri (sqft)",
+            label_en="Square feet (sqft)",
+            metadata={"type": "area", "conversion_to_m2": 0.0929},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="units_of_measure",
+            entry_code="pair",
+            label_it="Paia (paia)",
+            label_en="Pairs (pair)",
+            metadata={"type": "count", "conversion_to_m2": 1.0},
+            sort_order=2,
+        ),
+    ]
+    for r in registries:
+        db.save_registry_entry(r)
+
+
+def seed_schema_attribute_definitions(db: FootlinkSQLitePersistence) -> None:
+    """Seed configurable schema attribute definitions for the Founder Data Model Studio (Sprint 5)."""
+    attrs = [
+        # PIM Item attributes
+        SchemaAttributeDefinitionCreate(
+            target_entity=AttributeTargetEntity.PIM_ITEM,
+            field_key="target_gender",
+            label_it="Genere Target",
+            label_en="Target Gender",
+            field_type=AttributeFieldType.SELECT,
+            options=["Uomo", "Donna", "Unisex", "Bambino"],
+            is_required=False,
+            default_value="Unisex",
+            group_name="Commerciale & Marketing",
+            is_system=True,
+            description="Segmentazione commerciale del modello di collezione",
+        ),
+        SchemaAttributeDefinitionCreate(
+            target_entity=AttributeTargetEntity.PIM_ITEM,
+            field_key="sustainability_rating",
+            label_it="Rating Sostenibilità ESPR",
+            label_en="ESPR Sustainability Rating",
+            field_type=AttributeFieldType.SELECT,
+            options=["A - Eccellenza Circolare", "B - Alto Riciclo", "C - Standard UE ESPR"],
+            is_required=False,
+            default_value="A - Eccellenza Circolare",
+            group_name="Sostenibilità & Normativa",
+            is_system=False,
+            description="Grado di conformità circolare secondo la direttiva UE ESPR 2024/1781",
+        ),
+        SchemaAttributeDefinitionCreate(
+            target_entity=AttributeTargetEntity.PIM_ITEM,
+            field_key="collection_drop_number",
+            label_it="Numero Drop Campionario",
+            label_en="Sample Drop Number",
+            field_type=AttributeFieldType.NUMBER,
+            is_required=False,
+            default_value=1,
+            group_name="Commerciale & Marketing",
+            is_system=False,
+            description="Sequenza di rilascio all'interno della collezione (Drop 1, 2, 3)",
+        ),
+        # PLM Variant attributes
+        SchemaAttributeDefinitionCreate(
+            target_entity=AttributeTargetEntity.PLM_VARIANT,
+            field_key="heel_height_mm",
+            label_it="Altezza Tacco (mm)",
+            label_en="Heel Height (mm)",
+            field_type=AttributeFieldType.NUMBER,
+            is_required=False,
+            default_value=22.0,
+            group_name="Specifiche Tecniche Fabbrica",
+            is_system=False,
+            description="Quota millimetrica dell'altezza del tacco montato sulla forma",
+        ),
+        SchemaAttributeDefinitionCreate(
+            target_entity=AttributeTargetEntity.PLM_VARIANT,
+            field_key="leather_finish",
+            label_it="Finitura Pellame",
+            label_en="Leather Finishing",
+            field_type=AttributeFieldType.SELECT,
+            options=["Spazzolato a Mano", "Anilina Naturale", "Scamosciato Idrorepellente", "Pieno Fiore Semilucido"],
+            is_required=False,
+            default_value="Spazzolato a Mano",
+            group_name="Specifiche Tecniche Fabbrica",
+            is_system=False,
+            description="Trattamento estetico e protettivo superficiale applicato sulla tomaia",
+        ),
+        SchemaAttributeDefinitionCreate(
+            target_entity=AttributeTargetEntity.PLM_VARIANT,
+            field_key="fitting_width",
+            label_it="Calzata Forma",
+            label_en="Fitting Width",
+            field_type=AttributeFieldType.SELECT,
+            options=["Stretta (C)", "Regolare (D/E)", "Comoda (EE)"],
+            is_required=False,
+            default_value="Regolare (D/E)",
+            group_name="Specifiche Tecniche Fabbrica",
+            is_system=False,
+            description="Larghezza di calzata calcolata sulla pianta della forma",
+        ),
+        # BOM Item attributes
+        SchemaAttributeDefinitionCreate(
+            target_entity=AttributeTargetEntity.BOM_ITEM,
+            field_key="batch_quality_grade",
+            label_it="Grado Selezione Materia Prima",
+            label_en="Raw Material Quality Grade",
+            field_type=AttributeFieldType.SELECT,
+            options=["Scelta I (Top Grade)", "Scelta II (Commerciale)", "Campionario"],
+            is_required=False,
+            default_value="Scelta I (Top Grade)",
+            group_name="Controllo Qualità Fornitura",
+            is_system=False,
+            description="Classificazione del lotto di pellame o componente ricevuto dal fornitore",
+        ),
+    ]
+    for a in attrs:
+        db.save_attribute_definition(a)
+
+
 def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = False) -> List[PimCommercialItem]:
     """Populate the SQLite/PostgreSQL database with initial Made-in-Italy seed data if empty (or when force=True)."""
     if force:
-        db.clear_all()
+        db.clear_all(clear_master_data=True)
+
+    # Always seed seasons, domain registries and dynamic schema attributes if empty
+    if len(db.list_seasons()) == 0:
+        seed_seasons_and_collections(db)
+    if len(db.list_registry_entries()) == 0:
+        seed_domain_registries(db)
+    if len(db.list_attribute_definitions()) == 0:
+        seed_schema_attribute_definitions(db)
+
     if db.count_pim_items() == 0:
         for item in build_initial_seed_items():
             db.save_pim_item(item)
@@ -498,3 +1108,5 @@ def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = 
 if __name__ == "__main__":
     seeded = seed_initial_data(db_manager, force=True)
     print(f"Seeded {len(seeded)} PIM Commercial Items into {db_manager.sqlite_path}")
+    print(f"Seeded {len(db_manager.list_seasons())} Seasons, {len(db_manager.list_registry_entries())} Registries, {len(db_manager.list_attribute_definitions())} Schema Attributes")
+

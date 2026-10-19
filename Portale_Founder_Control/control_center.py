@@ -10,6 +10,7 @@ import glob
 import html
 import json
 import os
+import re
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -26,6 +27,236 @@ PORT = int(os.environ.get("FOOTLINK_PORT", "8080"))
 
 def now_iso() -> str:
     return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=2))).isoformat(timespec="seconds")
+
+
+AGENT_ROLE_MAP = {
+    "CEO": "footlink-ceo",
+    "CGO": "footlink-cgo",
+    "CTO": "footlink-cto",
+    "CPO": "footlink-cpo",
+    "CRO": "footlink-cro",
+    "CMO": "footlink-cmo",
+}
+
+PREFIX_MAP = {
+    "CEO": "FTL-CEO",
+    "CGO": "FTL-GOV",
+    "CTO": "FTL-TECH",
+    "CPO": "FTL-PROD",
+    "CRO": "FTL-REV",
+    "CMO": "FTL-MKT",
+}
+
+VALID_PRIORITIES = {"critical", "high", "medium", "low"}
+VALID_STATUSES = {"backlog", "todo", "in_progress", "review", "done", "blocked", "paused_ai_quota", "cancelled"}
+VALID_EFFORTS = {"XS (<2h)", "S (2-8h)", "M (1-3gg)", "L (3-10gg)", "XL (>10gg)"}
+VALID_ESCALATIONS = {"L0", "L1", "L2", "L3", "L4", "L5", "L6"}
+VALID_TAGS = {"PLM", "PIM", "infra", "governance", "sales", "marketing", "product", "finops"}
+
+
+def generate_next_task_id(role: str) -> str:
+    prefix = PREFIX_MAP.get(role, "FTL-CEO")
+    existing = glob.glob(os.path.join(TASKS_DIR, f"{prefix}-*.json"))
+    max_num = 0
+    for p in existing:
+        base = os.path.basename(p)
+        m = re.search(rf"^{prefix}-(\d+)\.json$", base)
+        if m:
+            num = int(m.group(1))
+            if num > max_num:
+                max_num = num
+    next_num = max_num + 1
+    return f"{prefix}-{next_num:03d}"
+
+
+def handle_create_task(payload: dict) -> dict:
+    role = payload.get("assignee_role", "CEO").strip()
+    if role not in AGENT_ROLE_MAP:
+        raise ValueError(f"Ruolo non valido: {role}. Deve essere uno tra {list(AGENT_ROLE_MAP.keys())}")
+
+    title = payload.get("title", "").strip()
+    if len(title) < 5:
+        raise ValueError("Il titolo deve contenere almeno 5 caratteri.")
+
+    description = payload.get("description", "").strip()
+    if len(description) < 10:
+        raise ValueError("La descrizione deve contenere almeno 10 caratteri per orientare la C-Suite.")
+
+    priority = payload.get("priority", "high").strip()
+    if priority not in VALID_PRIORITIES:
+        priority = "high"
+
+    status = payload.get("status", "todo").strip()
+    if status not in ("todo", "backlog"):
+        status = "todo"
+
+    estimated_effort = payload.get("estimated_effort", "M (1-3gg)").strip()
+    if estimated_effort not in VALID_EFFORTS:
+        estimated_effort = "M (1-3gg)"
+
+    escalation_level = payload.get("escalation_level", "L2").strip()
+    if escalation_level not in VALID_ESCALATIONS:
+        escalation_level = "L2"
+
+    raw_criteria = payload.get("acceptance_criteria") or []
+    if isinstance(raw_criteria, str):
+        criteria = [c.strip().lstrip("-*• ") for c in raw_criteria.split("\n") if c.strip()]
+    elif isinstance(raw_criteria, list):
+        criteria = [str(c).strip().lstrip("-*• ") for c in raw_criteria if str(c).strip()]
+    else:
+        criteria = []
+
+    if not criteria:
+        criteria = [
+            f"Analisi strategica e scomposizione organizzativa da parte del ruolo {role}",
+            "Definizione dei deliverable e attribuzione delle dipendenze C-Suite",
+            "Conferma di conformità FinOps e chiusura del task nel Founder Control Center"
+        ]
+
+    raw_tags = payload.get("tags") or []
+    if isinstance(raw_tags, list):
+        tags = [t for t in raw_tags if t in VALID_TAGS]
+    else:
+        tags = []
+    if not tags:
+        default_role_tags = {
+            "CEO": ["governance", "product"],
+            "CGO": ["governance"],
+            "CTO": ["infra", "product"],
+            "CPO": ["product", "PLM"],
+            "CRO": ["finops"],
+            "CMO": ["marketing", "sales"],
+        }
+        tags = default_role_tags.get(role, ["governance"])
+
+    notes = payload.get("notes", "").strip()
+    now_str = now_iso()
+    combined_notes = notes if notes else f"Iniziativa inserita dal Founder nel Control Center per triage e strutturazione {role}."
+
+    task_id = generate_next_task_id(role)
+    assignee_agent = AGENT_ROLE_MAP[role]
+    requires_escalation = escalation_level != "L0"
+    esc_reason = f"Direttiva Founder ({escalation_level}) — Richiede triage e strutturazione C-Suite" if requires_escalation else None
+
+    # Calculate default due date ~ 30 days ahead
+    due_date = (datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=2))) + datetime.timedelta(days=30)).strftime("%Y-%m-%dT23:59:59+02:00")
+
+    task_object = {
+        "task_id": task_id,
+        "title": title,
+        "description": description,
+        "status": status,
+        "priority": priority,
+        "assignee_role": role,
+        "assignee_agent": assignee_agent,
+        "created_by": "Founder (Control Center)",
+        "created_at": now_str,
+        "updated_at": now_str,
+        "due_date": due_date,
+        "estimated_effort": estimated_effort,
+        "actual_effort": None,
+        "dependencies": [],
+        "blocked_by": [],
+        "output_artifacts": [],
+        "requires_escalation": requires_escalation,
+        "escalation_reason": esc_reason,
+        "escalation_level": escalation_level,
+        "decision_record_id": None,
+        "tags": tags,
+        "acceptance_criteria": criteria,
+        "notes": combined_notes,
+    }
+
+    save_task(task_object)
+    sync_dependencies_and_readme()
+    return task_object
+
+
+def load_single_task(task_id: str) -> dict:
+    path = os.path.join(TASKS_DIR, f"{task_id}.json")
+    if os.path.isfile(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                data["_file"] = os.path.basename(path)
+                return data
+        except Exception:
+            pass
+    return None
+
+
+def handle_edit_task(payload: dict) -> dict:
+    task_id = payload.get("task_id", "").strip()
+    if not task_id:
+        raise ValueError("Task ID mancante.")
+
+    path = os.path.join(TASKS_DIR, f"{task_id}.json")
+    if not os.path.isfile(path):
+        raise ValueError(f"Task non trovato su disco: {task_id}")
+
+    with open(path, "r", encoding="utf-8") as f:
+        task_data = json.load(f)
+
+    if "title" in payload:
+        title = payload["title"].strip()
+        if len(title) < 5:
+            raise ValueError("Il titolo deve contenere almeno 5 caratteri.")
+        task_data["title"] = title
+
+    if "description" in payload:
+        desc = payload["description"].strip()
+        if len(desc) < 10:
+            raise ValueError("La descrizione deve contenere almeno 10 caratteri.")
+        task_data["description"] = desc
+
+    if "assignee_role" in payload:
+        role = payload["assignee_role"].strip()
+        if role in AGENT_ROLE_MAP:
+            task_data["assignee_role"] = role
+            task_data["assignee_agent"] = AGENT_ROLE_MAP[role]
+
+    if "priority" in payload and payload["priority"] in VALID_PRIORITIES:
+        task_data["priority"] = payload["priority"]
+
+    if "status" in payload and payload["status"] in VALID_STATUSES:
+        task_data["status"] = payload["status"]
+        if task_data["status"] == "done" and not task_data.get("actual_effort"):
+            task_data["actual_effort"] = "Completed & Approved by Founder"
+
+    if "estimated_effort" in payload and payload["estimated_effort"] in VALID_EFFORTS:
+        task_data["estimated_effort"] = payload["estimated_effort"]
+
+    if "escalation_level" in payload and payload["escalation_level"] in VALID_ESCALATIONS:
+        task_data["escalation_level"] = payload["escalation_level"]
+        task_data["requires_escalation"] = payload["escalation_level"] != "L0"
+        if task_data["requires_escalation"] and not task_data.get("escalation_reason"):
+            task_data["escalation_reason"] = f"Escalation {task_data['escalation_level']} — Richiede approvazione Founder"
+        elif not task_data["requires_escalation"]:
+            task_data["escalation_reason"] = None
+
+    if "acceptance_criteria" in payload:
+        raw_c = payload["acceptance_criteria"]
+        if isinstance(raw_c, str):
+            criteria = [c.strip().lstrip("-*• ") for c in raw_c.split("\n") if c.strip()]
+        elif isinstance(raw_c, list):
+            criteria = [str(c).strip().lstrip("-*• ") for c in raw_c if str(c).strip()]
+        else:
+            criteria = []
+        task_data["acceptance_criteria"] = criteria
+
+    if "tags" in payload:
+        raw_tags = payload["tags"]
+        if isinstance(raw_tags, list):
+            task_data["tags"] = [t for t in raw_tags if t in VALID_TAGS]
+
+    if "notes" in payload:
+        task_data["notes"] = payload["notes"].strip() if payload["notes"] else None
+
+    save_task(task_data)
+    sync_dependencies_and_readme()
+    reloaded = load_single_task(task_id)
+    return reloaded if reloaded else task_data
+
 
 
 def load_tasks():
@@ -54,6 +285,25 @@ def load_tasks():
         "FTL-TECH-003",
         "FTL-MKT-002",
         "FTL-REV-002",
+        # Sprint 3 (Design System v2.0, Home Hub & Core Process Convergence)
+        "FTL-GOV-003",
+        "FTL-CEO-003",
+        "FTL-PROD-003",
+        "FTL-TECH-004",
+        # Sprint 4 (Districts Pilot Onboarding, Zero-Training Mobile, Free-Tier Cloud Deploy)
+        "FTL-CEO-004",
+        "FTL-GOV-004",
+        "FTL-REV-003",
+        "FTL-MKT-003",
+        "FTL-PROD-004",
+        "FTL-TECH-005",
+        # Sprint 5 (Flexible Data Model, Seasons & Collections, Domain Registries, UI Simplification)
+        "FTL-CEO-005",
+        "FTL-GOV-005",
+        "FTL-PROD-005",
+        "FTL-TECH-006",
+        "FTL-REV-004",
+        "FTL-MKT-004",
     ]
     tasks.sort(key=lambda t: (order.index(t["task_id"]) if t.get("task_id") in order else 999, t.get("task_id", "")))
     return tasks
@@ -82,7 +332,7 @@ def sync_dependencies_and_readme():
                 t["blocked_by"] = new_blocked
                 row_changed = True
             deps = t.get("dependencies") or []
-            if all(d in done_ids for d in deps) and not t["blocked_by"] and t.get("status") == "backlog":
+            if deps and all(d in done_ids for d in deps) and not t["blocked_by"] and t.get("status") == "backlog":
                 t["status"] = "todo"
                 row_changed = True
             if row_changed:
@@ -106,8 +356,17 @@ def sync_dependencies_and_readme():
         "low": "🔵 `low`",
     }
 
-    sprint1 = [t for t in tasks if t["task_id"].endswith("-001")]
-    sprint2 = [t for t in tasks if not t["task_id"].endswith("-001")]
+    sprint1_ids = {"FTL-GOV-001", "FTL-CEO-001", "FTL-TECH-001", "FTL-PROD-001", "FTL-REV-001", "FTL-MKT-001"}
+    sprint2_ids = {"FTL-GOV-002", "FTL-CEO-002", "FTL-PROD-002", "FTL-TECH-002", "FTL-TECH-003", "FTL-MKT-002", "FTL-REV-002"}
+    sprint3_ids = {"FTL-GOV-003", "FTL-CEO-003", "FTL-PROD-003", "FTL-TECH-004"}
+    sprint4_ids = {"FTL-CEO-004", "FTL-GOV-004", "FTL-REV-003", "FTL-MKT-003", "FTL-PROD-004", "FTL-TECH-005"}
+    sprint5_ids = {"FTL-CEO-005", "FTL-GOV-005", "FTL-PROD-005", "FTL-TECH-006", "FTL-REV-004", "FTL-MKT-004"}
+
+    sprint1 = [t for t in tasks if t["task_id"] in sprint1_ids]
+    sprint2 = [t for t in tasks if t["task_id"] in sprint2_ids]
+    sprint3 = [t for t in tasks if t["task_id"] in sprint3_ids]
+    sprint4 = [t for t in tasks if t["task_id"] in sprint4_ids]
+    sprint5 = [t for t in tasks if t["task_id"] in sprint5_ids]
 
     lines = [
         "# 📋 Founder Control Dashboard — Registro Task (`Azienda/tasks/`)",
@@ -151,6 +410,90 @@ def sync_dependencies_and_readme():
             esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
             lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
 
+    if sprint3:
+        lines.extend([
+            "",
+            "---",
+            "",
+            "## 🎨 Sprint 3 — Convergenza UX/UI Design System v2.0, Home Hub Iniziale & Processi Core",
+            "",
+            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
+            "|---|:---:|---|:---:|:---:|---|:---:|",
+        ])
+        for t in sprint3:
+            tid = t["task_id"]
+            role = t["assignee_role"]
+            title = t["title"]
+            prio = prio_badges.get(t["priority"], t["priority"])
+            st = status_badges.get(t["status"], t["status"])
+            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
+            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
+            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
+
+    if sprint4:
+        lines.extend([
+            "",
+            "---",
+            "",
+            "## 🏭 Sprint 4 — Lancio Pilota nei Distretti, Validazione sul Campo 'Zero-Training Terzista', Deploy Free-Tier & Gate L2–L6",
+            "",
+            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
+            "|---|:---:|---|:---:|:---:|---|:---:|",
+        ])
+        for t in sprint4:
+            tid = t["task_id"]
+            role = t["assignee_role"]
+            title = t["title"]
+            prio = prio_badges.get(t["priority"], t["priority"])
+            st = status_badges.get(t["status"], t["status"])
+            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
+            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
+            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
+
+    if sprint5:
+        lines.extend([
+            "",
+            "---",
+            "",
+            "## 🚀 Sprint 5 — Modello Dati Flessibile, Gerarchia Stagioni & Collezioni, Tabelle Anagrafiche e Semplificazione UI",
+            "",
+            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
+            "|---|:---:|---|:---:|:---:|---|:---:|",
+        ])
+        for t in sprint5:
+            tid = t["task_id"]
+            role = t["assignee_role"]
+            title = t["title"]
+            prio = prio_badges.get(t["priority"], t["priority"])
+            st = status_badges.get(t["status"], t["status"])
+            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
+            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
+            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
+
+    known_sprints = sprint1_ids | sprint2_ids | sprint3_ids | sprint4_ids | sprint5_ids
+    new_founder_tasks = [t for t in tasks if t["task_id"] not in known_sprints]
+    if new_founder_tasks:
+        lines.extend([
+            "",
+            "---",
+            "",
+            "## 👑 Nuove Iniziative & Direttive Founder — Backlog C-Suite",
+            "",
+            "Task e direttive inseriti direttamente dal Founder via **Founder Control Center** per analisi, prioritizzazione strategica (CEO/CGO) ed esecuzione da parte dei C-Level responsabili.",
+            "",
+            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
+            "|---|:---:|---|:---:|:---:|---|:---:|",
+        ])
+        for t in new_founder_tasks:
+            tid = t["task_id"]
+            role = t["assignee_role"]
+            title = t["title"]
+            prio = prio_badges.get(t["priority"], t["priority"])
+            st = status_badges.get(t["status"], t["status"])
+            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
+            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
+            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
+
     lines.extend([
         "",
         "---",
@@ -168,6 +511,71 @@ def sync_dependencies_and_readme():
 
 def list_all_docs():
     docs = []
+    
+    # Task artifacts to role mapping
+    task_artifact_role = {}
+    task_files = sorted(glob.glob(os.path.join(TASKS_DIR, "FTL-*.json")))
+    for p in task_files:
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                d = json.load(f)
+                r = d.get("assignee_role")
+                for a in d.get("output_artifacts") or []:
+                    norm = os.path.normpath(a)
+                    task_artifact_role[norm] = r
+                    task_artifact_role[norm.replace("Azienda/", "")] = r
+        except Exception:
+            pass
+
+    def infer_role(rel_path):
+        norm = os.path.normpath(rel_path)
+        if norm in task_artifact_role:
+            return task_artifact_role[norm]
+        for k, r in task_artifact_role.items():
+            if norm.endswith(k) or k.endswith(norm):
+                return r
+        low = norm.lower()
+        if "role_ceo" in low or "/okr/" in low or "ftl-ceo" in low:
+            return "CEO"
+        if "role_cgo" in low or "/adr/" in low or "/governance/" in low or "ftl-gov" in low or "portale_founder_control" in low:
+            return "CGO"
+        if "role_cto" in low or "applicativo/" in low or "ftl-tech" in low or ".github/" in low:
+            return "CTO"
+        if "role_cpo" in low or "/prd/" in low or "ftl-prod" in low:
+            return "CPO"
+        if "role_cro" in low or "/finops/" in low or "ftl-rev" in low:
+            return "CRO"
+        if "role_cmo" in low or "/marketing/" in low or "ftl-mkt" in low:
+            return "CMO"
+        if "manifesto" in low:
+            return "CEO"
+        return "TUTTI"
+
+    def extract_title(full_path):
+        ext = os.path.splitext(full_path)[1].lower()
+        try:
+            if ext == ".md":
+                with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("# "):
+                            return line[2:].strip()
+            elif ext in (".html", ".htm"):
+                with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read(2048)
+                    m = re.search(r"<title>(.*?)</title>", content, re.IGNORECASE | re.DOTALL)
+                    if m:
+                        return m.group(1).strip()
+            elif ext == ".json" and "FTL-" in full_path:
+                with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                    d = json.load(f)
+                    tid = d.get("task_id", "")
+                    t = d.get("title", "")
+                    return f"[{tid}] {t}"
+        except Exception:
+            pass
+        return os.path.basename(full_path)
+
     azienda_core = [
         os.path.join("Azienda", f)
         for f in [
@@ -181,6 +589,7 @@ def list_all_docs():
         ]
     ]
     adr_files = [os.path.relpath(p, ROOT_DIR) for p in sorted(glob.glob(os.path.join(ADR_DIR, "*.md")))]
+    task_json_files = [os.path.relpath(p, ROOT_DIR) for p in sorted(glob.glob(os.path.join(TASKS_DIR, "*.json")))]
     doc_files = [
         os.path.relpath(p, ROOT_DIR)
         for p in sorted(
@@ -208,7 +617,7 @@ def list_all_docs():
     ]
     root_files = ["README.md", "AGENTS.md", ".github/workflows/ci.yml"]
 
-    candidates = azienda_core + adr_files + doc_files + applicativo_files + portale_files + root_files
+    candidates = azienda_core + adr_files + task_json_files + doc_files + applicativo_files + portale_files + root_files
     seen = set()
     for rel in candidates:
         full_p = os.path.join(ROOT_DIR, rel)
@@ -222,6 +631,9 @@ def list_all_docs():
             docs.append({
                 "path": rel,
                 "pillar": pillar,
+                "role": infer_role(rel),
+                "title": extract_title(full_p),
+                "ext": os.path.splitext(rel)[1].lower(),
                 "size": os.path.getsize(full_p),
                 "mtime": datetime.datetime.fromtimestamp(os.path.getmtime(full_p)).strftime("%Y-%m-%d %H:%M:%S"),
             })
@@ -298,6 +710,23 @@ INDEX_HTML = r"""<!DOCTYPE html>
   .btn-approve:hover { background: rgba(34,197,94,0.3); }
   .btn-warn { background: rgba(245,158,11,0.18); border-color: #f59e0b; color: #fbbf24; }
   .btn-danger { background: rgba(239,68,68,0.18); border-color: #ef4444; color: #f87171; }
+  .btn-platform {
+    background: linear-gradient(135deg, #0284c7 0%, #6366f1 100%);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 2px 10px rgba(2, 132, 199, 0.45);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+  }
+  .btn-platform:hover {
+    background: linear-gradient(135deg, #0369a1 0%, #4f46e5 100%);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.55);
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
   .container { max-width: 1440px; margin: 24px auto; padding: 0 24px; }
   .kpi-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -361,16 +790,271 @@ INDEX_HTML = r"""<!DOCTYPE html>
   }
   .artifact-link:hover { text-decoration: underline; }
   .card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-  .docs-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  .col-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 700px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .col-cards::-webkit-scrollbar {
+    width: 6px;
+  }
+  .col-cards::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
+  .col-cards::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+
+  /* C-Suite Knowledge Hub & Document Explorer */
+  .knowledge-hub {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 36px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+  .hub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hub-title-box h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
     gap: 10px;
   }
-  .doc-item {
-    background: var(--panel); border: 1px solid var(--border);
-    padding: 12px 14px; border-radius: 8px; cursor: pointer;
-    display: flex; justify-content: space-between; align-items: center;
+  .hub-title-box p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
   }
-  .doc-item:hover { border-color: var(--accent); }
+  .hub-stats {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #7dd3fc;
+  }
+  .role-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .role-tab {
+    cursor: pointer;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+  }
+  .role-tab:hover {
+    border-color: var(--accent);
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+  .role-tab.active {
+    background: linear-gradient(135deg, #0284c7 0%, #6366f1 100%);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+  }
+  .role-tab .count {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .hub-toolbar {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .hub-search-box {
+    position: relative;
+    flex: 1;
+    min-width: 280px;
+  }
+  .hub-search-box input {
+    width: 100%;
+    background: #090d16;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px 10px 38px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .hub-search-box input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+  }
+  .hub-search-box .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  .clear-search-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .clear-search-btn:hover { color: #ffffff; }
+  .hub-format-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .filter-chip {
+    cursor: pointer;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+  .filter-chip:hover {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  .filter-chip.active {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: var(--accent);
+    color: #38bdf8;
+  }
+  .hub-results-meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .hub-docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+  .doc-card {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.15s ease;
+  }
+  .doc-card:hover {
+    border-color: rgba(56, 189, 248, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  }
+  .doc-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .doc-role-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+  }
+  .role-CEO { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.4); }
+  .role-CGO { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.4); }
+  .role-CTO { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.4); }
+  .role-CPO { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
+  .role-CRO { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+  .role-CMO { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236,72,153,0.4); }
+  .role-TUTTI, .role-GENERAL { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.4); }
+  .doc-type-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+  }
+  .type-md { color: #4ade80; background: rgba(34,197,94,0.15); }
+  .type-html { color: #c084fc; background: rgba(168,85,247,0.15); }
+  .type-json { color: #fbbf24; background: rgba(245,158,11,0.15); }
+  .doc-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.4;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .doc-card-path {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px;
+    color: #38bdf8;
+    margin-bottom: 8px;
+    word-break: break-all;
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  .doc-card-path:hover { text-decoration: underline; }
+  .doc-card-meta {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .doc-card-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 10px;
+  }
   .modal-backdrop {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
     z-index: 100; align-items: center; justify-content: center; padding: 20px;
@@ -488,6 +1172,168 @@ INDEX_HTML = r"""<!DOCTYPE html>
   .md-preview pre code { background: transparent; color: #f1f5f9; padding: 0; }
   .md-preview a { color: #38bdf8; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .md-preview a:hover { color: #7dd3fc; }
+
+  /* Create Task Modal & Founder Directives */
+  .btn-create-task {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.35) 100%);
+    border: 1px solid #f59e0b;
+    color: #fef08a;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+  }
+  .btn-create-task:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.4) 0%, rgba(217, 119, 6, 0.5) 100%);
+    border-color: #fbbf24;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    transform: translateY(-1px);
+    color: #ffffff;
+  }
+  .task-card.founder-card {
+    border-left: 4px solid #f59e0b;
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--panel-alt) 100%);
+  }
+  .badge-founder-directive {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(234, 179, 8, 0.25) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.55);
+    color: #fef08a;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+  }
+  .modal-form-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    max-width: 840px;
+    width: 96%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+  }
+  .modal-form-header {
+    padding: 16px 24px;
+    background: linear-gradient(90deg, #131b2e 0%, #1e1b4b 100%);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .modal-form-header h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-form-header p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .modal-form-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: #0d1322;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-group label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #cbd5e1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .form-group label span.hint {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: normal;
+  }
+  .form-input, .form-select, .form-textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.15s ease;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  }
+  .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+  }
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 640px) {
+    .form-grid-2 { grid-template-columns: 1fr; }
+  }
+  .tag-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .tag-chip {
+    font-size: 11.5px;
+    padding: 5px 11px;
+    border-radius: 6px;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+  }
+  .tag-chip:hover {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  .tag-chip.selected {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    font-weight: 600;
+  }
+  .modal-form-footer {
+    padding: 14px 24px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
 </style>
 </head>
 <body>
@@ -501,6 +1347,13 @@ INDEX_HTML = r"""<!DOCTYPE html>
     </div>
   </div>
   <div class="top-controls">
+    <button class="btn btn-create-task" onclick="openCreateTaskModal()" title="Crea un nuovo task da assegnare alla C-Suite">
+      <span>✨ Crea Task Founder</span>
+    </button>
+    <a href="http://127.0.0.1:5173" target="_blank" rel="noopener noreferrer" class="btn btn-platform" title="Apri l'applicazione Web React Vite su http://127.0.0.1:5173">
+      <span>👟 Piattaforma Footlink</span>
+      <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Frontend :5173 ↗</span>
+    </a>
     <span class="pill green" id="quota-pill">⚡ AI Quota: ACTIVE (€21.99 Pro + €30 Credits)</span>
     <span class="pill amber">🛡️ Spend Policy: €0 Autonomous (L2 Founder Lock)</span>
     <button class="btn btn-warn" onclick="toggleQuotaPause()">⏸️ Toggle Standby (paused_ai_quota)</button>
@@ -518,9 +1371,20 @@ INDEX_HTML = r"""<!DOCTYPE html>
       <div class="sub"><code>Manifesto</code> • <code>adr/</code> • <code>tasks/</code> • <code>docs/</code></div>
     </div>
     <div class="kpi-card" style="border-left:4px solid #22c55e;">
-      <div class="label">💻 Pilastro 2 — Applicativo/</div>
-      <div class="value" style="font-size:18px;">Piattaforma PLM + PIM</div>
-      <div class="sub"><code>backend/</code> (FastAPI) • <code>frontend/</code> (React) • <code>database/</code></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="label">💻 Pilastro 2 — Applicativo/</div>
+        <span class="pill green" style="font-size:10px;padding:2px 8px;">Frontend &amp; Backend</span>
+      </div>
+      <div class="value" style="font-size:18px;margin-top:4px;">Piattaforma PLM + PIM</div>
+      <div class="sub"><code>backend/</code> (FastAPI :8000) • <code>frontend/</code> (React :5173)</div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="http://127.0.0.1:5173" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-approve" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+          🚀 Apri Frontend (:5173) ↗
+        </a>
+        <button class="btn btn-sm" onclick="openDoc('Applicativo/frontend/app-live-preview.html')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;display:inline-flex;align-items:center;gap:4px;">
+          👁️ Live Preview Standalone
+        </button>
+      </div>
     </div>
     <div class="kpi-card" style="border-left:4px solid #a855f7;">
       <div class="label">🎛️ Pilastro 3 — Portale Founder Control/</div>
@@ -532,15 +1396,44 @@ INDEX_HTML = r"""<!DOCTYPE html>
   <div id="approval-queue-container"></div>
 
   <div class="section-title">
-    <span>📊 C-Suite Task Board — Sprint 1 &amp; Sprint 2 (Real-Time Sync con <code>Azienda/tasks/*.json</code>)</span>
+    <span>📊 C-Suite Task Board (Sprint 1–4 • Real-Time Sync con <code>Azienda/tasks/*.json</code>)</span>
     <span style="font-size:12px;color:var(--muted)" id="last-sync"></span>
   </div>
   <div class="kanban" id="kanban-board"></div>
 
-  <div class="section-title">
-    <span>📚 Esplora Repository a 3 Pilastri: 🏢 Azienda • 💻 Applicativo • 🎛️ Portale Founder Control</span>
+  <!-- C-Suite Knowledge Hub & Document Explorer -->
+  <div class="knowledge-hub" id="knowledge-hub">
+    <div class="hub-header">
+      <div class="hub-title-box">
+        <h2>📚 Archivio Documentale &amp; Deliverable C-Suite</h2>
+        <p>Consultazione rapida per ruolo C-Level, ricerca in tempo reale e anteprima interattiva (.md ed .html)</p>
+      </div>
+      <div class="hub-stats" id="hub-doc-count">0 Documenti</div>
+    </div>
+
+    <!-- C-Level Role Filter Tabs -->
+    <div class="role-tabs" id="role-tabs-container"></div>
+
+    <!-- Search & Format Filters Toolbar -->
+    <div class="hub-toolbar">
+      <div class="hub-search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="doc-search-input" placeholder="Cerca per titolo, percorso file, parola chiave o deliverable..." oninput="onSearchInput(this.value)" />
+        <button class="clear-search-btn" id="clear-search-btn" onclick="clearSearch()" style="display:none;" title="Cancella ricerca">✕</button>
+      </div>
+      
+      <div class="hub-format-filters" id="format-filter-group">
+        <button class="filter-chip active" data-ext="all" onclick="setDocFilterExt('all')">Tutti i formati</button>
+        <button class="filter-chip" data-ext=".md" onclick="setDocFilterExt('.md')">📝 Markdown (.md)</button>
+        <button class="filter-chip" data-ext=".html" onclick="setDocFilterExt('.html')">🌐 HTML / Preview (.html)</button>
+        <button class="filter-chip" data-ext=".json" onclick="setDocFilterExt('.json')">⚙️ JSON Task</button>
+        <button class="filter-chip" data-ext=".py" onclick="setDocFilterExt('.py')">🐍 Codice (.py / .tsx)</button>
+      </div>
+    </div>
+
+    <div class="hub-results-meta" id="hub-results-meta"></div>
+    <div class="hub-docs-grid" id="hub-docs-grid"></div>
   </div>
-  <div class="docs-grid" id="docs-grid"></div>
 </div>
 
 <div class="modal-backdrop" id="doc-modal" onclick="if(event.target===this)closeModal()">
@@ -591,13 +1484,361 @@ INDEX_HTML = r"""<!DOCTYPE html>
   </div>
 </div>
 
+<div class="modal-backdrop" id="create-task-modal" onclick="if(event.target===this)closeCreateTaskModal()">
+  <div class="modal-form-card">
+    <div class="modal-form-header">
+      <div>
+        <h3>✨ Nuova Direttiva / Task Founder</h3>
+        <p>Inserisci un'iniziativa: verrà registrata in <code>Azienda/tasks/</code>, sincronizzata nel registro e inviata alla C-Suite per triage, strutturazione ed esecuzione.</p>
+      </div>
+      <button class="btn btn-sm" onclick="closeCreateTaskModal()" title="Chiudi finestra (Esc)">✕ Chiudi</button>
+    </div>
+
+    <div class="modal-form-body">
+      <!-- Role selection with dynamic ID display -->
+      <div class="form-group">
+        <label>
+          <span>Destinatario Iniziale per Triage &amp; Strutturazione:</span>
+          <span class="hint" id="new-task-id-badge" style="font-family:monospace;font-weight:700;color:var(--accent);background:rgba(56,189,248,0.15);padding:2px 8px;border-radius:4px;">ID Calcolato: FTL-CEO-005</span>
+        </label>
+        <select class="form-select" id="new-task-role" onchange="onRoleChange(this.value)">
+          <option value="CEO" selected>👑 CEO (footlink-ceo) — Triage Strategico, Allineamento OKR &amp; Scomposizione (Consigliato)</option>
+          <option value="CGO">⚖️ CGO (footlink-cgo) — Governance, Ingegneria dei Processi, Schema &amp; ADR</option>
+          <option value="CTO">💻 CTO (footlink-cto) — Architettura Tecnica, Backend FastAPI, React &amp; DB</option>
+          <option value="CPO">📦 CPO (footlink-cpo) — Specifiche Prodotto PLM/PIM, UX/UI &amp; Scheda Tecnica</option>
+          <option value="CRO">💰 CRO (footlink-cro) — FinOps, Pricing di Filiera &amp; Sostenibilità</option>
+          <option value="CMO">📣 CMO (footlink-cmo) — Marketing, Posizionamento &amp; Go-To-Market Distretti</option>
+        </select>
+      </div>
+
+      <!-- Title -->
+      <div class="form-group">
+        <label>
+          <span>Titolo dell'Iniziativa / Task:</span>
+          <span class="hint">Minimo 5 caratteri</span>
+        </label>
+        <input type="text" class="form-input" id="new-task-title" placeholder="Es. Integrazione modulo calcolo consumi tomaia e scarti pellami" />
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label>
+          <span>Descrizione &amp; Direttiva Operativa:</span>
+          <span class="hint">Spiega obiettivi, contesto e motivazione strategica</span>
+        </label>
+        <textarea class="form-textarea" id="new-task-desc" rows="3" placeholder="Descrivi in dettaglio la richiesta del Founder, specificando quali processi industriali tocca e quali C-Level devono collaborare..."></textarea>
+      </div>
+
+      <!-- 2 Columns: Priority / Status / Effort and Escalation / Due Date -->
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label><span>Priorità Esecutiva:</span></label>
+          <select class="form-select" id="new-task-priority">
+            <option value="critical">🔴 Critical (Bloccante / Massima priorità)</option>
+            <option value="high" selected>🟠 High (Alta priorità)</option>
+            <option value="medium">🟡 Medium (Normale / Sprint Backlog)</option>
+            <option value="low">🔵 Low (Bassa / Miglioria futura)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label><span>Stato Iniziale:</span></label>
+          <select class="form-select" id="new-task-status">
+            <option value="todo" selected>🟢 todo (Pronto per Presa in Carico C-Suite)</option>
+            <option value="backlog">📥 backlog (In attesa di pianificazione sprint)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label><span>Stima Effort Iniziale:</span></label>
+          <select class="form-select" id="new-task-effort">
+            <option value="XS (<2h)">XS (&lt;2h) — Task rapido / Verifica puntuale</option>
+            <option value="S (2-8h)">S (2-8h) — Mezza/Una giornata</option>
+            <option value="M (1-3gg)" selected>M (1-3gg) — Standard deliverable</option>
+            <option value="L (3-10gg)">L (3-10gg) — Epica / Sub-modulo complesso</option>
+            <option value="XL (>10gg)">XL (&gt;10gg) — Milestone strategica</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <span>Policy di Escalation (L0–L6):</span>
+            <span class="hint">Red Lines</span>
+          </label>
+          <select class="form-select" id="new-task-escalation">
+            <option value="L2" selected>🛡️ L2 (Zero Spesa Autonoma €0 — Consigliato)</option>
+            <option value="L0">⚡ L0 (Autonomia Piena C-Suite)</option>
+            <option value="L1">ℹ️ L1 (Notifica Informativa Founder)</option>
+            <option value="L3">💼 L3 (Scelta di Business &amp; Pricing Network)</option>
+            <option value="L4">📐 L4 (Architettura &amp; Modello Dati 1:N)</option>
+            <option value="L5">📢 L5 (Comunicazioni Esterne &amp; Partner)</option>
+            <option value="L6">🔒 L6 (Sicurezza, Segreti &amp; Dati Critici)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Acceptance Criteria -->
+      <div class="form-group">
+        <label>
+          <span>Criteri di Accettazione / Risultati Attesi:</span>
+          <span class="hint">Un criterio per riga</span>
+        </label>
+        <textarea class="form-textarea" id="new-task-criteria" rows="3" placeholder="Analisi preliminare e scomposizione organizzativa CEO/CGO&#10;Definizione dei deliverable e attribuzione delle dipendenze C-Suite&#10;Conferma di conformità FinOps e chiusura del task nel Founder Control Center"></textarea>
+      </div>
+
+      <!-- Tags Multi-Select -->
+      <div class="form-group">
+        <label>
+          <span>Tag Tematici:</span>
+          <span class="hint">Seleziona uno o più ambiti</span>
+        </label>
+        <div class="tag-chips" id="tag-chips-container">
+          <span class="tag-chip selected" data-tag="governance" onclick="toggleTagChip(this)">⚖️ governance</span>
+          <span class="tag-chip selected" data-tag="product" onclick="toggleTagChip(this)">📦 product</span>
+          <span class="tag-chip" data-tag="PLM" onclick="toggleTagChip(this)">📐 PLM</span>
+          <span class="tag-chip" data-tag="PIM" onclick="toggleTagChip(this)">🏷️ PIM</span>
+          <span class="tag-chip" data-tag="infra" onclick="toggleTagChip(this)">☁️ infra</span>
+          <span class="tag-chip" data-tag="finops" onclick="toggleTagChip(this)">💰 finops</span>
+          <span class="tag-chip" data-tag="sales" onclick="toggleTagChip(this)">🤝 sales</span>
+          <span class="tag-chip" data-tag="marketing" onclick="toggleTagChip(this)">📣 marketing</span>
+        </div>
+      </div>
+
+      <!-- Notes for CEO/CGO -->
+      <div class="form-group">
+        <label>
+          <span>Note &amp; Istruzioni di Triage per CEO &amp; CGO:</span>
+          <span class="hint">Opzionale</span>
+        </label>
+        <input type="text" class="form-input" id="new-task-notes" placeholder="Es. Valutare se richiede nuovo ADR o integrazione con Sprint 4." />
+      </div>
+
+      <div id="create-task-error" style="display:none;color:#ef4444;background:rgba(239,68,68,0.12);border:1px solid #ef4444;padding:10px 14px;border-radius:8px;font-size:12.5px;"></div>
+    </div>
+
+    <div class="modal-form-footer">
+      <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+        <span>📋 Conforme al Task Object Schema v1.0</span>
+        <span>•</span>
+        <span>Google Antigravity Ready</span>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn" onclick="closeCreateTaskModal()">Annulla</button>
+        <button type="button" class="btn btn-create-task" id="btn-submit-task" onclick="submitCreateTask()">
+          <span>🚀 Invia Direttiva alla C-Suite</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="edit-task-modal" onclick="if(event.target===this)closeEditTaskModal()">
+  <div class="modal-form-card">
+    <div class="modal-form-header">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <h3 id="edit-task-header-id" style="font-family:monospace;letter-spacing:-0.2px;">FTL-XXX-000</h3>
+          <span class="pill" id="edit-task-header-sprint" style="font-size:11px;"></span>
+          <span class="pill" id="edit-task-header-role" style="font-size:11px;"></span>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:4px;">Modifica i parametri del task. I dati verranno salvati su file in <code>Azienda/tasks/</code> e sincronizzati nel registro.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="btn btn-sm" id="btn-edit-open-raw" onclick="openDocFromEditModal()" title="Visualizza il file JSON grezzo">🔍 JSON</button>
+        <button class="btn btn-sm" onclick="closeEditTaskModal()" title="Chiudi finestra (Esc)">✕ Chiudi</button>
+      </div>
+    </div>
+    <div id="edit-task-error-top" style="display:none;color:#ef4444;background:rgba(239,68,68,0.12);border-bottom:1px solid #ef4444;padding:10px 24px;font-size:12.5px;"></div>
+
+    <div class="modal-form-body">
+      <input type="hidden" id="edit-task-id-hidden" />
+
+      <!-- Title -->
+      <div class="form-group">
+        <label>
+          <span>Titolo del Task:</span>
+          <span class="hint">Minimo 5 caratteri</span>
+        </label>
+        <input type="text" class="form-input" id="edit-task-title" />
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label>
+          <span>Descrizione &amp; Mandato Operativo:</span>
+          <span class="hint">Minimo 10 caratteri</span>
+        </label>
+        <textarea class="form-textarea" id="edit-task-desc" rows="3"></textarea>
+      </div>
+
+      <!-- 2 Columns: Role & Status / Priority & Effort -->
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label><span>Ruolo Assegnatario (C-Suite):</span></label>
+          <select class="form-select" id="edit-task-role">
+            <option value="CEO">👑 CEO (footlink-ceo)</option>
+            <option value="CGO">⚖️ CGO (footlink-cgo)</option>
+            <option value="CTO">💻 CTO (footlink-cto)</option>
+            <option value="CPO">📦 CPO (footlink-cpo)</option>
+            <option value="CRO">💰 CRO (footlink-cro)</option>
+            <option value="CMO">📣 CMO (footlink-cmo)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label><span>Stato Operativo:</span></label>
+          <select class="form-select" id="edit-task-status">
+            <option value="todo">🟢 todo (Pronto per Presa in Carico)</option>
+            <option value="in_progress">🔄 in_progress (In Lavorazione)</option>
+            <option value="review">🟣 review (In Attesa di Approvazione Founder)</option>
+            <option value="done">✅ done (Completato ed Approvato)</option>
+            <option value="backlog">📥 backlog (In Coda Pianificazione)</option>
+            <option value="blocked">🔴 blocked (Bloccato da Dipendenza)</option>
+            <option value="paused_ai_quota">⏸️ paused_ai_quota (Standby Quota FinOps)</option>
+            <option value="cancelled">⚪ cancelled (Annullato)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label><span>Priorità Esecutiva:</span></label>
+          <select class="form-select" id="edit-task-priority">
+            <option value="critical">🔴 Critical (Bloccante / Massima)</option>
+            <option value="high">🟠 High (Alta priorità)</option>
+            <option value="medium">🟡 Medium (Normale / Sprint)</option>
+            <option value="low">🔵 Low (Bassa / Miglioria futura)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label><span>Stima Effort:</span></label>
+          <select class="form-select" id="edit-task-effort">
+            <option value="XS (<2h)">XS (&lt;2h) — Task rapido</option>
+            <option value="S (2-8h)">S (2-8h) — Mezza/Una giornata</option>
+            <option value="M (1-3gg)">M (1-3gg) — Standard deliverable</option>
+            <option value="L (3-10gg)">L (3-10gg) — Epica / Sub-modulo</option>
+            <option value="XL (>10gg)">XL (&gt;10gg) — Milestone strategica</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label><span>Policy di Escalation (L0–L6):</span></label>
+          <select class="form-select" id="edit-task-escalation">
+            <option value="L2">🛡️ L2 (Zero Spesa Autonoma €0)</option>
+            <option value="L0">⚡ L0 (Autonomia Piena C-Suite)</option>
+            <option value="L1">ℹ️ L1 (Notifica Informativa Founder)</option>
+            <option value="L3">💼 L3 (Scelta di Business &amp; Pricing Network)</option>
+            <option value="L4">📐 L4 (Architettura &amp; Modello Dati 1:N)</option>
+            <option value="L5">📢 L5 (Comunicazioni Esterne &amp; Partner)</option>
+            <option value="L6">🔒 L6 (Sicurezza, Segreti &amp; Dati Critici)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label><span>Creato Da:</span></label>
+          <input type="text" class="form-input" id="edit-task-created-by" disabled style="opacity:0.75;" />
+        </div>
+      </div>
+
+      <!-- Acceptance Criteria -->
+      <div class="form-group">
+        <label>
+          <span>Criteri di Accettazione / Risultati Attesi (DoD):</span>
+          <span class="hint">Un criterio per riga</span>
+        </label>
+        <textarea class="form-textarea" id="edit-task-criteria" rows="3"></textarea>
+      </div>
+
+      <!-- Tags Multi-Select -->
+      <div class="form-group">
+        <label>
+          <span>Tag Tematici:</span>
+          <span class="hint">Clicca sui tag per attivare/disattivare</span>
+        </label>
+        <div class="tag-chips" id="edit-tag-chips-container">
+          <span class="tag-chip" data-tag="governance" onclick="toggleTagChip(this)">⚖️ governance</span>
+          <span class="tag-chip" data-tag="product" onclick="toggleTagChip(this)">📦 product</span>
+          <span class="tag-chip" data-tag="PLM" onclick="toggleTagChip(this)">📐 PLM</span>
+          <span class="tag-chip" data-tag="PIM" onclick="toggleTagChip(this)">🏷️ PIM</span>
+          <span class="tag-chip" data-tag="infra" onclick="toggleTagChip(this)">☁️ infra</span>
+          <span class="tag-chip" data-tag="finops" onclick="toggleTagChip(this)">💰 finops</span>
+          <span class="tag-chip" data-tag="sales" onclick="toggleTagChip(this)">🤝 sales</span>
+          <span class="tag-chip" data-tag="marketing" onclick="toggleTagChip(this)">📣 marketing</span>
+        </div>
+      </div>
+
+      <!-- Notes / Directives -->
+      <div class="form-group">
+        <label>
+          <span>Note &amp; Direttive Esecutive:</span>
+          <span class="hint">Modifica o aggiungi note per la C-Suite</span>
+        </label>
+        <textarea class="form-textarea" id="edit-task-notes" rows="2"></textarea>
+      </div>
+
+      <!-- Output Artifacts display if any -->
+      <div class="form-group" id="edit-task-artifacts-group" style="display:none;">
+        <label><span>Deliverable / Output Artifacts Collegati:</span></label>
+        <div id="edit-task-artifacts-list" class="artifact-list"></div>
+      </div>
+
+      <div id="edit-task-error" style="display:none;color:#ef4444;background:rgba(239,68,68,0.12);border:1px solid #ef4444;padding:10px 14px;border-radius:8px;font-size:12.5px;"></div>
+    </div>
+
+    <div class="modal-form-footer">
+      <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+        <span>📝 Task Object Schema v1.0 Compliant</span>
+        <span>•</span>
+        <span>Salvataggio Diretto in Azienda/tasks/</span>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn" onclick="closeEditTaskModal()">Annulla</button>
+        <button type="button" class="btn btn-approve" id="btn-submit-edit-task" onclick="submitEditTask()">
+          <span>💾 Salva Modifiche</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-notification" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;background:#0f172a;border:1px solid #22c55e;color:#f8fafc;padding:12px 20px;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,0.5);font-size:13px;align-items:center;gap:10px;transition:opacity 0.25s ease;">
+  <span id="toast-icon">✅</span>
+  <span id="toast-text">Modifiche salvate con successo!</span>
+</div>
+
 <script>
 let currentState = { tasks: [], docs: [] };
 
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast-notification');
+  if (!t) return;
+  t.style.borderColor = isError ? '#ef4444' : '#22c55e';
+  document.getElementById('toast-icon').textContent = isError ? '❌' : '✅';
+  document.getElementById('toast-text').textContent = msg;
+  t.style.display = 'flex';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => {
+    t.style.opacity = '0';
+    setTimeout(() => { t.style.display = 'none'; }, 250);
+  }, 3500);
+}
+
 async function fetchState() {
-  const res = await fetch('/api/state');
-  currentState = await res.json();
-  renderAll();
+  try {
+    const res = await fetch('/api/state?_t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      currentState = await res.json();
+      renderAll();
+    }
+  } catch (e) {
+    console.error('Error fetching state:', e);
+  }
 }
 
 function renderAll() {
@@ -676,43 +1917,83 @@ function renderAll() {
   ];
 
   document.getElementById('kanban-board').innerHTML = columns.map(col => {
-    const colTasks = tasks.filter(t => col.key === 'backlog' ? (t.status === 'backlog' || t.status === 'paused_ai_quota' || t.status === 'blocked') : t.status === col.key);
+    let colTasks = tasks.filter(t => col.key === 'backlog' ? (t.status === 'backlog' || t.status === 'paused_ai_quota' || t.status === 'blocked') : t.status === col.key);
+
+    if (col.key === 'done') {
+      // Sort Done tasks descending by updated_at / created_at (most recently approved first)
+      colTasks.sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+      const totalDone = colTasks.length;
+      const displayed = showAllDone ? colTasks : colTasks.slice(0, 10);
+      return `
+        <div class="col">
+          <div class="col-header">
+            <span>${col.label}</span>
+            <span class="pill green" title="${totalDone} task completati in totale">${displayed.length} / ${totalDone}</span>
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;padding:2px 2px;">
+            <span>${showAllDone ? 'Tutti i ' + totalDone + ' approvati' : 'Ultimi 10 approvati (discendenti)'}</span>
+            ${totalDone > 10 ? `<button class="btn btn-sm" onclick="toggleShowAllDone()" style="padding:2px 8px;font-size:10px;background:rgba(255,255,255,0.06);">${showAllDone ? 'Mostra 10' : 'Vedi tutti (' + totalDone + ')'}</button>` : ''}
+          </div>
+          <div class="col-cards">
+            ${displayed.map(t => renderCard(t)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
     return `
       <div class="col">
         <div class="col-header">
           <span>${col.label}</span>
           <span class="pill">${colTasks.length}</span>
         </div>
-        ${colTasks.map(t => renderCard(t)).join('')}
+        <div class="col-cards">
+          ${colTasks.map(t => renderCard(t)).join('')}
+        </div>
       </div>
     `;
   }).join('');
 
-  // Render Docs with 3-Pillar icon badges
-  const pillarIcon = (p) => p === 'Azienda' ? '🏢' : (p === 'Applicativo' ? '💻' : (p === 'Portale_Founder_Control' ? '🎛️' : '📄'));
-  document.getElementById('docs-grid').innerHTML = (currentState.docs || []).map(d => `
-    <div class="doc-item" onclick="openDoc('${d.path}')">
-      <div>
-        <div style="font-family:monospace;font-size:12.5px;color:#38bdf8;font-weight:600;">${pillarIcon(d.pillar)} ${d.path}</div>
-        <div style="font-size:11px;color:var(--muted);">Pilastro: ${d.pillar || 'Root'} • Aggiornato: ${d.mtime}</div>
-      </div>
-      <span style="font-size:11px;color:var(--muted);">${(d.size/1024).toFixed(1)} KB</span>
-    </div>
-  `).join('');
+  // Render C-Suite Knowledge Hub & Document Explorer
+  renderKnowledgeHub();
 
   document.getElementById('last-sync').textContent = 'Ultimo sync: ' + new Date().toLocaleTimeString('it-IT');
 }
 
+const SPRINT_MAP = {
+  // Sprint 1
+  'FTL-GOV-001': 'S1', 'FTL-CEO-001': 'S1', 'FTL-TECH-001': 'S1', 'FTL-PROD-001': 'S1', 'FTL-REV-001': 'S1', 'FTL-MKT-001': 'S1',
+  // Sprint 2
+  'FTL-GOV-002': 'S2', 'FTL-CEO-002': 'S2', 'FTL-PROD-002': 'S2', 'FTL-TECH-002': 'S2', 'FTL-TECH-003': 'S2', 'FTL-MKT-002': 'S2', 'FTL-REV-002': 'S2',
+  // Sprint 3
+  'FTL-GOV-003': 'S3', 'FTL-CEO-003': 'S3', 'FTL-PROD-003': 'S3', 'FTL-TECH-004': 'S3',
+  // Sprint 4
+  'FTL-CEO-004': 'S4', 'FTL-GOV-004': 'S4', 'FTL-REV-003': 'S4', 'FTL-MKT-003': 'S4', 'FTL-PROD-004': 'S4', 'FTL-TECH-005': 'S4',
+  // Sprint 5
+  'FTL-CEO-005': 'S5', 'FTL-GOV-005': 'S5', 'FTL-PROD-005': 'S5', 'FTL-TECH-006': 'S5', 'FTL-REV-004': 'S5', 'FTL-MKT-004': 'S5',
+};
+
+function getSprintBadge(taskId) {
+  const s = SPRINT_MAP[taskId];
+  return s ? `<span style="font-size:10px;color:var(--muted);">[${s}]</span>` : '';
+}
+
 function renderCard(t) {
   const extraClass = t.status === 'review' ? 'review-highlight' : (t.status === 'in_progress' ? 'inprog-highlight' : '');
-  const sprintBadge = (t.task_id && t.task_id.endsWith('-001')) ? 'S1' : 'S2';
+  const isFounder = (t.created_by === 'Founder (Control Center)') || 
+                    (t.created_by && t.created_by.includes('Control Center')) ||
+                    (t.created_by === 'Founder' && !SPRINT_MAP[t.task_id] && t.task_id !== 'FTL-CEO-006');
+  const founderCardClass = isFounder ? 'founder-card' : '';
+  const sprintBadge = getSprintBadge(t.task_id);
+  const founderBadge = isFounder ? '<span class="badge-founder-directive" title="Iniziativa inserita direttamente dal Founder per triage C-Suite">👑 Direttiva Founder</span>' : '';
   return `
-    <div class="task-card ${extraClass}">
+    <div class="task-card ${extraClass} ${founderCardClass}">
       <div class="task-top">
-        <span class="task-id">${t.task_id} <span style="font-size:10px;color:var(--muted);">[${sprintBadge}]</span></span>
-        <span class="role-badge">${t.assignee_role} • ${t.escalation_level}</span>
+        <span class="task-id" style="cursor:pointer;" onclick="openEditTaskModal('${t.task_id}')" title="Clicca per modificare">${t.task_id}</span>
+        ${sprintBadge} ${founderBadge}
+        <span class="role-badge role-${t.assignee_role}" style="margin-left:auto;">${t.assignee_role} • ${t.escalation_level}</span>
       </div>
-      <div class="task-title">${t.title}</div>
+      <div class="task-title" style="cursor:pointer;" onclick="openEditTaskModal('${t.task_id}')" title="Clicca per aprire e modificare">${t.title}</div>
       <div class="task-desc">${t.description}</div>
       ${t.escalation_reason ? `<div class="esc-box">⚠️ <strong>Escalation:</strong> ${t.escalation_reason}</div>` : ''}
       ${t.notes ? `<div style="font-size:11px;color:#cbd5e1;background:rgba(255,255,255,0.04);padding:6px;border-radius:6px;">📝 ${t.notes}</div>` : ''}
@@ -720,12 +2001,331 @@ function renderCard(t) {
         ${(t.output_artifacts || []).map(a => `<a class="artifact-link" onclick="openDoc('${a}')">🔗 ${a}</a>`).join('')}
       </div>
       <div class="card-actions">
-        ${t.status === 'review' ? `<button class="btn btn-approve" onclick="updateTaskStatus('${t.task_id}', 'done')">✅ Approva</button>` : ''}
-        ${t.status !== 'done' ? `<button class="btn" onclick="promptNote('${t.task_id}', '${t.status}')">📝 Nota Founder</button>` : ''}
-        <button class="btn" onclick="openDoc('Azienda/tasks/${t.task_id}.json')">🔍 JSON</button>
+        <button class="btn btn-sm btn-approve" onclick="openEditTaskModal('${t.task_id}')">✏️ Modifica</button>
+        ${t.status === 'review' ? `<button class="btn btn-sm" onclick="updateTaskStatus('${t.task_id}', 'done')" style="background:rgba(34,197,94,0.3);color:#4ade80;">✅ Approva</button>` : ''}
+        ${t.status !== 'done' ? `<button class="btn btn-sm" onclick="promptNote('${t.task_id}', '${t.status}')">📝 Nota</button>` : ''}
+        <button class="btn btn-sm" onclick="openDoc('Azienda/tasks/${t.task_id}.json')">🔍 JSON</button>
       </div>
     </div>
   `;
+}
+
+let currentEditingTaskId = null;
+
+function openEditTaskModal(taskId) {
+  const t = (currentState.tasks || []).find(x => x.task_id === taskId);
+  if (!t) return;
+
+  currentEditingTaskId = taskId;
+  document.getElementById('edit-task-id-hidden').value = taskId;
+  document.getElementById('edit-task-header-id').textContent = taskId;
+
+  const sprintBadge = SPRINT_MAP[taskId] || 'Backlog';
+  const headerSprint = document.getElementById('edit-task-header-sprint');
+  headerSprint.textContent = sprintBadge.startsWith('S') ? 'Sprint ' + sprintBadge.slice(1) : sprintBadge;
+  headerSprint.className = 'pill ' + (sprintBadge.startsWith('S') ? 'purple' : 'amber');
+
+  const headerRole = document.getElementById('edit-task-header-role');
+  headerRole.textContent = t.assignee_role + ' (' + (t.assignee_agent || 'unassigned') + ')';
+  headerRole.className = 'pill green';
+
+  document.getElementById('edit-task-title').value = t.title || '';
+  document.getElementById('edit-task-desc').value = t.description || '';
+  document.getElementById('edit-task-role').value = t.assignee_role || 'CEO';
+  document.getElementById('edit-task-priority').value = t.priority || 'high';
+  document.getElementById('edit-task-status').value = t.status || 'todo';
+  document.getElementById('edit-task-effort').value = t.estimated_effort || 'M (1-3gg)';
+  document.getElementById('edit-task-escalation').value = t.escalation_level || 'L2';
+  document.getElementById('edit-task-created-by').value = t.created_by || 'Founder';
+  document.getElementById('edit-task-notes').value = t.notes || '';
+
+  // Criteria
+  const criteria = Array.isArray(t.acceptance_criteria) ? t.acceptance_criteria.join('\n') : (t.acceptance_criteria || '');
+  document.getElementById('edit-task-criteria').value = criteria;
+
+  // Tags
+  const currentTags = Array.isArray(t.tags) ? t.tags : [];
+  document.querySelectorAll('#edit-tag-chips-container .tag-chip').forEach(chip => {
+    const tag = chip.getAttribute('data-tag');
+    if (currentTags.includes(tag)) {
+      chip.classList.add('selected');
+    } else {
+      chip.classList.remove('selected');
+    }
+  });
+
+  // Artifacts
+  const artifactsGroup = document.getElementById('edit-task-artifacts-group');
+  const artifactsList = document.getElementById('edit-task-artifacts-list');
+  if (t.output_artifacts && t.output_artifacts.length > 0) {
+    artifactsGroup.style.display = 'block';
+    artifactsList.innerHTML = t.output_artifacts.map(a => `
+      <a class="artifact-link" onclick="closeEditTaskModal(); openDoc('${a}');">🔗 ${a} ↗</a>
+    `).join('');
+  } else {
+    artifactsGroup.style.display = 'none';
+    artifactsList.innerHTML = '';
+  }
+
+  const errDiv = document.getElementById('edit-task-error');
+  if (errDiv) { errDiv.style.display = 'none'; errDiv.textContent = ''; }
+  const errDivTop = document.getElementById('edit-task-error-top');
+  if (errDivTop) { errDivTop.style.display = 'none'; errDivTop.textContent = ''; }
+
+  document.getElementById('edit-task-modal').style.display = 'flex';
+}
+
+function closeEditTaskModal() {
+  const modal = document.getElementById('edit-task-modal');
+  if (modal) modal.style.display = 'none';
+  currentEditingTaskId = null;
+}
+
+function openDocFromEditModal() {
+  if (!currentEditingTaskId) return;
+  const path = `Azienda/tasks/${currentEditingTaskId}.json`;
+  closeEditTaskModal();
+  openDoc(path);
+}
+
+async function submitEditTask() {
+  const taskId = document.getElementById('edit-task-id-hidden').value;
+  if (!taskId) return;
+
+  const errDiv = document.getElementById('edit-task-error');
+  const errDivTop = document.getElementById('edit-task-error-top');
+  const btn = document.getElementById('btn-submit-edit-task');
+  if (errDiv) { errDiv.style.display = 'none'; errDiv.textContent = ''; }
+  if (errDivTop) { errDivTop.style.display = 'none'; errDivTop.textContent = ''; }
+
+  const title = document.getElementById('edit-task-title').value.trim();
+  const desc = document.getElementById('edit-task-desc').value.trim();
+  const role = document.getElementById('edit-task-role').value;
+  const priority = document.getElementById('edit-task-priority').value;
+  const status = document.getElementById('edit-task-status').value;
+  const effort = document.getElementById('edit-task-effort').value;
+  const escalation = document.getElementById('edit-task-escalation').value;
+  const rawCriteria = document.getElementById('edit-task-criteria').value;
+  const notes = document.getElementById('edit-task-notes').value.trim();
+
+  function showError(msg) {
+    if (errDiv) {
+      errDiv.style.display = 'block';
+      errDiv.textContent = msg;
+      errDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    if (errDivTop) {
+      errDivTop.style.display = 'block';
+      errDivTop.textContent = msg;
+    }
+    showToast(msg, true);
+  }
+
+  if (title.length < 5) {
+    showError('⚠️ Il titolo deve contenere almeno 5 caratteri.');
+    return;
+  }
+  if (desc.length < 10) {
+    showError('⚠️ La descrizione deve contenere almeno 10 caratteri.');
+    return;
+  }
+
+  const selectedTags = Array.from(document.querySelectorAll('#edit-tag-chips-container .tag-chip.selected'))
+    .map(c => c.getAttribute('data-tag'));
+
+  const criteria = rawCriteria
+    .split('\n')
+    .map(c => c.trim().replace(/^[-*•\s]+/, ''))
+    .filter(c => c.length > 0);
+
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Salvataggio in corso...</span>';
+
+  try {
+    const res = await fetch('/api/edit_task', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        task_id: taskId,
+        title: title,
+        description: desc,
+        assignee_role: role,
+        priority: priority,
+        status: status,
+        estimated_effort: effort,
+        escalation_level: escalation,
+        tags: selectedTags,
+        acceptance_criteria: criteria,
+        notes: notes
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || 'Errore durante il salvataggio del task.');
+    }
+
+    // Immediately update local currentState with the updated task from server
+    if (data.task) {
+      const idx = (currentState.tasks || []).findIndex(x => x.task_id === data.task.task_id);
+      if (idx !== -1) {
+        currentState.tasks[idx] = data.task;
+      } else {
+        currentState.tasks.push(data.task);
+      }
+      renderAll();
+    }
+
+    closeEditTaskModal();
+    showToast(`✅ Task ${taskId} salvato con successo!`);
+    await fetchState();
+  } catch (err) {
+    showError(`❌ ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>💾 Salva Modifiche</span>';
+  }
+}
+
+function openCreateTaskModal() {
+  const modal = document.getElementById('create-task-modal');
+  if (!modal) return;
+  document.getElementById('new-task-title').value = '';
+  document.getElementById('new-task-desc').value = '';
+  document.getElementById('new-task-priority').value = 'high';
+  document.getElementById('new-task-status').value = 'todo';
+  document.getElementById('new-task-effort').value = 'M (1-3gg)';
+  document.getElementById('new-task-escalation').value = 'L2';
+  document.getElementById('new-task-criteria').value = 'Analisi preliminare e scomposizione organizzativa CEO/CGO\nDefinizione dei deliverable e attribuzione delle dipendenze C-Suite\nConferma di conformità FinOps e chiusura del task nel Founder Control Center';
+  document.getElementById('new-task-notes').value = '';
+  const errDiv = document.getElementById('create-task-error');
+  if (errDiv) { errDiv.style.display = 'none'; errDiv.textContent = ''; }
+  
+  const roleSelect = document.getElementById('new-task-role');
+  if (roleSelect) roleSelect.value = 'CEO';
+  onRoleChange('CEO');
+
+  modal.style.display = 'flex';
+  setTimeout(() => {
+    const titleInput = document.getElementById('new-task-title');
+    if (titleInput) titleInput.focus();
+  }, 100);
+}
+
+function closeCreateTaskModal() {
+  const modal = document.getElementById('create-task-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function onRoleChange(role) {
+  const roleTagsMap = {
+    'CEO': ['governance', 'product'],
+    'CGO': ['governance'],
+    'CTO': ['infra', 'product'],
+    'CPO': ['product', 'PLM', 'PIM'],
+    'CRO': ['finops'],
+    'CMO': ['marketing', 'sales']
+  };
+  const recTags = roleTagsMap[role] || ['governance'];
+  document.querySelectorAll('#tag-chips-container .tag-chip').forEach(chip => {
+    const tag = chip.getAttribute('data-tag');
+    if (recTags.includes(tag)) {
+      chip.classList.add('selected');
+    } else {
+      chip.classList.remove('selected');
+    }
+  });
+
+  await updateNextTaskIdPreview(role);
+}
+
+async function updateNextTaskIdPreview(role) {
+  const badge = document.getElementById('new-task-id-badge');
+  if (!badge) return;
+  try {
+    const res = await fetch(`/api/next_task_id?role=${encodeURIComponent(role)}`);
+    const data = await res.json();
+    if (data.next_task_id) {
+      badge.textContent = `ID Calcolato: ${data.next_task_id}`;
+    }
+  } catch (e) {
+    console.error('Error fetching next task id:', e);
+  }
+}
+
+function toggleTagChip(el) {
+  el.classList.toggle('selected');
+}
+
+async function submitCreateTask() {
+  const errDiv = document.getElementById('create-task-error');
+  const btn = document.getElementById('btn-submit-task');
+  errDiv.style.display = 'none';
+  errDiv.textContent = '';
+
+  const role = document.getElementById('new-task-role').value;
+  const title = document.getElementById('new-task-title').value.trim();
+  const desc = document.getElementById('new-task-desc').value.trim();
+  const priority = document.getElementById('new-task-priority').value;
+  const status = document.getElementById('new-task-status').value;
+  const effort = document.getElementById('new-task-effort').value;
+  const escalation = document.getElementById('new-task-escalation').value;
+  const rawCriteria = document.getElementById('new-task-criteria').value;
+  const notes = document.getElementById('new-task-notes').value.trim();
+
+  if (title.length < 5) {
+    errDiv.style.display = 'block';
+    errDiv.textContent = '⚠️ Il titolo deve contenere almeno 5 caratteri.';
+    return;
+  }
+  if (desc.length < 10) {
+    errDiv.style.display = 'block';
+    errDiv.textContent = '⚠️ La descrizione deve contenere almeno 10 caratteri per guidare la C-Suite.';
+    return;
+  }
+
+  const selectedTags = Array.from(document.querySelectorAll('#tag-chips-container .tag-chip.selected'))
+    .map(c => c.getAttribute('data-tag'));
+
+  const criteria = rawCriteria
+    .split('\n')
+    .map(c => c.trim().replace(/^[-*•\s]+/, ''))
+    .filter(c => c.length > 0);
+
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Creazione in corso...</span>';
+
+  try {
+    const res = await fetch('/api/create_task', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assignee_role: role,
+        title: title,
+        description: desc,
+        priority: priority,
+        status: status,
+        estimated_effort: effort,
+        escalation_level: escalation,
+        tags: selectedTags,
+        acceptance_criteria: criteria,
+        notes: notes
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || 'Errore durante la creazione del task.');
+    }
+
+    closeCreateTaskModal();
+    await fetchState();
+    alert(`✅ Task ${data.task.task_id} creato con successo!\n\nAssegnato a: ${data.task.assignee_role} (${data.task.assignee_agent})\nStato: ${data.task.status}\n\nÈ ora disponibile per il triage e la strutturazione da parte di CEO e CGO.`);
+  } catch (err) {
+    errDiv.style.display = 'block';
+    errDiv.textContent = `❌ ${err.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>🚀 Invia Direttiva alla C-Suite</span>';
+  }
 }
 
 async function updateTaskStatus(taskId, newStatus, note = null) {
@@ -749,6 +2349,167 @@ async function toggleQuotaPause() {
   await fetchState();
 }
 
+let showAllDone = false;
+function toggleShowAllDone() {
+  showAllDone = !showAllDone;
+  renderAll();
+}
+
+let hubFilter = {
+  role: 'TUTTI',
+  ext: 'all',
+  query: ''
+};
+
+function renderKnowledgeHub() {
+  const allDocs = currentState.docs || [];
+
+  const rolesList = [
+    { key: 'TUTTI', label: '🏢 Tutti i Documenti' },
+    { key: 'CEO', label: '👔 CEO' },
+    { key: 'CGO', label: '⚖️ CGO' },
+    { key: 'CTO', label: '💻 CTO' },
+    { key: 'CPO', label: '🎯 CPO' },
+    { key: 'CRO', label: '💰 CRO' },
+    { key: 'CMO', label: '📢 CMO' }
+  ];
+
+  const roleCounts = { TUTTI: allDocs.length };
+  rolesList.forEach(r => { if (r.key !== 'TUTTI') roleCounts[r.key] = 0; });
+  allDocs.forEach(d => {
+    const r = d.role || 'TUTTI';
+    if (roleCounts[r] !== undefined) roleCounts[r]++;
+  });
+
+  const tabsContainer = document.getElementById('role-tabs-container');
+  if (tabsContainer) {
+    tabsContainer.innerHTML = rolesList.map(r => `
+      <button class="role-tab ${hubFilter.role === r.key ? 'active' : ''}" onclick="setDocFilterRole('${r.key}')">
+        <span>${r.label}</span>
+        <span class="count">${roleCounts[r.key] || 0}</span>
+      </button>
+    `).join('');
+  }
+
+  let filtered = allDocs.filter(d => {
+    if (hubFilter.role !== 'TUTTI' && d.role !== hubFilter.role) {
+      return false;
+    }
+    if (hubFilter.ext !== 'all') {
+      if (hubFilter.ext === '.py') {
+        if (d.ext !== '.py' && d.ext !== '.tsx') return false;
+      } else if (d.ext !== hubFilter.ext) {
+        return false;
+      }
+    }
+    if (hubFilter.query) {
+      const q = hubFilter.query.toLowerCase();
+      const matchPath = (d.path || '').toLowerCase().includes(q);
+      const matchTitle = (d.title || '').toLowerCase().includes(q);
+      const matchPillar = (d.pillar || '').toLowerCase().includes(q);
+      const matchRole = (d.role || '').toLowerCase().includes(q);
+      if (!matchPath && !matchTitle && !matchPillar && !matchRole) return false;
+    }
+    return true;
+  });
+
+  const counterEl = document.getElementById('hub-doc-count');
+  if (counterEl) counterEl.textContent = `${filtered.length} di ${allDocs.length} Documenti`;
+
+  const metaEl = document.getElementById('hub-results-meta');
+  if (metaEl) {
+    metaEl.textContent = `Mostrando ${filtered.length} file • Filtro: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.query ? ' • Ricerca: "' + hubFilter.query + '"' : ''}`;
+  }
+
+  const gridEl = document.getElementById('hub-docs-grid');
+  if (!gridEl) return;
+
+  if (filtered.length === 0) {
+    gridEl.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--muted); background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed var(--border);">
+        <div style="font-size: 28px; margin-bottom: 8px;">🔍</div>
+        <div style="font-size: 14px; font-weight: 600; color: #e2e8f0;">Nessun documento trovato</div>
+        <div style="font-size: 12px; margin-top: 4px;">Prova a modificare i filtri C-Level o la parola chiave di ricerca.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const roleEmoji = {
+    CEO: '👔',
+    CGO: '⚖️',
+    CTO: '💻',
+    CPO: '🎯',
+    CRO: '💰',
+    CMO: '📢',
+    TUTTI: '🏢',
+    GENERAL: '📄'
+  };
+
+  gridEl.innerHTML = filtered.map(d => {
+    const isHtml = (d.ext === '.html' || d.ext === '.htm');
+    const isMd = (d.ext === '.md');
+    const cleanExt = (d.ext || '').replace('.', '');
+    const emoji = roleEmoji[d.role] || '📄';
+    return `
+      <div class="doc-card">
+        <div>
+          <div class="doc-card-top">
+            <span class="doc-role-badge role-${d.role}">${emoji} ${d.role}</span>
+            <span class="doc-type-badge type-${cleanExt}">${cleanExt.toUpperCase()}</span>
+            <span class="doc-size" style="font-size:11px;color:var(--muted);">${(d.size/1024).toFixed(1)} KB</span>
+          </div>
+          <div class="doc-card-title" title="${escapeHtml(d.title)}">${escapeHtml(d.title)}</div>
+          <div class="doc-card-path" onclick="openDoc('${d.path}')" title="Clicca per aprire">${d.path}</div>
+          <div class="doc-card-meta">
+            <span>🏛️ ${d.pillar}</span>
+            <span>🕒 ${d.mtime}</span>
+          </div>
+        </div>
+        <div class="doc-card-actions">
+          <button class="btn btn-sm btn-approve" onclick="openDoc('${d.path}', 'preview')">👁️ Anteprima Live</button>
+          <button class="btn btn-sm" onclick="openDoc('${d.path}', 'code')">💻 Codice</button>
+          ${isHtml ? `<button class="btn btn-sm" onclick="window.open('/raw?path=' + encodeURIComponent('${d.path}'), '_blank')" title="Apri in nuova scheda">↗ Scheda</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function setDocFilterRole(role) {
+  hubFilter.role = role;
+  renderKnowledgeHub();
+}
+
+function setDocFilterExt(ext) {
+  hubFilter.ext = ext;
+  document.querySelectorAll('#format-filter-group .filter-chip').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-ext') === ext);
+  });
+  renderKnowledgeHub();
+}
+
+function onSearchInput(val) {
+  hubFilter.query = val.trim();
+  const clearBtn = document.getElementById('clear-search-btn');
+  if (clearBtn) clearBtn.style.display = hubFilter.query ? 'block' : 'none';
+  renderKnowledgeHub();
+}
+
+function clearSearch() {
+  hubFilter.query = '';
+  const input = document.getElementById('doc-search-input');
+  if (input) input.value = '';
+  const clearBtn = document.getElementById('clear-search-btn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  renderKnowledgeHub();
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 let currentDoc = {
   path: '',
   content: '',
@@ -757,7 +2518,7 @@ let currentDoc = {
   viewport: 'desktop'
 };
 
-async function openDoc(path) {
+async function openDoc(path, forcedMode = null) {
   try {
     const res = await fetch('/api/doc?path=' + encodeURIComponent(path));
     const data = await res.json();
@@ -769,9 +2530,10 @@ async function openDoc(path) {
     currentDoc.viewport = 'desktop';
 
     // Default view mode:
-    // Markdown (.md) and HTML (.html/.htm) -> preview
-    // Other files (e.g. .json, .py, .txt) -> code
-    if (ext === 'md' || ext === 'html' || ext === 'htm') {
+    // Forced mode if provided, otherwise preview for .md / .html, code for others
+    if (forcedMode) {
+      currentDoc.mode = forcedMode;
+    } else if (ext === 'md' || ext === 'html' || ext === 'htm') {
       currentDoc.mode = 'preview';
     } else {
       currentDoc.mode = 'code';
@@ -908,8 +2670,16 @@ function closeModal() {
 }
 
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && document.getElementById('doc-modal').style.display === 'flex') {
-    closeModal();
+  if (e.key === 'Escape') {
+    const editModal = document.getElementById('edit-task-modal');
+    const createModal = document.getElementById('create-task-modal');
+    if (editModal && editModal.style.display === 'flex') {
+      closeEditTaskModal();
+    } else if (createModal && createModal.style.display === 'flex') {
+      closeCreateTaskModal();
+    } else if (document.getElementById('doc-modal')?.style.display === 'flex') {
+      closeModal();
+    }
   }
 });
 
@@ -1056,6 +2826,9 @@ class ControlCenterHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
         self.end_headers()
         self.wfile.write(body)
 
@@ -1066,11 +2839,39 @@ class ControlCenterHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
             self.end_headers()
             self.wfile.write(body)
+        elif parsed.path == "/app":
+            app_html = os.path.join(APPLICATIVO_DIR, "frontend", "app-live-preview.html")
+            if os.path.isfile(app_html):
+                with open(app_html, "rb") as f:
+                    body = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            else:
+                self.send_response(302)
+                self.send_header("Location", "http://127.0.0.1:5173")
+                self.end_headers()
+                return
         elif parsed.path == "/api/state":
             sync_dependencies_and_readme()
             self._send_json({"tasks": load_tasks(), "docs": list_all_docs()})
+        elif parsed.path == "/api/next_task_id":
+            qs = urllib.parse.parse_qs(parsed.query)
+            role = qs.get("role", ["CEO"])[0]
+            next_id = generate_next_task_id(role)
+            self._send_json({
+                "next_task_id": next_id,
+                "role": role,
+                "agent": AGENT_ROLE_MAP.get(role, "footlink-ceo")
+            })
         elif parsed.path == "/api/doc":
             qs = urllib.parse.parse_qs(parsed.query)
             rel_path = qs.get("path", [""])[0]
@@ -1185,6 +2986,20 @@ class ControlCenterHandler(BaseHTTPRequestHandler):
                     save_task(t)
             sync_dependencies_and_readme()
             self._send_json({"ok": True})
+        elif parsed.path == "/api/create_task":
+            try:
+                task = handle_create_task(payload)
+                self._send_json({"ok": True, "task": task})
+            except Exception as e:
+                self._send_json({"ok": False, "error": str(e)}, status=400)
+        elif parsed.path == "/api/edit_task":
+            try:
+                task = handle_edit_task(payload)
+                print(f"[/api/edit_task] Saved {task.get('task_id')}: status={task.get('status')}, prio={task.get('priority')}, title={task.get('title')}", flush=True)
+                self._send_json({"ok": True, "task": task})
+            except Exception as e:
+                print(f"[/api/edit_task ERROR] {e}", flush=True)
+                self._send_json({"ok": False, "error": str(e)}, status=400)
         else:
             self.send_error(404)
 

@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-REV-003",
+  "title": "Attivazione Outreach 15 Prospect Pilota nei Distretti, Gestione Pipeline LOI e Dossier di Escalation L4 Listini",
+  "description": "Attivare il piano di outreach commerciale sui 15 prospect profilati nei distretti di Marche, Toscana e Veneto, istituire il CRM di tracking pipeline verso le prime 3 LOI (Design Partner), formalizzare le condizioni pilota e sottoporre il dossier formale di autorizzazione listini e sconti (Gate L4) all'approvazione del Founder.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CRO",
+  "assignee_agent": "footlink-cro",
+  "created_by": "CEO",
+  "created_at": "2026-10-19T10:55:00+02:00",
+  "updated_at": "2026-10-19T13:13:30+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2-8h)",
+  "dependencies": [
+    "FTL-REV-002",
+    "FTL-CEO-004"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/finops/pilot-pipeline-tracking-and-loi-dossier.md",
+    "Azienda/docs/finops/README.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Approvazione formale Livello L4 richiesta al Founder per la concessione del beneficio Design Partner Fondatore (sconto 20% sul canone standard per i primi 12 mesi).",
+  "escalation_level": "L4",
+  "decision_record_id": "ADR-004",
+  "tags": [
+    "sales",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "Attivazione operativa dei 15 contatti prospect nei distretti di Marche, Toscana e Veneto",
+    "Strutturazione del tabellone CRM di pipeline con demo schedulate e lettere d'intenti",
+    "Predisposizione del pacchetto decisionale L4 con verifica FinOps Margine Lordo > 75%"
+  ],
+  "notes": "Approvazione L4 formalmente deliberata dal Founder nel Control Center (condizioni di sconto 20% Design Partner Fondatore per i primi 12 mesi confermate). Attivato l'outreach sui 15 prospect distrettuali e avviato l'invio delle prime 2 LOI."
+}

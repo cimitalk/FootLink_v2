@@ -20,3 +20,14 @@ Questo file conserva i fatti durevoli, le decisioni architetturali e lo stato ev
     3. `Portale_Founder_Control/`: Dashboard e strumenti di supervisione e gatekeeping L2–L6 per il Founder.
 - **Direttiva Esecutiva Sprint 2 e Audit Manifesto (`FTL-CEO-002` — Completato):**
   - Formalizzato in [`Azienda/docs/okr/sprint-2-kickoff-and-governance-audit.md`](./docs/okr/sprint-2-kickoff-and-governance-audit.md) l'allineamento tra gli OKR Q4 2026 – Q1 2027 e i deliverable operativi dello Sprint 2 (`FTL-TECH-002`, `FTL-PROD-002`, `FTL-TECH-003`, `FTL-MKT-002`, `FTL-REV-002`, `FTL-GOV-002`), certificando Cost-to-Serve infrastrutturale a **0 €/mese** (Margine Lordo SaaS prospettico > 82%), gratuità perpetua per i terzisti e risoluzione preventiva delle dipendenze incrociate `CTO ↔ CPO` e `CTO ↔ CMO`.
+- **Sprint 5 — Modello Dati Flessibile, Calendario Stagioni & Collezioni, Tabelle Anagrafiche e Semplificazione UI (19 Ottobre 2026):**
+  - **Decisione Architetturale (`ADR-007`):** Formalizzato il modello dati dinamico su base JSON relazionale (`metadata_json`) con validatore formale (`schema_attribute_definitions`), gerarchia calendario moda 1 Stagione ↔ N Collezioni, centralizzazione anagrafiche di dominio PIM/PLM, e semplificazione della UI a 7 moduli coerenti con il processo reale del settore lusso.
+  - **Sviluppo Full-Stack:** Implementate API REST FastAPI e componenti React (`SeasonsCollectionsHub.tsx`, `DomainRegistriesManager.tsx`, `DataModelSchemaStudio.tsx`, `PimToPlmBridge.tsx`, `App.tsx`), con selettore globale di stagione e filtri omnicanale.
+  - **Test & Validazione:** Test suite backend passante al 100% (`12 passed in 2.39s`), compilazione frontend senza errori, zero costi infrastrutturali aggiuntivi (FinOps L2 rispettato).
+  - **Direttiva Founder `FTL-CEO-007` (Edit Tabelle Anagrafiche):** Introdotto l'editing inline/modale completo nel Modulo 03 con relative rotte `PUT`/`PATCH` su FastAPI e SQLite (`12 passed in 2.62s`).
+- **Sprint 6 — Setup Governance Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Terzisti (19 Ottobre 2026):**
+  - **ADR-008 Redatto:** Formalizzata l'architettura delle Commesse di Produzione, tracciabilità lotti conceria (LWG/ICEC, concia vegetale/cromo, origine grezzo, REACH, hash SHA-256 a costo zero), lifecycle fasi terzisti a 0 € ("3 Clic") e segregazione rigorosa L6 dei costi/prezzi industriali via DTO backend.
+  - **Chiusura FTL-CEO-006 & FTL-CEO-007:** Risolto il tag schema invalidante in FTL-CEO-007 (100% validazione Task Schema v1.0) ed esplosa l'iniziativa strategica FTL-CEO-006 nel backlog operativo di Sprint 6.
+  - **Task Object Sprint 6 Inizializzati:** Configurato il set di task canonici v1.0 (`FTL-CEO-008`, `FTL-GOV-006`, `FTL-PROD-006`, `FTL-TECH-007`, `FTL-REV-005`, `FTL-MKT-005`) con presidio gate L2-L6 verso il Founder.
+
+

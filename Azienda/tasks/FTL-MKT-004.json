@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-MKT-004",
+  "title": "Product & Brand Marketing Sprint 5: Naming e Tassonomia Moda/Lusso (Stagioni/Collezioni), UX Positioning e Guide Operative",
+  "description": "Elaborare la tassonomia standard per la moda e il lusso (codici stagione P/E, A/I, Cruise, Pre-Fall; tipologie collezioni Main, Fashion, Runway, Capsule, Carry Over), curare il micro-copywriting della UI semplificata secondo il Design System v2.0 (Nike-inspired minimalism) e redigere le release notes orientate ai distretti.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CMO",
+  "assignee_agent": "footlink-cmo",
+  "created_by": "Founder",
+  "created_at": "2026-10-19T15:35:00+02:00",
+  "updated_at": "2026-10-19T16:00:00+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "XS (<2h)",
+  "dependencies": [
+    "FTL-MKT-003",
+    "FTL-CEO-005",
+    "FTL-PROD-005"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/marketing/sprint-5-ui-ux-positioning.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": null,
+  "tags": [
+    "marketing",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Formalizzazione del dizionario di terminologia per stagioni e collezioni secondo le best practice dei marchi del lusso",
+    "Revisione del micro-copy della UI per eliminare il gergo tecnico superfluo e favorire l'adozione immediata",
+    "Preparazione delle release notes di Sprint 5 per i prospect pilota dei distretti calzaturieri"
+  ],
+  "notes": "Posizionamento che esalta la semplicità e il rigore visivo della nuova interfaccia utente di Footlink."
+}

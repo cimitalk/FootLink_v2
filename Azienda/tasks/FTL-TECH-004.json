@@ -1,0 +1,56 @@
+{
+  "task_id": "FTL-TECH-004",
+  "title": "Rifacimento UX/UI Design System v2.0, Home Hub Iniziale ed Evoluzione Full-Stack Processi Core (PIM Data Quality/Export, Schede Verticali, Scala Taglie, Costing L6, Workflow PLM)",
+  "description": "Implementare su Backend FastAPI (SQLite/PostgreSQL) e Frontend React + Live Preview HTML: (1) Design System v2.0 Nike-Inspired Editorial Minimalism (#FFFFFF, #F5F5F5, #111111, Barlow Condensed 900 Uppercase, Inter, JetBrains Mono, bottoni pill 999px, logo SVG 'Dynamic Sole-Link' senza 1:N); (2) Home Iniziale di Footlink (Executive & Module Launchpad con KPI di filiera e accesso ai 6 moduli principali); (3) Motore PIM Data Quality (0-100%), creazione nuovi SKU PIM, switcher IT/EN ed Export Catalogo strutturato CSV/JSON/Shopify/B2B (FEAT-05); (4) Schede Tecniche Verticali per Calzature, Pelletteria e Abbigliamento, sviluppo scala taglie, calcolo costi riservato al Brand (L6) con oscuramento nella vista Terzista 0 EUR, workflow ciclo di vita PLM con snapshot BOM e doppia vista DPP (Consumatore vs Ispettiva/Doganale).",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder",
+  "created_at": "2026-10-18T22:14:00+02:00",
+  "updated_at": "2026-10-19T08:44:00+02:00",
+  "due_date": "2026-11-05T23:59:59+02:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": "M (1-3gg)",
+  "dependencies": [
+    "FTL-TECH-002",
+    "FTL-TECH-003",
+    "FTL-PROD-003"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/backend/app/models.py",
+    "Applicativo/backend/app/seed.py",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/tests/test_main.py",
+    "Applicativo/frontend/index.html",
+    "Applicativo/frontend/src/types.ts",
+    "Applicativo/frontend/src/mockSeedData.ts",
+    "Applicativo/frontend/src/App.tsx",
+    "Applicativo/frontend/src/components/FootlinkHomeHub.tsx",
+    "Applicativo/frontend/src/components/PimToPlmBridge.tsx",
+    "Applicativo/frontend/src/components/BomThreeLevelTree.tsx",
+    "Applicativo/frontend/src/components/SubcontractorMobilePortal.tsx",
+    "Applicativo/frontend/src/components/LiveDppPassportGenerator.tsx",
+    "Applicativo/frontend/app-live-preview.html"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Validazione L3/L1 del Founder sull'architettura UX/UI Design System v2.0, Home Hub iniziale e nuovi moduli full-stack di Sprint 3.",
+  "escalation_level": "L3",
+  "decision_record_id": "ADR-006",
+  "tags": [
+    "PLM",
+    "PIM",
+    "infra",
+    "product",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "100% dell'Applicativo (React, app-live-preview.html e viste HTML FastAPI) convertito al Design System v2.0 Nike-Inspired Editorial Minimalism con logo SVG 'The Dynamic Sole-Link' (zero dicitura 1:N nel logo)",
+    "Home Iniziale interattiva con overview KPI e schede di lancio rapido verso tutti i 6 moduli principali di Footlink",
+    "PIM Data Quality Engine (0-100%) e Syndication Export (CSV, JSON, Shopify B2C, B2B Showroom) + creazione nuovo Articolo PIM e switcher IT/EN",
+    "Schede Tecniche Verticali per Calzature, Pelletteria e Abbigliamento, sviluppo consumi su scala taglie, Costing Industriale riservato al Brand (L6) e Workflow Ciclo di Vita PLM con Snapshot BOM",
+    "Test suite Pytest backend aggiornata e 100% passante"
+  ],
+  "notes": "In lavorazione per Sprint 3."
+}

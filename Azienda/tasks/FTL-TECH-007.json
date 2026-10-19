@@ -1,0 +1,46 @@
+{
+  "task_id": "FTL-TECH-007",
+  "title": "Sviluppo Full-Stack Commesse di Produzione, Data Model Lotti Pellame/Conceria, API Lifecycle Terzisti & UI",
+  "description": "Implementare a livello full-stack in Applicativo/ il modulo Commesse di Produzione e Tracciabilità Conceria: estensione DDL database (SQLite e PostgreSQL), API RESTful FastAPI con DTO segregati L6 per Brand vs Terzisti, algoritmo di hashing SHA-256 a costo zero per certificati conceria, viste React per la gestione commesse e interfaccia mobile '3 Clic' per façonisti, con copertura test suite 100% passante.",
+  "status": "todo",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "CPO",
+  "created_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T17:00:00+02:00",
+  "due_date": "2026-11-25T23:59:59+02:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": null,
+  "dependencies": [
+    "FTL-PROD-006",
+    "FTL-GOV-006"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/backend/app/models.py",
+    "Applicativo/backend/app/database.py",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/tests/test_main.py",
+    "Applicativo/frontend/src/components/ProductionOrdersManager.tsx",
+    "Applicativo/frontend/src/components/TanneryBatchesManager.tsx",
+    "Applicativo/frontend/src/components/SubcontractorPortal.tsx",
+    "Applicativo/frontend/src/App.tsx"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Evoluzione DDL DB, endpoint segregati L6 e deploy componenti commesse su stack di produzione",
+  "escalation_level": "L3",
+  "decision_record_id": "ADR-008",
+  "tags": [
+    "infra",
+    "PLM"
+  ],
+  "acceptance_criteria": [
+    "Implementazione delle tabelle production_orders, production_order_items, tannery_batches e production_phases_execution",
+    "Endpoint FastAPI RESTful completi per CRUD commesse, lotti conceria e avanzamento fasi",
+    "Segregazione DTO L6 verificata: nessun campo economico esposto negli endpoint per i terzisti",
+    "Componenti React nel Design System v2.0 (Nike-Inspired Editorial) perfettamente integrati in App.tsx",
+    "Test suite di backend passante al 100% con test di non-regressione e validazione segregazione L6"
+  ],
+  "notes": "Implementazione tecnica cardine dello Sprint 6. Mantiene vincolo Free-Tier 0 EUR/mese."
+}

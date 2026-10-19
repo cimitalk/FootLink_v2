@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-REV-005",
+  "title": "Analisi FinOps & Commerciale Commesse e Tracciabilità Conceria (Invarianza 0 € Terzisti & Tier Brand/PMI)",
+  "description": "Valutare l'impatto economico e commerciale del modulo Commesse di Produzione e Tracciabilità Conceria: confermare il principio FinOps del Cost-to-Serve a 0 € per i terzisti façonisti, modellare il packaging commerciale per Brand e PMI (Tier Professional ed Enterprise con add-on tracciabilità LWG/ICEC) e validare il margine lordo obiettivo > 75%.",
+  "status": "todo",
+  "priority": "high",
+  "assignee_role": "CRO",
+  "assignee_agent": "footlink-cro",
+  "created_by": "CEO",
+  "created_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T17:00:00+02:00",
+  "due_date": "2026-11-25T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": null,
+  "dependencies": [
+    "FTL-CEO-008",
+    "FTL-PROD-006"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/finops/sprint-6-commercial-and-finops-analysis.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Valutazione commerciale packaging modulo tracciabilità lotti conceria per Tier Enterprise",
+  "escalation_level": "L4",
+  "decision_record_id": "ADR-008",
+  "tags": [
+    "sales",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "Validazione economica del Cost-to-Serve a 0 EUR/mese per l'accesso mobile dei terzisti",
+    "Modellazione del valore percepito per i Brand dell'integrazione di conformità ESPR/LWG",
+    "Definizione della proposta di monetizzazione per il modulo Commesse (Tier Professional vs Enterprise)",
+    "Dossier di conformità FinOps e verifica margine lordo SaaS > 75%"
+  ],
+  "notes": "Analisi revenue e FinOps per valorizzare la tracciabilità di filiera nel posizionamento B2B."
+}

@@ -1,0 +1,45 @@
+{
+  "task_id": "FTL-TECH-005",
+  "title": "Hardening Backend/Frontend, Configurazione Deploy Cloud Free-Tier (0 EUR/mese), Endpoint Magic Link Terzisti e Test Suite",
+  "description": "Implementare le configurazioni per il deploy cloud su tier gratuito (Render/Fly.io a 0 EUR/mese secondo ADR-002), esporre l'endpoint FastAPI per l'accesso passwordless con Magic Link per i terzisti a 0 EUR, estendere la test suite Pytest verificando l'assoluta conformità alla segregazione costi L6 e sottoporre il dossier architetturale (Gate L3) al Founder.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "CEO",
+  "created_at": "2026-10-19T11:05:00+02:00",
+  "updated_at": "2026-10-19T15:05:00+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2-8h)",
+  "dependencies": [
+    "FTL-TECH-004",
+    "FTL-CEO-004"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/render.yaml",
+    "Applicativo/fly.toml",
+    "Applicativo/docker-compose.prod.yml",
+    "Applicativo/Caddyfile",
+    "Applicativo/backend/Dockerfile",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/tests/test_main.py",
+    "Azienda/docs/technical/free-tier-deployment-and-pilot-readiness.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Approvazione formale Livello L3 richiesta al Founder prima del trigger di deploy pubblico sui provider cloud free-tier.",
+  "escalation_level": "L3",
+  "decision_record_id": "ADR-002",
+  "tags": [
+    "infra",
+    "product",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "Creazione dei file di deploy cloud render.yaml, fly.toml e docker-compose.prod.yml a costo 0 EUR/mese",
+    "Implementazione e test degli endpoint Magic Link / Tokenless per l'onboarding terzisti",
+    "Copertura test Pytest al 100% passante (8/8 test superati)"
+  ],
+  "notes": "In attesa di approvazione L3 del Founder nel Control Center per procedere al trigger di deploy online. | [Founder 2026-10-19T13:12]: voglio avere 3 opzioni di architettura da scegliere (altre due oltre Render/Vercel). | [CTO 2026-10-19T15:05]: Integrate in Azienda/docs/technical/free-tier-deployment-and-pilot-readiness.md le 3 opzioni architetturali complete a costo 0 EUR (Opzione 1: Render+Vercel+Neon; Opzione 2: Fly.io+Cloudflare+Turso con risveglio < 1.5s; Opzione 3: OCI Always Free 24GB RAM 24/7 zero-sleep con Docker Compose e Caddy). Generati i file di configurazione turnkey render.yaml, fly.toml, docker-compose.prod.yml e Caddyfile. Build frontend e test suite (8/8) verificate con successo."
+}

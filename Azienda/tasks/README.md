@@ -31,6 +31,67 @@ Questa directory contiene i **Task Object JSON** della C-Suite di **Footlink**, 
 
 ---
 
+## 🎨 Sprint 3 — Convergenza UX/UI Design System v2.0, Home Hub Iniziale & Processi Core
+
+| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |
+|---|:---:|---|:---:|:---:|---|:---:|
+| [`FTL-GOV-003`](./FTL-GOV-003.json) | **CGO** | ADR-006: Unificazione Design System v2.0 (Nike-Inspired Editorial Minimalism) e Segregazione Costi L6 Brand vs Terzista | 🔴 `critical` | ✅ `done` | `FTL-GOV-002`, `FTL-MKT-002` | No (`L1`) |
+| [`FTL-CEO-003`](./FTL-CEO-003.json) | **CEO** | Direttiva Esecutiva Sprint 3: Convergenza UX/UI Design System v2.0, Home Hub Modulare e Completamento Processi Core PIM/PLM | 🔴 `critical` | ✅ `done` | `FTL-CEO-002`, `FTL-GOV-003` | No (`L1`) |
+| [`FTL-PROD-003`](./FTL-PROD-003.json) | **CPO** | PRD-003: Home Hub Modulare, Design System v2.0 Applicativo, PIM Data Quality & Export (FEAT-05) e Schede Tecniche Verticali Multi-Settore con Costing L6 | 🔴 `critical` | ✅ `done` | `FTL-PROD-002`, `FTL-MKT-002` | No (`L1`) |
+| [`FTL-TECH-004`](./FTL-TECH-004.json) | **CTO** | Rifacimento UX/UI Design System v2.0, Home Hub Iniziale ed Evoluzione Full-Stack Processi Core (PIM Data Quality/Export, Schede Verticali, Scala Taglie, Costing L6, Workflow PLM) | 🔴 `critical` | ✅ `done` | `FTL-TECH-002`, `FTL-TECH-003`, `FTL-PROD-003` | Sì (`L3`) |
+
+---
+
+## 🏭 Sprint 4 — Lancio Pilota nei Distretti, Validazione sul Campo 'Zero-Training Terzista', Deploy Free-Tier & Gate L2–L6
+
+| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |
+|---|:---:|---|:---:|:---:|---|:---:|
+| [`FTL-CEO-004`](./FTL-CEO-004.json) | **CEO** | Direttiva Esecutiva Sprint 4: Lancio Pilota nei Distretti, Validazione sul Campo 'Zero-Training Terzista', Deploy Free-Tier e Presidio Gate L2–L6 | 🔴 `critical` | ✅ `done` | `FTL-CEO-003`, `FTL-TECH-004` | No (`L1`) |
+| [`FTL-GOV-004`](./FTL-GOV-004.json) | **CGO** | Audit Conformità GDPR, Data Protection Agreement (DPA) Filiera e Segregazione Multi-Tenant Dati Riservati L6 | 🔴 `critical` | ✅ `done` | `FTL-GOV-003`, `FTL-CEO-004` | No (`L6`) |
+| [`FTL-REV-003`](./FTL-REV-003.json) | **CRO** | Attivazione Outreach 15 Prospect Pilota nei Distretti, Gestione Pipeline LOI e Dossier di Escalation L4 Listini | 🟠 `high` | ✅ `done` | `FTL-REV-002`, `FTL-CEO-004` | Sì (`L4`) |
+| [`FTL-MKT-003`](./FTL-MKT-003.json) | **CMO** | Pacchetto Esecutivo Go-Live Comunicazione B2B, Dossier Gate L5 e Sequenza Primi 3 Post LinkedIn DPP UE | 🟠 `high` | ✅ `done` | `FTL-MKT-002`, `FTL-CEO-004` | Sì (`L5`) |
+| [`FTL-PROD-004`](./FTL-PROD-004.json) | **CPO** | PRD-004: Protocollo di Validazione Pilota sul Campo 'Zero-Training Terzista' (≤ 3 Clic, < 90s) & Framework Benchmark SUS | 🔴 `critical` | ✅ `done` | `FTL-PROD-003`, `FTL-CEO-004` | No (`L1`) |
+| [`FTL-TECH-005`](./FTL-TECH-005.json) | **CTO** | Hardening Backend/Frontend, Configurazione Deploy Cloud Free-Tier (0 EUR/mese), Endpoint Magic Link Terzisti e Test Suite | 🔴 `critical` | ✅ `done` | `FTL-TECH-004`, `FTL-CEO-004` | Sì (`L3`) |
+
+---
+
+## 🚀 Sprint 5 — Modello Dati Flessibile, Gerarchia Stagioni & Collezioni, Tabelle Anagrafiche e Semplificazione UI
+
+| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |
+|---|:---:|---|:---:|:---:|---|:---:|
+| [`FTL-CEO-005`](./FTL-CEO-005.json) | **CEO** | Direttiva Esecutiva Sprint 5: Riorganizzazione Modello Dati Flessibile, Gerarchia Stagioni & Collezioni, Tabelle Anagrafiche e Semplificazione UI | 🔴 `critical` | ✅ `done` | `FTL-CEO-004`, `FTL-TECH-005` | No (`L1`) |
+| [`FTL-GOV-005`](./FTL-GOV-005.json) | **CGO** | ADR-007: Architettura Modello Dati Dinamico, Gerarchia Stagione/Collezione 1:N, Anagrafiche di Dominio e Streamlining UX | 🔴 `critical` | ✅ `done` | `FTL-GOV-004`, `FTL-CEO-005` | No (`L1`) |
+| [`FTL-PROD-005`](./FTL-PROD-005.json) | **CPO** | PRD-005: Specifica Funzionale e Modello di Dominio per Modello Dati Flessibile, Gestione Stagioni & Collezioni, Tabelle Anagrafiche Master PLM/PIM e Semplificazione UI | 🔴 `critical` | ✅ `done` | `FTL-CEO-005`, `FTL-GOV-005` | No (`L1`) |
+| [`FTL-TECH-006`](./FTL-TECH-006.json) | **CTO** | Sviluppo Full-Stack Piattaforma: Schema Flessibile Configurabile dal Founder, Modulo Stagioni & Collezioni, Anagrafiche Master PLM/PIM, UI Streamlined e Test Suite | 🔴 `critical` | ✅ `done` | `FTL-TECH-005`, `FTL-PROD-005`, `FTL-GOV-005` | No (`L1`) |
+| [`FTL-REV-004`](./FTL-REV-004.json) | **CRO** | Analisi Commerciale & FinOps Sprint 5: Impatto Modello Multi-Stagione, Gestione Collezioni e Cost-to-Serve Anagrafiche Rete | 🟠 `high` | ✅ `done` | `FTL-REV-003`, `FTL-CEO-005`, `FTL-PROD-005` | No (`L1`) |
+| [`FTL-MKT-004`](./FTL-MKT-004.json) | **CMO** | Product & Brand Marketing Sprint 5: Naming e Tassonomia Moda/Lusso (Stagioni/Collezioni), UX Positioning e Guide Operative | 🟠 `high` | ✅ `done` | `FTL-MKT-003`, `FTL-CEO-005`, `FTL-PROD-005` | No (`L1`) |
+
+---
+
+## 👑 Direttive Founder Formalizzate & Risolte (Sprint 5 Finalization)
+
+Task e direttive inseriti direttamente dal Founder via **Founder Control Center** e completati con successo:
+
+| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |
+|---|:---:|---|:---:|:---:|---|:---:|
+| [`FTL-CEO-006`](./FTL-CEO-006.json) | **CEO** | Analisi Strategica Modulo Passaporto Digitale Pellami e Tracciabilità Conceria | 🟠 `high` | ✅ `done` | — | No (`L1`) |
+| [`FTL-CEO-007`](./FTL-CEO-007.json) | **CEO** | Edit degli elementi presenti in tabella | 🔴 `critical` | ✅ `done` | — | No (`L1`) |
+
+---
+
+## 🏭 Sprint 6 — Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti
+
+| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |
+|---|:---:|---|:---:|:---:|---|:---:|
+| [`FTL-CEO-008`](./FTL-CEO-008.json) | **CEO** | Direttiva Esecutiva Sprint 6: Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti | 🔴 `critical` | 🟢 `todo` | `FTL-CEO-005`, `FTL-CEO-007` | No (`L1`) |
+| [`FTL-GOV-006`](./FTL-GOV-006.json) | **CGO** | ADR-008: Architettura Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti | 🔴 `critical` | 🟢 `todo` | `FTL-GOV-005`, `FTL-CEO-008` | Sì (`L3/L6`) |
+| [`FTL-PROD-006`](./FTL-PROD-006.json) | **CPO** | PRD-006: Gestione Ordini di Produzione (Work Orders Hub), Passaporto Pellami LWG/ICEC e UX Anagrafiche | 🔴 `critical` | ✅ `done` | `FTL-CEO-006`, `FTL-CEO-007`, `FTL-PROD-005` | No (`L1`) |
+| [`FTL-TECH-007`](./FTL-TECH-007.json) | **CTO** | Sviluppo Full-Stack Commesse di Produzione, Data Model Lotti Pellame/Conceria, API Lifecycle Terzisti & UI | 🔴 `critical` | 🟢 `todo` | `FTL-PROD-006`, `FTL-GOV-006` | Sì (`L3`) |
+| [`FTL-REV-005`](./FTL-REV-005.json) | **CRO** | Analisi FinOps & Commerciale Commesse e Tracciabilità Conceria (Invarianza 0 € Terzisti & Tier Brand/PMI) | 🟠 `high` | 🟢 `todo` | `FTL-CEO-008`, `FTL-PROD-006` | Sì (`L4`) |
+| [`FTL-MKT-005`](./FTL-MKT-005.json) | **CMO** | Posizionamento e Comunicazione DPP Conceria & Tracciabilità di Filiera (Storytelling ESPR / LWG / ICEC) | 🟠 `high` | 🟢 `todo` | `FTL-CEO-008`, `FTL-PROD-006` | Sì (`L5`) |
+
+---
+
 ## ⚙️ Regole di Aggiornamento
 1. Ogni sub-agente di Google Antigravity, quando prende in carico un task, aggiorna `status` a `"in_progress"` e `updated_at` con il timestamp corrente.
 2. Al termine della produzione dei deliverable in `Azienda/docs/`, `Azienda/adr/` o `Applicativo/`, popola `output_artifacts`, imposta `status` a `"review"` (se richiede approvazione L2–L6 del Founder) oppure `"done"`.

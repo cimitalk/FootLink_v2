@@ -1,0 +1,27 @@
+# Fly.io Configuration for Footlink Core API (Option 2: Micro-VM Container)
+# Region: fra (Frankfurt, Germany - EU GDPR Compliant)
+# Free Tier Plan: 0.00 EUR / month
+
+app = "footlink-core-api"
+primary_region = "fra"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  FOOTLINK_PORT = "8000"
+  FOOTLINK_ENV = "production"
+  FOOTLINK_PERSISTENCE = "sqlite"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512

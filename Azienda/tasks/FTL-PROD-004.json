@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-PROD-004",
+  "title": "PRD-004: Protocollo di Validazione Pilota sul Campo 'Zero-Training Terzista' (≤ 3 Clic, < 90s) & Framework Benchmark SUS",
+  "description": "Definire il protocollo operativo di collaudo e validazione in reparto produttivo per i primi 3 Design Partner pilota e i loro façonisti a 0 EUR, specificando i criteri di test mobile (tempo medio < 90s, ≤ 3 tap per conferma lotto/fase), il questionario di valutazione System Usability Score (SUS ≥ 80/100) e i KPI di riduzione errori di trascrizione PIM/PLM.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "CEO",
+  "created_at": "2026-10-19T11:00:00+02:00",
+  "updated_at": "2026-10-19T11:30:00+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "XS (<2h)",
+  "dependencies": [
+    "FTL-PROD-003",
+    "FTL-CEO-004"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/PRD-004-pilot-validation-protocol-and-zero-training-ux.md",
+    "Azienda/docs/prd/README.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": null,
+  "tags": [
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Definizione del flusso mobile 'Zero-Training Terzista' in ≤ 3 clic e < 90s",
+    "Pubblicazione della matrice dei KPI di validazione in fabbrica (tempo medio, tassi completamento)",
+    "Formalizzazione del questionario SUS a 10 domande per la certificazione finale"
+  ],
+  "notes": "Protocollo approvato per l'esecuzione congiunta con i team di produzione dei Design Partner."
+}

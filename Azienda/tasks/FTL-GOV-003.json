@@ -1,0 +1,40 @@
+{
+  "task_id": "FTL-GOV-003",
+  "title": "ADR-006: Unificazione Design System v2.0 (Nike-Inspired Editorial Minimalism) e Segregazione Costi L6 Brand vs Terzista",
+  "description": "Formalizzare l'ADR-006 che sancisce l'adozione obbligatoria e uniforme del Design System v2.0 (MKT-BRAND-002: palette monocromatica #FFFFFF/#F5F5F5/#111111, tipografia Barlow Condensed 900 Uppercase + Inter + JetBrains Mono, bottoni pill 999px, logo SVG 'The Dynamic Sole-Link' senza 1:N) su tutto l'Applicativo (React, preview standalone e viste FastAPI) e le regole di segregazione L6 dei costi industriali e commerciali (visibili solo al Tenant Brand/PMI e oscurati al Terzista a 0 EUR).",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CGO",
+  "assignee_agent": "footlink-cgo",
+  "created_by": "Founder",
+  "created_at": "2026-10-18T22:14:00+02:00",
+  "updated_at": "2026-10-18T22:18:00+02:00",
+  "due_date": "2026-11-05T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "XS (<2h)",
+  "dependencies": [
+    "FTL-GOV-002",
+    "FTL-MKT-002"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/adr/ADR-006-unified-design-system-and-l6-cost-segregation.md",
+    "Azienda/adr/README.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-006",
+  "tags": [
+    "governance",
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Redazione di ADR-006 con vincoli vincolanti sul Design System v2.0 (zero dark-slate SaaS, zero dicitura 1:N nel logo, bottoni pill 999px)",
+    "Specifica formale della segregazione dati L6 tra vista Brand/PMI (costi industriali, margini wholesale/retail e dati ispettivi DPP) e vista Terzista 0 EUR",
+    "Aggiornamento dell'indice Azienda/adr/README.md e validazione formale 100% dei Task Object di Sprint 3"
+  ],
+  "notes": "Avviato nello Sprint 3 su direttiva del Founder per allineare l'intero Applicativo al Design System v2.0 e blindare la riservatezza costi L6."
+}

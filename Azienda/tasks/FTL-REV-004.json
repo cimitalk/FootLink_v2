@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-REV-004",
+  "title": "Analisi Commerciale & FinOps Sprint 5: Impatto Modello Multi-Stagione, Gestione Collezioni e Cost-to-Serve Anagrafiche Rete",
+  "description": "Valutare l'impatto economico e commerciale dell'introduzione della gestione multi-stagione e multi-collezione: retention dei Brand e delle PMI calzaturiere attraverso il ciclo di vita annuale, salvaguardia del Cost-to-Serve a 0 EUR per i façonisti terzisti, e pricing tiering basato su volume collezioni/anno.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CRO",
+  "assignee_agent": "footlink-cro",
+  "created_by": "Founder",
+  "created_at": "2026-10-19T15:35:00+02:00",
+  "updated_at": "2026-10-19T16:00:00+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "XS (<2h)",
+  "dependencies": [
+    "FTL-REV-003",
+    "FTL-CEO-005",
+    "FTL-PROD-005"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/finops/sprint-5-commercial-impact.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": null,
+  "tags": [
+    "finops",
+    "sales",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Analisi dei unit economics nel modello multi-stagione (P/E, A/I, Capsule/Drop) per clienti PMI e Enterprise",
+    "Verifica che le anagrafiche terzisti rimangano perpetuamente a 0 EUR garantendo la viralità di rete",
+    "Validazione del margine lordo aggregato > 75% anche con incremento dei volumi di collezioni"
+  ],
+  "notes": "Analisi che conferma la sostenibilità del modello di business Footlink nell'orizzonte multi-stagionale."
+}

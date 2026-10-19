@@ -1,0 +1,41 @@
+{
+  "task_id": "FTL-CEO-003",
+  "title": "Direttiva Esecutiva Sprint 3: Convergenza UX/UI Design System v2.0, Home Hub Modulare e Completamento Processi Core PIM/PLM",
+  "description": "Emettere la direttiva esecutiva di Sprint 3 per orchestrare il rifacimento UX/UI dell'Applicativo secondo il Design System v2.0, l'introduzione della Home Iniziale (Executive & Operational Launchpad) e il rilascio dei restanti processi core (PIM Data Quality & Export FEAT-05, Schede Tecniche Verticali Calzature/Pelletteria/Abbigliamento, Scala Taglie, Costing riservato L6 e Workflow Ciclo di Vita PLM) mantenendo Cost-to-Serve a 0 EUR.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder",
+  "created_at": "2026-10-18T22:14:00+02:00",
+  "updated_at": "2026-10-18T22:18:30+02:00",
+  "due_date": "2026-11-05T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "XS (<2h)",
+  "dependencies": [
+    "FTL-CEO-002",
+    "FTL-GOV-003"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/okr/sprint-3-kickoff-and-ux-convergence.md",
+    "Azienda/docs/okr/README.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-006",
+  "tags": [
+    "governance",
+    "product",
+    "finops",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Allineamento dei 5 workstream di Sprint 3 (Design System v2.0, Home Hub, Processi End-to-End, FEAT-05 Data Quality/Export, Schede Tecniche Verticali & Costing L6) agli OKR Q4 2026 / Q1 2027",
+    "Certificazione FinOps di mantenimento 0 EUR/mese di spesa infrastrutturale e Margine Lordo SaaS prospettico > 82%",
+    "Aggiornamento di Azienda/docs/okr/README.md"
+  ],
+  "notes": "Avviato su input diretto del Founder per guidare l'evoluzione UX/UI e funzionale di Sprint 3."
+}

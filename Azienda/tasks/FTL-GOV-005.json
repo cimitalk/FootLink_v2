@@ -1,0 +1,40 @@
+{
+  "task_id": "FTL-GOV-005",
+  "title": "ADR-007: Architettura Modello Dati Dinamico, Gerarchia Stagione/Collezione 1:N, Anagrafiche di Dominio e Streamlining UX",
+  "description": "Formalizzare in ADR-007 l'architettura per la flessibilità del modello dati (schema definitions estendibili dal Founder), la gerarchia a 2 livelli Stagione -> Collezioni -> Prodotti, il sottosistema unificato di anagrafiche di dominio (PIM e PLM) e i principi guida di semplificazione ergonomica della UI.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CGO",
+  "assignee_agent": "footlink-cgo",
+  "created_by": "Founder",
+  "created_at": "2026-10-19T15:35:00+02:00",
+  "updated_at": "2026-10-19T16:00:00+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "XS (<2h)",
+  "dependencies": [
+    "FTL-GOV-004",
+    "FTL-CEO-005"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/adr/ADR-007-flexible-data-model-seasons-collections-domain-registries.md",
+    "Azienda/adr/README.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-007",
+  "tags": [
+    "governance",
+    "PLM",
+    "PIM",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Redazione completa di ADR-007 secondo il template ufficiale ADR-000",
+    "Definizione delle decisioni architetturali per estendibilità schema senza alterazioni distruttive del DB",
+    "Aggiornamento del registro generale ADR in Azienda/adr/README.md"
+  ],
+  "notes": "Governance cardine per l'estensibilità di Footlink da parte del Founder e degli operatori industriali."
+}

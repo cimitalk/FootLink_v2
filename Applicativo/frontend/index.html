@@ -3,10 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Footlink OS — 1 PIM ↔ N PLM · BOM 3 Livelli · Portale Terzisti 0 € · EU DPP Live</title>
+    <title>FOOTLINK — Il Sistema Operativo PLM + PIM per la Moda Italiana</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --bg-white: #FFFFFF;
+        --bg-grey: #F5F5F5;
+        --bg-black: #111111;
+        --text-black: #111111;
+        --text-grey: #707072;
+        --border-light: #E5E5E5;
+        --status-ok: #10B981;
+      }
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+        background-color: var(--bg-white);
+        color: var(--text-black);
+        -webkit-font-smoothing: antialiased;
+      }
+      .display-title {
+        font-family: 'Barlow Condensed', 'Impact', 'Helvetica Neue', sans-serif;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.03em;
+        line-height: 0.94;
+      }
+      .mono-code {
+        font-family: 'JetBrains Mono', monospace;
+      }
+    </style>
   </head>
-  <body class="bg-slate-950 text-slate-100 antialiased">
+  <body class="bg-white text-[#111111] antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

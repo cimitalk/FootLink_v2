@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-PROD-006",
+  "title": "PRD-006: Gestione Ordini di Produzione (Work Orders Hub), Passaporto Pellami LWG/ICEC e UX Anagrafiche",
+  "description": "Redigere il Product Requirement Document (PRD-006) che formalizza la specifica UX per l'editing delle anagrafiche (FTL-CEO-007), l'architettura funzionale del Work Orders Hub per le commesse di fabbrica con griglia taglie e avanzamento a fasi façonisti, e il Passaporto Pellami & Tracciabilità Conceria (FTL-CEO-006) con rating LWG/ICEC e conformità ESPR UE.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "CEO",
+  "created_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T17:05:00+02:00",
+  "due_date": "2026-11-25T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2-8h)",
+  "dependencies": [
+    "FTL-CEO-006",
+    "FTL-CEO-007",
+    "FTL-PROD-005"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/PRD-006-work-orders-hub-and-leather-traceability-passport.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-008",
+  "tags": [
+    "product",
+    "PLM"
+  ],
+  "acceptance_criteria": [
+    "Specifica UX per l'editing controllato e soft-disable delle tabelle anagrafiche di dominio",
+    "Modello funzionale Work Orders Hub con Size Breakdown Grid e assegnazione terzisti a 0 EUR",
+    "Integrazione attributi tracciabilità conciaria (LWG, ICEC, concia vegetale/cromo, origine grezzo, REACH)",
+    "Matrice di visibilità e segregazione costi L6 tra Brand, Terzista e Vista Pubblica DPP"
+  ],
+  "notes": "Deliverable PRD-006 completato dal CPO e allineato con le direttive del Founder e l'ADR-008."
+}

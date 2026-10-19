@@ -1,0 +1,41 @@
+{
+  "task_id": "FTL-GOV-006",
+  "title": "ADR-008: Architettura Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti",
+  "description": "Formalizzare e approvare in ADR-008 l'architettura tecnica per la gestione delle commesse di produzione, il sottosistema dei lotti di conceria (certificazioni ambientali LWG/ICEC, REACH, hash SHA-256 a costo zero), lo state machine delle fasi terzisti in 3 clic e il presidio rigoroso della segregazione dati industriali riservati L6 (brand vs façonisti).",
+  "status": "todo",
+  "priority": "critical",
+  "assignee_role": "CGO",
+  "assignee_agent": "footlink-cgo",
+  "created_by": "Founder",
+  "created_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T17:00:00+02:00",
+  "due_date": "2026-11-25T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": null,
+  "dependencies": [
+    "FTL-GOV-005",
+    "FTL-CEO-008"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/adr/ADR-008-production-orders-tannery-traceability-subcontractor-lifecycle.md",
+    "Azienda/adr/README.md",
+    "Azienda/tasks/README.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Scelta architetturale strutturale per commesse industriali, tracciabilità lotti e presidio L6 segreti industriali",
+  "escalation_level": "L3",
+  "decision_record_id": "ADR-008",
+  "tags": [
+    "governance",
+    "PLM",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Redazione completa di ADR-008 secondo il template ufficiale ADR-000",
+    "Definizione formale del protocollo di segregazione DTO L6 tra Brand e Terzisti",
+    "Verifica rispetto vincolo Zero Spesa (L2) per certificati conceria tramite hash crittografico",
+    "Aggiornamento del registro generale ADR e del registro Task"
+  ],
+  "notes": "Governance cardine dello Sprint 6 per la sicurezza dei dati di produzione e il controllo dei flussi manifatturieri."
+}

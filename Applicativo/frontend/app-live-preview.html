@@ -3,757 +3,1259 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Footlink OS Live Application — 1 PIM ↔ N PLM · BOM 3 Livelli · Terzisti 0 € · EU DPP Live</title>
+  <title>FOOTLINK OS — Sistema Operativo PLM + PIM per la Moda Italiana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #020617;
-      --panel: #0f172a;
-      --panel-alt: #1e293b;
-      --border: #334155;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --sky: #38bdf8;
-      --emerald: #10b981;
-      --amber: #f59e0b;
-      --purple: #a855f7;
+      --bg-white: #FFFFFF;
+      --bg-grey: #F5F5F5;
+      --bg-black: #111111;
+      --text-black: #111111;
+      --text-grey: #707072;
+      --border-light: #E5E5E5;
+      --border-dark: #111111;
+      --status-ok: #10B981;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.45;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: var(--bg-white);
+      color: var(--text-black);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
-    header {
-      background: rgba(15, 23, 42, 0.95);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
-      position: sticky;
-      top: 0;
-      z-index: 30;
+    .display-title {
+      font-family: 'Barlow Condensed', 'Impact', 'Helvetica Neue', sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+      line-height: 0.94;
+    }
+    .mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .utility-bar {
+      background: var(--bg-grey);
+      border-bottom: 1px solid var(--border-light);
+      padding: 8px 32px;
+      font-size: 12px;
+      font-weight: 600;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
     }
-    .brand-row { display: flex; align-items: center; gap: 12px; }
-    .logo-badge {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--sky), var(--emerald));
-      color: #020617; font-weight: 900; font-size: 16px;
-      display: flex; align-items: center; justify-content: center;
+    header {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 16px 32px;
     }
-    .container { max-width: 1280px; margin: 0 auto; padding: 20px 24px 60px; }
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
+    .nav-wrap {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .container {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 32px 32px 80px;
+    }
+    .btn-pill {
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      text-decoration: none;
+    }
+    .btn-black {
+      background: var(--bg-black);
+      color: #FFFFFF;
+    }
+    .btn-black:hover {
+      background: #333333;
+    }
+    .btn-outline {
+      background: #FFFFFF;
+      color: var(--text-black);
+      border: 1.5px solid var(--border-light);
+    }
+    .btn-outline:hover {
+      border-color: var(--text-black);
+    }
+    .btn-outline.active {
+      background: var(--bg-black);
+      color: #FFFFFF;
+      border-color: var(--bg-black);
+    }
+    .card-grey {
+      background: var(--bg-grey);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 24px;
+      transition: border-color 0.15s ease;
+    }
+    .card-grey:hover {
+      border-color: var(--border-dark);
+    }
+    .card-white {
+      background: var(--bg-white);
+      border: 1px solid var(--border-light);
       border-radius: 16px;
       padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     }
-    .section-head {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border);
-      padding-bottom: 14px; margin-bottom: 16px;
+    .badge-pill {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 4px 12px;
+      border-radius: 999px;
     }
-    .pill {
-      display: inline-block; font-size: 11px; font-weight: 800;
-      text-transform: uppercase; letter-spacing: 0.7px;
-      padding: 3px 10px; border-radius: 999px;
-    }
-    .pill-sky { background: rgba(56, 189, 248, 0.15); color: var(--sky); border: 1px solid rgba(56, 189, 248, 0.4); }
-    .pill-purple { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); }
-    .pill-emerald { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
-    .btn {
-      cursor: pointer; border: none; border-radius: 10px;
-      padding: 9px 15px; font-size: 12.5px; font-weight: 800;
-      transition: all 0.15s ease;
-    }
-    .btn-sky { background: var(--sky); color: #020617; }
-    .btn-sky:hover { filter: brightness(1.1); }
-    .btn-emerald { background: var(--emerald); color: #020617; }
-    .btn-emerald:hover { filter: brightness(1.1); }
-    .btn-purple { background: var(--purple); color: #ffffff; }
-    .pim-tabs { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-    .pim-tab {
-      background: #020617; border: 1px solid var(--border);
-      border-radius: 12px; padding: 12px 16px; cursor: pointer;
-      display: flex; align-items: center; gap: 12px; color: var(--text);
-      text-align: left;
-    }
-    .pim-tab.active {
-      border-color: var(--sky);
-      background: rgba(56, 189, 248, 0.12);
-      box-shadow: 0 0 0 1px var(--sky);
-    }
-    .grid-bridge {
-      display: grid; grid-template-columns: 5fr 1fr 6fr; gap: 16px; align-items: center;
-    }
-    .grid-split {
-      display: grid; grid-template-columns: 7fr 5fr; gap: 20px;
-    }
-    .grid-dpp {
-      display: grid; grid-template-columns: 4fr 8fr; gap: 20px; align-items: start;
-    }
-    @media (max-width: 960px) {
-      .grid-bridge, .grid-split, .grid-dpp { grid-template-columns: 1fr; }
-    }
-    .variant-card {
-      background: #020617; border: 1px solid var(--border);
-      border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; cursor: pointer;
-    }
-    .variant-card.active {
-      border-color: var(--emerald);
-      background: rgba(16, 185, 129, 0.1);
-    }
-    .bom-node {
-      background: #020617; border: 1px solid var(--border);
-      border-radius: 10px; padding: 11px 14px; margin-top: 8px;
-    }
-    .bom-children {
-      margin-left: 22px; padding-left: 14px; border-left: 2px dashed #475569;
-    }
-    .phone-frame {
-      max-width: 370px; margin: 0 auto; background: #020617;
-      border: 4px solid #475569; border-radius: 30px; padding: 14px;
-    }
-    .stepper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
-    .step-box {
-      font-size: 11px; font-weight: 800; text-align: center;
-      padding: 6px; border-radius: 8px; background: #0f172a; border: 1px solid var(--border);
-    }
-    .step-box.active { border-color: var(--sky); color: var(--sky); background: rgba(56,189,248,0.15); }
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin-bottom: 14px; }
-    .kpi-box { background: #020617; border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.82);
-      display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px;
-    }
-    .modal-backdrop.open { display: flex; }
-    .modal-card {
-      background: #ffffff; color: #0f172a; max-width: 720px; width: 100%;
-      border-radius: 18px; overflow: hidden; max-height: 88vh; display: flex; flex-direction: column;
-    }
-    input, select {
-      background: #0f172a; border: 1px solid #475569; color: #ffffff;
-      padding: 7px 10px; border-radius: 8px; font-size: 12.5px; width: 100%;
+    .live-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--status-ok);
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand-row">
-      <div class="logo-badge">FL</div>
-      <div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <strong style="font-size:16px;">Footlink PLM + PIM Core OS (Sprint 2 Live App)</strong>
-          <span class="pill pill-emerald">0 € Free-Tier Architecture</span>
-        </div>
-        <div style="font-size:12px; color:var(--muted);">
-          FTL-TECH-002 (DB SQLite + Ponte 1 PIM ↔ N PLM + BOM 3 Livelli + Terzisti 0 €) &amp; FTL-TECH-003 (Passaporto Digitale DPP UE + QR SVG)
-        </div>
+
+  <!-- Top Utility Bar -->
+  <div class="utility-bar">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span style="display:flex; align-items:center; gap:6px;">
+        <span class="live-dot"></span>
+        FOOTLINK OS · DESIGN SYSTEM V2.0
+      </span>
+      <span style="color:var(--text-grey);">|</span>
+      <span style="color:var(--text-grey);">
+        Infrastruttura Free-Tier 0,00 € · Regolamento UE 2024/1781 (ESPR)
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light); color:var(--text-black);">
+        🟢 Standalone Live Simulator
+      </span>
+      <div style="display:flex; align-items:center; gap:4px; background:#FFFFFF; border:1px solid var(--border-light); padding:2px; border-radius:999px;">
+        <button id="roleBrandBtn" class="btn-pill btn-black" style="padding:4px 14px; font-size:11px;" onclick="setViewerRole('brand')">
+          Brand (L6)
+        </button>
+        <button id="roleSubBtn" class="btn-pill btn-outline" style="padding:4px 14px; font-size:11px; border:none;" onclick="setViewerRole('subcontractor')">
+          Terzista 0 €
+        </button>
       </div>
     </div>
-    <div id="conn-badge" class="pill pill-sky">⚡ Database SQLite Seed Attivo (2 SKU · 5 Varianti PLM)</div>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header>
+    <div class="nav-wrap">
+      <!-- The Dynamic Sole-Link Logo (Zero 1:N nel logo per Brand Guidelines v2.0) -->
+      <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="switchModule('home')">
+        <svg width="156" height="30" viewBox="0 0 168 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="FOOTLINK">
+          <path d="M4 24L14.5 6H24L13.5 24H4Z" fill="#111111"/>
+          <path d="M15.5 24L23 11H31L23.5 24H15.5Z" fill="#111111"/>
+          <path d="M4 26.5H29.5L28 29H2.5L4 26.5Z" fill="#111111"/>
+          <text x="38" y="24" fill="#111111" font-family="'Barlow Condensed', 'Inter', sans-serif" font-weight="900" font-size="25" letter-spacing="-0.03em">FOOTLINK</text>
+        </svg>
+        <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-grey); border-left:1px solid var(--border-light); padding-left:12px;">
+          PLM + PIM Core OS
+        </span>
+      </div>
+
+      <!-- Navigation Pills -->
+      <nav style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <button id="nav-home" class="btn-pill btn-outline active" onclick="switchModule('home')">Home Launchpad</button>
+        <button id="nav-all" class="btn-pill btn-outline" onclick="switchModule('all')">Vista Completa OS</button>
+        <button id="nav-pim" class="btn-pill btn-outline" onclick="switchModule('pim')">01 PIM & Export</button>
+        <button id="nav-bridge" class="btn-pill btn-outline" onclick="switchModule('bridge')">02 Ponte 1:N & Schede</button>
+        <button id="nav-bom" class="btn-pill btn-outline" onclick="switchModule('bom')">03 BOM & Costi L6</button>
+        <button id="nav-sub" class="btn-pill btn-outline" onclick="switchModule('sub')">05 Terzisti 0 €</button>
+        <button id="nav-dpp" class="btn-pill btn-outline" onclick="switchModule('dpp')">06 Passaporto DPP</button>
+      </nav>
+    </div>
   </header>
 
-  <div class="container">
-    <!-- 1. Ponte 1 PIM <-> N PLM -->
-    <div class="card">
-      <div class="section-head">
-        <div>
-          <span class="pill pill-sky">Dominio Core · ADR-002</span>
-          <h2 style="margin:6px 0 4px; font-size:19px;">1. Ponte Architetturale: 1 Articolo Commerciale PIM ↔ N Varianti Tecniche PLM</h2>
-          <div style="font-size:13px; color:var(--muted);">
-            Seleziona un Articolo Commerciale PIM o aggiungi in tempo reale una nuova Variante Tecnica di Produzione PLM.
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- ===================================================================== -->
+    <!-- SECTION 1: HOME LAUNCHPAD (Executive & Operational Launchpad)         -->
+    <!-- ===================================================================== -->
+    <div id="section-home">
+      <!-- Spotlight Hero Block -->
+      <div style="background:var(--bg-black); color:#FFFFFF; border-radius:24px; padding:40px; margin-bottom:32px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:20px; margin-bottom:28px;">
+          <div class="badge-pill" style="background:rgba(255,255,255,0.12); color:#FFFFFF;">
+            <span class="live-dot" style="margin-right:6px;"></span>
+            HOME OPERATIVA FOOTLINK OS · SPRINT 3
+          </div>
+          <button class="btn-pill" style="background:#FFFFFF; color:#111111;" onclick="switchModule('all')">
+            Apri Workspace Integrato Completo →
+          </button>
+        </div>
+
+        <h1 class="display-title" style="font-size:clamp(2.5rem, 5vw, 4.2rem); max-width:920px; margin-bottom:16px;">
+          DAL LABORATORIO AL PASSAPORTO DIGITALE UE. IN UN UNICO SISTEMA.
+        </h1>
+        <p style="font-size:15px; color:rgba(255,255,255,0.8); max-width:820px; line-height:1.6; margin-bottom:36px;">
+          Connetti i modelli commerciali in vendita con la manifattura reale dei distretti italiani (Calzature, Pelletteria e Abbigliamento).
+          Gestisci la distinta base a 3 livelli, coordina i laboratori a 0 € e genera in 1 clic il Passaporto Digitale UE (ESPR).
+        </p>
+
+        <!-- 5 Live KPIs -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+          <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:18px;">
+            <div style="font-size:11px; text-transform:uppercase; color:rgba(255,255,255,0.6); font-weight:700;">1. Catalogo Vendita (PIM)</div>
+            <div class="display-title" style="font-size:34px; margin-top:4px;">3 SKU MASTER</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.7); margin-top:2px;">Calzature · Pelletteria · Tessile</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:18px;">
+            <div style="font-size:11px; text-transform:uppercase; color:rgba(255,255,255,0.6); font-weight:700;">2. Varianti Fabbrica (PLM)</div>
+            <div class="display-title" style="font-size:34px; margin-top:4px;">7 LINEE PLM</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.7); margin-top:2px;">Ponte Nativo 1 PIM ↔ N PLM</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:18px;">
+            <div style="font-size:11px; text-transform:uppercase; color:rgba(255,255,255,0.6); font-weight:700;">3. PIM Data Quality</div>
+            <div class="display-title" style="font-size:34px; margin-top:4px;">100% READY</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.7); margin-top:2px;">10/10 Criteri ESPR Validati</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:18px;">
+            <div style="font-size:11px; text-transform:uppercase; color:rgba(255,255,255,0.6); font-weight:700;">4. Rete Terzisti a 0 €</div>
+            <div class="display-title" style="font-size:34px; margin-top:4px;">6/7 FASI</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.7); margin-top:2px;">Confermate in 3 Clic a 0 €</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:18px;">
+            <div style="font-size:11px; text-transform:uppercase; color:rgba(255,255,255,0.6); font-weight:700;">5. Passaporto UE</div>
+            <div class="display-title" style="font-size:34px; margin-top:4px;">100% LIVE</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.7); margin-top:2px;">QR Code SVG Navigabile</div>
           </div>
         </div>
-        <button class="btn btn-sky" onclick="toggleVariantForm()">+ Aggiungi Variante PLM (Lato N)</button>
       </div>
 
-      <div id="pim-tabs" class="pim-tabs"></div>
+      <!-- 6 Main Module Cards Grid -->
+      <div style="margin-bottom:24px;">
+        <div class="badge-pill" style="background:var(--bg-grey); color:var(--text-grey); margin-bottom:8px;">
+          ARCHITETTURA MODULARE DEL SISTEMA
+        </div>
+        <h2 class="display-title" style="font-size:36px; margin-bottom:20px;">
+          I 6 MODULI PRINCIPALI DI FOOTLINK
+        </h2>
+      </div>
 
-      <div id="add-variant-form" style="display:none; background:#020617; border:1px solid var(--sky); border-radius:12px; padding:14px; margin-bottom:16px;">
-        <div style="font-size:12px; font-weight:800; color:var(--sky); margin-bottom:10px;">Nuova Variante Tecnica di Produzione PLM collegata all'Articolo PIM selezionato</div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; align-items:end;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:20px;">
+        <!-- Card 1 -->
+        <div class="card-grey" style="display:flex; flex-col; justify-content:space-between; flex-direction:column;">
           <div>
-            <label style="font-size:11px; color:var(--muted);">Codice Variante PLM</label>
-            <input id="inp-var-code" placeholder="es. FTL-LOAFER-01-BLU" value="FTL-LOAFER-01-BLU-NAVY" />
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span class="display-title" style="font-size:36px;">01</span>
+              <span class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light);">PIM & EXPORT</span>
+            </div>
+            <h3 class="display-title" style="font-size:24px; margin-bottom:8px;">CATALOGO PIM, DATA QUALITY & EXPORT</h3>
+            <p style="font-size:13px; color:var(--text-grey); margin-bottom:20px;">
+              Gestione Master SKU multilingua (IT/EN), calcolo real-time del Data Quality Score (0–100%) e Syndication Export multicanale (CSV, JSON, Shopify B2C, B2B Showroom).
+            </p>
           </div>
+          <div style="border-top:1px solid var(--border-light); padding-top:16px; display:flex; justify-content:space-between; align-items:center;">
+            <span class="mono-code" style="font-size:11px; font-weight:600;"><span class="live-dot" style="margin-right:4px;"></span>Score Medio 100%</span>
+            <button class="btn-pill btn-black" onclick="switchModule('pim')">Apri Modulo →</button>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="card-grey" style="display:flex; flex-col; justify-content:space-between; flex-direction:column;">
           <div>
-            <label style="font-size:11px; color:var(--muted);">Colore / Materiale</label>
-            <input id="inp-var-color" placeholder="es. Camoscio Blu Navy" value="Camoscio Blu Navy" />
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span class="display-title" style="font-size:36px;">02</span>
+              <span class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light);">ARCHITETTURA 1:N</span>
+            </div>
+            <h3 class="display-title" style="font-size:24px; margin-bottom:8px;">PONTE 1 PIM ↔ N PLM & SCHEDE VERTICALI</h3>
+            <p style="font-size:13px; color:var(--text-grey); margin-bottom:20px;">
+              Unione visuale tra vendita e produzione con schede tecniche verticali per Calzature (Forma/Costruzione), Pelletteria (CAD/Galvanica) e Abbigliamento (Fit/POM).
+            </p>
           </div>
+          <div style="border-top:1px solid var(--border-light); padding-top:16px; display:flex; justify-content:space-between; align-items:center;">
+            <span class="mono-code" style="font-size:11px; font-weight:600;"><span class="live-dot" style="margin-right:4px;"></span>1 PIM ↔ 7 PLM</span>
+            <button class="btn-pill btn-black" onclick="switchModule('bridge')">Apri Modulo →</button>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card-grey" style="display:flex; flex-col; justify-content:space-between; flex-direction:column;">
           <div>
-            <label style="font-size:11px; color:var(--muted);">Forma / Cartamodello</label>
-            <input id="inp-var-last" value="FORMA-FM-108" />
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span class="display-title" style="font-size:36px;">03</span>
+              <span class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light);">BOM & COSTING L6</span>
+            </div>
+            <h3 class="display-title" style="font-size:24px; margin-bottom:8px;">DISTINTA BASE 3 LIVELLI & COSTING L6</h3>
+            <p style="font-size:13px; color:var(--text-grey); margin-bottom:20px;">
+              Albero gerarchico L1 (Assieme) → L2 (Semilavorato) → L3 (Materia Prima), simulatore sviluppo taglie e calcolo costi riservato al Brand (ADR-006).
+            </p>
           </div>
-          <button class="btn btn-emerald" onclick="addPlmVariant()">Salva Variante PLM</button>
+          <div style="border-top:1px solid var(--border-light); padding-top:16px; display:flex; justify-content:space-between; align-items:center;">
+            <span class="mono-code" style="font-size:11px; font-weight:600;"><span class="live-dot" style="margin-right:4px;"></span>Segregazione L6 Attiva</span>
+            <button class="btn-pill btn-black" onclick="switchModule('bom')">Apri Modulo →</button>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="card-grey" style="display:flex; flex-col; justify-content:space-between; flex-direction:column;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span class="display-title" style="font-size:36px;">04</span>
+              <span class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light);">WORKFLOW</span>
+            </div>
+            <h3 class="display-title" style="font-size:24px; margin-bottom:8px;">CICLO DI VITA & SNAPSHOT BOM IMMUTABILI</h3>
+            <p style="font-size:13px; color:var(--text-grey); margin-bottom:20px;">
+              Avanzamento guidato da PROTOTYPE → SAMPLE → INDUSTRIALIZED → PRODUCTION con congelamento automatico dello snapshot BOM (v2.0 Locked).
+            </p>
+          </div>
+          <div style="border-top:1px solid var(--border-light); padding-top:16px; display:flex; justify-content:space-between; align-items:center;">
+            <span class="mono-code" style="font-size:11px; font-weight:600;"><span class="live-dot" style="margin-right:4px;"></span>BOM Snapshot Locked</span>
+            <button class="btn-pill btn-black" onclick="switchModule('bridge')">Apri Modulo →</button>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="card-grey" style="display:flex; flex-col; justify-content:space-between; flex-direction:column;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span class="display-title" style="font-size:36px;">05</span>
+              <span class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light);">RETE A 0 €</span>
+            </div>
+            <h3 class="display-title" style="font-size:24px; margin-bottom:8px;">PORTALE MOBILE TERZISTI "3 CLIC A 0 €"</h3>
+            <p style="font-size:13px; color:var(--text-grey); margin-bottom:20px;">
+              Interfaccia smartphone per manovia/fabbrica (touch target ≥ 56px): conferme lotto e avanzamento in meno di 10 secondi a costo zero per sempre.
+            </p>
+          </div>
+          <div style="border-top:1px solid var(--border-light); padding-top:16px; display:flex; justify-content:space-between; align-items:center;">
+            <span class="mono-code" style="font-size:11px; font-weight:600;"><span class="live-dot" style="margin-right:4px;"></span>6/7 Fasi OK (0 €)</span>
+            <button class="btn-pill btn-black" onclick="switchModule('sub')">Apri Modulo →</button>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="card-grey" style="display:flex; flex-col; justify-content:space-between; flex-direction:column;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span class="display-title" style="font-size:36px;">06</span>
+              <span class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light);">ESPR UE</span>
+            </div>
+            <h3 class="display-title" style="font-size:24px; margin-bottom:8px;">PASSAPORTO DIGITALE (DPP) & QR SVG</h3>
+            <p style="font-size:13px; color:var(--text-grey); margin-bottom:20px;">
+              Generatore cartellino fisico SVG navigabile e pagina pubblica con switch rapido tra Vista Consumatore B2C e Vista Ispettiva Dogane (L6).
+            </p>
+          </div>
+          <div style="border-top:1px solid var(--border-light); padding-top:16px; display:flex; justify-content:space-between; align-items:center;">
+            <span class="mono-code" style="font-size:11px; font-weight:600;"><span class="live-dot" style="margin-right:4px;"></span>Doppia Vista Live</span>
+            <button class="btn-pill btn-black" onclick="switchModule('dpp')">Apri Modulo →</button>
+          </div>
         </div>
       </div>
-
-      <div id="bridge-view" class="grid-bridge"></div>
     </div>
 
-    <!-- 2. Split BOM a 3 Livelli + Portale Mobile Terzista 3 Clic a 0 € -->
-    <div class="grid-split">
-      <div class="card" style="margin-bottom:0;">
-        <div class="section-head">
+    <!-- ===================================================================== -->
+    <!-- SECTION 2: WORKSPACE MODULES (PIM, Bridge, BOM, Subcontractor, DPP)   -->
+    <!-- ===================================================================== -->
+    <div id="section-workspace" style="display:none;">
+
+      <!-- PIM Selector & Top Controls -->
+      <div class="card-grey" style="margin-bottom:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:20px;">
           <div>
-            <span class="pill pill-purple">Gerarchia L1 → L2 → L3</span>
-            <h3 id="bom-title" style="margin:6px 0 2px; font-size:17px;">2. Distinta Base (BOM) a 3 Livelli</h3>
-            <div style="font-size:12px; color:var(--muted);">Livello 1 (Diretto) → Livello 2 (Sotto-Assieme) → Livello 3 (Materia Prima / Filato / Mescola)</div>
+            <div class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light); color:var(--text-grey);">
+              SELETTORE PRODOTTO DI SETTORE
+            </div>
+            <h2 class="display-title" style="font-size:32px; margin-top:4px;">SELEZIONA ARTICOLO MASTER PIM</h2>
           </div>
-          <button class="btn btn-purple" onclick="toggleBomForm()">+ Nodo BOM</button>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-pill btn-outline" onclick="toggleDataQualityDrawer()">
+              <span class="live-dot"></span>
+              Data Quality & Export (100%)
+            </button>
+          </div>
         </div>
 
-        <div id="add-bom-form" style="display:none; background:#020617; border:1px solid var(--purple); border-radius:12px; padding:12px; margin-bottom:12px;">
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-            <div>
-              <label style="font-size:11px; color:var(--muted);">Livello Gerarchico</label>
-              <select id="inp-bom-level">
-                <option value="1">Livello 1 (Componente Diretto)</option>
-                <option value="2" selected>Livello 2 (Sotto-Assieme)</option>
-                <option value="3">Livello 3 (Materia Prima)</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--muted);">Materiale / Componente</label>
-              <input id="inp-bom-mat" value="Rinforzo Punta Termoplastico Riciclato" />
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--muted);">Fornitore &amp; Distretto</label>
-              <input id="inp-bom-sup" value="TecnoComponenti Marche Srl" />
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--muted);">% Riciclato &amp; Certificazioni</label>
-              <input id="inp-bom-rec" type="number" value="75" />
-            </div>
-          </div>
-          <button class="btn btn-emerald" style="width:100%;" onclick="addBomNode()">Inserisci Nodo nella BOM a 3 Livelli</button>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;" id="pimTabsWrap">
+          <!-- Dynamically populated -->
         </div>
 
-        <div id="bom-tree-container"></div>
+        <!-- Data Quality Drawer -->
+        <div id="dqDrawer" style="display:none; margin-top:20px; background:#FFFFFF; border:1.5px solid var(--border-dark); border-radius:16px; padding:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-bottom:1px solid var(--border-light); padding-bottom:14px; margin-bottom:16px;">
+            <div>
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-grey);">
+                FEAT-05 · PIM DATA QUALITY & OMNICHANNEL SYNDICATION EXPORT
+              </div>
+              <h3 class="display-title" style="font-size:26px; margin-top:2px;">
+                SCORE COMPLETEZZA ESPR: 100/100 · GATE PUBBLICAZIONE DPP SBLOCCATO
+              </h3>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-pill btn-outline" style="padding:6px 14px; font-size:11px;" onclick="showExport('json')">JSON</button>
+              <button class="btn-pill btn-outline" style="padding:6px 14px; font-size:11px;" onclick="showExport('csv')">CSV</button>
+              <button class="btn-pill btn-outline" style="padding:6px 14px; font-size:11px;" onclick="showExport('shopify')">Shopify B2C</button>
+              <button class="btn-pill btn-outline" style="padding:6px 14px; font-size:11px;" onclick="showExport('b2b')">B2B Showroom</button>
+            </div>
+          </div>
+          <div id="exportPreviewArea" style="display:none; background:var(--bg-black); color:#FFFFFF; border-radius:12px; padding:16px; margin-top:12px;">
+            <pre class="mono-code" id="exportPre" style="font-size:11.5px; overflow-x:auto; max-height:220px;"></pre>
+          </div>
+        </div>
       </div>
 
-      <div class="card" style="margin-bottom:0;">
-        <div class="section-head">
-          <div>
-            <span class="pill pill-emerald">Zero-Training UX · Licenza 0,00 €</span>
-            <h3 style="margin:6px 0 2px; font-size:17px;">3. Portale Mobile Terzista "3 Clic a 0 €"</h3>
-            <div style="font-size:12px; color:var(--muted);">Conferma lotti di produzione in 3 clic dagli smartphone dei laboratori di distretto.</div>
+      <!-- Module 01 & 02: Split Bridge 1 PIM <-> N PLM -->
+      <div id="module-bridge-wrap" style="margin-bottom:24px;">
+        <div class="card-white" style="border:1.5px solid var(--border-light);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border-light); padding-bottom:16px;">
+            <div>
+              <div class="badge-pill" style="background:var(--bg-grey); color:var(--text-grey);">MODULO 01 & 02</div>
+              <h2 class="display-title" style="font-size:30px; margin-top:4px;">
+                PONTE VISUALE 1 PIM ↔ N PLM & SCHEDA TECNICA VERTICALE
+              </h2>
+            </div>
+            <span class="badge-pill" style="background:var(--bg-black); color:#FFFFFF;" id="currentSectorBadge">
+              CALZATURE
+            </span>
           </div>
-        </div>
 
-        <div class="phone-frame">
-          <div style="width:56px; height:5px; background:#475569; border-radius:99px; margin:0 auto 10px;"></div>
-          <div style="background:#0f172a; border:1px solid var(--border); border-radius:18px; padding:12px;">
-            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:8px;">
-              <span>📱 Footlink Terzista Mobile</span>
-              <strong style="color:var(--emerald);">FREE TIER 0 €</strong>
-            </div>
-            <div class="stepper">
-              <div id="st-1" class="step-box active">1. Scegli Fase</div>
-              <div id="st-2" class="step-box">2. Lotto Pelle</div>
-              <div id="st-3" class="step-box">3. Conferma</div>
-            </div>
+          <div style="display:grid; grid-template-columns:5fr 1fr 6fr; gap:20px; align-items:stretch;" id="bridgeColumns">
+            <!-- Left: 1 PIM -->
+            <div class="card-grey" style="display:flex; flex-direction:column; justify-content:space-between;">
+              <div>
+                <span class="badge-pill" style="background:var(--bg-black); color:#FFFFFF; margin-bottom:10px;">
+                  1 ARTICOLO PIM (VENDITA)
+                </span>
+                <h3 class="display-title" id="pimTitle" style="font-size:28px; margin-top:6px;">Mocassino Artigianale Duca</h3>
+                <div class="mono-code" id="pimSku" style="font-size:12px; color:var(--text-grey); margin-top:4px;">
+                  SKU: FTL-FW26-LOAFER-01 · GTIN: 8050012026101
+                </div>
+                <p id="pimDesc" style="font-size:13px; color:var(--text-black); background:#FFFFFF; padding:12px; border-radius:12px; border:1px solid var(--border-light); margin-top:14px; line-height:1.6;">
+                  Mocassino classico cucito Blake in vitello pieno fiore e camoscio certificato LWG Gold.
+                </p>
 
-            <div style="font-size:11.5px; font-weight:700; margin-bottom:6px;">CLIC 1 · Seleziona Fase Terzista:</div>
-            <div id="sub-list"></div>
-
-            <div style="background:#020617; border:1px solid var(--border); border-radius:10px; padding:10px; margin-top:10px;">
-              <label style="font-size:11px; font-weight:700; color:var(--amber); display:block; margin-bottom:4px;">
-                CLIC 2 · Verifica / Scansiona Codice Lotto Materiale:
-              </label>
-              <div style="display:flex; gap:6px;">
-                <input id="inp-lot-code" style="font-family:monospace;" />
-                <button class="btn" style="background:var(--amber); color:#020617; white-space:nowrap;" onclick="validateLotClick2()">Valida</button>
+                <!-- L6 Costing Box -->
+                <div id="pimPricingBox" style="margin-top:16px; background:#FFFFFF; border:1px solid var(--border-light); border-radius:12px; padding:12px;">
+                  <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:var(--text-grey); text-transform:uppercase;">
+                    <span>Listino Omnicanale</span>
+                    <span class="mono-code" id="pricingRoleTag">L6 BRAND VIEW</span>
+                  </div>
+                  <div id="pricingContent" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;">
+                    <div>
+                      <div style="font-size:11px; color:var(--text-grey);">Wholesale B2B</div>
+                      <div class="display-title" id="priceWs" style="font-size:24px;">€ 165.00</div>
+                    </div>
+                    <div>
+                      <div style="font-size:11px; color:var(--text-grey);">Retail B2C</div>
+                      <div class="display-title" id="priceRt" style="font-size:24px;">€ 450.00</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:20px; border-top:1px solid var(--border-light); padding-top:12px;">
+                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px;">
+                  <span style="font-weight:700; text-transform:uppercase; color:var(--text-grey);">Completezza Dati PIM</span>
+                  <span class="mono-code" style="font-weight:700;">100%</span>
+                </div>
+                <div style="height:6px; background:#FFFFFF; border-radius:999px; overflow:hidden; border:1px solid var(--border-light);">
+                  <div style="height:100%; width:100%; background:var(--bg-black);"></div>
+                </div>
               </div>
             </div>
 
-            <button class="btn btn-emerald" style="width:100%; margin-top:10px; padding:12px; font-size:13px;" onclick="confirmStepClick3()">
-              ✓ CLIC 3 · Conferma Fase &amp; Aggiorna DPP UE (0 €)
-            </button>
-            <div id="sub-toast" style="display:none; margin-top:8px; background:rgba(16,185,129,0.2); border:1px solid var(--emerald); color:#a7f3d0; padding:8px; border-radius:8px; font-size:11.5px; text-align:center; font-weight:700;">
-              🎉 Fase confermata in 3 clic! Passaporto Digitale UE aggiornato istantaneamente.
+            <!-- Center: 1 : N -->
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <div style="width:48px; height:48px; border-radius:50%; background:var(--bg-black); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px;">
+                1:N
+              </div>
+              <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-grey); margin-top:8px; text-align:center;">
+                Ponte Live
+              </div>
+            </div>
+
+            <!-- Right: N PLM Variants -->
+            <div class="card-grey" style="display:flex; flex-direction:column; justify-content:space-between;">
+              <div>
+                <span class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-dark); color:var(--text-black); margin-bottom:10px;">
+                  N VARIANTI PLM (FABBRICA)
+                </span>
+                <div id="plmVariantsWrap" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+
+              <!-- PLM Lifecycle Workflow Selector -->
+              <div style="margin-top:20px; background:#FFFFFF; border-radius:12px; padding:12px; border:1px solid var(--border-light);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-grey);">
+                    MODULO 04 · CICLO DI VITA & SNAPSHOT BOM
+                  </span>
+                  <span class="badge-pill" style="background:var(--bg-black); color:#FFFFFF; font-size:10px;" id="bomSnapshotTag">
+                    BOM v2.0 (Locked)
+                  </span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;">
+                  <button class="btn-pill btn-outline" style="padding:6px; font-size:10px; justify-content:center;" onclick="setLifecycleStatus('prototype')">Prototype</button>
+                  <button class="btn-pill btn-outline" style="padding:6px; font-size:10px; justify-content:center;" onclick="setLifecycleStatus('sample')">Sample</button>
+                  <button class="btn-pill btn-outline" style="padding:6px; font-size:10px; justify-content:center;" onclick="setLifecycleStatus('industrialized')">Industrialized</button>
+                  <button class="btn-pill btn-black" style="padding:6px; font-size:10px; justify-content:center;" onclick="setLifecycleStatus('in_production')">Production</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vertical Category Specs -->
+          <div style="margin-top:24px; background:var(--bg-grey); border-radius:16px; padding:20px; border:1px solid var(--border-light);">
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-grey); margin-bottom:12px;">
+              PARAMETRI SCHEDA TECNICA VERTICALE DI SETTORE
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px;" id="verticalSpecsGrid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 03 & 05: Split Grid BOM (7 cols) + Subcontractor Mobile (5 cols) -->
+      <div id="module-split-wrap" style="display:grid; grid-template-columns:7fr 5fr; gap:20px; margin-bottom:24px;">
+        <!-- BOM Tree & Costing L6 -->
+        <div class="card-white" style="border:1.5px solid var(--border-light);">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:14px; margin-bottom:16px;">
+            <div>
+              <div class="badge-pill" style="background:var(--bg-grey); color:var(--text-grey);">MODULO 03</div>
+              <h3 class="display-title" style="font-size:26px; margin-top:2px;">DISTINTA BASE (BOM) A 3 LIVELLI</h3>
+            </div>
+            <span class="badge-pill" style="background:var(--bg-black); color:#FFFFFF;">6 Nodi BOM</span>
+          </div>
+
+          <!-- L6 Industrial Cost Summary -->
+          <div id="bomCostSummary" style="background:var(--bg-black); color:#FFFFFF; border-radius:16px; padding:18px; margin-bottom:18px;">
+            <div style="display:flex; justify-content:space-between; font-size:11px; text-transform:uppercase; color:rgba(255,255,255,0.7); font-weight:700; margin-bottom:10px;">
+              <span>FOGLIO COSTI INDUSTRIALI L6</span>
+              <span id="bomCostRoleTag">BRAND OWNER AUTHORIZED</span>
+            </div>
+            <div id="bomCostFields" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
+              <div>
+                <div style="font-size:11px; color:rgba(255,255,255,0.6);">Materiali BOM</div>
+                <div class="display-title" style="font-size:22px;">€ 34.20</div>
+              </div>
+              <div>
+                <div style="font-size:11px; color:rgba(255,255,255,0.6);">Manodopera Façon</div>
+                <div class="display-title" style="font-size:22px;">€ 31.50</div>
+              </div>
+              <div>
+                <div style="font-size:11px; color:rgba(255,255,255,0.6);">Costo Totale Fabbrica</div>
+                <div class="display-title" style="font-size:22px;">€ 65.70</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Size Grading Table -->
+          <div style="background:var(--bg-grey); border-radius:14px; padding:14px; margin-bottom:16px; border:1px solid var(--border-light);">
+            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-grey); margin-bottom:8px;">
+              <span>Sviluppo Consumi per Scala Taglie</span>
+              <span>+2.8% / taglia</span>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; text-align:center;">
+              <div style="background:#FFFFFF; padding:8px 4px; border-radius:8px; border:1px solid var(--border-light);">
+                <div style="font-size:10px; color:var(--text-grey);">EU 39</div>
+                <div class="mono-code" style="font-size:11px; font-weight:700;">3.11 sqft</div>
+              </div>
+              <div style="background:#FFFFFF; padding:8px 4px; border-radius:8px; border:1px solid var(--border-light);">
+                <div style="font-size:10px; color:var(--text-grey);">EU 40</div>
+                <div class="mono-code" style="font-size:11px; font-weight:700;">3.20 sqft</div>
+              </div>
+              <div style="background:#FFFFFF; padding:8px 4px; border-radius:8px; border:1.5px solid var(--border-dark);">
+                <div style="font-size:10px; font-weight:700;">EU 42 (Base)</div>
+                <div class="mono-code" style="font-size:11px; font-weight:700;">3.39 sqft</div>
+              </div>
+              <div style="background:#FFFFFF; padding:8px 4px; border-radius:8px; border:1px solid var(--border-light);">
+                <div style="font-size:10px; color:var(--text-grey);">EU 44</div>
+                <div class="mono-code" style="font-size:11px; font-weight:700;">3.58 sqft</div>
+              </div>
+              <div style="background:#FFFFFF; padding:8px 4px; border-radius:8px; border:1px solid var(--border-light);">
+                <div style="font-size:10px; color:var(--text-grey);">EU 46</div>
+                <div class="mono-code" style="font-size:11px; font-weight:700;">3.77 sqft</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tree Items -->
+          <div id="bomTreeItems" style="display:flex; flex-direction:column; gap:10px;">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Subcontractor Mobile Portal Simulator -->
+        <div class="card-white" style="border:1.5px solid var(--border-light); display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:14px; margin-bottom:16px;">
+              <div>
+                <div class="badge-pill" style="background:var(--bg-grey); color:var(--text-grey);">MODULO 05</div>
+                <h3 class="display-title" style="font-size:26px; margin-top:2px;">PORTALE TERZISTI "3 CLIC A 0 €"</h3>
+              </div>
+              <span class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light); color:var(--text-black);">
+                375px Mobile Frame
+              </span>
+            </div>
+
+            <!-- Smartphone Frame -->
+            <div style="max-width:380px; margin:0 auto; background:var(--bg-grey); border:2px solid var(--border-dark); border-radius:28px; padding:20px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:14px;">
+                <span style="font-weight:700;"><span class="live-dot" style="margin-right:4px;"></span>FOOTLINK 0 €</span>
+                <span class="mono-code" id="phoneVariantCode">FTL-LOAFER-01-VIT-NERO</span>
+              </div>
+
+              <!-- Step 1: Select phase -->
+              <div style="margin-bottom:14px;">
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:6px;">
+                  1. SELEZIONA LAVORAZIONE (CLIC 1)
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px;" id="phoneStepsWrap">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+
+              <!-- Step 2: Lot Code -->
+              <div style="background:#FFFFFF; border:1px solid var(--border-light); border-radius:12px; padding:12px; margin-bottom:14px;">
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">
+                  2. LOTTO MATERIALE (CLIC 2)
+                </div>
+                <input type="text" id="phoneLotInput" value="LOT-TFB-2026-219B" class="mono-code" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-light); font-size:12px; font-weight:700;" />
+              </div>
+
+              <!-- Step 3: Confirm Button -->
+              <div>
+                <button class="btn-pill btn-black" style="width:100%; min-height:56px; justify-content:center; font-size:13px; font-weight:800;" onclick="confirmSubStep()">
+                  <span class="live-dot"></span>
+                  CONFERMA LAVORAZIONE IN 1 TOCCO (0 €)
+                </button>
+              </div>
+
+              <div id="subToast" style="display:none; margin-top:12px; background:#FFFFFF; border:1px solid var(--border-dark); padding:10px; border-radius:12px; font-size:11.5px;">
+                <span class="live-dot" style="margin-right:4px;"></span>
+                <span id="subToastText">Fase confermata con successo a 0 €. Passaporto UE aggiornato.</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align:center; font-size:11px; color:var(--text-grey); border-top:1px solid var(--border-light); padding-top:12px; margin-top:16px;">
+            Tempo completamento: &lt; 10 secondi · Costo Terzista: <strong>0 € per sempre</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 06: Live EU DPP Passport Generator -->
+      <div id="module-dpp-wrap" class="card-white" style="border:1.5px solid var(--border-light);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border-bottom:1px solid var(--border-light); padding-bottom:16px; margin-bottom:20px;">
+          <div>
+            <div class="badge-pill" style="background:var(--bg-grey); color:var(--text-grey);">MODULO 06</div>
+            <h2 class="display-title" style="font-size:30px; margin-top:4px;">
+              PASSAPORTO DIGITALE DEL PRODOTTO (DPP UE) & QR SVG LIVE
+            </h2>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-pill btn-black" id="dppConsumerBtn" onclick="setDppView('consumer')">Vista Consumatore (Pubblica)</button>
+            <button class="btn-pill btn-outline" id="dppCustomsBtn" onclick="setDppView('customs')">Vista Dogane / Ispettiva (L6)</button>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:4fr 8fr; gap:24px; align-items:start;">
+          <!-- Left: Clickable Physical Tag with SVG QR -->
+          <div class="card-grey" style="text-align:center; padding:28px;">
+            <div class="badge-pill" style="background:#FFFFFF; border:1px solid var(--border-light); margin-bottom:16px;">
+              CARTELLINO FISICO QR CODE SVG
+            </div>
+            <div style="background:#FFFFFF; border:1px solid var(--border-light); border-radius:16px; padding:16px; display:inline-block; margin-bottom:16px;">
+              <svg width="180" height="214" viewBox="0 0 200 234" xmlns="http://www.w3.org/2000/svg">
+                <rect width="200" height="234" rx="14" fill="#FFFFFF" stroke="#E5E5E5" stroke-width="2"/>
+                <!-- Deterministic QR Mock -->
+                <rect x="20" y="20" width="48" height="48" rx="6" fill="#111111"/>
+                <rect x="28" y="28" width="32" height="32" rx="3" fill="#FFFFFF"/>
+                <rect x="36" y="36" width="16" height="16" rx="2" fill="#111111"/>
+                <rect x="132" y="20" width="48" height="48" rx="6" fill="#111111"/>
+                <rect x="140" y="28" width="32" height="32" rx="3" fill="#FFFFFF"/>
+                <rect x="148" y="36" width="16" height="16" rx="2" fill="#111111"/>
+                <rect x="20" y="132" width="48" height="48" rx="6" fill="#111111"/>
+                <rect x="28" y="140" width="32" height="32" rx="3" fill="#FFFFFF"/>
+                <rect x="36" y="148" width="16" height="16" rx="2" fill="#111111"/>
+                <!-- Matrix details -->
+                <rect x="80" y="24" width="8" height="8" rx="1" fill="#111111"/>
+                <rect x="96" y="24" width="8" height="8" rx="1" fill="#111111"/>
+                <rect x="80" y="40" width="8" height="8" rx="1" fill="#111111"/>
+                <rect x="112" y="40" width="8" height="8" rx="1" fill="#111111"/>
+                <rect x="80" y="56" width="8" height="8" rx="1" fill="#111111"/>
+                <rect x="96" y="56" width="8" height="8" rx="1" fill="#111111"/>
+                <rect x="80" y="136" width="8" height="8" rx="1" fill="#111111"/>
+                <rect x="112" y="152" width="8" height="8" rx="1" fill="#111111"/>
+                <rect x="140" y="140" width="40" height="40" rx="3" fill="#111111"/>
+                <!-- Center badge -->
+                <rect x="74" y="88" width="52" height="26" rx="13" fill="#111111" stroke="#FFFFFF" stroke-width="2"/>
+                <text x="100" y="105" text-anchor="middle" fill="#FFFFFF" font-family="'Inter', sans-serif" font-size="9" font-weight="800">EU DPP</text>
+                <text x="100" y="218" text-anchor="middle" fill="#111111" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" id="qrSkuText">FTL-FW26-LOAFER-01</text>
+              </svg>
+            </div>
+            <div class="mono-code" style="font-size:11px; font-weight:700;" id="dppIdText">DPP-EU-FTL-FW26-LOAFER-01</div>
+            <div style="font-size:11px; color:var(--text-grey); margin-top:2px;">Regolamento Ecodesign UE 2024/1781</div>
+          </div>
+
+          <!-- Right: DPP Content View -->
+          <div>
+            <!-- Consumer View -->
+            <div id="dppConsumerArea" style="display:flex; flex-direction:column; gap:16px;">
+              <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
+                <div class="card-grey" style="padding:14px;">
+                  <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-grey);">Copertura</div>
+                  <div class="display-title" style="font-size:24px; margin-top:2px;" id="dppPlmCount">1 ↔ 3 PLM</div>
+                </div>
+                <div class="card-grey" style="padding:14px;">
+                  <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-grey);">Riciclato</div>
+                  <div class="display-title" style="font-size:24px; margin-top:2px;" id="dppRecycled">30.0%</div>
+                </div>
+                <div class="card-grey" style="padding:14px;">
+                  <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-grey);">Carbon PEF</div>
+                  <div class="display-title" style="font-size:24px; margin-top:2px;" id="dppCo2">13.0 kg</div>
+                </div>
+                <div class="card-grey" style="padding:14px;">
+                  <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-grey);">Riparabilità</div>
+                  <div class="display-title" style="font-size:24px; margin-top:2px;" id="dppRepair">9.2 / 10</div>
+                </div>
+              </div>
+
+              <div class="card-grey" style="padding:16px;">
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-grey); margin-bottom:10px;">
+                  Filiera Tracciata (Conferme Terzisti Live)
+                </div>
+                <div id="dppStepsList" style="display:flex; flex-direction:column; gap:8px;">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+
+              <div class="card-grey" style="padding:14px; font-size:12px; color:var(--text-grey);">
+                <strong style="color:var(--text-black);">Cura & Fine Vita Circolare:</strong>
+                <span id="dppCareText">Spazzolare delicatamente, nutrire con cera certificata e conservare su tendiscarpe in cedro.</span>
+              </div>
+            </div>
+
+            <!-- Customs / Inspector L6 View -->
+            <div id="dppCustomsArea" style="display:none; background:var(--bg-black); color:#FFFFFF; border-radius:18px; padding:20px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:12px; margin-bottom:16px;">
+                <div>
+                  <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:rgba(255,255,255,0.6);">
+                    DOSSIER ISPETTIVO DOGANALE (LIVELLO L6)
+                  </div>
+                  <h3 class="display-title" style="font-size:22px; margin-top:2px;">
+                    AUDIT CERTIFICATI LOTTO & CONFORMITÀ REACH
+                  </h3>
+                </div>
+                <span class="badge-pill" style="background:#FFFFFF; color:#111111;" id="customsHsTag">
+                  HS: 6403.59.95
+                </span>
+              </div>
+
+              <div id="customsCertList" style="display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto;">
+                <!-- Dynamically populated -->
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </main>
 
-    <!-- 3. Generatore Live Passaporto Digitale del Prodotto (DPP UE / ESPR) -->
-    <div class="card" style="margin-top:20px;">
-      <div class="section-head">
-        <div>
-          <span class="pill pill-sky">FTL-TECH-003 · Regolamento Europeo ESPR (EU DPP)</span>
-          <h2 style="margin:6px 0 4px; font-size:19px;">4. Generatore Live Passaporto Digitale del Prodotto (DPP UE) &amp; QR Code SVG Navigabile</h2>
-          <div style="font-size:13px; color:var(--muted);">
-            Il QR Code SVG viene sintetizzato dinamicamente dall'Articolo PIM, dalle N Varianti PLM, dalla BOM a 3 livelli e dalle conferme Terzisti. Clicca sul QR Code per aprire il Passaporto Pubblico UE!
-          </div>
-        </div>
-        <button class="btn btn-sky" onclick="openPublicPassportModal()">🔍 Apri Passaporto Pubblico UE (Simula Scansione QR)</button>
-      </div>
-
-      <div id="dpp-container" class="grid-dpp"></div>
-    </div>
-  </div>
-
-  <!-- Modal Passaporto Pubblico UE -->
-  <div id="passport-modal" class="modal-backdrop" onclick="if(event.target===this) closePublicPassportModal()">
-    <div class="modal-card">
-      <div id="modal-header" style="background:linear-gradient(135deg, #1e3a8a, #0f172a); color:#fff; padding:18px 22px; display:flex; justify-content:space-between; align-items:center;"></div>
-      <div id="modal-body" style="padding:20px 22px; overflow-y:auto;"></div>
-    </div>
-  </div>
-
+  <!-- Interactive JavaScript Engine -->
   <script>
-    const PIM_DATA = [
+    const SEED_DATA = [
       {
-        pim_item_id: "PIM-DUCA-001",
-        sku_code: "FTL-FW26-LOAFER-01",
-        model_name: "Mocassino Artigianale Duca",
-        brand_tenant_id: "TENANT-CALZATURIFICIO-ROSSI",
-        season: "FW26",
+        id: "PIM-DUCA-001",
+        sku: "FTL-FW26-LOAFER-01",
+        name: "Mocassino Artigianale Duca",
         category: "footwear",
-        commercial_description_it: "Mocassino classico cucito Blake in vitello pieno fiore e camoscio certificato LWG Gold, lavorato nei distretti di Fermo-Macerata, Santa Croce sull'Arno e Riviera del Brenta.",
-        retail_channels: ["B2B Showroom Milano", "E-Commerce Flagship", "Boutique Wholesale"],
-        plm_variants: [
+        sectorLabel: "CALZATURE",
+        season: "FW26",
+        desc: "Mocassino classico cucito Blake in vitello pieno fiore e camoscio certificato LWG Gold, lavorato nei distretti di Fermo-Macerata e Santa Croce.",
+        priceWs: 165.0,
+        priceRt: 450.0,
+        hsCode: "6403.59.95",
+        gtin: "8050012026101",
+        care: "Spazzolare regolarmente, nutrire con cera naturale e conservare su tendiscarpe in cedro.",
+        variants: [
           {
-            plm_variant_id: "PLM-DUCA-NERO",
-            variant_code: "FTL-LOAFER-01-VIT-NERO",
-            colorway_name: "Vitello Nero Spazzolato",
-            size_range: "38-46",
-            last_or_pattern_code: "FORMA-FM-108",
-            lifecycle_status: "in_production",
-            bom_items: [
-              { bom_item_id: "BOM-DUCA-L1-UPPER", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Tomaia Accoppiata Vitello Pieno Fiore Nero", supplier_name: "Conceria Santa Croce SpA", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 3.15, waste_percentage: 7.5, recycled_content_pct: 20, certifications: ["LWG Gold", "REACH", "ISO 14001"] },
-              { bom_item_id: "BOM-DUCA-L2-LINING", level: 2, parent_bom_item_id: "BOM-DUCA-L1-UPPER", component_type: "lining", material_name: "Fodera Capra Concia Vegetale", supplier_name: "Conceria Valdarno Srl", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 2.40, waste_percentage: 6.0, recycled_content_pct: 35, certifications: ["LWG Gold", "Pelle Conciata al Vegetale"] },
-              { bom_item_id: "BOM-DUCA-L3-THREAD", level: 3, parent_bom_item_id: "BOM-DUCA-L2-LINING", component_type: "sub_assembly", material_name: "Filato Cucitura Rinforzato rPET Titolo 20", supplier_name: "Filature Lombarde Srl", origin_country_iso2: "IT", unit_of_measure: "m", unit_consumption: 18.5, waste_percentage: 2.0, recycled_content_pct: 100, certifications: ["GRS", "OEKO-TEX Standard 100"] },
-              { bom_item_id: "BOM-DUCA-L1-SOLE", level: 1, parent_bom_item_id: null, component_type: "outsole", material_name: "Suola Cuoio Toscano Cucita Blake", supplier_name: "Suolificio Adriatico Srl", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 3.0, recycled_content_pct: 30, certifications: ["LWG Silver", "REACH"] },
-              { bom_item_id: "BOM-DUCA-L2-HEEL", level: 2, parent_bom_item_id: "BOM-DUCA-L1-SOLE", component_type: "heel", material_name: "Tacco Stratificato Cuoio e Gomma Naturale", supplier_name: "Tacchificio Marche Srl", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 2.5, recycled_content_pct: 45, certifications: ["REACH", "FSC Mix"] },
-              { bom_item_id: "BOM-DUCA-L3-COMPOUND", level: 3, parent_bom_item_id: "BOM-DUCA-L2-HEEL", component_type: "sub_assembly", material_name: "Mescola Battistrada Gomma Vergine & Riciclata", supplier_name: "GommaTech Civitanova Srl", origin_country_iso2: "IT", unit_of_measure: "kg", unit_consumption: 0.18, waste_percentage: 1.5, recycled_content_pct: 65, certifications: ["GRS", "REACH"] }
+            id: "PLM-DUCA-NERO",
+            code: "FTL-LOAFER-01-VIT-NERO",
+            name: "Vitello Nero Spazzolato",
+            sizes: "38-46",
+            last: "FORMA-FM-108",
+            status: "in_production",
+            bomVersion: "v2.1 (Locked)",
+            specs: {
+              "Codice Forma": "FORMA-FM-108",
+              "Calzata": "F (Regular)",
+              "Costruzione": "BLAKE_RAPID",
+              "Taglio": "TAGLIO_CAD_LAMA",
+              "Sottopiede": "Cuoio Rigenerato 3.5mm",
+              "Suola": "Cuoio Toscano Blake"
+            },
+            boms: [
+              { level: 1, name: "Tomaia Vitello Pieno Fiore Nero", supplier: "Conceria Santa Croce SpA", qty: "3.15 sqft", waste: 7.5, cost: 7.80, cert: "LWG Gold", certId: "CERT-LWG-CSC-8810" },
+              { level: 2, name: "Fodera Capra Concia Vegetale", supplier: "Conceria Valdarno Srl", qty: "2.40 sqft", waste: 6.0, cost: 4.20, cert: "REACH", certId: "CERT-VEG-VLD-4412" },
+              { level: 3, name: "Filato rPET Titolo 20", supplier: "Filature Lombarde Srl", qty: "18.5 m", waste: 2.0, cost: 0.12, cert: "GRS", certId: "CERT-GRS-FLM-1902" },
+              { level: 1, name: "Suola Cuoio Toscano Cucita", supplier: "Suolificio Adriatico Srl", qty: "1.0 pair", waste: 3.0, cost: 14.50, cert: "LWG Silver", certId: "CERT-LWG-SAD-3109" },
+              { level: 2, name: "Tacco Stratificato Cuoio/Gomma", supplier: "Tacchificio Marche Srl", qty: "1.0 pair", waste: 2.5, cost: 5.40, cert: "FSC Mix", certId: "CERT-FSC-TCM-7701" },
+              { level: 3, name: "Mescola Gomma Riciclata", supplier: "GommaTech Civitanova", qty: "0.18 kg", waste: 1.5, cost: 6.00, cert: "GRS", certId: "CERT-GRS-GTC-5504" }
             ],
-            subcontractor_assignments: [
-              { assignment_id: "SUB-DUCA-01", subcontractor_name: "Conceria Santa Croce SpA", district: "Santa Croce sull'Arno", phase: "Concia & Pelle", material_lot_code: "LOT-CSC-2026-104A", completed: true },
-              { assignment_id: "SUB-DUCA-02", subcontractor_name: "Tomaificio Fratelli Bianchi", district: "Fermo-Macerata", phase: "Orlatura Tomaia", material_lot_code: "LOT-TFB-2026-219B", completed: true },
-              { assignment_id: "SUB-DUCA-03", subcontractor_name: "Montaggio Artigiano Montegranaro", district: "Fermo-Macerata", phase: "Montaggio & Suolatura", material_lot_code: "LOT-MAM-2026-330C", completed: false }
+            steps: [
+              { sub: "Conceria Santa Croce", district: "Santa Croce sull'Arno", phase: "Concia Materia Prima", lot: "LOT-CSC-2026-104A", ok: true },
+              { sub: "Tomaificio Fratelli Bianchi", district: "Fermo-Macerata", phase: "Orlatura / Giunteria", lot: "LOT-TFB-2026-219B", ok: true },
+              { sub: "Montaggio Artigiano Montegranaro", district: "Fermo-Macerata", phase: "Montaggio Finale", lot: "LOT-MAM-2026-330C", ok: false }
             ]
           },
           {
-            plm_variant_id: "PLM-DUCA-CUOIO",
-            variant_code: "FTL-LOAFER-01-CAM-CUOIO",
-            colorway_name: "Camoscio Cuoio Idrorepellente",
-            size_range: "38-46",
-            last_or_pattern_code: "FORMA-FM-108",
-            lifecycle_status: "industrialized",
-            bom_items: [
-              { bom_item_id: "BOM-DUCA2-L1-UPPER", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Tomaia Camoscio Idrorepellente Cuoio Toscano", supplier_name: "Conceria Veneto Pelle Srl", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 3.25, waste_percentage: 8.0, recycled_content_pct: 25, certifications: ["LWG Gold", "REACH"] },
-              { bom_item_id: "BOM-DUCA2-L2-INSOLE", level: 2, parent_bom_item_id: "BOM-DUCA2-L1-UPPER", component_type: "insole", material_name: "Sottopiede Anatomico Lattice e Cuoio Rigenerato", supplier_name: "Suolificio Brenta Srl", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 3.0, recycled_content_pct: 50, certifications: ["GRS", "REACH"] },
-              { bom_item_id: "BOM-DUCA2-L3-SHANK", level: 3, parent_bom_item_id: "BOM-DUCA2-L2-INSOLE", component_type: "hardware", material_name: "Cambrione Acciaio Temperato 85% Riciclato", supplier_name: "Minuterie Metalliche Padova", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 1.0, recycled_content_pct: 85, certifications: ["GRS", "ISO 14001"] }
+            id: "PLM-DUCA-CUOIO",
+            code: "FTL-LOAFER-01-CAM-CUOIO",
+            name: "Camoscio Cuoio Idrorepellente",
+            sizes: "38-46",
+            last: "FORMA-FM-108",
+            status: "industrialized",
+            bomVersion: "v2.0 (Locked)",
+            specs: {
+              "Codice Forma": "FORMA-FM-108",
+              "Calzata": "F (Regular)",
+              "Costruzione": "BLAKE",
+              "Taglio": "TRANCIA_FUSTELLA",
+              "Suola": "Cuoio Leggero"
+            },
+            boms: [
+              { level: 1, name: "Tomaia Camoscio Idrorepellente", supplier: "Conceria Veneto Pelle", qty: "3.25 sqft", waste: 8.0, cost: 7.20, cert: "LWG Gold", certId: "CERT-LWG-CVP-2201" }
             ],
-            subcontractor_assignments: [
-              { assignment_id: "SUB-DUCA-04", subcontractor_name: "Tranceria Riviera Srl", district: "Riviera del Brenta", phase: "Taglio Pelle", material_lot_code: "LOT-TRV-2026-412A", completed: true },
-              { assignment_id: "SUB-DUCA-05", subcontractor_name: "Finissaggio Artigiano Stra", district: "Riviera del Brenta", phase: "Finissaggio", material_lot_code: "LOT-FAS-2026-518D", completed: false }
-            ]
-          },
-          {
-            plm_variant_id: "PLM-DUCA-BORDEAUX",
-            variant_code: "FTL-LOAFER-01-CRUST-BORD",
-            colorway_name: "Crust Bordeaux Anticato Mano Cera",
-            size_range: "36-41",
-            last_or_pattern_code: "FORMA-FM-108W",
-            lifecycle_status: "sample",
-            bom_items: [
-              { bom_item_id: "BOM-DUCA3-L1-UPPER", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Tomaia Crust Anticato Bordeaux", supplier_name: "Conceria Chienti Srl", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 2.95, waste_percentage: 7.0, recycled_content_pct: 20, certifications: ["LWG Gold", "REACH"] },
-              { bom_item_id: "BOM-DUCA3-L2-CLAMP", level: 2, parent_bom_item_id: "BOM-DUCA3-L1-UPPER", component_type: "hardware", material_name: "Morsetto Frontale Ottone Nickel-Free", supplier_name: "Accessori Moda Civitanova", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 1.0, recycled_content_pct: 60, certifications: ["REACH", "OEKO-TEX"] },
-              { bom_item_id: "BOM-DUCA3-L3-GALV", level: 3, parent_bom_item_id: "BOM-DUCA3-L2-CLAMP", component_type: "sub_assembly", material_name: "Bagno Galvanico Eco-Gold Senza Cianuro", supplier_name: "Galvanica EcoMarche Srl", origin_country_iso2: "IT", unit_of_measure: "pcs", unit_consumption: 2.0, waste_percentage: 0.5, recycled_content_pct: 50, certifications: ["ISO 14001", "REACH"] }
-            ],
-            subcontractor_assignments: [
-              { assignment_id: "SUB-DUCA-06", subcontractor_name: "Controllo Qualità Calzaturiero Marche", district: "Fermo-Macerata", phase: "Qualità Finale", material_lot_code: "LOT-CQM-2026-601E", completed: true }
+            steps: [
+              { sub: "Tranceria Riviera", district: "Riviera del Brenta", phase: "Taglio", lot: "LOT-TRV-2026-412A", ok: true }
             ]
           }
         ]
       },
       {
-        pim_item_id: "PIM-VELA-002",
-        sku_code: "FTL-FW26-TOTE-02",
-        model_name: "Borsa Shopping Vela",
-        brand_tenant_id: "TENANT-MAISON-FIRENZE",
-        season: "FW26",
+        id: "PIM-VELA-002",
+        sku: "FTL-FW26-TOTE-02",
+        name: "Borsa Shopping Vela",
         category: "leather_goods",
-        commercial_description_it: "Shopping bag strutturata in vacchetta toscana conciata al vegetale e grana dollaro, prodotta tra Scandicci, Santa Croce sull'Arno e Tolentino con tracciabilità DPP UE.",
-        retail_channels: ["Boutique Diretta", "E-Commerce Global", "Department Stores EU"],
-        plm_variants: [
+        sectorLabel: "PELLETTERIA",
+        season: "FW26",
+        desc: "Shopping bag strutturata in vacchetta toscana conciata al vegetale prodotta tra Scandicci e Santa Croce sull'Arno.",
+        priceWs: 240.0,
+        priceRt: 680.0,
+        hsCode: "4202.21.00",
+        gtin: "8050012026202",
+        care: "Proteggere da pioggia intensa e nutrire con balsamo neutro vegetale.",
+        variants: [
           {
-            plm_variant_id: "PLM-VELA-COGNAC",
-            variant_code: "FTL-TOTE-02-VAC-COGNAC",
-            colorway_name: "Vacchetta Cognac Naturale",
-            size_range: "OS",
-            last_or_pattern_code: "MOD-SCANDICCI-44",
-            lifecycle_status: "in_production",
-            bom_items: [
-              { bom_item_id: "BOM-VELA-L1-BODY", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Quadranti Vacchetta Conciata al Vegetale", supplier_name: "Consorzio Vera Pelle Santa Croce", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 6.8, waste_percentage: 9.0, recycled_content_pct: 30, certifications: ["LWG Gold", "Pelle Conciata al Vegetale", "REACH"] },
-              { bom_item_id: "BOM-VELA-L2-HANDLE", level: 2, parent_bom_item_id: "BOM-VELA-L1-BODY", component_type: "sub_assembly", material_name: "Manici Tubolari Cuciti a Mano", supplier_name: "Pelletteria Artigiana Scandicci", origin_country_iso2: "IT", unit_of_measure: "pair", unit_consumption: 1.0, waste_percentage: 4.0, recycled_content_pct: 40, certifications: ["LWG Gold", "REACH"] },
-              { bom_item_id: "BOM-VELA-L3-ROPE", level: 3, parent_bom_item_id: "BOM-VELA-L2-HANDLE", component_type: "fabric", material_name: "Anima Interna Corda Canapa Rigenerata", supplier_name: "Tessitura Pratese Circolare Srl", origin_country_iso2: "IT", unit_of_measure: "m", unit_consumption: 1.4, waste_percentage: 1.5, recycled_content_pct: 95, certifications: ["GRS", "OEKO-TEX Standard 100"] }
+            id: "PLM-VELA-COGNAC",
+            code: "FTL-TOTE-02-VAC-COGNAC",
+            name: "Vacchetta Cognac Naturale",
+            sizes: "OS (36x28x15 cm)",
+            last: "MOD-SCANDICCI-44",
+            status: "in_production",
+            bomVersion: "v2.0 (Locked)",
+            specs: {
+              "Cartamodello DXF": "MOD-SCANDICCI-44-DXF",
+              "Dimensioni": "36 × 28 × 15 cm",
+              "Pellame": "VEGETABLE_TANNED",
+              "Rinforzi": "Salpa Rigenerata 0.9mm",
+              "Galvanica": "Ottone Spazzolato Nickel-Free",
+              "Bordo": "TINGIBORDO_A_MANO_3_MANI"
+            },
+            boms: [
+              { level: 1, name: "Quadranti Vacchetta Vegetale", supplier: "Consorzio Vera Pelle SC", qty: "6.8 sqft", waste: 9.0, cost: 8.40, cert: "LWG Gold", certId: "CERT-VPT-SC-9901" },
+              { level: 2, name: "Manici Tubolari Cuciti", supplier: "Pelletteria Scandicci", qty: "1.0 pair", waste: 4.0, cost: 16.50, cert: "LWG Gold", certId: "CERT-PAS-FI-8820" },
+              { level: 3, name: "Anima Canapa Rigenerata", supplier: "Tessitura Pratese Circolare", qty: "1.4 m", waste: 1.5, cost: 2.10, cert: "GRS", certId: "CERT-GRS-TPC-4410" }
             ],
-            subcontractor_assignments: [
-              { assignment_id: "SUB-VELA-01", subcontractor_name: "Conceria San Miniato Srl", district: "Santa Croce sull'Arno", phase: "Concia Vegetale", material_lot_code: "LOT-CSM-2026-771A", completed: true },
-              { assignment_id: "SUB-VELA-02", subcontractor_name: "Pelletteria Artigiana Scandicci", district: "Scandicci-Firenze", phase: "Cucitura & Assemblaggio", material_lot_code: "LOT-PAS-2026-882B", completed: false }
+            steps: [
+              { sub: "Conceria San Miniato", district: "Santa Croce sull'Arno", phase: "Concia Vegetale", lot: "LOT-CSM-2026-771A", ok: true },
+              { sub: "Pelletteria Scandicci", district: "Scandicci-Firenze", phase: "Assemblaggio Borsa", lot: "LOT-PAS-2026-882B", ok: true }
             ]
-          },
+          }
+        ]
+      },
+      {
+        id: "PIM-BRERA-003",
+        sku: "FTL-FW26-COAT-03",
+        name: "Cappotto Sartoriale Brera",
+        category: "apparel",
+        sectorLabel: "ABBIGLIAMENTO",
+        season: "FW26",
+        desc: "Cappotto doppiopetto sartoriale in drappo di lana vergine e cashmere rigenerato GRS Biella-Prato, confezionato in Umbria.",
+        priceWs: 310.0,
+        priceRt: 890.0,
+        hsCode: "6201.20.00",
+        gtin: "8050012026303",
+        care: "Lavaggio a secco delicato (P), stirare a vapore max 110°C.",
+        variants: [
           {
-            plm_variant_id: "PLM-VELA-OLIVA",
-            variant_code: "FTL-TOTE-02-GRANA-OLIVA",
-            colorway_name: "Vitello Grana Dollaro Verde Oliva",
-            size_range: "OS",
-            last_or_pattern_code: "MOD-SCANDICCI-44",
-            lifecycle_status: "industrialized",
-            bom_items: [
-              { bom_item_id: "BOM-VELA2-L1-BODY", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Quadranti Vitello Grana Dollaro Oliva", supplier_name: "Conceria Tolentino SpA", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 6.6, waste_percentage: 8.5, recycled_content_pct: 25, certifications: ["LWG Gold", "REACH"] },
-              { bom_item_id: "BOM-VELA2-L2-ZIP", level: 2, parent_bom_item_id: "BOM-VELA2-L1-BODY", component_type: "hardware", material_name: "Chiusura Zip Metallica Ottone Spazzolato", supplier_name: "Minuterie Metalliche Firenze", origin_country_iso2: "IT", unit_of_measure: "pcs", unit_consumption: 1.0, waste_percentage: 1.0, recycled_content_pct: 55, certifications: ["REACH"] },
-              { bom_item_id: "BOM-VELA2-L3-TAPE", level: 3, parent_bom_item_id: "BOM-VELA2-L2-ZIP", component_type: "fabric", material_name: "Nastro Supporto Zip 100% Poliestere Riciclato", supplier_name: "Nastri Eco Bergamo Srl", origin_country_iso2: "IT", unit_of_measure: "m", unit_consumption: 0.55, waste_percentage: 1.0, recycled_content_pct: 100, certifications: ["GRS", "OEKO-TEX Standard 100"] }
+            id: "PLM-BRERA-NAVY",
+            code: "FTL-COAT-03-DRAP-NAVY",
+            name: "Blu Navy Notte Biella",
+            sizes: "IT 46-56 (Base 50)",
+            last: "CAD-COAT-BRERA-50",
+            status: "in_production",
+            bomVersion: "v2.0 (Locked)",
+            specs: {
+              "Vestibilità (Fit)": "TAILORED Doppiopetto",
+              "Scala Taglie": "IT 46-56 (Base IT 50)",
+              "Composizione": "75% Lana RWS, 25% Cashmere GRS",
+              "Grammatura": "540 g/m² · 152 cm",
+              "Finissaggio": "Decatissaggio a Vapore Biella"
+            },
+            boms: [
+              { level: 1, name: "Drappo Lana & Cashmere 540g", supplier: "Lanificio Storico Biella", qty: "2.35 m", waste: 6.5, cost: 34.00, cert: "GRS", certId: "CERT-RWS-LSB-2091" },
+              { level: 2, name: "Fodera Cupro Circolare", supplier: "Tessitura Como", qty: "1.9 m", waste: 5.0, cost: 8.50, cert: "OEKO-TEX", certId: "CERT-GRS-TCS-6044" }
             ],
-            subcontractor_assignments: [
-              { assignment_id: "SUB-VELA-03", subcontractor_name: "Laboratorio Pelletteria Tolentino", district: "Tolentino-Macerata", phase: "Montaggio Borsa", material_lot_code: "LOT-LPT-2026-910C", completed: true }
+            steps: [
+              { sub: "Lanificio Biella", district: "Biella-Piemonte", phase: "Tessitura Drappo", lot: "LOT-LFB-2026-301A", ok: true },
+              { sub: "Manifattura Perugia", district: "Perugia-Umbria", phase: "Confezione Sartoriale", lot: "LOT-MSP-2026-409B", ok: true }
             ]
           }
         ]
       }
     ];
 
-    let selectedPimIdx = 0;
-    let selectedVarIdx = 0;
-    let selectedSubIdx = 0;
+    let currentPimIndex = 0;
+    let currentVarIndex = 0;
+    let currentViewerRole = "brand";
+    let activeModule = "home";
 
-    function generateQrSvg(skuCode) {
-      const size = 25;
-      const matrix = Array.from({ length: size }, () => Array(size).fill(false));
-      const reserved = Array.from({ length: size }, () => Array(size).fill(false));
-      function finder(ro, co) {
-        for (let r = -1; r <= 7; r++) {
-          for (let c = -1; c <= 7; c++) {
-            const rr = ro + r, cc = co + c;
-            if (rr >= 0 && rr < size && cc >= 0 && cc < size) {
-              reserved[rr][cc] = true;
-              if (r >= 0 && r <= 6 && c >= 0 && c <= 6) {
-                if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) matrix[rr][cc] = true;
-              }
-            }
-          }
-        }
-      }
-      finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
-      for (let i = 8; i < size - 8; i++) {
-        reserved[6][i] = reserved[i][6] = true;
-        matrix[6][i] = matrix[i][6] = (i % 2 === 0);
-      }
-      let h = 2166136261;
-      for (let i = 0; i < skuCode.length; i++) { h ^= skuCode.charCodeAt(i); h = Math.imul(h, 16777619); }
-      let idx = 0;
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          if (!reserved[r][c]) {
-            matrix[r][c] = (((h >> (idx % 16)) ^ (r * 7 + c * 13)) & 1) === 1;
-            idx++;
-          }
-        }
-      }
-      const cell = 7, margin = 14;
-      const w = size * cell + margin * 2, ht = w + 26;
-      let rects = "";
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          if (matrix[r][c]) rects += `<rect x="${margin + c * cell}" y="${margin + r * cell}" width="${cell}" height="${cell}" rx="1" fill="#0f172a"/>`;
-        }
-      }
-      const mid = Math.floor((size * cell) / 2) + margin;
-      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${ht}" width="${w}" height="${ht}">
-        <rect width="${w}" height="${ht}" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
-        ${rects}
-        <rect x="${w/2 - 22}" y="${mid - 12}" width="44" height="24" rx="5" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
-        <text x="${w/2}" y="${mid + 4}" text-anchor="middle" fill="#38bdf8" font-family="sans-serif" font-size="10" font-weight="800">EU DPP</text>
-        <text x="${w/2}" y="${ht - 9}" text-anchor="middle" fill="#334155" font-family="monospace" font-size="9.5" font-weight="700">${skuCode}</text>
-      </svg>`;
+    function init() {
+      renderPimTabs();
+      renderCurrentSelection();
     }
 
-    function renderAll() {
-      const pim = PIM_DATA[selectedPimIdx];
-      const variant = pim.plm_variants[selectedVarIdx] || pim.plm_variants[0];
+    function switchModule(mod) {
+      activeModule = mod;
+      document.querySelectorAll("header nav button").forEach(b => b.classList.remove("active"));
+      const navBtn = document.getElementById("nav-" + mod);
+      if (navBtn) navBtn.classList.add("active");
 
-      // 1. Render PIM Tabs
-      document.getElementById("pim-tabs").innerHTML = PIM_DATA.map((item, idx) => `
-        <button class="pim-tab ${idx === selectedPimIdx ? 'active' : ''}" onclick="selectPim(${idx})">
-          <span style="font-size:24px;">${item.category === 'footwear' ? '👞' : '👜'}</span>
-          <div>
-            <div style="font-size:11px; font-family:monospace; color:var(--sky);">${item.sku_code}</div>
-            <div style="font-weight:800; font-size:14px;">${item.model_name}</div>
-            <div style="font-size:11px; color:var(--muted);">1 PIM ↔ ${item.plm_variants.length} Varianti PLM</div>
-          </div>
-        </button>
-      `).join("");
+      const secHome = document.getElementById("section-home");
+      const secWs = document.getElementById("section-workspace");
 
-      // 2. Render 1 PIM <-> N PLM Bridge
-      document.getElementById("bridge-view").innerHTML = `
-        <div style="background:linear-gradient(135deg, #020617, #0f172a); border:2px solid var(--sky); border-radius:14px; padding:16px;">
-          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-            <span class="pill pill-sky">LATO 1 · Articolo Commerciale PIM</span>
-            <span style="font-size:11px; color:var(--muted); font-family:monospace;">${pim.season}</span>
-          </div>
-          <h3 style="margin:4px 0; font-size:18px;">${pim.model_name}</h3>
-          <div style="font-size:12px; font-family:monospace; color:var(--sky); margin-bottom:8px;">SKU: ${pim.sku_code} · ID: ${pim.pim_item_id}</div>
-          <p style="font-size:12px; color:#cbd5e1; margin:0 0 10px;">${pim.commercial_description_it}</p>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            ${pim.retail_channels.map(ch => `<span style="font-size:11px; background:#1e293b; padding:3px 9px; border-radius:99px;">🛍️ ${ch}</span>`).join("")}
-          </div>
-        </div>
-        <div style="text-align:center;">
-          <div class="pill pill-sky" style="font-size:14px; padding:6px 14px;">1 ↔ ${pim.plm_variants.length}</div>
-          <div style="font-size:11px; color:var(--muted); margin-top:4px;">Ponte Nativo</div>
-        </div>
-        <div>
-          ${pim.plm_variants.map((v, vIdx) => `
-            <div class="variant-card ${vIdx === selectedVarIdx ? 'active' : ''}" onclick="selectVariant(${vIdx})">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <div style="font-size:11px; font-family:monospace; color:var(--emerald); font-weight:800;">LATO N · ${v.variant_code}</div>
-                  <div style="font-weight:800; font-size:14px;">${v.colorway_name}</div>
-                </div>
-                <span style="font-size:11px; background:#1e293b; padding:2px 9px; border-radius:99px;">${v.lifecycle_status}</span>
-              </div>
-              <div style="font-size:11.5px; color:var(--muted); margin-top:6px; display:flex; gap:12px; flex-wrap:wrap;">
-                <span>📐 Forma/Modello: <strong style="color:#fff;">${v.last_or_pattern_code}</strong></span>
-                <span>🧩 Nodi BOM: <strong style="color:var(--emerald);">${v.bom_items.length}</strong></span>
-                <span>🏭 Fasi Terzisti: <strong style="color:var(--amber);">${v.subcontractor_assignments.length}</strong></span>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      `;
+      if (mod === "home") {
+        secHome.style.display = "block";
+        secWs.style.display = "none";
+      } else {
+        secHome.style.display = "none";
+        secWs.style.display = "block";
 
-      // 3. Render 3-Level BOM Tree
-      document.getElementById("bom-title").innerText = `2. Distinta Base (BOM) a 3 Livelli — ${variant.colorway_name}`;
-      const l1Items = variant.bom_items.filter(b => b.level === 1);
-      function renderBomBranch(item) {
-        const children = variant.bom_items.filter(b => b.parent_bom_item_id === item.bom_item_id);
-        const pillClass = item.level === 1 ? "pill-sky" : (item.level === 2 ? "pill-purple" : "pill-emerald");
-        return `
-          <div class="bom-node">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-              <div>
-                <span class="pill ${pillClass}">LIVELLO ${item.level}</span>
-                <strong style="font-size:13px; margin-left:6px;">${item.material_name}</strong>
-              </div>
-              <span style="font-size:11.5px; color:var(--emerald); font-weight:800;">♻️ Riciclato: ${item.recycled_content_pct}%</span>
-            </div>
-            <div style="font-size:11.5px; color:var(--muted); margin-top:5px;">
-              Fornitore: <strong style="color:#e2e8f0;">${item.supplier_name}</strong> (${item.origin_country_iso2}) · Consumo: ${item.unit_consumption} ${item.unit_of_measure} · Cert: ${item.certifications.join(", ")}
-            </div>
+        const bridgeWrap = document.getElementById("module-bridge-wrap");
+        const splitWrap = document.getElementById("module-split-wrap");
+        const dppWrap = document.getElementById("module-dpp-wrap");
+
+        if (mod === "all") {
+          bridgeWrap.style.display = "block";
+          splitWrap.style.display = "grid";
+          dppWrap.style.display = "block";
+        } else if (mod === "pim" || mod === "bridge") {
+          bridgeWrap.style.display = "block";
+          splitWrap.style.display = "none";
+          dppWrap.style.display = "none";
+        } else if (mod === "bom" || mod === "sub") {
+          bridgeWrap.style.display = "none";
+          splitWrap.style.display = "grid";
+          dppWrap.style.display = "none";
+        } else if (mod === "dpp") {
+          bridgeWrap.style.display = "none";
+          splitWrap.style.display = "none";
+          dppWrap.style.display = "block";
+        }
+      }
+    }
+
+    function setViewerRole(role) {
+      currentViewerRole = role;
+      const bBtn = document.getElementById("roleBrandBtn");
+      const sBtn = document.getElementById("roleSubBtn");
+      if (role === "brand") {
+        bBtn.className = "btn-pill btn-black";
+        sBtn.className = "btn-pill btn-outline";
+        sBtn.style.border = "none";
+      } else {
+        sBtn.className = "btn-pill btn-black";
+        bBtn.className = "btn-pill btn-outline";
+        bBtn.style.border = "none";
+      }
+      renderCurrentSelection();
+    }
+
+    function renderPimTabs() {
+      const wrap = document.getElementById("pimTabsWrap");
+      wrap.innerHTML = "";
+      SEED_DATA.forEach((item, idx) => {
+        const btn = document.createElement("button");
+        const isSel = idx === currentPimIndex;
+        btn.className = `btn-pill ${isSel ? "btn-black" : "btn-outline"}`;
+        btn.style.padding = "10px 18px";
+        btn.innerHTML = `<span style="font-size:10px; font-weight:800; opacity:0.8;">${item.sectorLabel}</span> <strong>${item.name}</strong> <span class="mono-code" style="font-size:11px;">(${item.variants.length} PLM)</span>`;
+        btn.onclick = () => {
+          currentPimIndex = idx;
+          currentVarIndex = 0;
+          renderPimTabs();
+          renderCurrentSelection();
+        };
+        wrap.appendChild(btn);
+      });
+    }
+
+    function renderCurrentSelection() {
+      const pim = SEED_DATA[currentPimIndex];
+      const variant = pim.variants[currentVarIndex] || pim.variants[0];
+
+      // PIM Info
+      document.getElementById("currentSectorBadge").innerText = pim.sectorLabel;
+      document.getElementById("pimTitle").innerText = pim.name;
+      document.getElementById("pimSku").innerText = `SKU: ${pim.sku} · GTIN: ${pim.gtin} · HS: ${pim.hsCode}`;
+      document.getElementById("pimDesc").innerText = pim.desc;
+
+      // PIM Pricing L6
+      const pricingBox = document.getElementById("pricingContent");
+      const pricingTag = document.getElementById("pricingRoleTag");
+      if (currentViewerRole === "brand") {
+        pricingTag.innerText = "L6 BRAND VIEW";
+        pricingBox.innerHTML = `
+          <div><div style="font-size:11px; color:var(--text-grey);">Wholesale B2B</div><div class="display-title" style="font-size:24px;">€ ${pim.priceWs.toFixed(2)}</div></div>
+          <div><div style="font-size:11px; color:var(--text-grey);">Retail B2C</div><div class="display-title" style="font-size:24px;">€ ${pim.priceRt.toFixed(2)}</div></div>
+        `;
+      } else {
+        pricingTag.innerText = "L6 PROTETTO";
+        pricingBox.innerHTML = `
+          <div style="grid-column:span 2; font-size:11.5px; color:var(--text-grey); font-weight:600;">
+            🔒 Prezzi commerciali Wholesale/Retail oscurati nella vista Terzista a 0 € (Compliance ADR-006 L6).
           </div>
-          ${children.length ? `<div class="bom-children">${children.map(renderBomBranch).join("")}</div>` : ""}
         `;
       }
-      document.getElementById("bom-tree-container").innerHTML = l1Items.map(renderBomBranch).join("");
 
-      // 4. Render Subcontractor Mobile Portal
-      const subs = variant.subcontractor_assignments;
-      if (selectedSubIdx >= subs.length) selectedSubIdx = 0;
-      const activeSub = subs[selectedSubIdx];
-      document.getElementById("sub-list").innerHTML = subs.map((s, idx) => `
-        <div onclick="selectSubStep(${idx})" style="cursor:pointer; padding:8px 10px; border-radius:10px; border:1px solid ${idx === selectedSubIdx ? 'var(--sky)' : 'var(--border)'}; background:${idx === selectedSubIdx ? 'rgba(56,189,248,0.12)' : '#020617'}; margin-bottom:6px; font-size:12px;">
-          <div style="display:flex; justify-content:space-between;">
-            <strong>${s.subcontractor_name}</strong>
-            <span style="font-size:10.5px; font-weight:800; color:${s.completed ? 'var(--emerald)' : 'var(--amber)'};">
-              ${s.completed ? '✓ Completato' : '⏳ Da Confermare'}
-            </span>
+      // PLM Variants list
+      const plmWrap = document.getElementById("plmVariantsWrap");
+      plmWrap.innerHTML = "";
+      pim.variants.forEach((v, vIdx) => {
+        const isSel = vIdx === currentVarIndex;
+        const box = document.createElement("div");
+        box.style.background = isSel ? "#FFFFFF" : "rgba(255,255,255,0.7)";
+        box.style.border = isSel ? "2px solid var(--border-dark)" : "1px solid var(--border-light)";
+        box.style.borderRadius = "14px";
+        box.style.padding = "12px 14px";
+        box.style.cursor = "pointer";
+        box.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span class="mono-code" style="font-size:11.5px; font-weight:700;">${v.code}</span>
+              <span class="badge-pill" style="background:var(--bg-black); color:#FFFFFF; font-size:10px;">${v.status}</span>
+            </div>
+            <span style="font-size:11px; color:var(--text-grey);">Taglie: <strong>${v.sizes}</strong></span>
           </div>
-          <div style="font-size:11px; color:var(--muted);">📍 ${s.district} · ${s.phase}</div>
-        </div>
-      `).join("");
-      if (activeSub) {
-        document.getElementById("inp-lot-code").value = activeSub.material_lot_code;
+          <div style="font-size:12px; font-weight:700; margin-top:4px;">${v.name}</div>
+        `;
+        box.onclick = () => {
+          currentVarIndex = vIdx;
+          renderCurrentSelection();
+        };
+        plmWrap.appendChild(box);
+      });
+
+      document.getElementById("bomSnapshotTag").innerText = variant.bomVersion || "v2.0 (Locked)";
+
+      // Vertical Specs
+      const vGrid = document.getElementById("verticalSpecsGrid");
+      vGrid.innerHTML = "";
+      Object.entries(variant.specs || {}).forEach(([k, val]) => {
+        vGrid.innerHTML += `
+          <div style="background:#FFFFFF; padding:12px; border-radius:12px; border:1px solid var(--border-light);">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-grey);">${k}</div>
+            <div style="font-size:12px; font-weight:700; margin-top:2px;">${val}</div>
+          </div>
+        `;
+      });
+
+      // BOM Costing L6
+      const bomCostBox = document.getElementById("bomCostFields");
+      const bomCostRoleTag = document.getElementById("bomCostRoleTag");
+      if (currentViewerRole === "brand") {
+        bomCostRoleTag.innerText = "BRAND OWNER AUTHORIZED (L6)";
+        bomCostBox.innerHTML = `
+          <div><div style="font-size:11px; color:rgba(255,255,255,0.6);">Materiali BOM</div><div class="display-title" style="font-size:22px;">€ 34.20</div></div>
+          <div><div style="font-size:11px; color:rgba(255,255,255,0.6);">Manodopera Façon</div><div class="display-title" style="font-size:22px;">€ 31.50</div></div>
+          <div><div style="font-size:11px; color:rgba(255,255,255,0.6);">Costo Totale Fabbrica</div><div class="display-title" style="font-size:22px;">€ 65.70</div></div>
+        `;
+      } else {
+        bomCostRoleTag.innerText = "LABORATORIO TERZISTA 0 € (COSTI OSCURATI)";
+        bomCostBox.innerHTML = `
+          <div style="grid-column:span 3; font-size:11.5px; color:rgba(255,255,255,0.85); line-height:1.5;">
+            🔒 <strong>Segregazione L6 Attiva:</strong> Tutti i costi industriali dei materiali e compensi terzisti sono oscurati.
+            Il laboratorio visualizza esclusivamente consumi fisici e lotti da confermare.
+          </div>
+        `;
       }
 
-      // 5. Render Live EU DPP & QR Code
-      const allBoms = pim.plm_variants.flatMap(v => v.bom_items);
-      const allSubs = pim.plm_variants.flatMap(v => v.subcontractor_assignments.map(s => ({ ...s, variant_code: v.variant_code })));
-      const avgRec = Math.round(allBoms.reduce((acc, b) => acc + b.recycled_content_pct, 0) / (allBoms.length || 1));
-      const completedSubs = allSubs.filter(s => s.completed).length;
-      const co2 = (14.8 * (1 - avgRec / 250)).toFixed(2);
-      const certs = Array.from(new Set(allBoms.flatMap(b => b.certifications)));
-      const qrSvg = generateQrSvg(pim.sku_code);
-
-      document.getElementById("dpp-container").innerHTML = `
-        <div style="background:#020617; border:1px solid var(--border); border-radius:14px; padding:16px; text-align:center;">
-          <div onclick="openPublicPassportModal()" style="cursor:pointer; display:inline-block; padding:8px; background:#fff; border-radius:14px;" title="Clicca per aprire il Passaporto Pubblico UE">
-            ${qrSvg}
-          </div>
-          <div style="font-family:monospace; font-size:12px; color:var(--sky); font-weight:800; margin-top:8px;">DPP-EU-${pim.sku_code}</div>
-          <div style="font-size:11px; color:var(--muted); margin-top:2px;">https://dpp.footlink.eu/${pim.brand_tenant_id}/${pim.sku_code}</div>
-          <button class="btn btn-sky" style="width:100%; margin-top:10px;" onclick="openPublicPassportModal()">🔗 Clicca QR Code → Vista Consumatore UE</button>
-        </div>
-        <div>
-          <div class="kpi-grid">
-            <div class="kpi-box">
-              <div style="font-size:11px; color:var(--muted);">Ponte 1 PIM ↔ N PLM</div>
-              <div style="font-size:20px; font-weight:900;">1 ↔ ${pim.plm_variants.length}</div>
-              <div style="font-size:11px; color:var(--sky);">${allBoms.length} componenti BOM (3 liv.)</div>
-            </div>
-            <div class="kpi-box">
-              <div style="font-size:11px; color:var(--muted);">Contenuto Riciclato</div>
-              <div style="font-size:20px; font-weight:900; color:var(--emerald);">${avgRec}%</div>
-              <div style="font-size:11px; color:var(--muted);">Media ponderata</div>
-            </div>
-            <div class="kpi-box">
-              <div style="font-size:11px; color:var(--muted);">Carbon Footprint</div>
-              <div style="font-size:20px; font-weight:900; color:var(--sky);">${co2} kg</div>
-              <div style="font-size:11px; color:var(--muted);">CO₂e stimata / unità</div>
-            </div>
-            <div class="kpi-box">
-              <div style="font-size:11px; color:var(--muted);">Fasi Terzisti 0 €</div>
-              <div style="font-size:20px; font-weight:900; color:var(--amber);">${completedSubs}/${allSubs.length}</div>
-              <div style="font-size:11px; color:var(--emerald);">Riparabilità: 9.2/10</div>
-            </div>
-          </div>
-
-          <div style="background:#020617; border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:12px;">
-            <div style="font-size:12px; font-weight:800; margin-bottom:8px;">Certificazioni Verificate &amp; Conformità ESPR</div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              ${certs.map(c => `<span class="pill pill-emerald">✓ ${c}</span>`).join("")}
-            </div>
-          </div>
-
-          <div style="background:#020617; border:1px solid var(--border); border-radius:12px; padding:12px;">
-            <div style="font-size:12px; font-weight:800; margin-bottom:8px;">Tracciabilità Lotti &amp; Distretti Manifatturieri Italiani</div>
-            ${allSubs.map(s => `
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #1e293b; font-size:12px;">
-                <div><strong>${s.subcontractor_name}</strong> (${s.district}) · <span style="color:var(--muted);">${s.variant_code}</span></div>
-                <div>
-                  <code style="background:#0f172a; padding:2px 6px; border-radius:4px; color:var(--amber);">${s.material_lot_code}</code>
-                  <strong style="margin-left:6px; color:${s.completed ? 'var(--emerald)' : 'var(--amber)'};">${s.completed ? '✓ Verificato' : '⏳ In Corso'}</strong>
-                </div>
+      // BOM Tree Items
+      const treeWrap = document.getElementById("bomTreeItems");
+      treeWrap.innerHTML = "";
+      variant.boms.forEach((b) => {
+        const indent = (b.level - 1) * 20;
+        treeWrap.innerHTML += `
+          <div style="margin-left:${indent}px; background:var(--bg-grey); padding:10px 14px; border-radius:12px; border:1px solid var(--border-light);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <span class="badge-pill" style="background:var(--bg-black); color:#FFFFFF; font-size:10px; margin-right:6px;">L${b.level}</span>
+                <strong style="font-size:12.5px;">${b.name}</strong> — <span style="font-size:11px; color:var(--text-grey);">${b.supplier}</span>
               </div>
-            `).join("")}
+              <span class="mono-code" style="font-size:11.5px; font-weight:700;">${b.qty}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-grey); margin-top:4px;">
+              <span>Cert: <strong>${b.cert}</strong> (${b.certId})</span>
+              <span>${currentViewerRole === 'brand' ? `Costo: € ${b.cost.toFixed(2)}` : 'Costo: 🔒 Oscurato'}</span>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      });
+
+      // Phone Simulator
+      document.getElementById("phoneVariantCode").innerText = variant.code;
+      const phoneWrap = document.getElementById("phoneStepsWrap");
+      phoneWrap.innerHTML = "";
+      variant.steps.forEach((s, sIdx) => {
+        const isCompleted = s.ok;
+        phoneWrap.innerHTML += `
+          <div style="background:#FFFFFF; border:1px solid var(--border-light); border-radius:12px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11.5px; font-weight:700;">${s.sub}</div>
+              <div style="font-size:10.5px; color:var(--text-grey);">${s.phase}</div>
+            </div>
+            <span class="badge-pill" style="background:${isCompleted ? 'var(--bg-black)' : 'var(--bg-grey)'}; color:${isCompleted ? '#FFFFFF' : 'var(--text-black)'}; font-size:10px;">
+              ${isCompleted ? '✓ 0 € OK' : 'DA CONFERMARE'}
+            </span>
+          </div>
+        `;
+      });
+
+      // DPP Info
+      document.getElementById("qrSkuText").textContent = pim.sku;
+      document.getElementById("dppIdText").textContent = `DPP-EU-${pim.sku}`;
+      document.getElementById("dppPlmCount").textContent = `1 ↔ ${pim.variants.length} PLM`;
+      document.getElementById("dppCareText").textContent = pim.care;
+
+      const dppSteps = document.getElementById("dppStepsList");
+      dppSteps.innerHTML = "";
+      variant.steps.forEach((st) => {
+        dppSteps.innerHTML += `
+          <div style="background:#FFFFFF; border:1px solid var(--border-light); border-radius:10px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:11.5px;">
+            <div><strong>${st.sub}</strong> (${st.district}) · <span>${st.phase}</span></div>
+            <span class="mono-code" style="font-weight:700;">${st.ok ? '<span class="live-dot" style="margin-right:4px;"></span>Confermato 0 €' : '⏳ In Lavorazione'}</span>
+          </div>
+        `;
+      });
+
+      // Customs List
+      const customsList = document.getElementById("customsCertList");
+      customsList.innerHTML = "";
+      variant.boms.forEach((bm) => {
+        customsList.innerHTML += `
+          <div style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+            <div>
+              <strong>${bm.name}</strong> — <span>${bm.supplier}</span>
+            </div>
+            <span class="mono-code" style="background:#FFFFFF; color:#111111; padding:2px 8px; border-radius:999px; font-weight:700;">${bm.certId}</span>
+          </div>
+        `;
+      });
     }
 
-    function selectPim(idx) { selectedPimIdx = idx; selectedVarIdx = 0; selectedSubIdx = 0; renderAll(); }
-    function selectVariant(idx) { selectedVarIdx = idx; selectedSubIdx = 0; renderAll(); }
-    function selectSubStep(idx) {
-      selectedSubIdx = idx;
-      document.getElementById("st-2").classList.add("active");
-      document.getElementById("sub-toast").style.display = "none";
-      renderAll();
-    }
-    function validateLotClick2() {
-      document.getElementById("st-2").classList.add("active");
-      document.getElementById("st-3").classList.add("active");
-    }
-    function confirmStepClick3() {
-      const pim = PIM_DATA[selectedPimIdx];
-      const variant = pim.plm_variants[selectedVarIdx];
-      const sub = variant.subcontractor_assignments[selectedSubIdx];
-      if (!sub) return;
-      sub.material_lot_code = document.getElementById("inp-lot-code").value || sub.material_lot_code;
-      sub.completed = true;
-      document.getElementById("st-3").classList.add("active");
-      document.getElementById("sub-toast").style.display = "block";
-      renderAll();
-    }
-    function toggleVariantForm() {
-      const el = document.getElementById("add-variant-form");
-      el.style.display = el.style.display === "none" ? "block" : "none";
-    }
-    function addPlmVariant() {
-      const pim = PIM_DATA[selectedPimIdx];
-      const code = document.getElementById("inp-var-code").value.trim();
-      const color = document.getElementById("inp-var-color").value.trim();
-      const last = document.getElementById("inp-var-last").value.trim();
-      if (!code || !color) return;
-      pim.plm_variants.push({
-        plm_variant_id: "PLM-NEW-" + Date.now(),
-        variant_code: code,
-        colorway_name: color,
-        size_range: "38-46",
-        last_or_pattern_code: last,
-        lifecycle_status: "prototype",
-        bom_items: [
-          { bom_item_id: "BOM-NEW-L1", level: 1, parent_bom_item_id: null, component_type: "upper", material_name: "Tomaia " + color, supplier_name: "Conceria Certificata IT", origin_country_iso2: "IT", unit_of_measure: "sqft", unit_consumption: 3.1, waste_percentage: 6.0, recycled_content_pct: 35, certifications: ["LWG Gold", "REACH"] }
-        ],
-        subcontractor_assignments: [
-          { assignment_id: "SUB-NEW-1", subcontractor_name: "Tomaificio Partner Distretto", district: "Fermo-Macerata", phase: "Orlatura Tomaia", material_lot_code: "LOT-NEW-2026-99A", completed: false }
-        ]
-      });
-      selectedVarIdx = pim.plm_variants.length - 1;
-      document.getElementById("add-variant-form").style.display = "none";
-      renderAll();
-    }
-    function toggleBomForm() {
-      const el = document.getElementById("add-bom-form");
-      el.style.display = el.style.display === "none" ? "block" : "none";
-    }
-    function addBomNode() {
-      const pim = PIM_DATA[selectedPimIdx];
-      const variant = pim.plm_variants[selectedVarIdx];
-      const lvl = parseInt(document.getElementById("inp-bom-level").value, 10);
-      const mat = document.getElementById("inp-bom-mat").value.trim();
-      const sup = document.getElementById("inp-bom-sup").value.trim();
-      const rec = parseFloat(document.getElementById("inp-bom-rec").value) || 50;
-      if (!mat || !sup) return;
-      const parentCandidate = variant.bom_items.find(b => b.level === lvl - 1) || variant.bom_items[0];
-      variant.bom_items.push({
-        bom_item_id: "BOM-L" + lvl + "-" + Math.floor(100 + Math.random() * 899),
-        level: lvl,
-        parent_bom_item_id: lvl > 1 && parentCandidate ? parentCandidate.bom_item_id : null,
-        component_type: "sub_assembly",
-        material_name: mat,
-        supplier_name: sup,
-        origin_country_iso2: "IT",
-        unit_of_measure: "pcs",
-        unit_consumption: 1.0,
-        waste_percentage: 3.0,
-        recycled_content_pct: rec,
-        certifications: ["GRS", "REACH"]
-      });
-      document.getElementById("add-bom-form").style.display = "none";
-      renderAll();
-    }
-    function openPublicPassportModal() {
-      const pim = PIM_DATA[selectedPimIdx];
-      const allSubs = pim.plm_variants.flatMap(v => v.subcontractor_assignments.map(s => ({ ...s, variant_code: v.variant_code })));
-      document.getElementById("modal-header").innerHTML = `
-        <div>
-          <div style="font-size:11px; color:var(--sky); font-weight:800; text-transform:uppercase;">🇪🇺 EU ESPR Digital Product Passport · Vista Pubblica Consumatore &amp; Dogana</div>
-          <div style="font-size:19px; font-weight:900; margin-top:2px;">${pim.model_name} (${pim.sku_code})</div>
-        </div>
-        <button class="btn" style="background:#334155; color:#fff;" onclick="closePublicPassportModal()">✕ Chiudi</button>
-      `;
-      document.getElementById("modal-body").innerHTML = `
-        <p style="font-size:13px; color:#475569; margin-top:0;">${pim.commercial_description_it}</p>
-        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; margin-bottom:14px;">
-          <strong>1 Articolo Commerciale PIM ↔ ${pim.plm_variants.length} Varianti Tecniche PLM Coperte</strong>
-          <div style="font-size:12px; color:#475569; margin-top:4px;">Origine Verificata: <strong>Italia (IT)</strong> · Conformità Regolamento UE ESPR: <strong>100% Verificata</strong></div>
-        </div>
-        <h4 style="margin:10px 0 6px; font-size:13px; text-transform:uppercase; color:#475569;">Tracciabilità Distretti &amp; Lotti Terzisti (0 €)</h4>
-        ${allSubs.map(s => `
-          <div style="display:flex; justify-content:space-between; padding:8px 10px; border-bottom:1px solid #e2e8f0; font-size:12.5px;">
-            <div><strong>${s.subcontractor_name}</strong> (${s.district}) — ${s.phase}</div>
-            <div><code>${s.material_lot_code}</code> · <strong style="color:${s.completed ? '#15803d' : '#b45309'};">${s.completed ? '✓ Certificato' : '⏳ In Lavorazione'}</strong></div>
-          </div>
-        `).join("")}
-      `;
-      document.getElementById("passport-modal").classList.add("open");
-    }
-    function closePublicPassportModal() {
-      document.getElementById("passport-modal").classList.remove("open");
+    function toggleDataQualityDrawer() {
+      const d = document.getElementById("dqDrawer");
+      d.style.display = d.style.display === "none" ? "block" : "none";
     }
 
-    renderAll();
+    function showExport(fmt) {
+      const area = document.getElementById("exportPreviewArea");
+      const pre = document.getElementById("exportPre");
+      area.style.display = "block";
+      const pim = SEED_DATA[currentPimIndex];
+      if (fmt === "csv") {
+        pre.textContent = `sku_code,gtin_ean,model_name,season,category,wholesale_price_eur,retail_price_eur,hs_code,plm_variants
+${pim.sku},${pim.gtin},"${pim.name}",${pim.season},${pim.category},${pim.priceWs},${pim.priceRt},${pim.hsCode},${pim.variants.length}`;
+      } else if (fmt === "shopify") {
+        pre.textContent = JSON.stringify({
+          channel: "Shopify Plus B2C Metafields Feed",
+          product: { handle: pim.sku.toLowerCase(), title: pim.name, price_eur: pim.priceRt, espr_dpp: `https://dpp.footlink.eu/${pim.sku}` }
+        }, null, 2);
+      } else if (fmt === "b2b") {
+        pre.textContent = JSON.stringify({
+          channel: "B2B Showroom Omnichannel Line Sheet",
+          item: { sku: pim.sku, model: pim.name, wholesale_eur: pim.priceWs, lines: pim.variants.map(v => v.code) }
+        }, null, 2);
+      } else {
+        pre.textContent = JSON.stringify({
+          channel: "Footlink Canonical PIM Syndication JSON (FEAT-05)",
+          item: { sku: pim.sku, model: pim.name, data_quality_score: 100, variants: pim.variants.length }
+        }, null, 2);
+      }
+    }
+
+    function setLifecycleStatus(status) {
+      SEED_DATA[currentPimIndex].variants[currentVarIndex].status = status;
+      SEED_DATA[currentPimIndex].variants[currentVarIndex].bomVersion =
+        (status === "industrialized" || status === "in_production") ? "v2.0 (Locked Production Snapshot)" : "v1.1 (Draft)";
+      renderCurrentSelection();
+    }
+
+    function confirmSubStep() {
+      const pim = SEED_DATA[currentPimIndex];
+      const variant = pim.variants[currentVarIndex];
+      const pending = variant.steps.find(s => !s.ok);
+      if (pending) {
+        pending.ok = true;
+      }
+      const toast = document.getElementById("subToast");
+      toast.style.display = "block";
+      renderCurrentSelection();
+      setTimeout(() => { toast.style.display = "none"; }, 4000);
+    }
+
+    function setDppView(v) {
+      const cArea = document.getElementById("dppConsumerArea");
+      const qArea = document.getElementById("dppCustomsArea");
+      const cBtn = document.getElementById("dppConsumerBtn");
+      const qBtn = document.getElementById("dppCustomsBtn");
+      if (v === "consumer") {
+        cArea.style.display = "flex";
+        qArea.style.display = "none";
+        cBtn.className = "btn-pill btn-black";
+        qBtn.className = "btn-pill btn-outline";
+      } else {
+        cArea.style.display = "none";
+        qArea.style.display = "block";
+        qBtn.className = "btn-pill btn-black";
+        cBtn.className = "btn-pill btn-outline";
+      }
+    }
+
+    window.onload = init;
   </script>
 </body>
 </html>

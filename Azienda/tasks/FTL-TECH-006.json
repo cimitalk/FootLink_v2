@@ -1,0 +1,55 @@
+{
+  "task_id": "FTL-TECH-006",
+  "title": "Sviluppo Full-Stack Piattaforma: Schema Flessibile Configurabile dal Founder, Modulo Stagioni & Collezioni, Anagrafiche Master PLM/PIM, UI Streamlined e Test Suite",
+  "description": "Implementare in backend (FastAPI/SQLAlchemy/SQLite/PostgreSQL) e frontend (React/TypeScript) le 4 innovazioni richieste dal Founder: 1) Gestione modello dati estendibile con attributi dinamici e riflesso in tempo reale sulle form e schede prodotto; 2) Semplificazione visuale della UI (decongestione, navigazione orientata ai processi, progressiva disclosure); 3) Modulo di gestione delle tabelle anagrafiche di dominio per PLM e PIM con CRUD persistente; 4) Modulo gerarchico Stagioni e Collezioni (1 Stagione -> N Collezioni) con associazione e filtro di tutti i prodotti PIM/PLM.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder",
+  "created_at": "2026-10-19T15:35:00+02:00",
+  "updated_at": "2026-10-19T16:00:00+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "M (1-3gg)",
+  "dependencies": [
+    "FTL-TECH-005",
+    "FTL-PROD-005",
+    "FTL-GOV-005"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/database/schema.sql",
+    "Applicativo/backend/app/models.py",
+    "Applicativo/backend/app/orm_models.py",
+    "Applicativo/backend/app/database.py",
+    "Applicativo/backend/app/seed.py",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/tests/test_main.py",
+    "Applicativo/frontend/src/types.ts",
+    "Applicativo/frontend/src/mockSeedData.ts",
+    "Applicativo/frontend/src/components/SeasonsCollectionsHub.tsx",
+    "Applicativo/frontend/src/components/DomainRegistriesManager.tsx",
+    "Applicativo/frontend/src/components/DataModelSchemaStudio.tsx",
+    "Applicativo/frontend/src/components/PimToPlmBridge.tsx",
+    "Applicativo/frontend/src/components/FootlinkHomeHub.tsx",
+    "Applicativo/frontend/src/App.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-007",
+  "tags": [
+    "PLM",
+    "PIM",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Tabelle DDL e migrazioni automatiche per seasons, collections, domain_registries, schema_attribute_definitions",
+    "API REST complete per gestione stagioni, collezioni, anagrafiche e attributi dinamici",
+    "Form di creazione/modifica prodotti PIM e PLM che renderizzano dinamicamente i campi custom definiti dal Founder",
+    "Interfaccia utente ripulita, minimale ed ergonomica (stile editoriale Nike Design System v2.0)",
+    "Suite di test backend estesa con esito 100% passante e build frontend pulita"
+  ],
+  "notes": "Traguardo tecnologico centrale di Sprint 5 che rende Footlink una piattaforma flessibile e pronta per i diversi distretti."
+}

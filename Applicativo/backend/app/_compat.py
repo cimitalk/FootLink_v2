@@ -231,6 +231,8 @@ except ImportError:
         HTTP_200_OK = 200
         HTTP_201_CREATED = 201
         HTTP_400_BAD_REQUEST = 400
+        HTTP_401_UNAUTHORIZED = 401
+        HTTP_403_FORBIDDEN = 403
         HTTP_404_NOT_FOUND = 404
         HTTP_409_CONFLICT = 409
         HTTP_422_UNPROCESSABLE_ENTITY = 422
@@ -319,6 +321,20 @@ except ImportError:
 
             return decorator
 
+        def put(self, path: str, status_code: int = 200, response_model: Any = None, response_class: Any = None, **kwargs: Any) -> Callable[..., Any]:
+            def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+                self.routes.append(_Route("PUT", path, func, status_code, response_model, response_class))
+                return func
+
+            return decorator
+
+        def delete(self, path: str, status_code: int = 200, response_model: Any = None, response_class: Any = None, **kwargs: Any) -> Callable[..., Any]:
+            def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+                self.routes.append(_Route("DELETE", path, func, status_code, response_model, response_class))
+                return func
+
+            return decorator
+
 
 class StdlibTestResponse:
     """HTTP response object compatible with FastAPI/Starlette TestClient."""
@@ -353,8 +369,18 @@ class StdlibTestClient:
     def patch(self, path: str, json: Any = None, **kwargs: Any) -> StdlibTestResponse:
         return self._request("PATCH", path, json_body=json, **kwargs)
 
+    def put(self, path: str, json: Any = None, **kwargs: Any) -> StdlibTestResponse:
+        return self._request("PUT", path, json_body=json, **kwargs)
+
+    def delete(self, path: str, **kwargs: Any) -> StdlibTestResponse:
+        return self._request("DELETE", path, **kwargs)
+
     def _request(self, method: str, path: str, json_body: Any = None, **kwargs: Any) -> StdlibTestResponse:
-        clean_path = path.split("?")[0]
+        import urllib.parse
+
+        parts = path.split("?", 1)
+        clean_path = parts[0]
+        query_params = dict(urllib.parse.parse_qsl(parts[1])) if len(parts) > 1 else {}
         for route in getattr(self.app, "routes", []):
             if route.method != method.upper():
                 continue
@@ -378,6 +404,8 @@ class StdlibTestClient:
                 for param_name, param in sig.parameters.items():
                     if param_name in path_params:
                         call_kwargs[param_name] = path_params[param_name]
+                    elif param_name in query_params:
+                        call_kwargs[param_name] = query_params[param_name]
                     elif json_body is not None:
                         ann = type_hints.get(param_name, param.annotation)
                         if isinstance(ann, type) and issubclass(ann, BaseModel):

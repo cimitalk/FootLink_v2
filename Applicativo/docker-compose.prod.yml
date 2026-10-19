@@ -1,0 +1,39 @@
+# Docker Compose Production Architecture for Footlink (Option 3: OCI Always Free / VPS)
+# High Availability, Zero Cold Start, Caddy Automated TLS (0.00 EUR / month)
+
+version: "3.8"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./frontend/dist:/var/www/html:ro
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      - FOOTLINK_PORT=8000
+      - FOOTLINK_ENV=production
+      - FOOTLINK_PERSISTENCE=sqlite
+      - CORS_ALLOW_ORIGINS=*
+    volumes:
+      - footlink_db_data:/app/database
+    expose:
+      - "8000"
+
+volumes:
+  caddy_data:
+  caddy_config:
+  footlink_db_data:

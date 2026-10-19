@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-PROD-005",
+  "title": "PRD-005: Specifica Funzionale e Modello di Dominio per Modello Dati Flessibile, Gestione Stagioni & Collezioni, Tabelle Anagrafiche Master PLM/PIM e Semplificazione UI",
+  "description": "Definire la specifica di prodotto per consentire al Founder di estendere e correggere gli attributi di prodotto (PIM, PLM, BOM) con riflesso immediato sulla piattaforma, modellare la gerarchia Stagione -> Collezioni -> Prodotti con filtri e associazioni dinamiche, censire le tabelle anagrafiche di dominio per PIM e PLM, e definire le linee guida per la semplificazione dell'interfaccia utente.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "Founder",
+  "created_at": "2026-10-19T15:35:00+02:00",
+  "updated_at": "2026-10-19T16:00:00+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2-8h)",
+  "dependencies": [
+    "FTL-CEO-005",
+    "FTL-GOV-005"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/PRD-005-flexible-domain-model-seasons-collections-ui-simplification.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-007",
+  "tags": [
+    "product",
+    "PIM",
+    "PLM"
+  ],
+  "acceptance_criteria": [
+    "Specifica dei requisiti funzionali per la gestione dinamica degli attributi (campo chiave, etichette IT/EN, tipi dato, target entity, obbligatorietà)",
+    "Definizione della logica 1 Stagione -> N Collezioni -> N Prodotti PIM / PLM con vincoli di coerenza e filtri globali",
+    "Catalogo esaustivo delle anagrafiche di dominio PIM (categorie, canali, marchi, certificazioni, codici doganali) e PLM (fasi, materiali, fornitori, terzisti, scale taglie, unità di misura)",
+    "Linee guida di Interaction Design per la semplificazione e decongestione della UI"
+  ],
+  "notes": "Deliverable fondamentale redatto dal CPO per guidare lo sviluppo software del CTO."
+}

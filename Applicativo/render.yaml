@@ -1,0 +1,30 @@
+# Render Blueprint Specification for Footlink Cloud Free-Tier Hosting (ADR-002)
+# Hosting Cost: 0.00 EUR / month (within free tier allowances)
+services:
+  - type: web
+    name: footlink-core-api
+    runtime: python
+    region: frankfurt # EU Frankfurt for GDPR compliance
+    plan: free
+    buildCommand: pip install -r Applicativo/backend/requirements.txt
+    startCommand: python3 Applicativo/backend/run_server.py
+    envVars:
+      - key: FOOTLINK_PORT
+        value: "10000"
+      - key: FOOTLINK_ENV
+        value: "production"
+      - key: FOOTLINK_PERSISTENCE
+        value: "sqlite" # Upgradable to Neon / Supabase Free-Tier PostgreSQL via DATABASE_URL
+      - key: CORS_ALLOW_ORIGINS
+        value: "*"
+    healthCheckPath: /health
+
+  - type: web
+    name: footlink-spa-frontend
+    runtime: static
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./Applicativo/frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://footlink-core-api.onrender.com

@@ -14,6 +14,9 @@ Questo registro raccoglie tutte le decisioni architetturali, di governance, di b
 | [ADR-003](./ADR-003-domain-model-1-to-n-pim-plm.md) | Modello di Dominio Core 1:N PIM (Vendita) ↔ PLM (Produzione) | 🟢 Approvata (L1) | CPO + CTO | CEO / Founder | 2026-10-18 | [`FTL-PROD-001`](../tasks/FTL-PROD-001.json) |
 | [ADR-004](./ADR-004-network-pricing-and-finops.md) | Pricing di Rete (Terzisti a Costo Zero) & FinOps Unit Economics | 🟢 Approvata (L4) | CRO + CEO | Founder (L4) | 2026-10-18 | [`FTL-REV-001`](../tasks/FTL-REV-001.json) |
 | [ADR-005](./ADR-005-repository-three-pillars-restructuring.md) | Riorganizzazione Repository in 3 Pilastri di Root (`Azienda/`, `Applicativo/`, `Portale_Founder_Control/`) | 🟢 Approvata (L1) | Founder + CGO | Founder | 2026-10-18 | [`FTL-GOV-002`](../tasks/FTL-GOV-002.json) |
+| [ADR-006](./ADR-006-unified-design-system-and-l6-cost-segregation.md) | Unificazione Design System v2.0 (`MKT-BRAND-002` — Nike-Inspired Editorial Minimalism) e Segregazione Dati/Costi L6 (Brand/PMI vs Terzista 0 € & Consumatore vs Dogane) | 🟢 Approvata (L1/L6) | Founder + CGO + CMO + CPO + CTO | Founder | 2026-10-18 | [`FTL-GOV-003`](../tasks/FTL-GOV-003.json) |
+| [ADR-007](./ADR-007-flexible-data-model-seasons-collections-domain-registries.md) | Architettura Modello Dati Dinamico, Gerarchia Stagione/Collezione 1:N, Anagrafiche di Dominio e Streamlining UX | 🟢 Approvata (L1) | CTO + CPO | CGO / Founder | 2026-10-19 | [`FTL-GOV-005`](../tasks/FTL-GOV-005.json) |
+| [ADR-008](./ADR-008-production-orders-tannery-traceability-subcontractor-lifecycle.md) | Architettura Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti | 🟡 Proposta (L3/L6) | CGO + CTO + CPO | Founder (L3/L6) | 2026-10-19 | [`FTL-GOV-006`](../tasks/FTL-GOV-006.json) |
 
 ---
 

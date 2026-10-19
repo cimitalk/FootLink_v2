@@ -1,0 +1,37 @@
+{
+  "task_id": "FTL-MKT-005",
+  "title": "Posizionamento e Comunicazione DPP Conceria & Tracciabilità di Filiera (Storytelling ESPR / LWG / ICEC)",
+  "description": "Elaborare la strategia di comunicazione e posizionamento di marketing per il modulo Tracciabilità Conceria e Commesse di Produzione: redazione dei messaggi chiave su sostenibilità e passaporto digitale DPP (Reg. UE ESPR 2024/1781), copy per la vista consumatore ad alto impatto visivo (Design System v2.0) e dossier per il Founder su post LinkedIn dedicati all'eccellenza conciaria Made in Italy.",
+  "status": "todo",
+  "priority": "high",
+  "assignee_role": "CMO",
+  "assignee_agent": "footlink-cmo",
+  "created_by": "CEO",
+  "created_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T17:00:00+02:00",
+  "due_date": "2026-11-25T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": null,
+  "dependencies": [
+    "FTL-CEO-008",
+    "FTL-PROD-006"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/marketing/sprint-6-leather-traceability-marketing-positioning.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Linee guida di comunicazione pubblica e copy per passaporto di filiera calzaturiera e post ufficiali",
+  "escalation_level": "L5",
+  "decision_record_id": "ADR-008",
+  "tags": [
+    "marketing"
+  ],
+  "acceptance_criteria": [
+    "Guida di storytelling sulla tracciabilità del pellame dal grezzo al prodotto finito",
+    "Micro-copy per i 4 quadranti di sostenibilità del Passaporto Digitale DPP (LWG, Metal-Free, Distretto)",
+    "Dossier piano editoriale con 2 post LinkedIn ufficiali per approvazione Founder (Gate L5)",
+    "Allineamento del tono di voce con il Design System editoriale Nike-inspired"
+  ],
+  "notes": "Storytelling B2B ed editoriale per valorizzare l'artigianalità e la sostenibilità normativa."
+}

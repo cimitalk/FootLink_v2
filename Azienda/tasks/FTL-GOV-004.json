@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-GOV-004",
+  "title": "Audit Conformità GDPR, Data Protection Agreement (DPA) Filiera e Segregazione Multi-Tenant Dati Riservati L6",
+  "description": "Condurre l'audit formale di conformità GDPR (art. 28 contitolarità e accordo DPA per Brand e laboratori terzisti), formalizzare la matrice di segregazione dati industriali L6 (costi materiali, fasi e margini protetti) e verificare la sicurezza dell'architettura prima dell'onboarding dei partner pilota.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CGO",
+  "assignee_agent": "footlink-cgo",
+  "created_by": "CEO",
+  "created_at": "2026-10-19T10:52:00+02:00",
+  "updated_at": "2026-10-19T11:05:00+02:00",
+  "due_date": "2026-11-15T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "XS (<2h)",
+  "dependencies": [
+    "FTL-GOV-003",
+    "FTL-CEO-004"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/governance/audit-gdpr-and-l6-multi-tenant-data-segregation.md",
+    "Azienda/docs/governance/process_rules_v1.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L6",
+  "decision_record_id": "ADR-006",
+  "tags": [
+    "governance",
+    "finops",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Pubblicazione dell'audit di conformità GDPR e della matrice di segregazione L6",
+    "Definizione della clausola DPA standard per l'accordo con i Design Partner pilota",
+    "Verifica tecnica di oscuramento dei costi riservati verso terzisti e consumatori"
+  ],
+  "notes": "Parere favorevole rilasciato dal CGO per l'onboarding industriale nei distretti."
+}
