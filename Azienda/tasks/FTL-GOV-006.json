@@ -1,17 +1,17 @@
 {
   "task_id": "FTL-GOV-006",
-  "title": "ADR-008: Architettura Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti",
-  "description": "Formalizzare e approvare in ADR-008 l'architettura tecnica per la gestione delle commesse di produzione, il sottosistema dei lotti di conceria (certificazioni ambientali LWG/ICEC, REACH, hash SHA-256 a costo zero), lo state machine delle fasi terzisti in 3 clic e il presidio rigoroso della segregazione dati industriali riservati L6 (brand vs façonisti).",
-  "status": "todo",
+  "title": "Governance PaaS Distrettuale 3 Tier, Formalizzazione ADR-008 e Presidio Gatekeeping L1-L6",
+  "description": "Formalizzare e approvare in ADR-008 l'architettura tecnica PaaS distrettuale multi-tenant sui 3 livelli (Enterprise, PMI, Laboratori 0 EUR), la gestione documentale certificazioni lotti pelle con hash SHA-256 e doppia vista DPP, il modulo commesse con matrice taglie e sfrido BOM, e definire la matrice di rischio e presidio Gatekeeping L1-L6 con focus su Segregazione Dati Industriali Riservati L6 (isolamento competitor e protezione margini) e Vincolo Zero Spesa L2 (0,00 EUR).",
+  "status": "done",
   "priority": "critical",
   "assignee_role": "CGO",
   "assignee_agent": "footlink-cgo",
   "created_by": "Founder",
   "created_at": "2026-10-19T17:00:00+02:00",
-  "updated_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T17:50:00+02:00",
   "due_date": "2026-11-25T23:59:59+02:00",
   "estimated_effort": "S (2-8h)",
-  "actual_effort": null,
+  "actual_effort": "S (2-8h)",
   "dependencies": [
     "FTL-GOV-005",
     "FTL-CEO-008"
@@ -19,11 +19,12 @@
   "blocked_by": [],
   "output_artifacts": [
     "Azienda/adr/ADR-008-production-orders-tannery-traceability-subcontractor-lifecycle.md",
+    "Azienda/docs/governance/governance-risk-matrix-and-gatekeeping-sprint-6.md",
     "Azienda/adr/README.md",
     "Azienda/tasks/README.md"
   ],
   "requires_escalation": true,
-  "escalation_reason": "Scelta architetturale strutturale per commesse industriali, tracciabilità lotti e presidio L6 segreti industriali",
+  "escalation_reason": "Approvazione Founder per ADR-008 (Gate L3 Architettura PaaS Distrettuale, Gate L6 Segregazione Industriale, Gate L2 Vincolo Zero Spesa)",
   "escalation_level": "L3",
   "decision_record_id": "ADR-008",
   "tags": [
@@ -32,10 +33,11 @@
     "infra"
   ],
   "acceptance_criteria": [
-    "Redazione completa di ADR-008 secondo il template ufficiale ADR-000",
-    "Definizione formale del protocollo di segregazione DTO L6 tra Brand e Terzisti",
-    "Verifica rispetto vincolo Zero Spesa (L2) per certificati conceria tramite hash crittografico",
-    "Aggiornamento del registro generale ADR e del registro Task"
+    "Redazione e integrazione di ADR-008 coprendo PaaS distrettuale 3 tier, gestione documentale lotti pelle e matrice taglie con sfrido",
+    "Definizione della Matrice di Rischio e Presidio Gatekeeping L1-L6 per lo Sprint 6 con criteri Go/No-Go",
+    "Formalizzazione del protocollo di Segregazione Dati Industriali L6 (isolamento orizzontale competitor e verticale brand-terzista)",
+    "Verifica rispetto vincolo Zero Spesa L2 (0,00 EUR) per storage locale e autenticità certificati tramite hash SHA-256 standard",
+    "Aggiornamento registri generali ADR e Task Object dello Sprint 6 per tutti i 6 ruoli"
   ],
-  "notes": "Governance cardine dello Sprint 6 per la sicurezza dei dati di produzione e il controllo dei flussi manifatturieri."
+  "notes": "Governance cardine dello Sprint 6 completata dal CGO e sottomessa per approvazione al Founder."
 }

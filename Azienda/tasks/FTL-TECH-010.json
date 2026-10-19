@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-TECH-010",
+  "title": "03 PIM (Catalogo & Feed) - \"+ NUOVO MODELLO PIM\"",
+  "description": "Se creo un nuovo modello da PIM l'SKU corrisposndende in PLM deve avere \"STATO CICLO VITA\" con il nuovo valore: \"Nuovo da PIM\"",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-19T22:08:03+02:00",
+  "updated_at": "2026-10-19T22:31:00+02:00",
+  "completed_at": "2026-10-19T22:31:00+02:00",
+  "due_date": "2026-11-18T23:59:59+02:00",
+  "estimated_effort": "XS (<2h)",
+  "actual_effort": "1h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/backend/app/models.py",
+    "Applicativo/frontend/src/types.ts",
+    "Applicativo/frontend/src/components/PimCatalogManager.tsx",
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/App.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": null,
+  "tags": [
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Aggiunto valore 'new_from_pim' all'enum PlmLifecycleStatus su backend e frontend con etichetta '🏷️ Nuovo da PIM'.",
+    "Creando un modello da PIM, la variante PLM generata riceve automaticamente lo stato 'new_from_pim'.",
+    "Filtro di stato e selettori in tabella PLM supportano e visualizzano 'new_from_pim'."
+  ],
+  "notes": "Risolto: implementato stato lifecycle NEW_FROM_PIM in Pydantic enum backend e frontend. Gestito in PimCatalogManager e App.tsx alla creazione modello commerciale PIM."
+}

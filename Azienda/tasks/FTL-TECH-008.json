@@ -1,0 +1,37 @@
+{
+  "task_id": "FTL-TECH-008",
+  "title": "02 Prodotti (PLM & BOM) - Azione Quick Edit",
+  "description": "L'Azione Quick Edit non permette di editare tutti gli attributi del prodotto. Apre soltanto un popup con STATO CICLO DI VITA; COLORE / VARIANTE e FORMA / CARTAMODELLO . Si devono vedere tutti gli attributi del prodtto e possibilità di modifica",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-19T21:54:37+02:00",
+  "updated_at": "2026-10-19T22:31:00+02:00",
+  "completed_at": "2026-10-19T22:31:00+02:00",
+  "due_date": "2026-11-18T23:59:59+02:00",
+  "estimated_effort": "XS (<2h)",
+  "actual_effort": "1.5h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/App.tsx",
+    "Applicativo/backend/app/main.py"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": null,
+  "tags": [
+    "product",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Apro l'azione quick edit, modifico i campi, salvo. Le modifiche sono salite a db.",
+    "Form Quick Edit completo: Nome Modello, SKU, Categoria, Genere Target, Stagione, Codice Variante PLM, Colore, Forma, Scala Taglie, Taglia Base, Sviluppo %, Stato Ciclo di Vita.",
+    "Endpoint PATCH /api/v1/pim-items/{id}/plm-variants/{var_id} aggiorna atomicamente genitore PIM e variante tecnica PLM."
+  ],
+  "notes": "Risolto: Quick Edit modale espanso a form completo bi-livello (PIM e PLM) con persistenza via PATCH REST API su backend e aggiornamento reattivo UI."
+}

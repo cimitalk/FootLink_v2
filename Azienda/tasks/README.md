@@ -68,27 +68,31 @@ Questa directory contiene i **Task Object JSON** della C-Suite di **Footlink**, 
 
 ---
 
-## 👑 Direttive Founder Formalizzate & Risolte (Sprint 5 Finalization)
+## 👑 Nuove Iniziative & Direttive Founder — Backlog C-Suite
 
-Task e direttive inseriti direttamente dal Founder via **Founder Control Center** e completati con successo:
+Task e direttive inseriti direttamente dal Founder via **Founder Control Center** per analisi, prioritizzazione strategica (CEO/CGO) ed esecuzione da parte dei C-Level responsabili.
 
 | Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |
 |---|:---:|---|:---:|:---:|---|:---:|
 | [`FTL-CEO-006`](./FTL-CEO-006.json) | **CEO** | Analisi Strategica Modulo Passaporto Digitale Pellami e Tracciabilità Conceria | 🟠 `high` | ✅ `done` | — | No (`L1`) |
 | [`FTL-CEO-007`](./FTL-CEO-007.json) | **CEO** | Edit degli elementi presenti in tabella | 🔴 `critical` | ✅ `done` | — | No (`L1`) |
-
----
-
-## 🏭 Sprint 6 — Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti
-
-| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |
-|---|:---:|---|:---:|:---:|---|:---:|
-| [`FTL-CEO-008`](./FTL-CEO-008.json) | **CEO** | Direttiva Esecutiva Sprint 6: Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti | 🔴 `critical` | 🟢 `todo` | `FTL-CEO-005`, `FTL-CEO-007` | No (`L1`) |
-| [`FTL-GOV-006`](./FTL-GOV-006.json) | **CGO** | ADR-008: Architettura Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti | 🔴 `critical` | 🟢 `todo` | `FTL-GOV-005`, `FTL-CEO-008` | Sì (`L3/L6`) |
-| [`FTL-PROD-006`](./FTL-PROD-006.json) | **CPO** | PRD-006: Gestione Ordini di Produzione (Work Orders Hub), Passaporto Pellami LWG/ICEC e UX Anagrafiche | 🔴 `critical` | ✅ `done` | `FTL-CEO-006`, `FTL-CEO-007`, `FTL-PROD-005` | No (`L1`) |
-| [`FTL-TECH-007`](./FTL-TECH-007.json) | **CTO** | Sviluppo Full-Stack Commesse di Produzione, Data Model Lotti Pellame/Conceria, API Lifecycle Terzisti & UI | 🔴 `critical` | 🟢 `todo` | `FTL-PROD-006`, `FTL-GOV-006` | Sì (`L3`) |
-| [`FTL-REV-005`](./FTL-REV-005.json) | **CRO** | Analisi FinOps & Commerciale Commesse e Tracciabilità Conceria (Invarianza 0 € Terzisti & Tier Brand/PMI) | 🟠 `high` | 🟢 `todo` | `FTL-CEO-008`, `FTL-PROD-006` | Sì (`L4`) |
-| [`FTL-MKT-005`](./FTL-MKT-005.json) | **CMO** | Posizionamento e Comunicazione DPP Conceria & Tracciabilità di Filiera (Storytelling ESPR / LWG / ICEC) | 🟠 `high` | 🟢 `todo` | `FTL-CEO-008`, `FTL-PROD-006` | Sì (`L5`) |
+| [`FTL-CEO-008`](./FTL-CEO-008.json) | **CEO** | Direttiva Esecutiva Sprint 6: PaaS Distrettuale 3 Tier, Tracciabilità Conceria EUDR/LWG e Matrice Taglie con Sfrido BOM | 🔴 `critical` | ✅ `done` | `FTL-CEO-005`, `FTL-CEO-007` | No (`L1`) |
+| [`FTL-CEO-009`](./FTL-CEO-009.json) | **CEO** | Nuova Area Prodotti PLM: Scorporo dal Ponte 1:N, Gestione BOM Nativa & Export Excel | 🟠 `high` | ✅ `done` | `FTL-CEO-011` | No (`L1`) |
+| [`FTL-CEO-010`](./FTL-CEO-010.json) | **CEO** | Revisione Modulo 04 in PIM Hub: Default 1:1, Aggregazione 1:N, Export Cataloghi & E-Commerce Feeds | 🟠 `high` | ✅ `done` | `FTL-CEO-009`, `FTL-CEO-011` | Sì (`L4`) |
+| [`FTL-CEO-011`](./FTL-CEO-011.json) | **CEO** | Sospensione Temporanea Modulo 02 Work Orders Hub (ADR-009) & Allineamento C-Suite | 🟠 `high` | ✅ `done` | — | No (`L1`) |
+| [`FTL-CEO-012`](./FTL-CEO-012.json) | **CEO** | Revisione Modulo 03: Vault Conceria, Upload File PDF Reali, Vincolo BOM Pelle & Import Excel | 🟠 `high` | ✅ `done` | `FTL-CEO-011` | No (`L2`) |
+| [`FTL-GOV-006`](./FTL-GOV-006.json) | **CGO** | Governance PaaS Distrettuale 3 Tier, Formalizzazione ADR-008 e Presidio Gatekeeping L1-L6 | 🔴 `critical` | ✅ `done` | `FTL-GOV-005`, `FTL-CEO-008` | Sì (`L3`) |
+| [`FTL-MKT-005`](./FTL-MKT-005.json) | **CMO** | Posizionamento PaaS Distrettuale & Storytelling Tracciabilità Conceria EUDR/LWG | 🟠 `high` | ✅ `done` | `FTL-CEO-008`, `FTL-PROD-006` | Sì (`L5`) |
+| [`FTL-PROD-006`](./FTL-PROD-006.json) | **CPO** | PRD-006: PaaS Distrettuale 3 Tier, Work Orders Hub con Matrice Taglie/Sfrido BOM e Vault Lotti Conceria | 🔴 `critical` | ✅ `done` | `FTL-CEO-006`, `FTL-CEO-007`, `FTL-PROD-005` | No (`L1`) |
+| [`FTL-PROD-007`](./FTL-PROD-007.json) | **CPO** | PRD-007: Nuova Area PRODOTTI (PLM & BOM), Modulo PIM Catalogo Commerciale e Revisione Vault Conceria | 🔴 `critical` | ✅ `done` | `FTL-CEO-009`, `FTL-CEO-010`, `FTL-CEO-011`, `FTL-CEO-012` | No (`L1`) |
+| [`FTL-PROD-008`](./FTL-PROD-008.json) | **CPO** | 06 Anagrafiche di Dominio | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-PROD-009`](./FTL-PROD-009.json) | **CPO** | 02 Prodotti (PLM & BOM) - + Nodo BOM (L1/L2/L3) | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-REV-005`](./FTL-REV-005.json) | **CRO** | Packaging Commerciale PaaS Distrettuale 3 Tier & Analisi FinOps Invarianza 0 € Terzisti | 🟠 `high` | ✅ `done` | `FTL-CEO-008`, `FTL-PROD-006` | Sì (`L4`) |
+| [`FTL-TECH-007`](./FTL-TECH-007.json) | **CTO** | Sviluppo Full-Stack PaaS Distrettuale 3 Tier, Vault Lotti Conceria SHA-256 e Matrice Taglie/Sfrido BOM | 🔴 `critical` | ✅ `done` | `FTL-PROD-006`, `FTL-GOV-006` | Sì (`L3`) |
+| [`FTL-TECH-008`](./FTL-TECH-008.json) | **CTO** | 02 Prodotti (PLM & BOM) - Azione Quick Edit | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-TECH-009`](./FTL-TECH-009.json) | **CTO** | 02 Prodotti (PLM & BOM) - Gestione taglie | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-TECH-010`](./FTL-TECH-010.json) | **CTO** | 03 PIM (Catalogo & Feed) - "+ NUOVO MODELLO PIM" | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-TECH-011`](./FTL-TECH-011.json) | **CTO** | 02 Prodotti (PLM & BOM) - Genere Target non disponibile | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 
 ---
 

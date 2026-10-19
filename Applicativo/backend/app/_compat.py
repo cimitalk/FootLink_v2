@@ -30,6 +30,7 @@ except ImportError:
             ge: Optional[float] = None,
             le: Optional[float] = None,
             gt: Optional[float] = None,
+            **kwargs: Any,
         ) -> None:
             self.default = default
             self.default_factory = default_factory
@@ -40,6 +41,7 @@ except ImportError:
             self.ge = ge
             self.le = le
             self.gt = gt
+            self.extra = kwargs
 
     def Field(
         default: Any = ...,
@@ -52,6 +54,7 @@ except ImportError:
         ge: Optional[float] = None,
         le: Optional[float] = None,
         gt: Optional[float] = None,
+        **kwargs: Any,
     ) -> Any:
         return _FieldInfo(
             default=default,
@@ -63,6 +66,7 @@ except ImportError:
             ge=ge,
             le=le,
             gt=gt,
+            **kwargs,
         )
 
     class ValidationError(ValueError):

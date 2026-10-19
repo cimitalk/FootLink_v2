@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-TECH-011",
+  "title": "02 Prodotti (PLM & BOM) - Genere Target non disponibile",
+  "description": "Sembra che in inserimento ed in edit del prodotto non sia gestito il campo Genere Target . Aggiungere anche come filtro della griglia prodotti",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-19T22:12:58+02:00",
+  "updated_at": "2026-10-19T22:31:00+02:00",
+  "completed_at": "2026-10-19T22:31:00+02:00",
+  "due_date": "2026-11-18T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "1.5h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/backend/app/models.py",
+    "Applicativo/frontend/src/types.ts",
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/components/PimCatalogManager.tsx",
+    "Applicativo/frontend/src/App.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": null,
+  "tags": [
+    "product",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Posso associare e modificare il genere di un prodotto.",
+    "Posso utilizzare il filtro nella griglia",
+    "Badge visivi per Genere Target (Donna ♀, Uomo ♂, Unisex ⚥, Bambino 🧒) nella colonna dedicata della tabella PLM."
+  ],
+  "notes": "Risolto: aggiunto campo target_gender nei modelli Pydantic e TypeScript, aggiunto selettore genere in creazione/Quick Edit di PLM e PIM, aggiunta colonna con badge grafici distinti e filtro dropdown dedicato nella toolbar della tabella PLM."
+}

@@ -1,0 +1,35 @@
+{
+  "task_id": "FTL-PROD-008",
+  "title": "06 Anagrafiche di Dominio",
+  "description": "Nuovo Elemento in Scale Taglie Certificate, campo Metadati e Parametri di Settore (JSON o note), non è chiaro come funziona. Gestire meglio la ux.\nCoinvolgere CTO per implementazione",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-19T22:00:24+02:00",
+  "updated_at": "2026-10-19T22:31:00+02:00",
+  "completed_at": "2026-10-19T22:31:00+02:00",
+  "due_date": "2026-11-18T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/DomainRegistriesManager.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": null,
+  "tags": [
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Carico una scala taglia completa e salvo i dati nel db.",
+    "Visual Scale Builder senza alcun JSON manuale con preset Donna/Uomo/Bambino/Abbigliamento/Pelletteria e preview dinamica."
+  ],
+  "notes": "Risolto: implementato Visual Scale Builder zero-JSON sia nel modale di aggiunta che di modifica in DomainRegistriesManager.tsx, con chip visivi in tabella e sincronizzazione DB."
+}

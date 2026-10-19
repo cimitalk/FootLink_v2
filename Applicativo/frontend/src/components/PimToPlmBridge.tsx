@@ -546,6 +546,37 @@ export const PimToPlmBridge: React.FC<PimToPlmBridgeProps> = ({
                         }
                         className="w-full bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
                       />
+                    ) : field.field_type === "boolean" ? (
+                      <label className="flex items-center gap-2 h-[34px] px-2.5 bg-white border border-[#CCCCCC] rounded-xl cursor-pointer hover:border-[#111111] transition">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(pimCustomAttrs[field.field_key] ?? field.default_value ?? false)}
+                          onChange={(e) =>
+                            setPimCustomAttrs({
+                              ...pimCustomAttrs,
+                              [field.field_key]: e.target.checked,
+                            })
+                          }
+                          className="w-4 h-4 rounded border-[#CCCCCC] text-[#111111] focus:ring-0 cursor-pointer accent-[#111111]"
+                        />
+                        <span className="text-xs font-medium text-[#111111]">
+                          {Boolean(pimCustomAttrs[field.field_key] ?? field.default_value ?? false)
+                            ? "Sì (Attivo)"
+                            : "No (Disattivo)"}
+                        </span>
+                      </label>
+                    ) : field.field_type === "date" ? (
+                      <input
+                        type="date"
+                        value={pimCustomAttrs[field.field_key] ?? field.default_value ?? ""}
+                        onChange={(e) =>
+                          setPimCustomAttrs({
+                            ...pimCustomAttrs,
+                            [field.field_key]: e.target.value,
+                          })
+                        }
+                        className="w-full bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
+                      />
                     ) : (
                       <input
                         type="text"
@@ -700,6 +731,37 @@ export const PimToPlmBridge: React.FC<PimToPlmBridgeProps> = ({
                           setPlmCustomAttrs({
                             ...plmCustomAttrs,
                             [field.field_key]: Number(e.target.value),
+                          })
+                        }
+                        className="w-full bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
+                      />
+                    ) : field.field_type === "boolean" ? (
+                      <label className="flex items-center gap-2 h-[34px] px-2.5 bg-white border border-[#CCCCCC] rounded-xl cursor-pointer hover:border-[#111111] transition">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(plmCustomAttrs[field.field_key] ?? field.default_value ?? false)}
+                          onChange={(e) =>
+                            setPlmCustomAttrs({
+                              ...plmCustomAttrs,
+                              [field.field_key]: e.target.checked,
+                            })
+                          }
+                          className="w-4 h-4 rounded border-[#CCCCCC] text-[#111111] focus:ring-0 cursor-pointer accent-[#111111]"
+                        />
+                        <span className="text-xs font-medium text-[#111111]">
+                          {Boolean(plmCustomAttrs[field.field_key] ?? field.default_value ?? false)
+                            ? "Sì (Attivo)"
+                            : "No (Disattivo)"}
+                        </span>
+                      </label>
+                    ) : field.field_type === "date" ? (
+                      <input
+                        type="date"
+                        value={plmCustomAttrs[field.field_key] ?? field.default_value ?? ""}
+                        onChange={(e) =>
+                          setPlmCustomAttrs({
+                            ...plmCustomAttrs,
+                            [field.field_key]: e.target.value,
                           })
                         }
                         className="w-full bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
@@ -874,7 +936,13 @@ export const PimToPlmBridge: React.FC<PimToPlmBridgeProps> = ({
                     return (
                       <div key={k} className="bg-[#F5F5F5] rounded-lg p-2 text-xs">
                         <div className="text-[10px] font-bold text-[#707072] uppercase">{label}</div>
-                        <div className="font-semibold text-[#111111] mt-0.5">{String(v)}</div>
+                        <div className="font-semibold text-[#111111] mt-0.5">
+                          {typeof v === "boolean"
+                            ? v
+                              ? "Sì (Attivo)"
+                              : "No (Disattivo)"
+                            : String(v)}
+                        </div>
                       </div>
                     );
                   })}
@@ -1113,7 +1181,13 @@ export const PimToPlmBridge: React.FC<PimToPlmBridgeProps> = ({
                     <span>{label}</span>
                     <span className="text-[9px] bg-[#10B981]/10 px-1.5 py-0.5 rounded">CUSTOM</span>
                   </div>
-                  <div className="text-xs font-bold text-[#111111] mt-1">{String(v)}</div>
+                  <div className="text-xs font-bold text-[#111111] mt-1">
+                    {typeof v === "boolean"
+                      ? v
+                        ? "Sì (Attivo)"
+                        : "No (Disattivo)"
+                      : String(v)}
+                  </div>
                 </div>
               );
             })}

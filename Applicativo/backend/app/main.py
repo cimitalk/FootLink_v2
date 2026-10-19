@@ -29,27 +29,55 @@ from app.models import (
     AttributeTargetEntity,
     BomHierarchySummary,
     BomItem,
+    BomRequirementsCalculationRequest,
+    BomRequirementsCalculationResult,
+    BomSizeRequirementItem,
     BomTreeNode,
     Collection,
     CollectionCreate,
+    Company,
+    CompanyBusinessType,
+    CompanyCreate,
+    CompanyMembership,
+    CompanyMembershipCreate,
+    CompanyTier,
+    CompanyUpdate,
     DigitalProductPassport,
+    DistrictUserRole,
     DomainRegistryEntry,
     DomainRegistryEntryCreate,
     DomainRegistryEntryUpdate,
+    OrderSizeBreakdownItem,
     PimCommercialItem,
     PimCommercialItemCreate,
     PimDataQualityReport,
     PlmLifecycleStatus,
     PlmProductionVariant,
     PlmProductionVariantCreate,
+    ProductionOrder,
+    ProductionOrderCreate,
+    ProductionOrderPhaseItem,
+    ProductionOrderStatus,
+    ProductionOrderUpdate,
     RegistryDomain,
     SchemaAttributeDefinition,
     SchemaAttributeDefinitionCreate,
     Season,
     SeasonCreate,
     SubcontractorAssignment,
+    SubcontractorPhaseConfirmRequest,
     SubcontractorStepConfirmRequest,
     SubcontractorStepConfirmResponse,
+    TanneryBatch,
+    TanneryBatchCreate,
+    TanneryBatchUpdate,
+    TanneryDocument,
+    TanneryDocumentCreate,
+    TanneryDocumentType,
+    TanneryDocumentVerifyResponse,
+    TanneryProcess,
+    User,
+    UserCreate,
 )
 from app.seed import seed_initial_data
 
@@ -526,6 +554,68 @@ def update_plm_variant_lifecycle(
             else:
                 variant.bom_snapshot_locked = False
                 variant.bom_version = payload.get("bom_version", "v1.1 (Draft)")
+            PIM_STORE[pim_item_id] = item
+            return variant
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PLM Production Variant not found.")
+
+
+@app.patch(
+    "/api/v1/pim-items/{pim_item_id}/plm-variants/{plm_variant_id}",
+    response_model=PlmProductionVariant,
+    tags=["plm"],
+)
+def update_plm_variant_attributes(
+    pim_item_id: str,
+    plm_variant_id: str,
+    payload: Dict[str, Any],
+) -> PlmProductionVariant:
+    """Update technical and commercial attributes of a PLM Variant and its parent PIM item (Quick Edit)."""
+    item = PIM_STORE.get(pim_item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PIM Commercial Item not found.")
+
+    # Update parent PIM attributes if provided
+    if "model_name" in payload and payload["model_name"]:
+        item.model_name = str(payload["model_name"])
+    if "sku_code" in payload and payload["sku_code"]:
+        item.sku_code = str(payload["sku_code"]).upper()
+    if "category" in payload and payload["category"]:
+        try:
+            item.category = ProductCategory(str(payload["category"]))
+        except ValueError:
+            pass
+    if "target_gender" in payload and payload["target_gender"]:
+        item.target_gender = str(payload["target_gender"]).lower()
+    if "season_id" in payload and payload["season_id"]:
+        item.season_id = str(payload["season_id"])
+    if "collection_id" in payload:
+        item.collection_id = payload["collection_id"]
+
+    for variant in item.plm_variants:
+        if variant.plm_variant_id == plm_variant_id:
+            if "variant_code" in payload and payload["variant_code"]:
+                variant.variant_code = str(payload["variant_code"]).upper()
+            if "colorway_name" in payload and payload["colorway_name"]:
+                variant.colorway_name = str(payload["colorway_name"])
+            if "last_or_pattern_code" in payload and payload["last_or_pattern_code"]:
+                variant.last_or_pattern_code = str(payload["last_or_pattern_code"])
+            if "size_range" in payload and payload["size_range"]:
+                variant.size_range = str(payload["size_range"])
+            if "sample_base_size" in payload and payload["sample_base_size"]:
+                variant.sample_base_size = str(payload["sample_base_size"])
+            if "size_grading_step_pct" in payload and payload["size_grading_step_pct"] is not None:
+                variant.size_grading_step_pct = float(payload["size_grading_step_pct"])
+            if "target_gender" in payload and payload["target_gender"]:
+                variant.target_gender = str(payload["target_gender"]).lower()
+            if "lifecycle_status" in payload and payload["lifecycle_status"]:
+                try:
+                    variant.lifecycle_status = PlmLifecycleStatus(str(payload["lifecycle_status"]))
+                except ValueError:
+                    pass
+            if "custom_attributes" in payload and isinstance(payload["custom_attributes"], dict):
+                variant.custom_attributes.update(payload["custom_attributes"])
+
             PIM_STORE[pim_item_id] = item
             return variant
 
@@ -1354,7 +1444,7 @@ def list_products_in_collection(season_id: str, collection_id: str) -> List[PimC
     tags=["registries"],
 )
 def list_domain_registries_summary() -> Dict[str, Any]:
-    """List all available master data registries across PIM and PLM with their entry counts."""
+    """List all available master data registries across PIM and PLM with their entry counts and all entries."""
     all_entries = db_manager.list_registry_entries()
     pim_names = {e.registry_name for e in all_entries if e.registry_domain == RegistryDomain.PIM or e.registry_domain == "pim"}
     plm_names = {e.registry_name for e in all_entries if e.registry_domain == RegistryDomain.PLM or e.registry_domain == "plm"}
@@ -1375,7 +1465,29 @@ def list_domain_registries_summary() -> Dict[str, Any]:
             for name in sorted(plm_names)
         ],
         "total_entries": len(all_entries),
+        "entries": all_entries,
     }
+
+
+@app.get(
+    "/api/v1/registries/entries",
+    response_model=List[DomainRegistryEntry],
+    tags=["registries"],
+)
+def list_all_domain_registry_entries(only_active: bool = False) -> List[DomainRegistryEntry]:
+    """Return all domain registry entries as a flat list."""
+    return db_manager.list_registry_entries(only_active=only_active)
+
+
+@app.post(
+    "/api/v1/registries",
+    response_model=DomainRegistryEntry,
+    status_code=status.HTTP_201_CREATED,
+    tags=["registries"],
+)
+def create_registry_entry_direct(payload: DomainRegistryEntryCreate) -> DomainRegistryEntry:
+    """Create a new domain registry entry directly from payload."""
+    return db_manager.save_registry_entry(payload)
 
 
 @app.get(
@@ -1569,4 +1681,465 @@ def delete_attribute_definition(target_entity: str, field_key: str) -> Dict[str,
         )
     ok = db_manager.delete_attribute_definition(tgt, field_key)
     return {"status": "deleted", "target_entity": tgt, "field_key": field_key}
+
+
+# ============================================================================
+# SPRINT 6: District PaaS (Companies & Users) API - ADR-008
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/companies",
+    response_model=List[Company],
+    tags=["companies", "paas"],
+)
+def list_companies(
+    tier: Optional[str] = None,
+    only_active: bool = False,
+) -> List[Company]:
+    """List district companies across the 3 tiers (Enterprise, PMI, Subcontractor 0 EUR)."""
+    return db_manager.list_companies(tier=tier, only_active=only_active)
+
+
+@app.get(
+    "/api/v1/companies/{company_id}",
+    response_model=Company,
+    tags=["companies", "paas"],
+)
+def get_company(company_id: str) -> Company:
+    """Get company profile and district membership tier."""
+    comp = db_manager.get_company(company_id)
+    if not comp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Company '{company_id}' not found.")
+    return comp
+
+
+@app.post(
+    "/api/v1/companies",
+    response_model=Company,
+    status_code=status.HTTP_201_CREATED,
+    tags=["companies", "paas"],
+)
+def create_company(payload: CompanyCreate) -> Company:
+    """Register and activate a new company in the District PaaS network."""
+    return db_manager.save_company(payload)
+
+
+@app.get(
+    "/api/v1/users",
+    response_model=List[User],
+    tags=["users", "paas"],
+)
+def list_users() -> List[User]:
+    """List all registered district users."""
+    return db_manager.list_users()
+
+
+@app.get(
+    "/api/v1/users/{user_id}",
+    response_model=User,
+    tags=["users", "paas"],
+)
+def get_user(user_id: str) -> User:
+    """Get user profile."""
+    usr = db_manager.get_user(user_id)
+    if not usr:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User '{user_id}' not found.")
+    return usr
+
+
+@app.post(
+    "/api/v1/users",
+    response_model=User,
+    status_code=status.HTTP_201_CREATED,
+    tags=["users", "paas"],
+)
+def create_user(payload: UserCreate) -> User:
+    """Create a user profile."""
+    return db_manager.save_user(payload)
+
+
+@app.get(
+    "/api/v1/companies/{company_id}/members",
+    response_model=List[CompanyMembership],
+    tags=["companies", "paas"],
+)
+def list_company_members(company_id: str) -> List[CompanyMembership]:
+    """List all members and roles for a specific company."""
+    return db_manager.list_memberships(company_id=company_id)
+
+
+@app.post(
+    "/api/v1/companies/{company_id}/members",
+    response_model=CompanyMembership,
+    status_code=status.HTTP_201_CREATED,
+    tags=["companies", "paas"],
+)
+def add_company_member(company_id: str, payload: CompanyMembershipCreate) -> CompanyMembership:
+    """Add or invite a user into a company."""
+    payload.company_id = company_id
+    return db_manager.save_membership(payload)
+
+
+# ============================================================================
+# SPRINT 6: Tannery Leather Batches & Document Vault (FTL-CEO-006)
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/tannery-batches",
+    response_model=List[TanneryBatch],
+    tags=["tannery", "traceability"],
+)
+def list_tannery_batches(
+    company_id: Optional[str] = None,
+    only_active: bool = False,
+) -> List[TanneryBatch]:
+    """List certified tannery leather batches with LWG/ICEC metrics and uploaded documents."""
+    return db_manager.list_tannery_batches(company_id=company_id, only_active=only_active)
+
+
+@app.get(
+    "/api/v1/tannery-batches/{batch_id}",
+    response_model=TanneryBatch,
+    tags=["tannery", "traceability"],
+)
+def get_tannery_batch(batch_id: str) -> TanneryBatch:
+    """Get single tannery batch details and verified document vault."""
+    batch = db_manager.get_tannery_batch(batch_id)
+    if not batch:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tannery Batch '{batch_id}' not found.")
+    return batch
+
+
+@app.post(
+    "/api/v1/tannery-batches",
+    response_model=TanneryBatch,
+    status_code=status.HTTP_201_CREATED,
+    tags=["tannery", "traceability"],
+)
+def create_tannery_batch(payload: TanneryBatchCreate) -> TanneryBatch:
+    """Register a new certified leather batch from a tannery with EUDR & LWG compliance data."""
+    return db_manager.save_tannery_batch(payload)
+
+
+@app.get(
+    "/api/v1/tannery-batches/{batch_id}/documents",
+    response_model=List[TanneryDocument],
+    tags=["tannery", "traceability"],
+)
+def list_tannery_documents(batch_id: str) -> List[TanneryDocument]:
+    """List all certificates and documents uploaded for a specific tannery batch."""
+    return db_manager.list_tannery_documents(batch_id)
+
+
+@app.post(
+    "/api/v1/tannery-batches/{batch_id}/documents",
+    response_model=TanneryDocument,
+    status_code=status.HTTP_201_CREATED,
+    tags=["tannery", "traceability"],
+)
+def upload_tannery_document(batch_id: str, payload: TanneryDocumentCreate) -> TanneryDocument:
+    """Upload a certificate (LWG, ICEC, REACH) to the batch document vault, calculating its SHA-256 fingerprint."""
+    batch = db_manager.get_tannery_batch(batch_id)
+    if not batch:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tannery Batch '{batch_id}' not found.")
+    return db_manager.save_tannery_document(batch_id, payload)
+
+
+@app.get(
+    "/api/v1/tannery-documents/{document_id}/verify",
+    response_model=TanneryDocumentVerifyResponse,
+    tags=["tannery", "traceability"],
+)
+@app.get(
+    "/api/v1/tannery-batches/{batch_id}/documents/{document_id}/verify",
+    response_model=TanneryDocumentVerifyResponse,
+    tags=["tannery", "traceability"],
+)
+def verify_tannery_document(document_id: str, batch_id: Optional[str] = None) -> TanneryDocumentVerifyResponse:
+    """Cryptographic tamper-detection verification: recomputes SHA-256 hash on stored payload and verifies integrity."""
+    res = db_manager.verify_tannery_document(document_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Document '{document_id}' not found.")
+    return res
+
+
+# ============================================================================
+# SPRINT 6: Production Orders Hub, Size Breakdown Matrix & BOM Wastage
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/production-orders",
+    response_model=List[ProductionOrder],
+    tags=["production_orders"],
+)
+def list_production_orders(
+    company_id: Optional[str] = None,
+    status: Optional[str] = None,
+    plm_variant_id: Optional[str] = None,
+) -> List[ProductionOrder]:
+    """List production work orders with their size breakdown matrix and subcontractor phases."""
+    return db_manager.list_production_orders(company_id=company_id, status=status, plm_variant_id=plm_variant_id)
+
+
+@app.get(
+    "/api/v1/production-orders/{order_id}",
+    response_model=ProductionOrder,
+    tags=["production_orders"],
+)
+def get_production_order(order_id: str) -> ProductionOrder:
+    """Get single production order details."""
+    order = db_manager.get_production_order(order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Production Order '{order_id}' not found.")
+    return order
+
+
+@app.post(
+    "/api/v1/production-orders",
+    response_model=ProductionOrder,
+    status_code=status.HTTP_201_CREATED,
+    tags=["production_orders"],
+)
+def create_production_order(payload: ProductionOrderCreate) -> ProductionOrder:
+    """Launch a new production order linked to a PLM variant, tannery batch, and size breakdown matrix."""
+    return db_manager.save_production_order(payload)
+
+
+@app.post(
+    "/api/v1/production-orders/calculate-requirements",
+    response_model=BomRequirementsCalculationResult,
+    tags=["production_orders", "bom"],
+)
+def calculate_bom_size_requirements(payload: BomRequirementsCalculationRequest) -> BomRequirementsCalculationResult:
+    """Calculate exact gross material requirements across all BOM components based on size matrix and wastage."""
+    return db_manager.calculate_bom_requirements(payload)
+
+
+@app.get(
+    "/api/v1/subcontractors/phases/{magic_token}",
+    tags=["subcontractors", "mobile"],
+)
+def get_subcontractor_phase_by_token(magic_token: str) -> Dict[str, Any]:
+    """Public read-only endpoint for 0 EUR subcontractor mobile portal (accessed via magic link QR)."""
+    all_orders = db_manager.list_production_orders()
+    for o in all_orders:
+        for p in o.phases:
+            if p.magic_token == magic_token:
+                p_dict = p.model_dump() if hasattr(p, "model_dump") else (p.dict() if hasattr(p, "dict") else dict(p))
+                res = {
+                    "order_id": o.order_id,
+                    "order_code": o.order_code,
+                    "variant_code": o.variant_code,
+                    "model_name": o.model_name,
+                    "target_delivery_date": o.target_delivery_date,
+                    "size_breakdown": o.size_breakdown,
+                    "phase": p,
+                }
+                res.update(p_dict)
+                return res
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Magic token not found or expired.")
+
+
+@app.post(
+    "/api/v1/subcontractors/phases/{magic_token}/confirm",
+    response_model=ProductionOrderPhaseItem,
+    tags=["subcontractors", "mobile"],
+)
+def confirm_subcontractor_phase(magic_token: str, payload: SubcontractorPhaseConfirmRequest) -> ProductionOrderPhaseItem:
+    """3-clic mobile phase confirmation from subcontractor smartphone: updates conform/scrap pieces at 0 EUR."""
+    phase = db_manager.confirm_phase_by_token(magic_token, payload)
+    if not phase:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Magic token not found or phase could not be confirmed.")
+    return phase
+
+
+# =============================================================================
+# Sprint 6 Additions: Tannery Template & Import (FTL-CEO-012), Feeds & PLM Export
+# =============================================================================
+
+@app.get(
+    "/api/v1/tannery-batches/template/download",
+    tags=["tannery", "batches"],
+)
+def download_tannery_batches_template() -> Response:
+    """Download standardized CSV template for batch leather onboarding (FTL-CEO-012)."""
+    headers = [
+        "batch_code",
+        "tannery_name",
+        "district",
+        "leather_type",
+        "tanning_process",
+        "raw_hide_origin_country",
+        "slaughterhouse_traceability_id",
+        "eudr_deforestation_free",
+        "lwg_rating",
+        "lwg_score_pct",
+        "icec_certificate_id",
+        "reach_svhc_compliant",
+        "chrome_vi_content_ppm",
+        "thickness_mm",
+        "available_qty_sqft",
+    ]
+    sample_row = [
+        "LOTTO-2026-CHEVRO-01",
+        "Conceria Montebello SpA",
+        "Arzignano (VI)",
+        "Vitello Pieno Fiore Semi-Anilina",
+        "vegetable_tanned",
+        "FR",
+        "IT-BRESCIA-SLAUGHTER-901",
+        "true",
+        "Gold",
+        "94.5",
+        "ICEC-TS-410-VET-2026",
+        "true",
+        "0.0",
+        "1.2 - 1.4 mm",
+        "4500.0",
+    ]
+    csv_content = ",".join(headers) + "\n" + ",".join(sample_row) + "\n"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="template_lotti_conceria_footlink.csv"'},
+    )
+
+
+@app.post(
+    "/api/v1/tannery-batches/import",
+    tags=["tannery", "batches"],
+)
+def import_tannery_batches(payload: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Massive import of tannery leather batches from validated spreadsheet data (FTL-CEO-012)."""
+    imported = []
+    errors = []
+    for idx, item in enumerate(payload):
+        try:
+            batch_in = TanneryBatchCreate(
+                company_id=item.get("company_id", "comp-pmi-montebello"),
+                batch_code=item.get("batch_code", f"LOTTO-IMP-{uuid4().hex[:6].upper()}"),
+                tannery_name=item.get("tannery_name", "Conceria Partner"),
+                district=item.get("district", "Distretto Conciario"),
+                leather_type=item.get("leather_type", "Pellame Pregiato"),
+                tanning_process=item.get("tanning_process", "vegetable_tanned"),
+                raw_hide_origin_country=item.get("raw_hide_origin_country", "IT"),
+                slaughterhouse_traceability_id=item.get("slaughterhouse_traceability_id", "IT-TRACE-DEFAULT"),
+                eudr_deforestation_free=bool(item.get("eudr_deforestation_free", True)),
+                lwg_rating=item.get("lwg_rating", "Gold"),
+                lwg_score_pct=float(item.get("lwg_score_pct", 92.0)),
+                icec_certificate_id=item.get("icec_certificate_id", "ICEC-DEFAULT"),
+                reach_svhc_compliant=bool(item.get("reach_svhc_compliant", True)),
+                chrome_vi_content_ppm=float(item.get("chrome_vi_content_ppm", 0.0)),
+                thickness_mm=str(item.get("thickness_mm", "1.2 - 1.4 mm")),
+                available_qty_sqft=float(item.get("available_qty_sqft", 1000.0)),
+                metadata=item.get("metadata", {}),
+            )
+            created = db_manager.create_tannery_batch(batch_in)
+            imported.append(created)
+        except Exception as exc:
+            errors.append({"row_index": idx, "error": str(exc)})
+
+    return {
+        "status": "success",
+        "total_rows": len(payload),
+        "imported_count": len(imported),
+        "errors_count": len(errors),
+        "batches": imported,
+        "errors": errors,
+    }
+
+
+@app.get(
+    "/api/v1/pim-items/feed/shopify",
+    tags=["pim", "feeds"],
+)
+def get_shopify_catalog_feed() -> Dict[str, Any]:
+    """Live Shopify Product Feed (JSON) for omnichannel e-commerce syndication (FTL-CEO-010)."""
+    items = db_manager.list_pim_items()
+    shopify_products = []
+    for item in items:
+        variants = []
+        for v in item.plm_variants:
+            variants.append(
+                {
+                    "sku": v.variant_code,
+                    "title": f"{item.model_name} - {v.colorway_name}",
+                    "price": str(item.retail_price_eur),
+                    "compare_at_price": str(round(item.retail_price_eur * 1.2, 2)),
+                    "barcode": item.barcode_ean13,
+                    "inventory_management": "footlink_os",
+                    "requires_shipping": True,
+                    "taxable": True,
+                }
+            )
+        shopify_products.append(
+            {
+                "id": item.pim_item_id,
+                "title": item.model_name,
+                "body_html": f"<p>{item.marketing_description_it}</p>",
+                "vendor": "Footlink District",
+                "product_type": item.category.capitalize(),
+                "tags": f"season:{item.season}, espr:dpp_compliant, lwg:gold",
+                "variants": variants,
+                "options": [{"name": "Colore", "values": [v.colorway_name for v in item.plm_variants]}],
+                "metafields": [
+                    {"key": "dpp_uri", "value": f"https://dpp.footlink.it/passport/{item.pim_item_id}", "type": "url"},
+                    {"key": "hs_customs_code", "value": item.hs_customs_code, "type": "string"},
+                ],
+            }
+        )
+    return {"products": shopify_products, "synced_at": datetime.now(timezone.utc).isoformat()}
+
+
+@app.get(
+    "/api/v1/pim-items/feed/b2b",
+    tags=["pim", "feeds"],
+)
+def get_b2b_wholesale_feed() -> Dict[str, Any]:
+    """B2B Wholesale Line Sheet Feed (NuORDER / JOOR format) with L6 cost segregation (FTL-CEO-010)."""
+    items = db_manager.list_pim_items()
+    lines = []
+    for item in items:
+        lines.append(
+            {
+                "style_number": item.commercial_sku,
+                "style_name": item.model_name,
+                "season": item.season,
+                "category": item.category,
+                "wholesale_eur": item.wholesale_price_eur,
+                "suggested_retail_eur": item.retail_price_eur,
+                "moq_pairs": 12,
+                "colorways": [v.colorway_name for v in item.plm_variants],
+                "size_run": item.plm_variants[0].size_range if item.plm_variants else "EU 39-44",
+                "made_in": "Italy",
+                "l6_segregated_internal_cost": "[PROTECTED_L6]",
+            }
+        )
+    return {"b2b_line_sheet": lines, "currency": "EUR", "generated_at": datetime.now(timezone.utc).isoformat()}
+
+
+@app.get(
+    "/api/v1/plm-variants/export",
+    tags=["plm", "export"],
+)
+def export_plm_variants_csv() -> Response:
+    """Export tabular PLM production variants as CSV for technical factory sheets (FTL-CEO-009)."""
+    items = db_manager.list_pim_items()
+    rows = [
+        "plm_variant_id,variant_code,model_name,category,colorway_name,lifecycle_status,size_range,bom_items_count"
+    ]
+    for item in items:
+        for v in item.plm_variants:
+            rows.append(
+                f'"{v.plm_variant_id}","{v.variant_code}","{item.model_name}","{item.category}","{v.colorway_name}","{v.lifecycle_status}","{v.size_range}",{len(v.bom_items)}'
+            )
+    return Response(
+        content="\n".join(rows) + "\n",
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="footlink_plm_variants_export.csv"'},
+    )
+
 

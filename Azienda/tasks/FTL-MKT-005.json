@@ -1,17 +1,17 @@
 {
   "task_id": "FTL-MKT-005",
-  "title": "Posizionamento e Comunicazione DPP Conceria & Tracciabilità di Filiera (Storytelling ESPR / LWG / ICEC)",
-  "description": "Elaborare la strategia di comunicazione e posizionamento di marketing per il modulo Tracciabilità Conceria e Commesse di Produzione: redazione dei messaggi chiave su sostenibilità e passaporto digitale DPP (Reg. UE ESPR 2024/1781), copy per la vista consumatore ad alto impatto visivo (Design System v2.0) e dossier per il Founder su post LinkedIn dedicati all'eccellenza conciaria Made in Italy.",
-  "status": "todo",
+  "title": "Posizionamento PaaS Distrettuale & Storytelling Tracciabilità Conceria EUDR/LWG",
+  "description": "Elaborare la strategia di comunicazione, posizionamento e marketing per il lancio della PaaS Distrettuale di Footlink e del modulo Tracciabilità Conceria: redazione del messaging di filiera per i tre cluster (Maison Enterprise, PMI manifatturiere e Laboratori façonisti a 0 €), micro-copy per la doppia vista DPP (Consumatore B2C vs Dogane L6), e redazione del dossier per il Founder con 2 post LinkedIn ufficiali dedicati all'eccellenza manifatturiera dei distretti calzaturieri Made in Italy.",
+  "status": "done",
   "priority": "high",
   "assignee_role": "CMO",
   "assignee_agent": "footlink-cmo",
   "created_by": "CEO",
   "created_at": "2026-10-19T17:00:00+02:00",
-  "updated_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T18:40:00+02:00",
   "due_date": "2026-11-25T23:59:59+02:00",
   "estimated_effort": "S (2-8h)",
-  "actual_effort": null,
+  "actual_effort": "S (2-8h)",
   "dependencies": [
     "FTL-CEO-008",
     "FTL-PROD-006"
@@ -21,17 +21,17 @@
     "Azienda/docs/marketing/sprint-6-leather-traceability-marketing-positioning.md"
   ],
   "requires_escalation": true,
-  "escalation_reason": "Linee guida di comunicazione pubblica e copy per passaporto di filiera calzaturiera e post ufficiali",
+  "escalation_reason": "Linee guida di comunicazione pubblica, copy doppia vista DPP e post LinkedIn ufficiali per approvazione Founder (Gate L5)",
   "escalation_level": "L5",
   "decision_record_id": "ADR-008",
   "tags": [
     "marketing"
   ],
   "acceptance_criteria": [
-    "Guida di storytelling sulla tracciabilità del pellame dal grezzo al prodotto finito",
-    "Micro-copy per i 4 quadranti di sostenibilità del Passaporto Digitale DPP (LWG, Metal-Free, Distretto)",
-    "Dossier piano editoriale con 2 post LinkedIn ufficiali per approvazione Founder (Gate L5)",
-    "Allineamento del tono di voce con il Design System editoriale Nike-inspired"
+    "Storytelling e value proposition differenziata per i 3 Tier PaaS: Enterprise (compliance/ESG), PMI (efficienza/fabbisogni), Façonisti (zero costi/zero complessità)",
+    "Micro-copy e visual design narrativo per i quadranti di sostenibilità del Passaporto Digitale DPP B2C (LWG, Concia vegetale, Tracciabilità grezzo)",
+    "Dossier editoriale con 2 post LinkedIn ufficiali per il profilo aziendale Footlink, sottomessi ad approvazione Founder (Gate L5)",
+    "Campagna di sensibilizzazione distrettuale B2B (Fermo-Macerata, Santa Croce, Arzignano)"
   ],
-  "notes": "Storytelling B2B ed editoriale per valorizzare l'artigianalità e la sostenibilità normativa."
+  "notes": "Storytelling B2B ed editoriale per valorizzare l'ecosistema distrettuale e la sostenibilità normativa."
 }

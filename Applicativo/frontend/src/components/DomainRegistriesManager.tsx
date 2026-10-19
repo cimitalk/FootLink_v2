@@ -69,6 +69,87 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
   const [editIsActive, setEditIsActive] = useState(true);
   const [editMetaExtra, setEditMetaExtra] = useState("");
 
+  // Size Scales Visual Builder State (FTL-PROD-008)
+  const [scaleCategory, setScaleCategory] = useState<string>("shoes_woman");
+  const [scaleMin, setScaleMin] = useState<number>(35);
+  const [scaleMax, setScaleMax] = useState<number>(42);
+  const [scaleBase, setScaleBase] = useState<number>(37);
+  const [scaleCustomSizes, setScaleCustomSizes] = useState<string>("35, 36, 37, 38, 39, 40, 41, 42");
+
+  const [editScaleCategory, setEditScaleCategory] = useState<string>("shoes_woman");
+  const [editScaleMin, setEditScaleMin] = useState<number>(35);
+  const [editScaleMax, setEditScaleMax] = useState<number>(42);
+  const [editScaleBase, setEditScaleBase] = useState<number>(37);
+  const [editScaleCustomSizes, setEditScaleCustomSizes] = useState<string>("35, 36, 37, 38, 39, 40, 41, 42");
+
+  const applyScalePreset = (preset: "woman" | "man" | "kid" | "apparel" | "leather", isEdit = false) => {
+    let cat = "shoes_woman";
+    let min = 35;
+    let max = 42;
+    let base = 37;
+    let sizes = "35, 36, 37, 38, 39, 40, 41, 42";
+    let code = "eu_shoes_woman_cert";
+    let it = "Calzature Donna EU 35-42";
+    let en = "Women Shoes EU 35-42";
+
+    if (preset === "man") {
+      cat = "shoes_man";
+      min = 38;
+      max = 46;
+      base = 42;
+      sizes = "38, 39, 40, 41, 42, 43, 44, 45, 46";
+      code = "eu_shoes_man_cert";
+      it = "Calzature Uomo EU 38-46";
+      en = "Men Shoes EU 38-46";
+    } else if (preset === "apparel") {
+      cat = "apparel";
+      min = 44;
+      max = 56;
+      base = 48;
+      sizes = "44, 46, 48, 50, 52, 54, 56";
+      code = "it_apparel_cert";
+      it = "Abbigliamento IT 44-56";
+      en = "Italian Apparel 44-56";
+    } else if (preset === "kid") {
+      cat = "shoes_kid";
+      min = 24;
+      max = 34;
+      base = 28;
+      sizes = "24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34";
+      code = "eu_shoes_kid_cert";
+      it = "Calzature Bambino EU 24-34";
+      en = "Kids Shoes EU 24-34";
+    } else if (preset === "leather") {
+      cat = "leather_goods";
+      min = 1;
+      max = 1;
+      base = 1;
+      sizes = "TU";
+      code = "leather_tu_cert";
+      it = "Pelletteria Taglia Unica (TU)";
+      en = "Leather Goods One Size (OS)";
+    }
+
+    if (isEdit) {
+      setEditScaleCategory(cat);
+      setEditScaleMin(min);
+      setEditScaleMax(max);
+      setEditScaleBase(base);
+      setEditScaleCustomSizes(sizes);
+      setEditLabelIt(it);
+      setEditLabelEn(en);
+    } else {
+      setScaleCategory(cat);
+      setScaleMin(min);
+      setScaleMax(max);
+      setScaleBase(base);
+      setScaleCustomSizes(sizes);
+      setEntryCode(code);
+      setLabelIt(it);
+      setLabelEn(en);
+    }
+  };
+
   const currentConfigs = activeDomain === "pim" ? PIM_REGISTRY_CONFIG : PLM_REGISTRY_CONFIG;
   const currentConfig =
     currentConfigs.find((c) => c.name === selectedRegistryName) || currentConfigs[0];
@@ -84,7 +165,20 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
     if (!entryCode.trim() || !labelIt.trim()) return;
 
     let parsedMeta: Record<string, any> = {};
-    if (metaExtra.trim()) {
+    if (selectedRegistryName === "size_scales") {
+      const sizeList = scaleCustomSizes
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      parsedMeta = {
+        category: scaleCategory,
+        min: Number(scaleMin) || 35,
+        max: Number(scaleMax) || 42,
+        base: Number(scaleBase) || 37,
+        sizes: sizeList.length > 0 ? sizeList : ["35", "36", "37", "38", "39", "40", "41", "42"],
+        grading_delta_pct: scaleCategory === "apparel" ? 3.4 : 2.8,
+      };
+    } else if (metaExtra.trim()) {
       try {
         parsedMeta = JSON.parse(metaExtra);
       } catch {
@@ -116,6 +210,17 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
     setEditLabelEn(entry.label_en || "");
     setEditSortOrder(entry.sort_order ?? 1);
     setEditIsActive(entry.is_active ?? true);
+    if (entry.registry_name === "size_scales" && entry.metadata) {
+      setEditScaleCategory(entry.metadata.category || "shoes_woman");
+      setEditScaleMin(entry.metadata.min ?? 35);
+      setEditScaleMax(entry.metadata.max ?? 42);
+      setEditScaleBase(entry.metadata.base ?? 37);
+      if (Array.isArray(entry.metadata.sizes)) {
+        setEditScaleCustomSizes(entry.metadata.sizes.join(", "));
+      } else {
+        setEditScaleCustomSizes("35, 36, 37, 38, 39, 40, 41, 42");
+      }
+    }
     setEditMetaExtra(
       entry.metadata && Object.keys(entry.metadata).length > 0
         ? JSON.stringify(entry.metadata, null, 2)
@@ -128,7 +233,20 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
     if (!editingEntry || !editLabelIt.trim() || !onUpdateEntry) return;
 
     let parsedMeta: Record<string, any> = {};
-    if (editMetaExtra.trim()) {
+    if (editingEntry.registry_name === "size_scales") {
+      const sizeList = editScaleCustomSizes
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      parsedMeta = {
+        category: editScaleCategory,
+        min: Number(editScaleMin) || 35,
+        max: Number(editScaleMax) || 42,
+        base: Number(editScaleBase) || 37,
+        sizes: sizeList,
+        grading_delta_pct: editScaleCategory === "apparel" ? 3.4 : 2.8,
+      };
+    } else if (editMetaExtra.trim()) {
       try {
         parsedMeta = JSON.parse(editMetaExtra);
       } catch {
@@ -329,7 +447,36 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
                           {item.label_en}
                         </td>
                         <td className="py-3 px-3">
-                          {item.metadata && Object.keys(item.metadata).length > 0 ? (
+                          {selectedRegistryName === "size_scales" && item.metadata ? (
+                            <div className="space-y-1 max-w-sm">
+                              <div className="flex flex-wrap gap-1">
+                                {(Array.isArray(item.metadata.sizes)
+                                  ? item.metadata.sizes
+                                  : (item.metadata?.min !== undefined && item.metadata?.max !== undefined)
+                                  ? Array.from(
+                                      { length: item.metadata.max - item.metadata.min + 1 },
+                                      (_, i) => (item.metadata?.min ?? 0) + i
+                                    )
+                                  : []
+                                ).map((sz: any) => (
+                                  <span
+                                    key={String(sz)}
+                                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                                      String(sz) === String(item.metadata?.base) || String(sz).includes(` ${item.metadata?.base}`)
+                                        ? "bg-emerald-500 text-white shadow-xs"
+                                        : "bg-white border border-[#CCCCCC] text-[#111111]"
+                                    }`}
+                                  >
+                                    {String(sz)}
+                                    {String(sz) === String(item.metadata?.base) ? " (Base)" : ""}
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="text-[10px] text-[#707072]">
+                                Base Campione: <strong className="text-[#111111]">{item.metadata.base ?? "42"}</strong> · Step BOM: <strong className="text-[#111111]">+{item.metadata.grading_delta_pct ?? 2.8}%</strong>
+                              </div>
+                            </div>
+                          ) : item.metadata && Object.keys(item.metadata).length > 0 ? (
                             <div className="flex flex-wrap gap-1 max-w-xs">
                               {Object.entries(item.metadata).map(([k, v]) => (
                                 <span
@@ -446,18 +593,147 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
                 />
               </div>
 
-              <div>
-                <label className="font-bold text-[#111111] block mb-1">
-                  Metadati Aggiuntivi (JSON o note)
-                </label>
-                <textarea
-                  rows={2}
-                  value={metaExtra}
-                  onChange={(e) => setMetaExtra(e.target.value)}
-                  placeholder='es. {"district": "Fermo", "rating": "A+"} oppure note di testo'
-                  className="w-full p-2.5 rounded-lg border border-[#E5E5E5] text-xs font-mono focus:outline-none focus:border-[#111111]"
-                />
-              </div>
+              {selectedRegistryName === "size_scales" ? (
+                <div className="bg-[#F9F9F9] border border-[#CCCCCC] rounded-xl p-3.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#111111] uppercase tracking-wider">
+                      📐 Configuratore Visuale Scala Taglie Certificate
+                    </span>
+                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">
+                      Zero JSON
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-[#707072] uppercase block mb-1">
+                      Template &amp; Preset Rapidi di Settore
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => applyScalePreset("woman")}
+                        className="px-2.5 py-1 rounded-full bg-white border border-[#CCCCCC] text-[11px] font-bold hover:bg-black hover:text-white transition"
+                      >
+                        👠 Donna EU (35-42)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyScalePreset("man")}
+                        className="px-2.5 py-1 rounded-full bg-white border border-[#CCCCCC] text-[11px] font-bold hover:bg-black hover:text-white transition"
+                      >
+                        👞 Uomo EU (38-46)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyScalePreset("apparel")}
+                        className="px-2.5 py-1 rounded-full bg-white border border-[#CCCCCC] text-[11px] font-bold hover:bg-black hover:text-white transition"
+                      >
+                        🧥 Abbigliamento IT (44-56)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyScalePreset("leather")}
+                        className="px-2.5 py-1 rounded-full bg-white border border-[#CCCCCC] text-[11px] font-bold hover:bg-black hover:text-white transition"
+                      >
+                        👜 Pelletteria (TU)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyScalePreset("kid")}
+                        className="px-2.5 py-1 rounded-full bg-white border border-[#CCCCCC] text-[11px] font-bold hover:bg-black hover:text-white transition"
+                      >
+                        🧒 Bambino EU (24-34)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                        Taglia Min
+                      </label>
+                      <input
+                        type="number"
+                        value={scaleMin}
+                        onChange={(e) => setScaleMin(Number(e.target.value))}
+                        className="w-full bg-white border border-[#CCCCCC] rounded-lg p-1.5 text-xs font-mono font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                        Taglia Max
+                      </label>
+                      <input
+                        type="number"
+                        value={scaleMax}
+                        onChange={(e) => setScaleMax(Number(e.target.value))}
+                        className="w-full bg-white border border-[#CCCCCC] rounded-lg p-1.5 text-xs font-mono font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                        Base Campione
+                      </label>
+                      <input
+                        type="number"
+                        value={scaleBase}
+                        onChange={(e) => setScaleBase(Number(e.target.value))}
+                        className="w-full bg-white border border-[#CCCCCC] rounded-lg p-1.5 text-xs font-mono font-bold text-center"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                      Elenco Taglie Incluse (separate da virgola)
+                    </label>
+                    <input
+                      type="text"
+                      value={scaleCustomSizes}
+                      onChange={(e) => setScaleCustomSizes(e.target.value)}
+                      placeholder="es. 38, 39, 40, 41, 42, 43, 44, 45, 46"
+                      className="w-full bg-white border border-[#CCCCCC] rounded-lg p-2 text-xs font-mono font-semibold"
+                    />
+                  </div>
+
+                  <div className="pt-1">
+                    <span className="text-[10px] font-bold text-[#707072] uppercase block mb-1">
+                      Anteprima Taglie Certificate:
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {scaleCustomSizes
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                        .map((s) => (
+                          <span
+                            key={s}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                              s === String(scaleBase)
+                                ? "bg-emerald-500 text-white"
+                                : "bg-white border border-[#CCCCCC] text-[#111111]"
+                            }`}
+                          >
+                            {s} {s === String(scaleBase) ? "(Base)" : ""}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="font-bold text-[#111111] block mb-1">
+                    Metadati Aggiuntivi (JSON o note)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={metaExtra}
+                    onChange={(e) => setMetaExtra(e.target.value)}
+                    placeholder='es. {"district": "Fermo", "rating": "A+"} oppure note di testo'
+                    className="w-full p-2.5 rounded-lg border border-[#E5E5E5] text-xs font-mono focus:outline-none focus:border-[#111111]"
+                  />
+                </div>
+              )}
 
               <div className="flex justify-end gap-2 pt-2 border-t border-[#E5E5E5]">
                 <button
@@ -574,18 +850,140 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
                 </div>
               </div>
 
-              <div>
-                <label className="font-bold text-[#111111] block mb-1">
-                  Metadati e Parametri di Settore (JSON o note)
-                </label>
-                <textarea
-                  rows={3}
-                  value={editMetaExtra}
-                  onChange={(e) => setEditMetaExtra(e.target.value)}
-                  placeholder='es. {"district": "Fermo", "rating": "A+"}'
-                  className="w-full p-2.5 rounded-lg border border-[#CCCCCC] focus:border-[#111111] text-xs font-mono focus:outline-none"
-                />
-              </div>
+              {editingEntry.registry_name === "size_scales" ? (
+                <div className="bg-[#F9F9F9] border border-[#CCCCCC] rounded-xl p-3.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#111111] uppercase tracking-wider">
+                      📐 Modifica Visuale Scala Taglie Certificate
+                    </span>
+                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">
+                      Zero JSON
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-[#707072] uppercase block mb-1">
+                      Template Rapidi
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => applyScalePreset("woman", true)}
+                        className="px-2.5 py-1 rounded-full bg-white border border-[#CCCCCC] text-[11px] font-bold hover:bg-black hover:text-white transition"
+                      >
+                        👠 Donna EU (35-42)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyScalePreset("man", true)}
+                        className="px-2.5 py-1 rounded-full bg-white border border-[#CCCCCC] text-[11px] font-bold hover:bg-black hover:text-white transition"
+                      >
+                        👞 Uomo EU (38-46)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyScalePreset("apparel", true)}
+                        className="px-2.5 py-1 rounded-full bg-white border border-[#CCCCCC] text-[11px] font-bold hover:bg-black hover:text-white transition"
+                      >
+                        🧥 Abbigliamento IT (44-56)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyScalePreset("leather", true)}
+                        className="px-2.5 py-1 rounded-full bg-white border border-[#CCCCCC] text-[11px] font-bold hover:bg-black hover:text-white transition"
+                      >
+                        👜 Pelletteria (TU)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                        Taglia Min
+                      </label>
+                      <input
+                        type="number"
+                        value={editScaleMin}
+                        onChange={(e) => setEditScaleMin(Number(e.target.value))}
+                        className="w-full bg-white border border-[#CCCCCC] rounded-lg p-1.5 text-xs font-mono font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                        Taglia Max
+                      </label>
+                      <input
+                        type="number"
+                        value={editScaleMax}
+                        onChange={(e) => setEditScaleMax(Number(e.target.value))}
+                        className="w-full bg-white border border-[#CCCCCC] rounded-lg p-1.5 text-xs font-mono font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                        Base Campione
+                      </label>
+                      <input
+                        type="number"
+                        value={editScaleBase}
+                        onChange={(e) => setEditScaleBase(Number(e.target.value))}
+                        className="w-full bg-white border border-[#CCCCCC] rounded-lg p-1.5 text-xs font-mono font-bold text-center"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                      Elenco Taglie Incluse (separate da virgola)
+                    </label>
+                    <input
+                      type="text"
+                      value={editScaleCustomSizes}
+                      onChange={(e) => setEditScaleCustomSizes(e.target.value)}
+                      placeholder="es. 38, 39, 40, 41, 42, 43, 44, 45, 46"
+                      className="w-full bg-white border border-[#CCCCCC] rounded-lg p-2 text-xs font-mono font-semibold"
+                    />
+                  </div>
+
+                  <div className="pt-1">
+                    <span className="text-[10px] font-bold text-[#707072] uppercase block mb-1">
+                      Anteprima Taglie Certificate:
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {editScaleCustomSizes
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                        .map((s) => (
+                          <span
+                            key={s}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                              s === String(editScaleBase)
+                                ? "bg-emerald-500 text-white"
+                                : "bg-white border border-[#CCCCCC] text-[#111111]"
+                            }`}
+                          >
+                            {s} {s === String(editScaleBase) ? "(Base)" : ""}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="font-bold text-[#111111] block mb-1">
+                    Metadati e Parametri di Settore (JSON o note)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editMetaExtra}
+                    onChange={(e) => setEditMetaExtra(e.target.value)}
+                    placeholder='es. {"district": "Fermo", "rating": "A+"}'
+                    className="w-full p-2.5 rounded-lg border border-[#CCCCCC] focus:border-[#111111] text-xs font-mono focus:outline-none"
+                  />
+                </div>
+              )}
 
               <div className="flex justify-end gap-2 pt-3 border-t border-[#E5E5E5]">
                 <button

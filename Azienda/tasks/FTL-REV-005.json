@@ -1,17 +1,17 @@
 {
   "task_id": "FTL-REV-005",
-  "title": "Analisi FinOps & Commerciale Commesse e Tracciabilità Conceria (Invarianza 0 € Terzisti & Tier Brand/PMI)",
-  "description": "Valutare l'impatto economico e commerciale del modulo Commesse di Produzione e Tracciabilità Conceria: confermare il principio FinOps del Cost-to-Serve a 0 € per i terzisti façonisti, modellare il packaging commerciale per Brand e PMI (Tier Professional ed Enterprise con add-on tracciabilità LWG/ICEC) e validare il margine lordo obiettivo > 75%.",
-  "status": "todo",
+  "title": "Packaging Commerciale PaaS Distrettuale 3 Tier & Analisi FinOps Invarianza 0 € Terzisti",
+  "description": "Modellare il packaging commerciale dell'architettura PaaS Distrettuale sui 3 Tier: Tier Enterprise (Maison e gruppi del lusso), Tier PMI (Calzaturifici di marca e pelletterie), e Tier Piccoli Laboratori Façonisti a 0,00 EUR (Cost-to-Serve azzerato per adozione virale). Definire la strategia di monetizzazione per gli add-on a valore aggiunto (Document Vault LWG/ICEC, Due Diligence EUDR, passaporto DPP), verificare il rispetto dell'invariante FinOps L2 (0,00 EUR) e validare il target di margine lordo SaaS > 75%.",
+  "status": "done",
   "priority": "high",
   "assignee_role": "CRO",
   "assignee_agent": "footlink-cro",
   "created_by": "CEO",
   "created_at": "2026-10-19T17:00:00+02:00",
-  "updated_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T18:40:00+02:00",
   "due_date": "2026-11-25T23:59:59+02:00",
   "estimated_effort": "S (2-8h)",
-  "actual_effort": null,
+  "actual_effort": "S (2-8h)",
   "dependencies": [
     "FTL-CEO-008",
     "FTL-PROD-006"
@@ -21,7 +21,7 @@
     "Azienda/docs/finops/sprint-6-commercial-and-finops-analysis.md"
   ],
   "requires_escalation": true,
-  "escalation_reason": "Valutazione commerciale packaging modulo tracciabilità lotti conceria per Tier Enterprise",
+  "escalation_reason": "Validazione packaging commerciale PaaS distrettuale 3 tier, pricing add-on EUDR/DPP e ratifica 0 EUR terzisti",
   "escalation_level": "L4",
   "decision_record_id": "ADR-008",
   "tags": [
@@ -29,10 +29,11 @@
     "finops"
   ],
   "acceptance_criteria": [
-    "Validazione economica del Cost-to-Serve a 0 EUR/mese per l'accesso mobile dei terzisti",
-    "Modellazione del valore percepito per i Brand dell'integrazione di conformità ESPR/LWG",
-    "Definizione della proposta di monetizzazione per il modulo Commesse (Tier Professional vs Enterprise)",
-    "Dossier di conformità FinOps e verifica margine lordo SaaS > 75%"
+    "Definizione del listino e packaging per i 3 Tier PaaS: Enterprise (Maison), PMI (Calzaturifici) e Laboratori (0,00 EUR perpetuo)",
+    "Modellazione economica degli add-on di conformità normativa: Document Vault Conceria (LWG/ICEC) e Fascicolo EUDR/ESPR",
+    "Verifica FinOps del Cost-to-Serve pari a 0,00 EUR/mese per l'accesso mobile dei terzisti via Magic Link",
+    "Analisi di sostenibilità unit economics e validazione del margine lordo operativo SaaS > 75%",
+    "Predisposizione del dossier commerciale per sblocco Gate L4 da parte del Founder"
   ],
-  "notes": "Analisi revenue e FinOps per valorizzare la tracciabilità di filiera nel posizionamento B2B."
+  "notes": "Analisi revenue e FinOps per valorizzare la tracciabilità di filiera e la rete distrettuale a 3 livelli."
 }

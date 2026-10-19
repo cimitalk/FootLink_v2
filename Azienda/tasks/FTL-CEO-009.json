@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-CEO-009",
+  "title": "Nuova Area Prodotti PLM: Scorporo dal Ponte 1:N, Gestione BOM Nativa & Export Excel",
+  "description": "Scorporare la creazione, modifica e disattivazione dei prodotti PLM dal menù '04 Prodotti & Ponte 1:N' creando un'area ad-hoc (PlmProductsManager) per lavorare sui prodotti industriali. Implementare visualizzazioni a griglia avanzate con filtri e possibilità di export Excel, incorporare direttamente in questa nuova funzione la gestione completa delle Distinte Base (BOM multi-livello), e rendere l'edit e l'inserimento rapido ed ergonomico per gli utenti.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-19T19:10:34+02:00",
+  "updated_at": "2026-10-19T19:50:00+02:00",
+  "due_date": "2026-11-18T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "M (1-3gg)",
+  "dependencies": [
+    "FTL-CEO-011"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/PRD-007-plm-products-area-and-bom-management.md",
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-009",
+  "tags": [
+    "PLM",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Creazione della nuova area 'PRODOTTI' (PLM) separata dal catalogo commerciale PIM",
+    "Gestione completa del ciclo di vita prodotto PLM: inserimento rapido, modifica inline/modale e soft-disable",
+    "Integrazione nativa dell'albero Distinta Base (BOM a 3 livelli) nella scheda di dettaglio del prodotto",
+    "Griglia dati avanzata con filtri per stagione, categoria e stato, con funzione di Export Excel a 0 EUR",
+    "Presidio segregazione L6: nessun leak di costi o margini riservati nei file Excel esportati"
+  ],
+  "notes": "Direttiva del Founder FTL-CEO-009 strutturata da CGO in ADR-009 per avvio implementazione."
+}

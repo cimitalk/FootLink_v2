@@ -383,144 +383,296 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
         {showAddForm && (
           <form
             onSubmit={handleAdd}
-            className="mt-4 bg-[#F5F5F5] border border-[#111111] rounded-2xl p-4 space-y-3"
+            className="mt-4 bg-[#F9F9F9] border-2 border-[#111111] rounded-2xl p-5 space-y-4 shadow-sm"
           >
-            <div className="text-xs font-bold text-[#111111] uppercase">
-              Aggiungi Componente alla Distinta Base ({variant.variant_code})
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#E5E5E5]">
               <div>
-                <label className="block text-[11px] font-bold text-[#707072] mb-1">
-                  Livello BOM (1, 2 o 3)
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  Nuovo Componente Distinta Base
+                </span>
+                <h4 className="text-sm font-extrabold text-[#111111] mt-1">
+                  Aggiungi Nodo alla Distinta Base ({variant.variant_code})
+                </h4>
+              </div>
+              <span className="text-xs text-[#707072]">
+                Gerarchia L1 (Assieme) → L2 (Semilavorato) → L3 (Materia Prima)
+              </span>
+            </div>
+
+            {/* Step 1: Gerarchia & Tipologia */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-[#111111] mb-1">
+                  1. Livello Gerarchico BOM *
                 </label>
                 <select
                   value={level}
                   onChange={(e) => setLevel(Number(e.target.value))}
-                  className="w-full bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
+                  className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs font-semibold text-[#111111] focus:outline-none focus:border-[#111111]"
                 >
-                  <option value={1}>Livello 1 — Macro-Componente</option>
-                  <option value={2}>Livello 2 — Semilavorato</option>
-                  <option value={3}>Livello 3 — Materia Prima</option>
+                  <option value={1}>Livello 1 — Macro-Componente / Assieme (Tomaia, Suola, Fodera)</option>
+                  <option value={2}>Livello 2 — Semilavorato (Fodera vitello, Sottopiede cuoio)</option>
+                  <option value={3}>Livello 3 — Materia Prima / Chimico (Filo, Collante, Tintura)</option>
                 </select>
+                <p className="text-[10px] text-[#707072] mt-0.5">Profondità nell'albero distinta base</p>
               </div>
 
               {level > 1 && (
                 <div>
-                  <label className="block text-[11px] font-bold text-[#707072] mb-1">
-                    Nodo Padre (Livello {level - 1})
+                  <label className="block text-[11px] font-bold text-[#111111] mb-1">
+                    2. Componente Padre (Livello {level - 1}) *
                   </label>
                   <select
                     value={parentId}
                     onChange={(e) => setParentId(e.target.value)}
-                    className="w-full bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
+                    className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs font-semibold text-[#111111] focus:outline-none focus:border-[#111111]"
                   >
                     {variant.bom_items
                       .filter((b) => b.level === level - 1)
                       .map((b) => (
                         <option key={b.bom_item_id} value={b.bom_item_id}>
-                          {b.bom_item_id} ({b.material_name.slice(0, 22)})
+                          {b.bom_item_id} · {b.material_name}
                         </option>
                       ))}
                   </select>
+                  <p className="text-[10px] text-[#707072] mt-0.5">Aggancia il nodo al genitore superiore</p>
                 </div>
               )}
 
               <div>
-                <label className="block text-[11px] font-bold text-[#707072] mb-1">
-                  Tipo Componente
+                <label className="block text-[11px] font-bold text-[#111111] mb-1">
+                  {level > 1 ? "3." : "2."} Tipo Componente Tecnico *
                 </label>
                 <select
                   value={componentType}
                   onChange={(e) =>
                     setComponentType(e.target.value as BomComponentType)
                   }
-                  className="w-full bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
+                  className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs font-semibold text-[#111111] focus:outline-none focus:border-[#111111]"
                 >
-                  <option value="upper">upper (Tomaia / Quadrante)</option>
-                  <option value="lining">lining (Fodera)</option>
-                  <option value="insole">insole (Sottopiede)</option>
-                  <option value="outsole">outsole (Suola)</option>
-                  <option value="heel">heel (Tacco)</option>
-                  <option value="hardware">hardware (Accessori / Galvanica)</option>
-                  <option value="fabric">fabric (Tessuto / Filato)</option>
-                  <option value="sub_assembly">sub_assembly (Sotto-assieme)</option>
+                  <option value="upper">Tomaia / Taglio Principale (upper)</option>
+                  <option value="lining">Fodera Interna (lining)</option>
+                  <option value="insole">Sottopiede / Fusetto (insole)</option>
+                  <option value="outsole">Suola / Battistrada (outsole)</option>
+                  <option value="heel">Tacco / Sopratacco (heel)</option>
+                  <option value="hardware">Minuteria Metallica / Galvanica (hardware)</option>
+                  <option value="fabric">Tessuto / Nastro / Stringhe (fabric)</option>
+                  <option value="packaging">Packaging & Scatola (packaging)</option>
+                  <option value="sub_assembly">Sotto-Assieme Lavorato (sub_assembly)</option>
                 </select>
+                <p className="text-[10px] text-[#707072] mt-0.5">Classificazione per passaporto DPP</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <input
-                type="text"
-                required
-                placeholder="Nome Materiale (es. Guardolo Cuoio Vegetale)"
-                value={materialName}
-                onChange={(e) => setMaterialName(e.target.value)}
-                className="bg-white border border-[#CCCCCC] rounded-xl px-3 py-1.5 text-xs text-[#111111]"
-              />
-              <input
-                type="text"
-                required
-                placeholder="Fornitore (es. Cuoificio Santa Croce Srl)"
-                value={supplierName}
-                onChange={(e) => setSupplierName(e.target.value)}
-                className="bg-white border border-[#CCCCCC] rounded-xl px-3 py-1.5 text-xs text-[#111111]"
-              />
+            {/* Step 2: Dati Materiale e Fornitore */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-[#111111] mb-1">
+                  Nome Materiale &amp; Specifiche Tecniche *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Es. Vitello Pieno Fiore Concia Minerale 1.3-1.5mm"
+                  value={materialName}
+                  onChange={(e) => setMaterialName(e.target.value)}
+                  className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-[#111111] mb-1">
+                  Fornitore / Conceria Accreditata *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Es. Conceria del Chienti SpA"
+                  value={supplierName}
+                  onChange={(e) => setSupplierName(e.target.value)}
+                  className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-              <input
-                type="text"
-                placeholder="ISO2 (IT)"
-                value={originIso}
-                onChange={(e) => setOriginIso(e.target.value)}
-                className="bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
-              />
-              <input
-                type="text"
-                placeholder="UdM (sqft/m/pair)"
-                value={uom}
-                onChange={(e) => setUom(e.target.value)}
-                className="bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
-              />
-              <input
-                type="number"
-                step="0.05"
-                placeholder="Consumo"
-                value={consumption}
-                onChange={(e) => setConsumption(Number(e.target.value))}
-                className="bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
-              />
-              <input
-                type="number"
-                step="0.5"
-                placeholder="% Riciclato"
-                value={recycledPct}
-                onChange={(e) => setRecycledPct(Number(e.target.value))}
-                className="bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
-              />
-              <input
-                type="number"
-                step="0.5"
-                placeholder="Costo € (L6)"
-                value={unitCostEur}
-                onChange={(e) => setUnitCostEur(Number(e.target.value))}
-                className="bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-1.5 text-xs text-[#111111]"
-              />
+            {/* Step 3: Indicatori di Consumo & Costing con etichette chiare */}
+            <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-3">
+              <div className="text-[11px] font-bold text-[#111111] uppercase tracking-wider">
+                Parametri di Consumo, Sfrido Industriale e Costing L6
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                    Paese Origine
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="IT"
+                    value={originIso}
+                    onChange={(e) => setOriginIso(e.target.value.toUpperCase())}
+                    className="w-full bg-[#FAFAFA] border border-[#CCCCCC] rounded-lg px-2.5 py-1.5 text-xs text-center font-mono font-bold text-[#111111]"
+                  />
+                  <span className="text-[9px] text-[#707072]">Codice ISO-2</span>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                    Unità di Misura
+                  </label>
+                  <select
+                    value={uom}
+                    onChange={(e) => setUom(e.target.value)}
+                    className="w-full bg-[#FAFAFA] border border-[#CCCCCC] rounded-lg px-2 py-1.5 text-xs font-semibold text-[#111111]"
+                  >
+                    <option value="sqft">sqft (Piedi²)</option>
+                    <option value="m2">m² (Metri²)</option>
+                    <option value="pair">pair (Paia)</option>
+                    <option value="pcs">pcs (Pezzi)</option>
+                    <option value="m">m (Metri lineari)</option>
+                    <option value="kg">kg (Chilogrammi)</option>
+                  </select>
+                  <span className="text-[9px] text-[#707072]">Unità calcolo</span>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                    Consumo Netto
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    value={consumption}
+                    onChange={(e) => setConsumption(Number(e.target.value))}
+                    className="w-full bg-[#FAFAFA] border border-[#CCCCCC] rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-[#111111]"
+                  />
+                  <span className="text-[9px] text-[#707072]">Netto per paio/capo</span>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                    Sfrido / Scarto %
+                  </label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    max="100"
+                    value={wastePct}
+                    onChange={(e) => setWastePct(Number(e.target.value))}
+                    className="w-full bg-[#FAFAFA] border border-[#CCCCCC] rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-[#111111]"
+                  />
+                  <span className="text-[9px] text-[#707072]">Es. 18% pelle, 3% fondo</span>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                    % Riciclato (ESPR)
+                  </label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    max="100"
+                    value={recycledPct}
+                    onChange={(e) => setRecycledPct(Number(e.target.value))}
+                    className="w-full bg-[#FAFAFA] border border-[#CCCCCC] rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-emerald-600"
+                  />
+                  <span className="text-[9px] text-[#707072]">Materia prima 2ª</span>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                    Costo Unitario (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.10"
+                    min="0"
+                    value={unitCostEur}
+                    onChange={(e) => setUnitCostEur(Number(e.target.value))}
+                    className="w-full bg-[#FAFAFA] border border-[#CCCCCC] rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-[#111111]"
+                  />
+                  <span className="text-[9px] text-amber-700 font-bold">🔒 Riservato L6</span>
+                </div>
+              </div>
+
+              <div className="text-[11px] bg-[#F5F5F5] rounded-lg p-2 text-[#707072] flex items-center justify-between">
+                <span>
+                  Fabbisogno Lordo Totale con Sfrido:{" "}
+                  <strong className="text-[#111111] font-mono">
+                    {(consumption * (1 + wastePct / 100)).toFixed(2)} {uom}
+                  </strong>
+                </span>
+                <span>
+                  Costo Lordo Componente:{" "}
+                  <strong className="text-[#111111] font-mono">
+                    € {(consumption * (1 + wastePct / 100) * unitCostEur).toFixed(2)}
+                  </strong>
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2">
+            {/* Step 4: Certificazioni Ambientali & Tracciabilità */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-[#111111]">
+                  Certificazioni Ambientali &amp; Conformità Chimica del Fornitore
+                </label>
+                <span className="text-[10px] text-[#707072]">
+                  Clicca sui badge rapidi o digita liberamente
+                </span>
+              </div>
               <input
                 type="text"
-                placeholder="Certificazioni (separate da virgola)"
+                placeholder="Es. LWG Gold, ICEC TS 410, REACH SVHC-Free, GRS 4.0, FSC"
                 value={certsInput}
                 onChange={(e) => setCertsInput(e.target.value)}
-                className="flex-1 bg-white border border-[#CCCCCC] rounded-xl px-3 py-1.5 text-xs text-[#111111]"
+                className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
               />
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <span className="text-[10px] text-[#707072] font-bold">Aggiungi rapidamente:</span>
+                {[
+                  "LWG Gold (Conceria)",
+                  "ICEC TS 410 (Tracciabilità)",
+                  "REACH SVHC-Free",
+                  "EUDR Deforestation-Free",
+                  "GRS (Riciclato)",
+                  "OEKO-TEX Standard 100",
+                ].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      const clean = c.split(" ")[0];
+                      const current = certsInput ? certsInput.split(",").map((s) => s.trim()) : [];
+                      if (!current.includes(clean)) {
+                        setCertsInput(current.concat(clean).filter(Boolean).join(", "));
+                      }
+                    }}
+                    className="px-2 py-0.5 rounded-full bg-white border border-[#E5E5E5] text-[10px] font-semibold text-[#111111] hover:bg-[#F0F0F0] hover:border-[#111111] transition"
+                  >
+                    + {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E5E5]">
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                className="px-4 py-2 rounded-full border border-[#CCCCCC] text-xs font-bold text-[#707072] hover:bg-white transition"
+              >
+                Annulla
+              </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-full bg-[#111111] text-white font-semibold text-xs hover:bg-[#333333] transition"
+                className="px-6 py-2 rounded-full bg-[#111111] text-white font-bold text-xs hover:bg-black transition shadow-sm"
               >
-                Salva Nodo BOM
+                Salva Componente in Distinta Base
               </button>
             </div>
           </form>

@@ -1,0 +1,35 @@
+{
+  "task_id": "FTL-PROD-009",
+  "title": "02 Prodotti (PLM & BOM) - + Nodo BOM (L1/L2/L3)",
+  "description": "La form inserire un nuovo nodo boom non è asstanza chiara. Ci sono tre campi numerici senza nessuna indicazione. C'è un campo testo valorizzato con \"LWG Gold, REACH\" che non si capisce cosa sia.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-19T22:03:32+02:00",
+  "updated_at": "2026-10-19T22:31:00+02:00",
+  "completed_at": "2026-10-19T22:31:00+02:00",
+  "due_date": "2026-11-18T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/BomThreeLevelTree.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": null,
+  "tags": [
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Inserisco un elemento BOM e la form ha tutti i capi con etichetta e descrizioni chiare.",
+    "Unità di misura dinamica (mq, paia, metri lineari, kg, pz), etichette esplicite per consumo, sfrido e riciclato, e chip cliccabili per certificazioni internazionali (+ LWG Gold, + ICEC, + REACH, + EUDR, + GRS)."
+  ],
+  "notes": "Risolto: form '+ Aggiungi Componente alla Distinta Base' completamente riprogettata con layout a sezioni, etichette chiare per consumo, sfrido industriale, riciclato ESPR, costo con presidio L6 e chip di selezione certificazioni."
+}

@@ -17,3 +17,11 @@ Directory dedicata ai deliverable del **CMO** ([`Role_CMO_Footlink.md`](../roles
 ## Deliverable Sprint 4 (`FTL-MKT-003`)
 - [`go-live-launch-kit-and-founder-l5-package.md`](./go-live-launch-kit-and-founder-l5-package.md) — **Pacchetto Esecutivo Go-Live Comunicazione B2B, Dossier Gate L5 e Sequenza Primi 3 Post LinkedIn DPP UE** per la lead generation organica nei distretti italiani a costo pubblicitario zero (0 € Paid Ads).
 
+## Deliverable Sprint 5 (`FTL-MKT-004`)
+- [`sprint-5-ui-ux-positioning.md`](./sprint-5-ui-ux-positioning.md) — **Brand Positioning, UI/UX Simplification & Fashion Calendar Narrative**: posizionamento Footlink OS, semplificazione interfaccia Nike-inspired v2.0, narrazione Stagioni/Collezioni e bozza post LinkedIn L5.
+
+## Deliverable Sprint 6 (`FTL-MKT-005`)
+- [`sprint-6-paas-distrettuale-posizionamento-e-comunicazione.md`](./sprint-6-paas-distrettuale-posizionamento-e-comunicazione.md) — **PaaS Distrettuale di Footlink: Posizionamento Strategico, Messaging Differenziato per i 3 Livelli (Enterprise, PMI, Laboratori 0 €), Kit Sales Enablement CRO e Posizionamento Fiere (Lineapelle, MICAM, Simac Tanning Tech)**.
+- [`sprint-6-leather-traceability-marketing-positioning.md`](./sprint-6-leather-traceability-marketing-positioning.md) — **Storytelling Passaporto Conceria & Tracciabilità di Filiera (LWG, ICEC, ESPR UE 2024/1781, EUDR)** con micro-copy per i 4 quadranti di sostenibilità DPP e matrice di segregazione L6.
+- [`sprint-6-plm-pim-vault-naming-microcopy-narrative.md`](./sprint-6-plm-pim-vault-naming-microcopy-narrative.md) — **Naming System, Microcopy per il Lusso Manifatturiero e Narrazione Integrata "PLM Fabbrica + PIM Omnicanale"**: vocabolario sartoriale/conciario per l'area autonoma PLM Ingegneria BOM, PIM Catalogo & Feed, Vault Conceria (PDF upload e Excel import) e stand-by temporaneo Modulo 02.
+

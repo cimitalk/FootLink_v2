@@ -1,17 +1,17 @@
 {
   "task_id": "FTL-CEO-008",
-  "title": "Direttiva Esecutiva Sprint 6: Commesse di Produzione, Tracciabilità Lotti Conceria e Lifecycle Fasi Terzisti",
-  "description": "Emettere la direttiva esecutiva di Sprint 6 per guidare la C-Suite nell'implementazione industriale delle Commesse di Produzione, nell'integrazione del passaporto conciario (lotti, metodi di concia, certificazioni LWG/ICEC, conformità REACH) e nell'orchestrazione del ciclo di vita delle lavorazioni terzisti a costo zero con segregazione L6.",
-  "status": "todo",
+  "title": "Direttiva Esecutiva Sprint 6: PaaS Distrettuale 3 Tier, Tracciabilità Conceria EUDR/LWG e Matrice Taglie con Sfrido BOM",
+  "description": "Emettere la direttiva esecutiva di Sprint 6 per guidare la C-Suite nelle tre priorità ridefinite dal Founder: (1) Architettura PaaS distrettuale multi-tenant sui 3 livelli (Enterprise, PMI, Piccoli laboratori a 0 EUR), (2) Tracciabilità conciaria con upload documentale certificazioni (LWG/ICEC/EUDR) e Passaporto DPP a doppia vista, (3) Work Orders Hub con Matrice Taglie & Fabbisogni BOM con sfrido percentuale differenziato, garantendo i vincoli L2 (Zero Spesa) e L6 (Segregazione Industriale Competitor & Brand/Terzista).",
+  "status": "done",
   "priority": "critical",
   "assignee_role": "CEO",
   "assignee_agent": "footlink-ceo",
   "created_by": "Founder",
   "created_at": "2026-10-19T17:00:00+02:00",
-  "updated_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T18:40:00+02:00",
   "due_date": "2026-11-25T23:59:59+02:00",
   "estimated_effort": "S (2-8h)",
-  "actual_effort": null,
+  "actual_effort": "S (2-8h)",
   "dependencies": [
     "FTL-CEO-005",
     "FTL-CEO-007"
@@ -30,9 +30,10 @@
     "PLM"
   ],
   "acceptance_criteria": [
-    "Emissione della Direttiva Esecutiva di Sprint 6 per CPO, CTO, CGO, CRO e CMO",
-    "Definizione degli obiettivi chiave (OKR) su avanzamento commesse industriali e tracciabilità conceria",
-    "Presidio dei vincoli L2 (Zero Spesa Monetaria) e L6 (Segregazione Dati Industriali Riservati)"
+    "Emissione della Direttiva Esecutiva di Sprint 6 per CPO, CTO, CGO, CRO e CMO allineata alle 3 priorità del Founder",
+    "Definizione degli OKR di Sprint 6 su PaaS distrettuale multi-tenant (3 Tier), tracciabilità conciaria e matrice taglie con sfrido",
+    "Presidio e monitoraggio dei vincoli del Manifesto: Zero Spesa Monetaria L2 (0,00 EUR) e Segregazione Dati Industriali Riservati L6",
+    "Validazione del piano di rilascio esecutivo coordinato tra i 6 ruoli della C-Suite"
   ],
-  "notes": "Direttiva di avvio per lo Sprint 6 focalizzata sulla verticalizzazione produttiva di filiera."
+  "notes": "Direttiva di avvio per lo Sprint 6 focalizzata sulla verticalizzazione produttiva di filiera e sul modello PaaS distrettuale."
 }

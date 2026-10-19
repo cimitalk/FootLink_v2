@@ -1,17 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { BomThreeLevelTree } from "./components/BomThreeLevelTree";
 import { DataModelSchemaStudio } from "./components/DataModelSchemaStudio";
+import { DistrictPaasManager } from "./components/DistrictPaasManager";
 import { DomainRegistriesManager } from "./components/DomainRegistriesManager";
 import { FootlinkHomeHub } from "./components/FootlinkHomeHub";
 import { LiveDppPassportGenerator } from "./components/LiveDppPassportGenerator";
+import { PimCatalogManager } from "./components/PimCatalogManager";
 import { PimToPlmBridge } from "./components/PimToPlmBridge";
+import { PlmProductsManager } from "./components/PlmProductsManager";
+import { ProductionOrdersManager } from "./components/ProductionOrdersManager";
 import { SeasonsCollectionsHub } from "./components/SeasonsCollectionsHub";
 import { SubcontractorMobilePortal } from "./components/SubcontractorMobilePortal";
+import { TanneryVaultManager } from "./components/TanneryVaultManager";
 import {
+  INITIAL_COMPANIES,
+  INITIAL_MEMBERSHIPS,
   INITIAL_PIM_ITEMS,
+  INITIAL_PRODUCTION_ORDERS,
   INITIAL_REGISTRIES,
   INITIAL_SCHEMA_ATTRIBUTES,
   INITIAL_SEASONS,
+  INITIAL_TANNERY_BATCHES,
+  INITIAL_USERS,
   synthesizeClientDpp,
 } from "./mockSeedData";
 import {
@@ -19,19 +29,33 @@ import {
   AttributeFieldType,
   AttributeTargetEntity,
   BomItem,
+  BomRequirementsCalculationResult,
   Collection,
   CollectionStatus,
+  Company,
+  CompanyBusinessType,
+  CompanyMembership,
+  CompanyTier,
   DigitalProductPassport,
+  DistrictUserRole,
   DomainRegistryEntry,
+  OrderSizeBreakdownItem,
   PimCommercialItem,
   PlmLifecycleStatus,
   PlmProductionVariant,
   ProductCategory,
+  ProductionOrder,
+  ProductionOrderStatus,
   RegistryDomain,
   SchemaAttributeDefinition,
   Season,
   SeasonStatus,
   SubcontractorAssignment,
+  TanneryBatch,
+  TanneryDocumentType,
+  TanneryDocumentVerifyResponse,
+  TanneryProcess,
+  User,
   ViewerSecurityRole,
 } from "./types";
 
@@ -43,6 +67,20 @@ export const App: React.FC = () => {
   const [registries, setRegistries] = useState<DomainRegistryEntry[]>(INITIAL_REGISTRIES);
   const [schemaAttributes, setSchemaAttributes] = useState<SchemaAttributeDefinition[]>(
     INITIAL_SCHEMA_ATTRIBUTES
+  );
+
+  // Sprint 6 States: District PaaS, Tannery Vault & Work Orders Hub
+  const [companies, setCompanies] = useState<Company[]>(INITIAL_COMPANIES);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>(
+    INITIAL_COMPANIES[0].company_id
+  );
+  const [companyMemberships, setCompanyMemberships] = useState<CompanyMembership[]>(
+    INITIAL_MEMBERSHIPS
+  );
+  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
+  const [tanneryBatches, setTanneryBatches] = useState<TanneryBatch[]>(INITIAL_TANNERY_BATCHES);
+  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(
+    INITIAL_PRODUCTION_ORDERS
   );
 
   const [selectedPimId, setSelectedPimId] = useState<string>(
@@ -93,9 +131,11 @@ export const App: React.FC = () => {
     // Fetch master domain registries
     fetch(`${API_BASE}/api/v1/registries`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: DomainRegistryEntry[]) => {
+      .then((data: any) => {
         if (data && Array.isArray(data) && data.length > 0) {
           setRegistries(data);
+        } else if (data && data.entries && Array.isArray(data.entries)) {
+          setRegistries(data.entries);
         }
       })
       .catch(() => {});
@@ -113,6 +153,53 @@ export const App: React.FC = () => {
               }
             })
             .catch(() => {});
+        }
+      })
+      .catch(() => {});
+
+    // Sprint 6 Fetches: Companies, Users, Batches, Orders
+    fetch(`${API_BASE}/api/v1/companies`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: Company[]) => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          setCompanies(data);
+          setSelectedCompanyId(data[0].company_id);
+          // Load memberships for primary company
+          fetch(`${API_BASE}/api/v1/companies/${data[0].company_id}/members`)
+            .then((r) => (r.ok ? r.json() : []))
+            .then((memList: CompanyMembership[]) => {
+              if (Array.isArray(memList) && memList.length > 0) {
+                setCompanyMemberships(memList);
+              }
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE}/api/v1/users`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((uData: User[]) => {
+        if (uData && Array.isArray(uData) && uData.length > 0) {
+          setUsers(uData);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE}/api/v1/tannery-batches`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((bData: TanneryBatch[]) => {
+        if (bData && Array.isArray(bData) && bData.length > 0) {
+          setTanneryBatches(bData);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE}/api/v1/production-orders`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((oData: ProductionOrder[]) => {
+        if (oData && Array.isArray(oData) && oData.length > 0) {
+          setProductionOrders(oData);
         }
       })
       .catch(() => {});
@@ -241,8 +328,10 @@ export const App: React.FC = () => {
     season_id?: string;
     collection_id?: string;
     category: ProductCategory;
-    commercial_description_it: string;
-    commercial_description_en: string;
+    target_gender?: string;
+    lifecycle_status?: PlmLifecycleStatus;
+    commercial_description_it?: string;
+    commercial_description_en?: string;
     wholesale_price_eur: number;
     retail_price_eur: number;
     custom_attributes?: Record<string, any>;
@@ -255,7 +344,8 @@ export const App: React.FC = () => {
       colorway_name: "Edizione Lancio Master",
       size_range: payload.category === "apparel" ? "IT 46-56" : "38-46",
       last_or_pattern_code: `FORMA-${payload.category.toUpperCase()}-01`,
-      lifecycle_status: "prototype",
+      target_gender: payload.target_gender || "unisex",
+      lifecycle_status: payload.lifecycle_status || "new_from_pim",
       bom_version: "v1.0 (Draft)",
       bom_snapshot_locked: false,
       sample_base_size: payload.category === "apparel" ? "IT 50" : "42",
@@ -265,7 +355,8 @@ export const App: React.FC = () => {
       category_specific_specs: {
         "Codice Cartamodello / Forma": `MOD-${payload.category.toUpperCase()}-01`,
         "Scala Taglie": payload.category === "apparel" ? "IT 46-56" : "38-46",
-        "Stato Ciclo di Vita": "prototype",
+        "Genere Target": payload.target_gender || "unisex",
+        "Stato Ciclo di Vita": payload.lifecycle_status || "new_from_pim",
       },
       bom_items: [
         {
@@ -301,6 +392,7 @@ export const App: React.FC = () => {
     const newPim: PimCommercialItem = {
       pim_item_id: newPimId,
       brand_tenant_id: "TENANT-BRAND-ITALIA",
+      target_gender: payload.target_gender || "unisex",
       retail_channels: ["B2B Showroom", "E-Commerce", "Wholesale EU"],
       hs_customs_code:
         payload.category === "footwear"
@@ -315,6 +407,8 @@ export const App: React.FC = () => {
       end_of_life_guide:
         "Programma Take-Back Footlink per riciclo e disassemblaggio circolare.",
       ...payload,
+      commercial_description_it: payload.commercial_description_it || payload.model_name,
+      commercial_description_en: payload.commercial_description_en || payload.model_name,
       plm_variants: [initialPlm],
     };
 
@@ -328,6 +422,67 @@ export const App: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newPim),
       }).catch(() => {});
+    }
+  };
+
+  const handleUpdateProductVariant = (
+    pimItemId: string,
+    variantId: string,
+    payload: {
+      model_name?: string;
+      sku_code?: string;
+      category?: ProductCategory;
+      target_gender?: string;
+      season_id?: string;
+      variant_code?: string;
+      colorway_name?: string;
+      last_or_pattern_code?: string;
+      size_range?: string;
+      sample_base_size?: string;
+      size_grading_step_pct?: number;
+      lifecycle_status?: PlmLifecycleStatus;
+      custom_attributes?: Record<string, any>;
+    }
+  ) => {
+    setPimItems((prev) =>
+      prev.map((item) => {
+        if (item.pim_item_id !== pimItemId) return item;
+        const updatedVariants = item.plm_variants.map((v) => {
+          if (v.plm_variant_id !== variantId) return v;
+          return {
+            ...v,
+            variant_code: payload.variant_code ?? v.variant_code,
+            colorway_name: payload.colorway_name ?? v.colorway_name,
+            last_or_pattern_code: payload.last_or_pattern_code ?? v.last_or_pattern_code,
+            size_range: payload.size_range ?? v.size_range,
+            sample_base_size: payload.sample_base_size ?? v.sample_base_size,
+            size_grading_step_pct: payload.size_grading_step_pct ?? v.size_grading_step_pct,
+            target_gender: payload.target_gender ?? v.target_gender,
+            lifecycle_status: payload.lifecycle_status ?? v.lifecycle_status,
+            custom_attributes: payload.custom_attributes
+              ? { ...(v.custom_attributes || {}), ...payload.custom_attributes }
+              : v.custom_attributes,
+          };
+        });
+
+        return {
+          ...item,
+          model_name: payload.model_name ?? item.model_name,
+          sku_code: payload.sku_code ?? item.sku_code,
+          category: payload.category ?? item.category,
+          target_gender: payload.target_gender ?? item.target_gender,
+          season_id: payload.season_id ?? item.season_id,
+          plm_variants: updatedVariants,
+        };
+      })
+    );
+
+    if (backendConnected) {
+      fetch(`${API_BASE}/api/v1/pim-items/${pimItemId}/plm-variants/${variantId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch((err) => console.error("Error updating product variant:", err));
     }
   };
 
@@ -655,6 +810,465 @@ export const App: React.FC = () => {
     }
   };
 
+  // ==========================================================================
+  // Sprint 6 Handlers: District PaaS (Companies & Users)
+  // ==========================================================================
+  const handleCreateCompany = (companyData: {
+    legal_name: string;
+    business_name: string;
+    vat_number: string;
+    district: string;
+    company_tier: CompanyTier;
+    business_type: CompanyBusinessType;
+    contact_email: string;
+    phone?: string;
+    website?: string;
+    metadata?: Record<string, any>;
+  }) => {
+    const newComp: Company = {
+      company_id: `comp-${companyData.company_tier === "subcontractor_zero_eur" ? "lab" : companyData.company_tier}-${Date.now().toString(36)}`,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      ...companyData,
+    };
+    setCompanies((prev) => [newComp, ...prev]);
+    setSelectedCompanyId(newComp.company_id);
+
+    if (backendConnected) {
+      fetch(`${API_BASE}/api/v1/companies`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(companyData),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((persisted: Company | null) => {
+          if (persisted) {
+            setCompanies((prev) =>
+              prev.map((c) => (c.company_id === newComp.company_id ? persisted : c))
+            );
+            setSelectedCompanyId(persisted.company_id);
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleAddCompanyMember = (membershipData: {
+    company_id: string;
+    user_id: string;
+    role: DistrictUserRole;
+  }) => {
+    const targetUser = users.find((u) => u.user_id === membershipData.user_id);
+    const targetComp = companies.find((c) => c.company_id === membershipData.company_id);
+    const newMem: CompanyMembership = {
+      membership_id: `mem-${Date.now().toString(36)}`,
+      company_id: membershipData.company_id,
+      user_id: membershipData.user_id,
+      role: membershipData.role,
+      status: "active",
+      user_full_name: targetUser?.full_name,
+      user_email: targetUser?.email,
+      company_business_name: targetComp?.business_name,
+      created_at: new Date().toISOString(),
+    };
+    setCompanyMemberships((prev) => [...prev, newMem]);
+
+    if (backendConnected) {
+      fetch(`${API_BASE}/api/v1/companies/${membershipData.company_id}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(membershipData),
+      }).catch(() => {});
+    }
+  };
+
+  const handleCreateUser = async (userData: { email: string; full_name: string }): Promise<string | undefined> => {
+    const newUid = `usr-${Date.now().toString(36)}`;
+    const newU: User = {
+      user_id: newUid,
+      email: userData.email,
+      full_name: userData.full_name,
+      is_platform_admin: false,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    };
+    setUsers((prev) => [...prev, newU]);
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/users`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+        });
+        if (res.ok) {
+          const created: User = await res.json();
+          setUsers((prev) => prev.map((u) => (u.user_id === newUid ? created : u)));
+          return created.user_id;
+        }
+      } catch {}
+    }
+    return newUid;
+  };
+
+  // ==========================================================================
+  // Sprint 6 Handlers: Tannery Leather Batches & Document Vault (FTL-CEO-006)
+  // ==========================================================================
+  const handleCreateTanneryBatch = (batchData: any) => {
+    const newBatch: TanneryBatch = {
+      batch_id: `batch-${Date.now().toString(36)}`,
+      documents: [],
+      is_active: true,
+      created_at: new Date().toISOString(),
+      ...batchData,
+    };
+    setTanneryBatches((prev) => [newBatch, ...prev]);
+
+    if (backendConnected) {
+      fetch(`${API_BASE}/api/v1/tannery-batches`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(batchData),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((persisted: TanneryBatch | null) => {
+          if (persisted) {
+            setTanneryBatches((prev) =>
+              prev.map((b) => (b.batch_id === newBatch.batch_id ? persisted : b))
+            );
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleImportTanneryBatches = (newBatches: any[]) => {
+    if (!newBatches || newBatches.length === 0) return;
+    setTanneryBatches((prev) => [...newBatches, ...prev]);
+
+    if (backendConnected) {
+      fetch(`${API_BASE}/api/v1/tannery-batches/import`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ batches: newBatches }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((result) => {
+          if (result && result.imported_batches) {
+            fetch(`${API_BASE}/api/v1/tannery-batches`)
+              .then((r) => (r.ok ? r.json() : []))
+              .then((data) => {
+                if (Array.isArray(data) && data.length > 0) setTanneryBatches(data);
+              })
+              .catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleUploadTanneryDocument = (batchId: string, docData: any) => {
+    const newDocId = `doc-${Date.now().toString(36)}`;
+    const mockHash = "a3f5c7e9b1d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4";
+    const newDoc = {
+      document_id: newDocId,
+      batch_id: batchId,
+      sha256_hash: mockHash,
+      file_size_bytes: 24500,
+      is_verified: true,
+      created_at: new Date().toISOString(),
+      ...docData,
+    };
+
+    setTanneryBatches((prev) =>
+      prev.map((b) =>
+        b.batch_id === batchId
+          ? { ...b, documents: [...(b.documents || []), newDoc] }
+          : b
+      )
+    );
+
+    if (backendConnected) {
+      fetch(`${API_BASE}/api/v1/tannery-batches/${batchId}/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(docData),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((persistedDoc) => {
+          if (persistedDoc) {
+            setTanneryBatches((prev) =>
+              prev.map((b) =>
+                b.batch_id === batchId
+                  ? {
+                      ...b,
+                      documents: (b.documents || []).map((d) =>
+                        d.document_id === newDocId ? persistedDoc : d
+                      ),
+                    }
+                  : b
+              )
+            );
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleVerifyTanneryDocument = async (
+    documentId: string
+  ): Promise<TanneryDocumentVerifyResponse | null> => {
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/tannery-documents/${documentId}/verify`);
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch {}
+    }
+    return {
+      document_id: documentId,
+      batch_id: "batch-montebello-lwg-gold",
+      file_name: "Certificato_Verificato.pdf",
+      stored_sha256_hash: "3b29c9bb8c9e4a3b8e4e7e6f8a9d1c2b3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+      computed_sha256_hash: "3b29c9bb8c9e4a3b8e4e7e6f8a9d1c2b3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+      is_authentic: true,
+      verification_status: "MATCH_AUTHENTIC_SHA256",
+      verified_at: new Date().toISOString(),
+    };
+  };
+
+  // ==========================================================================
+  // Sprint 6 Handlers: Production Orders Hub, Size Matrix & BOM Sfrido
+  // ==========================================================================
+  const handleCreateProductionOrder = (orderData: any) => {
+    const newOid = `ord-${Date.now().toString(36)}`;
+    const targetPim = pimItems.find((p) => p.pim_item_id === orderData.pim_item_id);
+    const targetVar = targetPim?.plm_variants.find((v) => v.plm_variant_id === orderData.plm_variant_id);
+    const targetBatch = tanneryBatches.find((b) => b.batch_id === orderData.tannery_batch_id);
+
+    const totalPlanned = (orderData.size_breakdown || []).reduce(
+      (sum: number, s: any) => sum + (Number(s.planned_quantity) || 0),
+      0
+    );
+
+    const newOrder: ProductionOrder = {
+      order_id: newOid,
+      order_code: orderData.order_code,
+      company_id: orderData.company_id,
+      plm_variant_id: orderData.plm_variant_id,
+      pim_item_id: orderData.pim_item_id,
+      variant_code: targetVar?.variant_code,
+      model_name: targetPim?.model_name,
+      season_id: orderData.season_id,
+      collection_id: orderData.collection_id,
+      tannery_batch_id: orderData.tannery_batch_id,
+      tannery_batch_code: targetBatch?.batch_code,
+      status: orderData.status,
+      total_planned_pairs: totalPlanned,
+      total_completed_pairs: 0,
+      total_scrapped_pairs: 0,
+      target_delivery_date: orderData.target_delivery_date,
+      notes: orderData.notes,
+      size_breakdown: orderData.size_breakdown,
+      phases: [
+        {
+          phase_id: `ph-cut-${newOid}`,
+          order_id: newOid,
+          phase_code: "cutting",
+          phase_sequence: 1,
+          subcontractor_name: "Taglio CAD Marchigiano",
+          district: "Fermo-Macerata",
+          status: "pending",
+          target_quantity: totalPlanned,
+          conform_quantity: 0,
+          scrapped_quantity: 0,
+          material_lot_code: targetBatch?.batch_code || "",
+          magic_token: `tok-cut-${Date.now().toString(36)}`,
+        },
+        {
+          phase_id: `ph-stitch-${newOid}`,
+          order_id: newOid,
+          phase_code: "stitching_upper",
+          phase_sequence: 2,
+          subcontractor_name: "Tomaificio Façon Marche (0 EUR)",
+          subcontractor_id: "comp-lab-tomaificio",
+          district: "Montegranaro",
+          status: "pending",
+          target_quantity: totalPlanned,
+          conform_quantity: 0,
+          scrapped_quantity: 0,
+          material_lot_code: targetBatch?.batch_code || "",
+          magic_token: `tok-stitch-${Date.now().toString(36)}`,
+        },
+        {
+          phase_id: `ph-lasting-${newOid}`,
+          order_id: newOid,
+          phase_code: "lasting_assembly",
+          phase_sequence: 3,
+          subcontractor_name: "Manovia Montaggio Adriatica",
+          subcontractor_id: "comp-lab-giunteria",
+          district: "Civitanova Marche",
+          status: "pending",
+          target_quantity: totalPlanned,
+          conform_quantity: 0,
+          scrapped_quantity: 0,
+          material_lot_code: "",
+          magic_token: `tok-last-${Date.now().toString(36)}`,
+        },
+        {
+          phase_id: `ph-finish-${newOid}`,
+          order_id: newOid,
+          phase_code: "finishing",
+          phase_sequence: 4,
+          subcontractor_name: "Reparto Finissaggio & Confezione",
+          district: "Fermo",
+          status: "pending",
+          target_quantity: totalPlanned,
+          conform_quantity: 0,
+          scrapped_quantity: 0,
+          material_lot_code: "",
+          magic_token: `tok-fin-${Date.now().toString(36)}`,
+        },
+        {
+          phase_id: `ph-qa-${newOid}`,
+          order_id: newOid,
+          phase_code: "quality_control",
+          phase_sequence: 5,
+          subcontractor_name: "Collaudo Finale & Packaging QA",
+          district: "Fermo",
+          status: "pending",
+          target_quantity: totalPlanned,
+          conform_quantity: 0,
+          scrapped_quantity: 0,
+          material_lot_code: "",
+          magic_token: `tok-qa-${Date.now().toString(36)}`,
+        },
+      ],
+      created_at: new Date().toISOString(),
+    };
+
+    setProductionOrders((prev) => [newOrder, ...prev]);
+
+    if (backendConnected) {
+      fetch(`${API_BASE}/api/v1/production-orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((persistedOrder: ProductionOrder | null) => {
+          if (persistedOrder) {
+            setProductionOrders((prev) =>
+              prev.map((o) => (o.order_id === newOid ? persistedOrder : o))
+            );
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleCalculateBomRequirements = async (
+    variantId: string,
+    sizeBreakdown: OrderSizeBreakdownItem[]
+  ): Promise<BomRequirementsCalculationResult | null> => {
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/production-orders/calculate-requirements`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plm_variant_id: variantId,
+            size_breakdown: sizeBreakdown,
+          }),
+        });
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch {}
+    }
+
+    const totalPairs = sizeBreakdown.reduce((sum, s) => sum + s.planned_quantity, 0);
+    return {
+      plm_variant_id: variantId,
+      total_pairs: totalPairs,
+      requirements: [
+        {
+          bom_item_id: "bom-mock-leather",
+          material_name: "Vitello Pieno Fiore Anilina LWG Gold",
+          component_type: "upper",
+          unit_of_measure: "sqft",
+          base_consumption: 3.2,
+          grading_delta_pct: 2.8,
+          waste_percentage: 18.0,
+          net_requirement: Number((totalPairs * 3.2).toFixed(2)),
+          gross_requirement_with_waste: Number((totalPairs * 3.2 * 1.18).toFixed(2)),
+          requirement_by_size: {},
+        },
+        {
+          bom_item_id: "bom-mock-sole",
+          material_name: "Suola Cuoio Toscano Cucita Blake",
+          component_type: "outsole",
+          unit_of_measure: "pair",
+          base_consumption: 1.0,
+          grading_delta_pct: 0.0,
+          waste_percentage: 2.0,
+          net_requirement: totalPairs,
+          gross_requirement_with_waste: Number((totalPairs * 1.02).toFixed(0)),
+          requirement_by_size: {},
+        },
+      ],
+      total_leather_sqft_gross: Number((totalPairs * 3.2 * 1.18).toFixed(2)),
+      total_soles_pairs_gross: Number((totalPairs * 1.02).toFixed(0)),
+      calculated_at: new Date().toISOString(),
+    };
+  };
+
+  const handleConfirmSubcontractorPhase = async (
+    magicToken: string,
+    data: {
+      conform_quantity: number;
+      scrapped_quantity: number;
+      waste_reason_code?: string;
+      operator_notes?: string;
+    }
+  ): Promise<boolean> => {
+    setProductionOrders((prev) =>
+      prev.map((order) => {
+        const hasPhase = order.phases?.some((p) => p.magic_token === magicToken);
+        if (!hasPhase) return order;
+        return {
+          ...order,
+          phases: order.phases.map((p) =>
+            p.magic_token === magicToken
+              ? {
+                  ...p,
+                  status: "completed",
+                  conform_quantity: data.conform_quantity,
+                  scrapped_quantity: data.scrapped_quantity,
+                  waste_reason_code: data.waste_reason_code,
+                  operator_notes: data.operator_notes,
+                  confirmed_at: new Date().toISOString(),
+                }
+              : p
+          ),
+        };
+      })
+    );
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/subcontractors/phases/${magicToken}/confirm`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        return res.ok;
+      } catch {}
+    }
+    return true;
+  };
+
   const handleNavigateToProductFromHub = (pimItemId: string) => {
     const target = pimItems.find((p) => p.pim_item_id === pimItemId);
     if (target) {
@@ -666,14 +1280,39 @@ export const App: React.FC = () => {
     setActiveModule("products");
   };
 
+  const availableLeatherBomMaterials = pimItems.flatMap((p) =>
+    p.plm_variants.flatMap((v) =>
+      v.bom_items
+        .filter(
+          (b) =>
+            b.component_type === "upper" ||
+            b.component_type === "lining" ||
+            b.material_name.toLowerCase().includes("pelle") ||
+            b.material_name.toLowerCase().includes("vitello") ||
+            b.material_name.toLowerCase().includes("camoscio") ||
+            b.material_name.toLowerCase().includes("nappa")
+        )
+        .map((b) => ({
+          bom_item_id: b.bom_item_id,
+          material_name: b.material_name,
+          component_type: b.component_type,
+          plm_code: v.variant_code,
+          colorway: v.colorway_name,
+        }))
+    )
+  );
+
   const NAV_MODULES: { id: ActiveWorkspaceModule; label: string }[] = [
     { id: "home", label: "Home Launchpad" },
-    { id: "products", label: "01 Prodotti & Ponte 1:N" },
-    { id: "seasons_collections", label: "02 Stagioni & Collezioni" },
-    { id: "domain_registries", label: "03 Anagrafiche di Dominio" },
-    { id: "schema_studio", label: "04 Modello Dati Flessibile" },
-    { id: "subcontractor_portal", label: "05 Terzisti 0 €" },
-    { id: "dpp_passport", label: "06 Passaporto DPP" },
+    { id: "district_paas", label: "01 PaaS Distretto & Utenti" },
+    { id: "products", label: "02 Prodotti (PLM & BOM)" },
+    { id: "pim_catalog", label: "03 PIM (Catalogo & Feed)" },
+    { id: "tannery_vault", label: "04 Vault Conceria & LWG" },
+    { id: "seasons_collections", label: "05 Stagioni & Collezioni" },
+    { id: "domain_registries", label: "06 Anagrafiche di Dominio" },
+    { id: "schema_studio", label: "07 Modello Dati Flessibile" },
+    { id: "subcontractor_portal", label: "08 Terzisti 0 €" },
+    { id: "dpp_passport", label: "09 Passaporto DPP" },
   ];
 
   return (
@@ -692,6 +1331,29 @@ export const App: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* District PaaS Company Switcher */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-[#707072] uppercase">
+              Azienda:
+            </span>
+            <select
+              value={selectedCompanyId}
+              onChange={(e) => setSelectedCompanyId(e.target.value)}
+              className="bg-white border border-[#CCCCCC] rounded-full px-3 py-1 text-xs font-bold text-[#111111]"
+            >
+              {companies.map((c) => (
+                <option key={c.company_id} value={c.company_id}>
+                  {c.company_tier === "enterprise"
+                    ? "🏢 "
+                    : c.company_tier === "pmi"
+                    ? "🏭 "
+                    : "🛠️ "}
+                  {c.business_name} ({c.company_tier.toUpperCase()})
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Global Season Selector (Requisito 4 Founder) */}
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] font-bold text-[#707072] uppercase">
@@ -817,10 +1479,104 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* VIEW 1: MODULE 01 - PRODOTTI & PONTE 1:N (PLM + PIM) */}
-        {(activeModule === "products" ||
-          activeModule === "all" ||
-          activeModule === "pim_catalog" ||
+        {/* VIEW 1: MODULE 01 - PAAS DISTRETTO & GESTIONE UTENTI */}
+        {activeModule === "district_paas" && (
+          <DistrictPaasManager
+            companies={companies}
+            selectedCompanyId={selectedCompanyId}
+            onSelectCompany={(id) => setSelectedCompanyId(id)}
+            onCreateCompany={handleCreateCompany}
+            memberships={companyMemberships}
+            onAddMember={handleAddCompanyMember}
+            users={users}
+            onCreateUser={handleCreateUser}
+          />
+        )}
+
+        {/* MODULE IN STAND-BY: COMMESSE DI PRODUZIONE & MATRICE TAGLIE (ADR-009) */}
+        {activeModule === "production_orders" && (
+          <div className="bg-white border border-[#E5E5E5] rounded-3xl p-8 max-w-3xl mx-auto text-center space-y-4">
+            <div className="w-12 h-12 bg-[#F5F5F5] rounded-full flex items-center justify-center mx-auto text-xl">
+              ⏸️
+            </div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#707072]">
+              Architecture Decision Record ADR-009 · Governance Notice
+            </div>
+            <h2 className="display-title text-2xl text-[#111111]">
+              MODULO 02 IN STAND-BY TEMPORANEO
+            </h2>
+            <p className="text-sm text-[#707072] max-w-xl mx-auto leading-relaxed">
+              In conformità alla direttiva del Founder FTL-CEO-011 e ad ADR-009, il modulo Work Orders Hub &amp; Matrice Taglie è stato temporaneamente congelato per rifocalizzare la roadmap esecutiva su PLM &amp; Ingegneria BOM, Catalogo PIM Commerciale e Vault Conceria. I dati relazionali e le API backend rimangono preservati e integri.
+            </p>
+            <div className="pt-4 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveModule("products")}
+                className="px-6 py-2.5 rounded-full bg-[#111111] text-white text-xs font-bold hover:bg-black transition"
+              >
+                Vai ad Area Prodotti (PLM) →
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModule("pim_catalog")}
+                className="px-6 py-2.5 rounded-full border border-[#111111] bg-white text-[#111111] text-xs font-bold hover:bg-[#F5F5F5] transition"
+              >
+                Vai a Catalogo Commerciale (PIM) →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* VIEW 2: MODULE 02 - PRODOTTI (PLM & DISTINTA BASE BOM) */}
+        {activeModule === "products" && (
+          <PlmProductsManager
+            pimItems={activePimList}
+            viewerRole={viewerRole}
+            seasons={seasons}
+            registries={registries}
+            onSelectPim={handleSelectPim}
+            onSelectVariant={handleSelectVariant}
+            onAddVariant={handleAddVariant}
+            onCreatePimItem={handleCreatePimItem}
+            onUpdateVariantLifecycle={handleUpdateVariantLifecycle}
+            onUpdateProductVariant={handleUpdateProductVariant}
+            onAddBomItem={handleAddBomItem}
+          />
+        )}
+
+        {/* VIEW 3: MODULE 03 - PIM (CATALOGO COMMERCIALE & FEED SYNDICATION) */}
+        {activeModule === "pim_catalog" && (
+          <PimCatalogManager
+            pimItems={activePimList}
+            seasons={seasons}
+            viewerRole={viewerRole}
+            onSelectPim={handleSelectPim}
+            onCreatePimItem={handleCreatePimItem}
+            onNavigateToPlm={(pimId) => {
+              handleNavigateToProductFromHub(pimId);
+            }}
+            onNavigateToDpp={(pimId) => {
+              setSelectedPimId(pimId);
+              setActiveModule("dpp_passport");
+            }}
+          />
+        )}
+
+        {/* VIEW 4: MODULE 04 - VAULT CONCERIA & CERTIFICAZIONI LWG/ICEC */}
+        {activeModule === "tannery_vault" && (
+          <TanneryVaultManager
+            batches={tanneryBatches}
+            companies={companies}
+            availableLeatherBomMaterials={availableLeatherBomMaterials}
+            onCreateBatch={handleCreateTanneryBatch}
+            onUploadDocument={handleUploadTanneryDocument}
+            onVerifyDocument={handleVerifyTanneryDocument}
+            onImportBatches={handleImportTanneryBatches}
+          />
+        )}
+
+        {/* LEGACY BRIDGE / SPECIFICHE VERTICALI / BOM COSTING */}
+        {(activeModule === "all" ||
           activeModule === "bridge_vertical_specs" ||
           activeModule === "bom_costing") && (
           <div className="space-y-6">
@@ -870,7 +1626,7 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* VIEW 2: MODULE 02 - STAGIONI & COLLEZIONI */}
+        {/* VIEW 5: MODULE 05 - STAGIONI & COLLEZIONI */}
         {activeModule === "seasons_collections" && (
           <SeasonsCollectionsHub
             seasons={seasons}
@@ -885,7 +1641,7 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* VIEW 3: MODULE 03 - ANAGRAFICHE DI DOMINIO MASTER */}
+        {/* VIEW 6: MODULE 06 - ANAGRAFICHE DI DOMINIO MASTER */}
         {activeModule === "domain_registries" && (
           <DomainRegistriesManager
             registries={registries}
@@ -895,7 +1651,7 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* VIEW 4: MODULE 04 - MODELLO DATI FLESSIBILE & FOUNDER STUDIO */}
+        {/* VIEW 7: MODULE 07 - MODELLO DATI FLESSIBILE & FOUNDER STUDIO */}
         {activeModule === "schema_studio" && (
           <DataModelSchemaStudio
             attributes={schemaAttributes}
@@ -904,7 +1660,7 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* VIEW 5: MODULE 05 - RETE TERZISTI 0 € */}
+        {/* VIEW 8: MODULE 08 - RETE TERZISTI 0 € */}
         {activeModule === "subcontractor_portal" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-5">
@@ -925,7 +1681,7 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* VIEW 6: MODULE 06 - PASSAPORTO DIGITALE UE (DPP) */}
+        {/* VIEW 9: MODULE 09 - PASSAPORTO DIGITALE UE (DPP) */}
         {activeModule === "dpp_passport" && (
           <LiveDppPassportGenerator pimItem={currentPim} dpp={dppData} />
         )}

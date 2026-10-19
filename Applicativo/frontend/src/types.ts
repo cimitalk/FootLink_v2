@@ -17,7 +17,8 @@ export type PlmLifecycleStatus =
   | "sample"
   | "industrialized"
   | "in_production"
-  | "archived";
+  | "archived"
+  | "new_from_pim";
 
 export type BomComponentType =
   | "upper"
@@ -42,6 +43,9 @@ export type ViewerSecurityRole = "brand" | "subcontractor";
 
 export type ActiveWorkspaceModule =
   | "home"
+  | "district_paas"
+  | "production_orders"
+  | "tannery_vault"
   | "products"
   | "seasons_collections"
   | "domain_registries"
@@ -191,6 +195,7 @@ export interface PlmProductionVariant {
   standard_labor_cost_eur?: number;
   category_specific_specs?: Record<string, any>;
   custom_attributes?: Record<string, any>;
+  target_gender?: string;
   bom_items: BomItem[];
   subcontractor_assignments: SubcontractorAssignment[];
   created_at?: string;
@@ -206,6 +211,7 @@ export interface PimCommercialItem {
   collection_id?: string | null;
   collection_name?: string | null;
   category: ProductCategory;
+  target_gender?: string;
   commercial_description_it: string;
   commercial_description_en: string;
   retail_channels: string[];
@@ -272,4 +278,212 @@ export interface DigitalProductPassport {
   customs_inspector_dossier?: Record<string, unknown>;
   generated_at: string;
   dpp_compliance_ready: boolean;
+}
+
+// ============================================================================
+// Sprint 6: District PaaS (ADR-008 - 3-Tier Multi-Company Governance)
+// ============================================================================
+
+export type CompanyTier = "enterprise" | "pmi" | "subcontractor_zero_eur";
+
+export type CompanyBusinessType =
+  | "brand"
+  | "manufacturer"
+  | "tannery"
+  | "subcontractor_lab"
+  | "components_supplier";
+
+export type DistrictUserRole =
+  | "brand_admin"
+  | "product_manager"
+  | "factory_tech_lead"
+  | "tannery_operator"
+  | "subcontractor_operator"
+  | "customs_inspector";
+
+export interface Company {
+  company_id: string;
+  legal_name: string;
+  business_name: string;
+  vat_number: string;
+  district: string;
+  company_tier: CompanyTier;
+  business_type: CompanyBusinessType;
+  contact_email: string;
+  phone?: string;
+  website?: string;
+  metadata?: Record<string, any>;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface User {
+  user_id: string;
+  email: string;
+  full_name: string;
+  is_platform_admin: boolean;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface CompanyMembership {
+  membership_id: string;
+  company_id: string;
+  user_id: string;
+  role: DistrictUserRole;
+  status: string;
+  user_email?: string;
+  user_full_name?: string;
+  company_business_name?: string;
+  created_at?: string;
+}
+
+// ============================================================================
+// Sprint 6: Tannery Leather Batches & Document Vault (FTL-CEO-006)
+// ============================================================================
+
+export type TanneryProcess = "vegetable" | "chrome" | "metal_free" | "synthetic_bio";
+
+export type TanneryDocumentType =
+  | "lwg_certificate"
+  | "icec_traceability"
+  | "reach_chemical_test"
+  | "eudr_due_diligence"
+  | "technical_sheet"
+  | "invoice_transport";
+
+export interface TanneryDocument {
+  document_id: string;
+  batch_id: string;
+  doc_type: TanneryDocumentType;
+  file_name: string;
+  mime_type: string;
+  file_size_bytes: number;
+  sha256_hash: string;
+  data_payload?: string;
+  valid_until?: string | null;
+  is_verified: boolean;
+  created_at?: string;
+}
+
+export interface TanneryDocumentVerifyResponse {
+  document_id: string;
+  batch_id: string;
+  file_name: string;
+  stored_sha256_hash: string;
+  computed_sha256_hash: string;
+  is_authentic: boolean;
+  verification_status: string;
+  verified_at: string;
+}
+
+export interface TanneryBatch {
+  batch_id: string;
+  company_id: string;
+  batch_code: string;
+  tannery_name: string;
+  district: string;
+  leather_type: string;
+  tanning_process: TanneryProcess;
+  raw_hide_origin_country: string;
+  slaughterhouse_traceability_id: string;
+  eudr_deforestation_free: boolean;
+  lwg_rating: string;
+  lwg_score_pct: number;
+  icec_certificate_id: string;
+  reach_svhc_compliant: boolean;
+  chrome_vi_content_ppm: number;
+  thickness_mm: string;
+  available_qty_sqft: number;
+  metadata?: Record<string, any>;
+  is_active: boolean;
+  documents: TanneryDocument[];
+  created_at?: string;
+}
+
+// ============================================================================
+// Sprint 6: Production Orders Hub, Size Breakdown & BOM Wastage (ADR-008)
+// ============================================================================
+
+export type ProductionOrderStatus =
+  | "draft"
+  | "released"
+  | "in_production"
+  | "quality_check"
+  | "completed"
+  | "halted"
+  | "cancelled";
+
+export interface OrderSizeBreakdownItem {
+  id?: number;
+  size_code: string;
+  planned_quantity: number;
+  completed_quantity?: number;
+  scrapped_quantity?: number;
+}
+
+export interface ProductionOrderPhaseItem {
+  phase_id: string;
+  order_id: string;
+  phase_code: ProductionPhase;
+  phase_sequence: number;
+  subcontractor_name: string;
+  subcontractor_id?: string | null;
+  district: string;
+  status: string;
+  target_quantity: number;
+  conform_quantity: number;
+  scrapped_quantity: number;
+  waste_reason_code?: string | null;
+  material_lot_code: string;
+  magic_token: string;
+  confirmed_at?: string | null;
+  operator_notes?: string;
+}
+
+export interface ProductionOrder {
+  order_id: string;
+  order_code: string;
+  company_id: string;
+  plm_variant_id: string;
+  pim_item_id: string;
+  variant_code?: string;
+  model_name?: string;
+  season_id?: string | null;
+  collection_id?: string | null;
+  tannery_batch_id?: string | null;
+  tannery_batch_code?: string | null;
+  status: ProductionOrderStatus;
+  total_planned_pairs: number;
+  total_completed_pairs: number;
+  total_scrapped_pairs: number;
+  start_date?: string | null;
+  target_delivery_date: string;
+  notes: string;
+  size_breakdown: OrderSizeBreakdownItem[];
+  phases: ProductionOrderPhaseItem[];
+  metadata?: Record<string, any>;
+  created_at?: string;
+}
+
+export interface BomSizeRequirementItem {
+  bom_item_id: string;
+  material_name: string;
+  component_type: string;
+  unit_of_measure: string;
+  base_consumption: number;
+  grading_delta_pct: number;
+  waste_percentage: number;
+  net_requirement: number;
+  gross_requirement_with_waste: number;
+  requirement_by_size: Record<string, number>;
+}
+
+export interface BomRequirementsCalculationResult {
+  plm_variant_id: string;
+  total_pairs: number;
+  requirements: BomSizeRequirementItem[];
+  total_leather_sqft_gross: number;
+  total_soles_pairs_gross: number;
+  calculated_at: string;
 }

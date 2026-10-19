@@ -18,17 +18,30 @@ from app.models import (
     BomItem,
     CollectionCreate,
     CollectionStatus,
+    CompanyBusinessType,
+    CompanyCreate,
+    CompanyMembershipCreate,
+    CompanyTier,
+    DistrictUserRole,
     DomainRegistryEntryCreate,
+    OrderSizeBreakdownItem,
     PimCommercialItem,
     PlmLifecycleStatus,
     PlmProductionVariant,
     ProductCategory,
+    ProductionOrderCreate,
+    ProductionOrderStatus,
     ProductionPhase,
     RegistryDomain,
     SchemaAttributeDefinitionCreate,
     SeasonCreate,
     SeasonStatus,
     SubcontractorAssignment,
+    TanneryBatchCreate,
+    TanneryDocumentCreate,
+    TanneryDocumentType,
+    TanneryProcess,
+    UserCreate,
 )
 
 
@@ -1086,6 +1099,196 @@ def seed_schema_attribute_definitions(db: FootlinkSQLitePersistence) -> None:
         db.save_attribute_definition(a)
 
 
+def seed_district_companies_and_users(db: FootlinkSQLitePersistence) -> None:
+    """Sprint 6: Seed PaaS Distrettuale Companies (3 Tiers), Users & Memberships."""
+    companies = [
+        CompanyCreate(
+            legal_name="Tod's Group SpA",
+            business_name="Tod's Luxury Brand",
+            vat_number="IT01112220448",
+            district="Fermo-Macerata",
+            company_tier=CompanyTier.ENTERPRISE,
+            business_type=CompanyBusinessType.BRAND,
+            contact_email="supplychain@todsgroup.com",
+            phone="+39 0734 8661",
+            website="https://www.todsgroup.com",
+            metadata={"brands": ["Tod's", "Hogan", "Fay", "Roger Vivier"], "audit_score_esg": 96.5},
+            is_active=True,
+        ),
+        CompanyCreate(
+            legal_name="Calzaturificio Rossi & Figli Srl",
+            business_name="Calzaturificio Rossi",
+            vat_number="IT01234567890",
+            district="Fermo-Macerata",
+            company_tier=CompanyTier.PMI,
+            business_type=CompanyBusinessType.MANUFACTURER,
+            contact_email="produzione@calzaturificiorossi.it",
+            phone="+39 0734 871234",
+            website="https://www.calzaturificiorossi.it",
+            metadata={"capacity_pairs_day": 400, "certifications": ["ISO 9001", "SA8000"]},
+            is_active=True,
+        ),
+        CompanyCreate(
+            legal_name="Conceria Montebello SpA",
+            business_name="Conceria Montebello Arzignano",
+            vat_number="IT02345678901",
+            district="Arzignano / Valle del Chiampo",
+            company_tier=CompanyTier.PMI,
+            business_type=CompanyBusinessType.TANNERY,
+            contact_email="qualita@conceriamontebello.it",
+            phone="+39 0444 670123",
+            website="https://www.conceriamontebello.it",
+            metadata={"lwg_rating": "Gold", "icec_cert": "ICEC-TS410-0982", "tanning_focus": "Metal-Free Bio-Circular"},
+            is_active=True,
+        ),
+        CompanyCreate(
+            legal_name="Tomaificio Façon Marche di Rossi Marco",
+            business_name="Tomaificio Façon Marche (0 EUR)",
+            vat_number="IT03456789012",
+            district="Montegranaro",
+            company_tier=CompanyTier.SUBCONTRACTOR_ZERO_EUR,
+            business_type=CompanyBusinessType.SUBCONTRACTOR_LAB,
+            contact_email="facon.marche@gmail.com",
+            phone="+39 0734 890111",
+            metadata={"operators_count": 8, "specialty": "Giunteria e Orlatura Tomaie Lusso"},
+            is_active=True,
+        ),
+        CompanyCreate(
+            legal_name="Laboratorio Adriatica Orlatura Snc",
+            business_name="Giunteria Adriatica (0 EUR)",
+            vat_number="IT04567890123",
+            district="Civitanova Marche",
+            company_tier=CompanyTier.SUBCONTRACTOR_ZERO_EUR,
+            business_type=CompanyBusinessType.SUBCONTRACTOR_LAB,
+            contact_email="adriatica.orlatura@libero.it",
+            phone="+39 0733 778899",
+            metadata={"operators_count": 6, "specialty": "Taglio CAD e Preparazione Fondi"},
+            is_active=True,
+        ),
+    ]
+
+    comp_ids = ["comp-ent-tods", "comp-pmi-rossi", "comp-pmi-montebello", "comp-lab-tomaificio", "comp-lab-giunteria"]
+    for c, cid in zip(companies, comp_ids):
+        db.save_company(c, company_id=cid)
+
+    users = [
+        UserCreate(email="founder@footlink.it", full_name="Alessandro Ciminari", is_platform_admin=True),
+        UserCreate(email="elena.visconti@todsgroup.com", full_name="Elena Visconti", is_platform_admin=False),
+        UserCreate(email="marco.rossi@calzaturificiorossi.it", full_name="Marco Rossi", is_platform_admin=False),
+        UserCreate(email="giovanni.battaglia@conceriamontebello.it", full_name="Giovanni Battaglia", is_platform_admin=False),
+        UserCreate(email="giuseppe.facon@gmail.com", full_name="Giuseppe Façonista", is_platform_admin=False),
+    ]
+    user_ids = ["usr-founder", "usr-brand-lead", "usr-factory-lead", "usr-tannery-qa", "usr-artisan"]
+    for u, uid in zip(users, user_ids):
+        db.save_user(u, user_id=uid)
+
+    memberships = [
+        CompanyMembershipCreate(company_id="comp-ent-tods", user_id="usr-founder", role=DistrictUserRole.BRAND_ADMIN),
+        CompanyMembershipCreate(company_id="comp-ent-tods", user_id="usr-brand-lead", role=DistrictUserRole.BRAND_ADMIN),
+        CompanyMembershipCreate(company_id="comp-pmi-rossi", user_id="usr-factory-lead", role=DistrictUserRole.FACTORY_TECH_LEAD),
+        CompanyMembershipCreate(company_id="comp-pmi-montebello", user_id="usr-tannery-qa", role=DistrictUserRole.TANNERY_OPERATOR),
+        CompanyMembershipCreate(company_id="comp-lab-tomaificio", user_id="usr-artisan", role=DistrictUserRole.SUBCONTRACTOR_OPERATOR),
+    ]
+    for m in memberships:
+        db.save_membership(m)
+
+
+def seed_tannery_batches_and_documents(db: FootlinkSQLitePersistence) -> None:
+    """Sprint 6: Seed Tannery Leather Batches & Document Vault with SHA-256 Hashes."""
+    batch = TanneryBatchCreate(
+        company_id="comp-pmi-montebello",
+        batch_code="LOT-MONTEBELLO-2026-X9",
+        tannery_name="Conceria Montebello SpA",
+        district="Arzignano / Valle del Chiampo",
+        leather_type="Vitello Pieno Fiore Anilina",
+        tanning_process=TanneryProcess.METAL_FREE,
+        raw_hide_origin_country="IT",
+        slaughterhouse_traceability_id="EU-SLAUGHTER-8841-VR",
+        eudr_deforestation_free=True,
+        lwg_rating="Gold",
+        lwg_score_pct=95.2,
+        icec_certificate_id="ICEC-TS410-0982",
+        reach_svhc_compliant=True,
+        chrome_vi_content_ppm=0.0,
+        thickness_mm="1.2 - 1.4 mm",
+        available_qty_sqft=4500.0,
+        metadata={
+            "tannery_vat_id": "IT02345678901",
+            "botte_drum_id": "BOTTALE-N4",
+            "finish_type": "Anilina Naturale Semilucida",
+            "bally_flex_resistance_cycles": 50000,
+            "veslic_rub_fastness": 500,
+        },
+        is_active=True,
+    )
+    saved_batch = db.save_tannery_batch(batch, batch_id="batch-montebello-lwg-gold")
+
+    docs = [
+        TanneryDocumentCreate(
+            doc_type=TanneryDocumentType.LWG_CERTIFICATE,
+            file_name="Certificato_LWG_Gold_Audit_2026_Montebello.pdf",
+            mime_type="application/pdf",
+            file_size_bytes=24810,
+            data_payload="OFFICIAL_AUDIT_LWG_GOLD_RATING_SCORE_95_2_PERCENT_CONCERIA_MONTEBELLO_EXP_2027_12_31",
+            valid_until="2027-12-31",
+            is_verified=True,
+        ),
+        TanneryDocumentCreate(
+            doc_type=TanneryDocumentType.ICEC_TRACEABILITY,
+            file_name="ICEC_TS410_Tracciabilita_Filiera_Allevamento_Italia.pdf",
+            mime_type="application/pdf",
+            file_size_bytes=18450,
+            data_payload="ICEC_CERTIFIED_TRACEABILITY_TS410_RAW_HIDE_ORIGIN_VERONA_ITALY_EUDR_COMPLIANT_POST_2020",
+            valid_until="2028-06-30",
+            is_verified=True,
+        ),
+        TanneryDocumentCreate(
+            doc_type=TanneryDocumentType.REACH_CHEMICAL_TEST,
+            file_name="Report_Analisi_Laboratorio_Cromo_VI_REACH_2026.pdf",
+            mime_type="application/pdf",
+            file_size_bytes=12600,
+            data_payload="CHEMICAL_TEST_LAB_REPORT_ZERO_CHROME_VI_UNDER_0_3_PPM_NO_SVHC_SAFE_CIRCULAR_FOOTWEAR",
+            valid_until="2027-01-31",
+            is_verified=True,
+        ),
+    ]
+    for d in docs:
+        db.save_tannery_document(saved_batch.batch_id, d)
+
+
+def seed_production_orders(db: FootlinkSQLitePersistence) -> None:
+    """Sprint 6: Seed Production Orders Hub with Size Breakdown & Phases."""
+    order = ProductionOrderCreate(
+        order_code="COMM-2026-PE-084",
+        company_id="comp-pmi-rossi",
+        plm_variant_id="PLM-DUCA-NERO",
+        pim_item_id="PIM-DUCA-001",
+        season_id="SEASON-PE26",
+        collection_id="COLL-SEASON-PE26-MAIN-26",
+        tannery_batch_id="batch-montebello-lwg-gold",
+        status=ProductionOrderStatus.IN_PRODUCTION,
+        target_delivery_date="2026-05-30",
+        notes="Commessa lancio P/E 2026 calzatura classica Blake in vitello anilina LWG Gold con suola cuoio.",
+        size_breakdown=[
+            OrderSizeBreakdownItem(size_code="39", planned_quantity=40, completed_quantity=0, scrapped_quantity=0),
+            OrderSizeBreakdownItem(size_code="40", planned_quantity=80, completed_quantity=0, scrapped_quantity=0),
+            OrderSizeBreakdownItem(size_code="41", planned_quantity=120, completed_quantity=0, scrapped_quantity=0),
+            OrderSizeBreakdownItem(size_code="42", planned_quantity=140, completed_quantity=0, scrapped_quantity=0),
+            OrderSizeBreakdownItem(size_code="43", planned_quantity=80, completed_quantity=0, scrapped_quantity=0),
+            OrderSizeBreakdownItem(size_code="44", planned_quantity=40, completed_quantity=0, scrapped_quantity=0),
+        ],
+        phases=[
+            {"phase_code": "cutting", "sequence": 1, "subcontractor_name": "Taglio CAD Marchigiano", "district": "Fermo-Macerata"},
+            {"phase_code": "stitching_upper", "sequence": 2, "subcontractor_name": "Tomaificio Façon Marche (0 EUR)", "subcontractor_id": "comp-lab-tomaificio", "district": "Montegranaro"},
+            {"phase_code": "lasting_assembly", "sequence": 3, "subcontractor_name": "Manovia Montaggio Adriatica", "subcontractor_id": "comp-lab-giunteria", "district": "Civitanova Marche"},
+            {"phase_code": "finishing", "sequence": 4, "subcontractor_name": "Reparto Finissaggio & Confezione", "district": "Fermo"},
+            {"phase_code": "quality_control", "sequence": 5, "subcontractor_name": "Collaudo Finale & Packaging QA", "district": "Fermo"},
+        ],
+        metadata={"priority": "high", "delivery_depot": "Hub Milano Lusso"},
+    )
+    db.save_production_order(order)
+
+
 def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = False) -> List[PimCommercialItem]:
     """Populate the SQLite/PostgreSQL database with initial Made-in-Italy seed data if empty (or when force=True)."""
     if force:
@@ -1099,9 +1302,19 @@ def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = 
     if len(db.list_attribute_definitions()) == 0:
         seed_schema_attribute_definitions(db)
 
+    # Sprint 6 Seeds: District Companies, Users, Tannery Batches, Documents & Production Orders
+    if len(db.list_companies()) == 0:
+        seed_district_companies_and_users(db)
+    if len(db.list_tannery_batches()) == 0:
+        seed_tannery_batches_and_documents(db)
+
     if db.count_pim_items() == 0:
         for item in build_initial_seed_items():
             db.save_pim_item(item)
+
+    if len(db.list_production_orders()) == 0:
+        seed_production_orders(db)
+
     return db.list_pim_items()
 
 

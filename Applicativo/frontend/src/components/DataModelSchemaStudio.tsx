@@ -242,6 +242,10 @@ export const DataModelSchemaStudio: React.FC<DataModelSchemaStudioProps> = ({
                               ? "bg-[#3B82F6]/10 text-[#2563EB] border border-[#3B82F6]/20"
                               : attr.field_type === "number"
                               ? "bg-[#10B981]/10 text-[#059669] border border-[#10B981]/20"
+                              : attr.field_type === "boolean"
+                              ? "bg-[#8B5CF6]/10 text-[#7C3AED] border border-[#8B5CF6]/20"
+                              : attr.field_type === "date"
+                              ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
                               : "bg-[#707072]/10 text-[#707072] border border-[#707072]/20"
                           }`}
                         >

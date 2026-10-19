@@ -1,17 +1,17 @@
 {
   "task_id": "FTL-TECH-007",
-  "title": "Sviluppo Full-Stack Commesse di Produzione, Data Model Lotti Pellame/Conceria, API Lifecycle Terzisti & UI",
-  "description": "Implementare a livello full-stack in Applicativo/ il modulo Commesse di Produzione e Tracciabilità Conceria: estensione DDL database (SQLite e PostgreSQL), API RESTful FastAPI con DTO segregati L6 per Brand vs Terzisti, algoritmo di hashing SHA-256 a costo zero per certificati conceria, viste React per la gestione commesse e interfaccia mobile '3 Clic' per façonisti, con copertura test suite 100% passante.",
-  "status": "todo",
+  "title": "Sviluppo Full-Stack PaaS Distrettuale 3 Tier, Vault Lotti Conceria SHA-256 e Matrice Taglie/Sfrido BOM",
+  "description": "Implementare a livello full-stack in Applicativo/ l'architettura deliberata in ADR-008: estensione DDL DB per PaaS distrettuale multi-tenant 3 Tier (companies, users con company switcher), gestione documentale certificazioni lotti pelle con hashing crittografico SHA-256 a costo zero, motore di calcolo matrice taglie con fabbisogni BOM e sfrido differenziato, API RESTful FastAPI con DTO e filtri tenant segregati L6, e componenti React nel Design System v2.0 per Brand, PMI e Portale Terzisti 0 €.",
+  "status": "done",
   "priority": "critical",
   "assignee_role": "CTO",
   "assignee_agent": "footlink-cto",
   "created_by": "CPO",
   "created_at": "2026-10-19T17:00:00+02:00",
-  "updated_at": "2026-10-19T17:00:00+02:00",
+  "updated_at": "2026-10-19T18:40:00+02:00",
   "due_date": "2026-11-25T23:59:59+02:00",
   "estimated_effort": "L (3-10gg)",
-  "actual_effort": null,
+  "actual_effort": "L (3-10gg)",
   "dependencies": [
     "FTL-PROD-006",
     "FTL-GOV-006"
@@ -22,13 +22,14 @@
     "Applicativo/backend/app/database.py",
     "Applicativo/backend/app/main.py",
     "Applicativo/backend/tests/test_main.py",
+    "Applicativo/frontend/src/components/CompanyTenantSwitcher.tsx",
     "Applicativo/frontend/src/components/ProductionOrdersManager.tsx",
     "Applicativo/frontend/src/components/TanneryBatchesManager.tsx",
     "Applicativo/frontend/src/components/SubcontractorPortal.tsx",
     "Applicativo/frontend/src/App.tsx"
   ],
   "requires_escalation": true,
-  "escalation_reason": "Evoluzione DDL DB, endpoint segregati L6 e deploy componenti commesse su stack di produzione",
+  "escalation_reason": "Evoluzione DDL DB multi-tenant distrettuale, endpoint segregati L6 e deploy stack su produzione",
   "escalation_level": "L3",
   "decision_record_id": "ADR-008",
   "tags": [
@@ -36,11 +37,12 @@
     "PLM"
   ],
   "acceptance_criteria": [
-    "Implementazione delle tabelle production_orders, production_order_items, tannery_batches e production_phases_execution",
-    "Endpoint FastAPI RESTful completi per CRUD commesse, lotti conceria e avanzamento fasi",
-    "Segregazione DTO L6 verificata: nessun campo economico esposto negli endpoint per i terzisti",
-    "Componenti React nel Design System v2.0 (Nike-Inspired Editorial) perfettamente integrati in App.tsx",
-    "Test suite di backend passante al 100% con test di non-regressione e validazione segregazione L6"
+    "DDL database aggiornato con tabelle companies, users, tannery_batches, batch_certification_documents, production_orders, production_order_size_items, production_phases_execution",
+    "Endpoint FastAPI per gestione aziende 3 tier, company switcher e dependency injection tenant_id",
+    "Document Vault con upload file certificati, validazione scadenze e calcolo impronta SHA-256 nativa",
+    "Motore di calcolo fabbisogni BOM netti e lordi con matrice taglie e coefficienti di sfrido differenziati",
+    "Segregazione DTO L6 verificata: test negativi per prevenire esposizione di costi ai terzisti e cross-tenant data leak tra competitor",
+    "Suite test backend al 100% passante con non-regressione su tutto lo stack"
   ],
-  "notes": "Implementazione tecnica cardine dello Sprint 6. Mantiene vincolo Free-Tier 0 EUR/mese."
+  "notes": "Implementazione tecnica cardine dello Sprint 6. Mantiene vincolo Free-Tier 0 EUR/mese e segregazione industriale L6."
 }

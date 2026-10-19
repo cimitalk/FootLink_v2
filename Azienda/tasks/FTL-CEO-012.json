@@ -1,0 +1,40 @@
+{
+  "task_id": "FTL-CEO-012",
+  "title": "Revisione Modulo 03: Vault Conceria, Upload File PDF Reali, Vincolo BOM Pelle & Import Excel",
+  "description": "Eseguire la revisione funzionale e UX del 'Modulo 03 · Vault Conceria & LWG' secondo le direttive del Founder: (1) Sostituire la label tecnica 'FTL-CEO-006' con naming appropriato ('Passaporto Pellami & Tracciabilità Conceria ESPR & EUDR'), (2) Rendere obbligatoria la selezione di un materiale pelle censito in BOM nella creazione di un nuovo lotto di conceria, (3) Superare il payload Base64 abilitando il caricamento reale di FILE (PDF/JPG) con archiviazione locale e hash SHA-256 a costo zero, (4) Implementare il caricamento massivo di lotti tramite file Excel con template scaricabile a costo zero.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-19T19:24:43+02:00",
+  "updated_at": "2026-10-19T19:50:00+02:00",
+  "due_date": "2026-11-18T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "M (1-3gg)",
+  "dependencies": [
+    "FTL-CEO-011"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/PRD-009-leather-vault-file-upload-and-excel-import.md",
+    "Applicativo/frontend/src/components/TanneryBatchesManager.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L2",
+  "decision_record_id": "ADR-009",
+  "tags": [
+    "product",
+    "PLM",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "Aggiornamento etichetta UX del modulo senza codici tecnici interni obsoleti",
+    "Vincolo referenziale obbligatorio: selezione di un componente BOM pelle valido per creare un lotto",
+    "Upload reale di file PDF e immagini su filesystem locale protetto con calcolo SHA-256",
+    "Funzionalità di caricamento massivo lotti da file Excel con template scaricabile a 0 EUR",
+    "Rispetto rigoroso del vincolo FinOps L2: zero costi di licenza o storage cloud aggiuntivo"
+  ],
+  "notes": "Direttiva Founder FTL-CEO-012 formalizzata in ADR-009 con presidio FinOps L2."
+}

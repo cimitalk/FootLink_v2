@@ -1,14 +1,14 @@
 {
   "task_id": "FTL-PROD-006",
-  "title": "PRD-006: Gestione Ordini di Produzione (Work Orders Hub), Passaporto Pellami LWG/ICEC e UX Anagrafiche",
-  "description": "Redigere il Product Requirement Document (PRD-006) che formalizza la specifica UX per l'editing delle anagrafiche (FTL-CEO-007), l'architettura funzionale del Work Orders Hub per le commesse di fabbrica con griglia taglie e avanzamento a fasi façonisti, e il Passaporto Pellami & Tracciabilità Conceria (FTL-CEO-006) con rating LWG/ICEC e conformità ESPR UE.",
+  "title": "PRD-006: PaaS Distrettuale 3 Tier, Work Orders Hub con Matrice Taglie/Sfrido BOM e Vault Lotti Conceria",
+  "description": "Redigere e completare il Product Requirement Document (PRD-006) che formalizza: (1) Architettura PaaS Distrettuale multi-company sui 3 Tier (Enterprise, PMI, Laboratori 0 €) con company switcher, (2) Document Vault Conceria per caricamento certificazioni (LWG, ICEC, EUDR) con hash SHA-256 e DPP a doppia vista, (3) Work Orders Hub con Matrice Taglie Dinamica e calcolo deterministico dei fabbisogni BOM con sfrido percentuale differenziato, e (4) UX Anagrafiche di Dominio con soft-disable.",
   "status": "done",
   "priority": "critical",
   "assignee_role": "CPO",
   "assignee_agent": "footlink-cpo",
   "created_by": "CEO",
   "created_at": "2026-10-19T17:00:00+02:00",
-  "updated_at": "2026-10-19T17:05:00+02:00",
+  "updated_at": "2026-10-19T17:50:00+02:00",
   "due_date": "2026-11-25T23:59:59+02:00",
   "estimated_effort": "M (1-3gg)",
   "actual_effort": "S (2-8h)",
@@ -30,10 +30,11 @@
     "PLM"
   ],
   "acceptance_criteria": [
-    "Specifica UX per l'editing controllato e soft-disable delle tabelle anagrafiche di dominio",
-    "Modello funzionale Work Orders Hub con Size Breakdown Grid e assegnazione terzisti a 0 EUR",
-    "Integrazione attributi tracciabilità conciaria (LWG, ICEC, concia vegetale/cromo, origine grezzo, REACH)",
-    "Matrice di visibilità e segregazione costi L6 tra Brand, Terzista e Vista Pubblica DPP"
+    "Specifica funzionale PaaS Distrettuale con gerarchia 3 Tier (Enterprise, PMI, Laboratori 0 EUR) e Company Switcher",
+    "Architettura Document Vault Conceria per upload certificati (LWG, ICEC, EUDR, REACH) con hash SHA-256 e doppia vista DPP",
+    "Matrice Taglie Dinamica con calcolo deterministico fabbisogni BOM netti e lordi con sfrido differenziato (15-25%)",
+    "Pipeline Work Orders Hub con avanzamento fasi terzisti mobile a 0 EUR e UX editing anagrafiche con soft-disable",
+    "Matrice di segregazione visibilità industriale L6 rigorosamente definita"
   ],
-  "notes": "Deliverable PRD-006 completato dal CPO e allineato con le direttive del Founder e l'ADR-008."
+  "notes": "Deliverable PRD-006 completato dal CPO e pienamente integrato con le 3 priorità dello Sprint 6 e l'ADR-008."
 }

@@ -1,0 +1,42 @@
+{
+  "task_id": "FTL-PROD-007",
+  "title": "PRD-007: Nuova Area PRODOTTI (PLM & BOM), Modulo PIM Catalogo Commerciale e Revisione Vault Conceria",
+  "description": "Redigere la specifica funzionale e UX dettagliata (PRD-007) in attuazione delle direttive Founder FTL-CEO-009, FTL-CEO-010, FTL-CEO-011, FTL-CEO-012: (1) Scorporo dell'Area PRODOTTI (PLM & Ingegneria BOM) con griglia avanzata, quick edit/create, soft-disable, export Excel e albero BOM a 3 livelli integrato; (2) Revisione Modulo PIM (Catalogo Commerciale) con default 1:1, aggregati 1:N, stagioni/collezioni e feed Shopify/B2B; (3) Revisione Modulo 03 Vault Conceria (label professionale, obbligatorietà materiale pelle da BOM, file upload PDF/immagini e import massivo lotti da Excel); (4) Stand-by del Modulo 02 Work Orders Hub & Size Matrix nella navigazione.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "Founder / CEO",
+  "created_at": "2026-10-19T19:25:00+02:00",
+  "updated_at": "2026-10-19T19:30:00+02:00",
+  "due_date": "2026-11-20T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (2-8h)",
+  "dependencies": [
+    "FTL-CEO-009",
+    "FTL-CEO-010",
+    "FTL-CEO-011",
+    "FTL-CEO-012"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/PRD-007-plm-products-pim-catalog-and-tannery-vault-evolution.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-009",
+  "tags": [
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Specifica UX e funzionale per l'Area PRODOTTI (PLM) con Advanced Data Table, Quick Edit, soft-disable, export Excel e gestione BOM a 3 livelli",
+    "Specifica UX e funzionale per il Modulo PIM con default 1:1, composizione 1:N aggregata, stagioni/collezioni e feed esterni (Shopify, Joor/NuORDER)",
+    "Specifica 4 punti Vault Conceria: label pulita, obbligo materiale pelle da BOM, file upload PDF/immagini reali, template e import massivo lotti da Excel",
+    "Riorganizzazione mappa navigazione applicativa con Modulo 02 in stand-by e invisibile da UI",
+    "Linee guida operative per l'implementazione del CTO"
+  ],
+  "notes": "PRD-007 completato con successo dal CPO per il recepimento immediato da parte del CTO."
+}

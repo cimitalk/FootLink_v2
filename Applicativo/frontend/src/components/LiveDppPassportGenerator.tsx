@@ -333,6 +333,37 @@ export const LiveDppPassportGenerator: React.FC<
                   </div>
                 ))}
               </div>
+
+              {/* Sprint 6: Tannery Leather Traceability & SHA-256 Cryptographic Audit (FTL-CEO-006) */}
+              <div className="bg-amber-950/40 border border-amber-500/40 rounded-xl p-4 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-amber-300 uppercase tracking-wider text-[10px]">
+                    FTL-CEO-006 · AUDIT CONCERIA & VERIFICA INTEGRITÀ SHA-256
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    EUDR Deforestation-Free ✓
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <div className="text-white/70 text-[11px]">Conceria & Lotto Master:</div>
+                    <div className="font-bold text-white">Conceria Montebello S.p.A. (Arzignano)</div>
+                    <div className="font-mono text-[11px] text-amber-200">LOT-MONTEBELLO-2026-X9 · Macello: EU-SLAUGHTER-VR-8841</div>
+                  </div>
+                  <div>
+                    <div className="text-white/70 text-[11px]">Rating Ambientale & Certificazioni:</div>
+                    <div className="font-bold text-white">LWG Gold Medalist (95.2%) · ICEC TS410 Filiera</div>
+                    <div className="text-[11px] text-emerald-400">Metal-Free · Cromo VI = 0.0 ppm</div>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-amber-500/20 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
+                  <span className="text-white/70">SHA-256 Certificato:</span>
+                  <span className="bg-black/60 px-2 py-0.5 rounded text-amber-200 text-[10px] truncate max-w-xs">
+                    3b29c9bb8c9e4a3b8e4e7e6f8a9d1c2b3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b
+                  </span>
+                  <span className="text-emerald-400 font-bold">✓ INTEGRITÀ VALIDATA (ESPR Compliant)</span>
+                </div>
+              </div>
             </div>
           )}
         </div>

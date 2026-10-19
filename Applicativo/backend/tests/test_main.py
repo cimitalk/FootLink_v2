@@ -675,3 +675,262 @@ def test_pim_and_plm_with_seasons_and_custom_attributes():
     assert any(i["sku_code"] == "FTL-PE26-SNEAKER-01" for i in col_items)
 
 
+# ============================================================================
+# SPRINT 6 TEST SUITE (ADR-008): District PaaS, Tannery Vault, Work Orders & Sfrido
+# ============================================================================
+
+
+def test_district_paas_companies_and_users_flow():
+    """Sprint 6: Verify District PaaS multi-company 3-tier hierarchy and user membership onboarding."""
+    # 1. Verify seeded companies across 3 tiers
+    resp = client.get("/api/v1/companies")
+    assert resp.status_code == 200
+    companies = resp.json()
+    assert len(companies) >= 5
+    tiers = {c["company_tier"] for c in companies}
+    assert "enterprise" in tiers
+    assert "pmi" in tiers
+    assert "subcontractor_zero_eur" in tiers
+
+    # 2. Create new Subcontractor Workshop (0 EUR Tier)
+    lab_payload = {
+        "legal_name": "Tomaificio San Crispino S.n.c.",
+        "business_name": "Tomaificio San Crispino",
+        "company_tier": "subcontractor_zero_eur",
+        "business_type": "subcontractor_lab",
+        "vat_number": "IT09876543210",
+        "district": "Fermo-Macerata",
+        "contact_email": "sancrispino@distretto.marche.it",
+        "metadata": {
+            "city": "Sant'Elpidio a Mare",
+            "specialization": "Giunteria e orlatura mocassini tubolari",
+        },
+    }
+    create_resp = client.post("/api/v1/companies", json=lab_payload)
+    assert create_resp.status_code == 201
+    created_lab = create_resp.json()
+    assert created_lab["company_tier"] == "subcontractor_zero_eur"
+    assert created_lab["business_name"] == "Tomaificio San Crispino"
+
+    # 3. Create User and add as Artisan Member to the lab
+    user_payload = {
+        "email": "luigi.crispino@distretto.marche.it",
+        "full_name": "Luigi Crispino",
+    }
+    user_resp = client.post("/api/v1/users", json=user_payload)
+    assert user_resp.status_code == 201
+    created_user = user_resp.json()
+    user_id = created_user["user_id"]
+
+    member_payload = {
+        "company_id": created_lab["company_id"],
+        "user_id": user_id,
+        "role": "subcontractor_operator",
+        "status": "active",
+    }
+    mem_resp = client.post(f"/api/v1/companies/{created_lab['company_id']}/members", json=member_payload)
+    assert mem_resp.status_code == 201
+
+    # Verify membership list
+    members_resp = client.get(f"/api/v1/companies/{created_lab['company_id']}/members")
+    assert members_resp.status_code == 200
+    members = members_resp.json()
+    assert len(members) == 1
+    assert members[0]["user_id"] == user_id
+    assert members[0]["role"] == "subcontractor_operator"
+
+
+def test_tannery_batches_documents_vault_and_sha256_verification():
+    """Sprint 6: Verify Tannery Batch creation, document upload, and SHA-256 cryptographic verification."""
+    # 1. Verify seeded batch exists
+    resp = client.get("/api/v1/tannery-batches")
+    assert resp.status_code == 200
+    batches = resp.json()
+    assert len(batches) >= 1
+    montebello = next(b for b in batches if "montebello" in b["tannery_name"].lower())
+    assert montebello["lwg_rating"] == "Gold"
+    assert montebello["eudr_deforestation_free"] is True
+
+    # 2. Create new Tannery Batch for Vegetable Tanning
+    new_batch_payload = {
+        "company_id": montebello["company_id"],
+        "batch_code": "BATCH-PONTE-VEG-2026",
+        "tannery_name": "Conceria Il Ponte Pelle al Vegetale",
+        "district": "Santa Croce sull'Arno",
+        "leather_type": "Vacchetta al Vegetale Naturale",
+        "tanning_process": "vegetable",
+        "raw_hide_origin_country": "FR",
+        "slaughterhouse_traceability_id": "EU-SLAUGHTER-PONTE-88",
+        "eudr_deforestation_free": True,
+        "lwg_rating": "Gold",
+        "lwg_score_pct": 96.0,
+        "icec_certificate_id": "ICEC-TS410-VEG-01",
+        "available_qty_sqft": 450.0,
+        "metadata": {
+            "tannery_vat": "IT03456789012",
+            "notes": "Pellame conciato al 100% con estratti vegetali di castagno e mimosa certificato Consorzio Vera Pelle",
+        },
+    }
+    batch_resp = client.post("/api/v1/tannery-batches", json=new_batch_payload)
+    assert batch_resp.status_code == 201
+    batch_data = batch_resp.json()
+    batch_id = batch_data["batch_id"]
+
+    # 3. Upload document to batch and verify SHA-256 computation
+    raw_payload = "CERTIFICATO_CONSORZIO_VERA_PELLE_VEGETALE_N_88492_SANTA_CROCE_2026_MARZO"
+    doc_payload = {
+        "doc_type": "lwg_certificate",
+        "file_name": "scheda_tecnica_vacchetta_ponte.pdf",
+        "mime_type": "application/pdf",
+        "file_size_bytes": 1024,
+        "data_payload": raw_payload,
+        "valid_until": "2027-12-31",
+        "is_verified": True,
+    }
+    doc_resp = client.post(f"/api/v1/tannery-batches/{batch_id}/documents", json=doc_payload)
+    assert doc_resp.status_code == 201
+    doc_data = doc_resp.json()
+    doc_id = doc_data["document_id"]
+    stored_hash = doc_data["sha256_hash"]
+    assert len(stored_hash) == 64  # SHA-256 hex string
+
+    # 4. Cryptographic integrity check via verification endpoint
+    verify_resp = client.get(f"/api/v1/tannery-documents/{doc_id}/verify")
+    assert verify_resp.status_code == 200
+    verify_data = verify_resp.json()
+    assert verify_data["verification_status"] == "MATCH_AUTHENTIC_SHA256"
+    assert verify_data["is_authentic"] is True
+    assert verify_data["stored_sha256_hash"] == stored_hash
+    assert verify_data["computed_sha256_hash"] == stored_hash
+
+
+def test_production_orders_and_size_breakdown_matrix():
+    """Sprint 6: Verify Production Orders lifecycle, Size Breakdown matrix, and phase management."""
+    # 1. Verify seeded order
+    resp = client.get("/api/v1/production-orders")
+    assert resp.status_code == 200
+    orders = resp.json()
+    assert len(orders) >= 1
+    seed_order = next(o for o in orders if o["order_code"] == "COMM-2026-PE-084")
+    assert seed_order["total_planned_pairs"] == 500
+    assert len(seed_order["size_breakdown"]) == 6
+    assert len(seed_order["phases"]) == 5
+
+    # 2. Create new Production Order with dynamic size breakdown
+    new_order_payload = {
+        "order_code": "COMM-2026-TEST-99",
+        "company_id": seed_order["company_id"],
+        "plm_variant_id": seed_order["plm_variant_id"],
+        "pim_item_id": seed_order["pim_item_id"],
+        "season_id": "SEASON-PE26",
+        "status": "draft",
+        "target_delivery_date": "2026-06-30",
+        "notes": "Commessa test estiva Donna per sandali artigianali",
+        "size_breakdown": [
+            {"size_code": "36", "planned_quantity": 25},
+            {"size_code": "37", "planned_quantity": 50},
+            {"size_code": "38", "planned_quantity": 75},
+            {"size_code": "39", "planned_quantity": 50},
+            {"size_code": "40", "planned_quantity": 25},
+        ],
+    }
+    create_resp = client.post("/api/v1/production-orders", json=new_order_payload)
+    assert create_resp.status_code == 201
+    created_order = create_resp.json()
+    assert created_order["total_planned_pairs"] == 225
+    assert len(created_order["size_breakdown"]) == 5
+    assert created_order["status"] == "draft"
+
+
+def test_bom_requirements_calculation_with_wastage():
+    """Sprint 6: Verify industrial BOM consumption calculation with size grading delta and wastage (sfrido)."""
+    calc_payload = {
+        "plm_variant_id": "PLM-DUCA-NERO",
+        "size_breakdown": [
+            {"size_code": "39", "planned_quantity": 50},
+            {"size_code": "40", "planned_quantity": 100},
+            {"size_code": "41", "planned_quantity": 100},
+            {"size_code": "42", "planned_quantity": 50},
+        ],
+    }
+    calc_resp = client.post("/api/v1/production-orders/calculate-requirements", json=calc_payload)
+    assert calc_resp.status_code == 200
+    result = calc_resp.json()
+    assert result["plm_variant_id"] == "PLM-DUCA-NERO"
+    assert result["total_pairs"] == 300
+    assert len(result["requirements"]) > 0
+
+    # Find leather component and verify wastage (sfrido) applied
+    leather_comp = next((c for c in result["requirements"] if "pelle" in c["material_name"].lower() or "vitello" in c["material_name"].lower()), None)
+    if leather_comp:
+        assert leather_comp["waste_percentage"] > 0.0
+        # Gross requirement must be strictly greater than net requirement due to sfrido
+        assert leather_comp["gross_requirement_with_waste"] > leather_comp["net_requirement"]
+        assert leather_comp["unit_of_measure"] in ["sqft", "sqm", "MQ", "PAIA", "PZ", "MT"]
+
+
+def test_subcontractor_phase_magic_link_flow():
+    """Sprint 6: Verify Subcontractor 3-click mobile phase access and completion via magic token."""
+    # 1. Fetch existing production order
+    resp = client.get("/api/v1/production-orders")
+    assert resp.status_code == 200
+    orders = resp.json()
+    order = next(o for o in orders if o["order_code"] == "COMM-2026-PE-084")
+    assert len(order["phases"]) > 0
+    phase = order["phases"][0]
+    token = phase["magic_token"]
+
+    # 2. Access phase details via magic link token
+    phase_resp = client.get(f"/api/v1/subcontractors/phases/{token}")
+    assert phase_resp.status_code == 200
+    phase_data = phase_resp.json()
+    assert phase_data["magic_token"] == token
+    assert phase_data["phase_code"] == phase["phase_code"]
+
+    # 3. Confirm phase completion
+    confirm_payload = {
+        "conform_quantity": phase_data["target_quantity"] - 2,
+        "scrapped_quantity": 2,
+        "waste_reason_code": "difetto_taglio_grana_pelle",
+        "operator_notes": "Taglio eseguito a mano a regola d'arte, 2 pezzi scartati per venatura cicatriziale su pelle",
+    }
+    confirm_resp = client.post(f"/api/v1/subcontractors/phases/{token}/confirm", json=confirm_payload)
+    assert confirm_resp.status_code == 200
+    confirmed = confirm_resp.json()
+    assert confirmed["status"] == "completed"
+    assert confirmed["conform_quantity"] == phase_data["target_quantity"] - 2
+    assert confirmed["scrapped_quantity"] == 2
+    assert confirmed["confirmed_at"] is not None
+
+
+def test_domain_registry_editing_founder_directive():
+    """Sprint 6: Verify Founder Directive FTL-CEO-007 (Edit domain registry entries)."""
+    # 1. Direct POST to registry entries
+    entry_payload = {
+        "code": "FINISH_ANILINE_NAT",
+        "label_it": "Anilina Naturale Pregiata",
+        "label_en": "Precious Natural Aniline",
+        "sort_order": 1,
+        "is_active": True,
+        "metadata": {"luster": "semi-gloss", "water_resistance": "medium"},
+    }
+    resp = client.post("/api/v1/registries/plm/leather_finishes", json=entry_payload)
+    assert resp.status_code in [200, 201]
+
+    # 2. Update via PUT endpoint
+    update_payload = {
+        "label_it": "Anilina Naturale Pieno Fiore Extra",
+        "label_en": "Extra Full Grain Natural Aniline",
+        "sort_order": 2,
+        "is_active": True,
+        "metadata": {"luster": "high-gloss", "water_resistance": "high"},
+    }
+    put_resp = client.put("/api/v1/registries/plm/leather_finishes/FINISH_ANILINE_NAT", json=update_payload)
+    assert put_resp.status_code == 200
+    updated = put_resp.json()
+    assert updated["label_it"] == "Anilina Naturale Pieno Fiore Extra"
+    assert updated["label_en"] == "Extra Full Grain Natural Aniline"
+    assert updated["metadata"]["luster"] == "high-gloss"
+
+
+
