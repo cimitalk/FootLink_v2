@@ -697,7 +697,7 @@ class ProductionOrderCreate(BaseModel):
     status: ProductionOrderStatus = Field(default=ProductionOrderStatus.DRAFT)
     target_delivery_date: str = Field(..., description="ISO Date YYYY-MM-DD")
     notes: str = Field(default="")
-    size_breakdown: List[OrderSizeBreakdownItem] = Field(..., min_items=1)
+    size_breakdown: List[OrderSizeBreakdownItem] = Field(..., min_length=1)
     phases: Optional[List[Dict[str, Any]]] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
 

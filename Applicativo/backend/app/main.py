@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import urllib.parse
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
 from app._compat import (
@@ -357,8 +357,9 @@ def list_pim_items(
 @app.get(
     "/api/v1/pim-items/export/catalog",
     tags=["pim", "syndication"],
+    response_model=None,
 )
-def export_omnichannel_catalog(format: str = "json") -> Response | Dict[str, Any]:
+def export_omnichannel_catalog(format: str = "json") -> Any:
     """FEAT-05: Export the 1 PIM Commercial Catalog across channels (JSON, CSV, Shopify B2C, B2B Showroom)
     with zero SKU duplication and strict L6 exclusion of internal industrial costs.
     """
@@ -1137,6 +1138,7 @@ def generate_dpp_preview(pim_item_id: str) -> DigitalProductPassport:
 
 @app.get(
     "/api/v1/pim-items/{pim_item_id}/dpp-qr.svg",
+    response_class=Response,
     tags=["dpp"],
 )
 def get_dpp_qr_svg(pim_item_id: str) -> Response:
@@ -1962,6 +1964,7 @@ def confirm_subcontractor_phase(magic_token: str, payload: SubcontractorPhaseCon
 
 @app.get(
     "/api/v1/tannery-batches/template/download",
+    response_class=Response,
     tags=["tannery", "batches"],
 )
 def download_tannery_batches_template() -> Response:
@@ -2123,6 +2126,7 @@ def get_b2b_wholesale_feed() -> Dict[str, Any]:
 
 @app.get(
     "/api/v1/plm-variants/export",
+    response_class=Response,
     tags=["plm", "export"],
 )
 def export_plm_variants_csv() -> Response:
