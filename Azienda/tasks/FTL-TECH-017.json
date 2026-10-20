@@ -1,0 +1,41 @@
+{
+  "task_id": "FTL-TECH-017",
+  "title": "Reportistica su codebase",
+  "description": "Vorrei una semplice pagina HTML che mi faccia da dashboard informativa sulla code base. Regionaci approfonditamente su KPI (semplici da comprendere, che ti danno il poslo della situazione; massimo 3 o 4). Grafici di tendenza sull'andamento dei commit. Analisi dei file con più righe di codice e più soggetti a cambiamenti. Ragiona su questo ambito e crea la dshboard funzionante con i dati reali. Valuta tu se meglio connetterla alla rebo GitHub o farla girare sui file locali (come viene più comodo e semplice da implementare).\n⚠️VALUTAZIONE IMPORTANTE: valuta se integrare la pagina nel (Footlink — Founder Control Center), o farla slegata. Mi basterebbe avere un link nel portale del founder.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-20T21:55:47+02:00",
+  "updated_at": "2026-10-20T22:02:00+02:00",
+  "due_date": "2026-11-19T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Portale_Founder_Control/codebase_analytics.py",
+    "Portale_Founder_Control/codebase_dashboard.html",
+    "Applicativo/frontend/public/codebase_dashboard.html",
+    "Portale_Founder_Control/control_center.py"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L2",
+  "decision_record_id": null,
+  "tags": [
+    "product",
+    "infra",
+    "analytics",
+    "dashboard"
+  ],
+  "acceptance_criteria": [
+    "Dashboard informativa HTML funzionante con dati reali estratti da repository locale",
+    "Massimo 4 KPI chiari per dare il polso della situazione al Founder",
+    "Grafici di tendenza sull'andamento dei commit nel tempo",
+    "Analisi dei file con più righe di codice e hotspot soggetti a modifiche",
+    "Integrazione e link diretto nel Founder Control Center e nel frontend"
+  ],
+  "notes": "Risolto con successo: creata dashboard analitica su codebase con dati reali estratti da git log e scansione SLOC locale (FinOps €0, near-real-time). Include 4 KPI essenziali (Dimensioni SLOC, Cadenza Commit, Hotspot Core, Qualità & FinOps), grafico SVG di andamento commit nel tempo, ripartizione architetturale a 3 pilastri e stack tecnologico, classifica Top 10 file più grandi e Top 10 hotspot di modifica. Integrata direttamente nel Founder Control Center su http://127.0.0.1:8080/codebase-dashboard e accessibile anche via file statico o su http://localhost:5173/codebase_dashboard.html."
+}

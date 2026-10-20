@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1200, height=630, initial-scale=1.0">
+  <title>Footlink DAM · LinkedIn B2B Card (1200x630)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card-frame {
+      width: 1200px;
+      height: 630px;
+      background: #0A0A0A;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #222222;
+      border-radius: 20px;
+      box-shadow: 0 30px 100px rgba(0,0,0,0.8), 0 0 60px rgba(0, 255, 135, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 60px 70px;
+    }
+    canvas#waveCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1200px;
+      height: 630px;
+      z-index: 1;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+    .z-content {
+      position: relative;
+      z-index: 10;
+    }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-text {
+      font-weight: 900;
+      font-size: 28px;
+      letter-spacing: -0.04em;
+      color: #ffffff;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 255, 135, 0.12);
+      border: 1px solid rgba(0, 255, 135, 0.35);
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #00FF87;
+      letter-spacing: 0.05em;
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #00FF87;
+      box-shadow: 0 0 8px #00FF87;
+      animation: pulse 1.8s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    .hero-body {
+      max-width: 900px;
+      margin-top: 20px;
+    }
+    .tagline {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: #00FF87;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1.display-title {
+      font-size: 52px;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      color: #ffffff;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    }
+    h1.display-title span.highlight-green {
+      color: #00FF87;
+      text-shadow: 0 0 30px rgba(0, 255, 135, 0.4);
+    }
+    h1.display-title span.highlight-red {
+      color: #FF3366;
+      text-shadow: 0 0 30px rgba(255, 51, 102, 0.4);
+    }
+    p.subtitle {
+      font-size: 19px;
+      line-height: 1.45;
+      color: #A0A0A0;
+      margin-top: 18px;
+      max-width: 740px;
+      font-weight: 500;
+    }
+    .kpi-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #1F1F1F;
+    }
+    .kpi-card {
+      background: rgba(20, 20, 20, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .kpi-value {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+    }
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #707072;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .cta-pill {
+      margin-left: auto;
+      background: #ffffff;
+      color: #0A0A0A;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 16px 36px;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 30px rgba(255,255,255,0.15);
+      letter-spacing: -0.01em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card-frame">
+    <canvas id="waveCanvas" width="1200" height="630"></canvas>
+
+    <!-- Top Header -->
+    <div class="header-row z-content">
+      <div class="logo-badge">
+        <svg width="42" height="34" viewBox="0 0 46 38" fill="none">
+          <path d="M0 36L16 2H30L14 36H0Z" fill="#00FF87"/>
+          <path d="M18 36L28 12H42L31 36H18Z" fill="#00FF87" fill-opacity="0.85"/>
+          <path d="M0 37.5H42L40 40H-2L0 37.5Z" fill="#00FF87"/>
+        </svg>
+        <span class="logo-text">FOOTLINK</span>
+      </div>
+
+      <div class="status-pill">
+        <span class="pulse-dot"></span>
+        PAAS DISTRETTUALE · SPRINT 7
+      </div>
+    </div>
+
+    <!-- Center Hero Typography -->
+    <div class="hero-body z-content">
+      <div class="tagline">✦ Fast Onboarding Campionario &amp; DPP UE</div>
+      <h1 class="display-title">
+        La filiera calzaturiera italiana.<br>
+        <span class="highlight-green">Connessa.</span> Intelligente. <span class="highlight-red">A Canone Zero.</span>
+      </h1>
+      <p class="subtitle">
+        Clona distinte base a 3 livelli in 90 secondi, governa piramidi di collezione carryover senza JSON e integra i terzisti del distretto a costo zero perpetuo.
+      </p>
+    </div>
+
+    <!-- Bottom KPI & CTA -->
+    <div class="kpi-row z-content">
+      <div class="kpi-card">
+        <div class="kpi-value">&lt; 90s</div>
+        <div class="kpi-label">Onboarding BOM Rapido</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">0,00 €</div>
+        <div class="kpi-label">Canone Terzisti di Filiera</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">100%</div>
+        <div class="kpi-label">Conformità ESPR &amp; DPP UE</div>
+      </div>
+      <div class="cta-pill">
+        <span>Richiedi Accesso Pilota</span>
+        <span>→</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("waveCanvas");
+    const ctx = canvas.getContext("2d");
+    let width = canvas.width = 1200;
+    let height = canvas.height = 630;
+    let time = 0;
+
+    const waveLayers = [
+      { baseY: 0.40, amp: 44, freq: 0.0024, speed: 0.012, color: "rgba(0, 255, 135, 0.45)", width: 2.5 },
+      { baseY: 0.50, amp: 52, freq: 0.0020, speed: 0.009, color: "rgba(16, 185, 129, 0.50)", width: 3.0 },
+      { baseY: 0.60, amp: 48, freq: 0.0022, speed: -0.011, color: "rgba(255, 51, 102, 0.55)", width: 2.8 },
+      { baseY: 0.68, amp: 38, freq: 0.0028, speed: 0.014, color: "rgba(244, 63, 94, 0.40)", width: 2.2 },
+      { baseY: 0.54, amp: 58, freq: 0.0016, speed: 0.007, color: "rgba(0, 255, 135, 0.65)", width: 3.4 }
+    ];
+
+    // 14 Walking Tracking Nodes with spinning coordinate telemetry HUD
+    const trackingNodes = Array.from({ length: 14 }, (_, i) => ({
+      x: (i / 14) * width + (Math.sin(i * 3) * 60),
+      yRatio: 0.32 + ((i % 5) * 0.10),
+      radius: 2.6 + (i % 3) * 0.8,
+      speedX: 0.40 + ((i % 4) * 0.20),
+      waveOffset: i * 0.85,
+      waveAmp: 16 + (i % 4) * 8,
+      hue: i % 2 === 0 ? "green" : "red",
+      rotSpeed: (i % 2 === 0 ? 0.018 : -0.016) + (i % 3) * 0.004,
+      orbitRadius: 18 + (i % 3) * 4,
+      angle: (i * Math.PI) / 7,
+      alpha: 0.65 + (i % 3) * 0.15
+    }));
+
+    function render() {
+      time += 1;
+      ctx.clearRect(0, 0, width, height);
+
+      // Deep subtle radial background glow
+      const radialGrad = ctx.createRadialGradient(
+        width * 0.55, height * 0.55, 40,
+        width * 0.55, height * 0.55, width * 0.75
+      );
+      radialGrad.addColorStop(0, "rgba(0, 255, 135, 0.06)");
+      radialGrad.addColorStop(0.5, "rgba(255, 51, 102, 0.03)");
+      radialGrad.addColorStop(1, "rgba(10, 10, 10, 0)");
+      ctx.fillStyle = radialGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+
+      // 1. Draw Sine Waves
+      waveLayers.forEach(layer => {
+        ctx.beginPath();
+        ctx.strokeStyle = layer.color;
+        ctx.lineWidth = layer.width;
+        ctx.shadowColor = layer.color;
+        ctx.shadowBlur = 12;
+
+        for (let x = 0; x <= width; x += 6) {
+          const y =
+            height * layer.baseY +
+            Math.sin(x * layer.freq + time * layer.speed) * layer.amp +
+            Math.sin(x * layer.freq * 2.1 + time * layer.speed * 1.3) * (layer.amp * 0.4);
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      });
+
+      // 2. Draw Walking Nodes + Orbiting Telemetry HUD
+      trackingNodes.forEach((node, idx) => {
+        node.x = (node.x + node.speedX) % (width + 80);
+        const curX = node.x - 40;
+        const waveY = Math.sin(time * 0.018 + node.waveOffset) * node.waveAmp;
+        const curY = height * node.yRatio + waveY;
+        node.angle += node.rotSpeed;
+
+        const isGreen = node.hue === "green";
+        const mainColor = isGreen ? "#00FF87" : "#FF3366";
+
+        if (curX >= -20 && curX <= width + 20) {
+          // Central luminous dot
+          ctx.beginPath();
+          ctx.arc(curX, curY, node.radius, 0, Math.PI * 2);
+          ctx.fillStyle = mainColor;
+          ctx.shadowColor = mainColor;
+          ctx.shadowBlur = 10;
+          ctx.fill();
+
+          // Radar ring
+          const pulse = (Math.sin(time * 0.04 + idx) + 1) * 0.5;
+          ctx.beginPath();
+          ctx.arc(curX, curY, node.radius + 3 + pulse * 4, 0, Math.PI * 2);
+          ctx.strokeStyle = isGreen ? "rgba(0, 255, 135, 0.4)" : "rgba(255, 51, 102, 0.4)";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+
+          // Spinning HUD Telemetry Numbers & Degree
+          ctx.save();
+          ctx.translate(curX, curY);
+          ctx.rotate(node.angle);
+
+          // Orbit dashed circle
+          ctx.strokeStyle = isGreen ? "rgba(0, 255, 135, 0.3)" : "rgba(255, 51, 102, 0.3)";
+          ctx.lineWidth = 0.8;
+          ctx.setLineDash([2, 3]);
+          ctx.beginPath();
+          ctx.arc(0, 0, node.orbitRadius, 0, Math.PI * 1.65);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Crosshair tick
+          ctx.beginPath();
+          ctx.moveTo(node.orbitRadius - 3, 0);
+          ctx.lineTo(node.orbitRadius + 3, 0);
+          ctx.stroke();
+
+          // Real-time Coordinates [X, Y]
+          const coordText = `[X:${Math.round(curX)} Y:${Math.round(curY)}]`;
+          ctx.font = '8px "JetBrains Mono", monospace';
+          ctx.fillStyle = isGreen ? "rgba(0, 255, 135, 0.9)" : "rgba(255, 75, 110, 0.9)";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.fillText(coordText, node.orbitRadius + 4, 0);
+
+          // Angle \theta
+          const deg = (Math.round((node.angle * (180 / Math.PI)) % 360) + 360) % 360;
+          ctx.font = '7px "JetBrains Mono", monospace';
+          ctx.fillStyle = isGreen ? "rgba(52, 211, 153, 0.65)" : "rgba(251, 113, 133, 0.65)";
+          ctx.fillText(`θ:${deg}°`, -node.orbitRadius - 22, 0);
+
+          ctx.restore();
+        }
+      });
+
+      ctx.restore();
+      requestAnimationFrame(render);
+    }
+
+    render();
+  </script>
+</body>
+</html>

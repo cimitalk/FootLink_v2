@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920, initial-scale=1.0">
+  <title>Footlink DAM · Vertical Story (1080x1920)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .story-frame {
+      width: 1080px;
+      height: 1920px;
+      background: #0A0A0A;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #222;
+      border-radius: 36px;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 120px 90px;
+    }
+    canvas#vertCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1080px;
+      height: 1920px;
+      z-index: 1;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+    .z-ui {
+      position: relative;
+      z-index: 10;
+    }
+    .story-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .logo-text {
+      font-weight: 900;
+      font-size: 36px;
+      letter-spacing: -0.04em;
+    }
+    .distretto-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #00FF87;
+      border: 1px solid rgba(0, 255, 135, 0.4);
+      background: rgba(0, 255, 135, 0.1);
+      padding: 10px 22px;
+      border-radius: 9999px;
+    }
+    .story-center {
+      margin-top: 80px;
+    }
+    .category-pill {
+      display: inline-block;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 16px;
+      font-weight: 800;
+      color: #00FF87;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .big-headline {
+      font-size: 84px;
+      font-weight: 900;
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+    .subtext {
+      font-size: 30px;
+      line-height: 1.45;
+      color: #A5A5A5;
+      font-weight: 500;
+      max-width: 860px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-top: 50px;
+    }
+    .feature-row {
+      background: rgba(20, 20, 20, 0.7);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 24px 30px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .feature-icon {
+      font-size: 32px;
+    }
+    .feature-info h4 {
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .feature-info p {
+      font-size: 16px;
+      color: #707072;
+      font-family: "JetBrains Mono", monospace;
+      margin-top: 4px;
+    }
+    .story-footer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    .swipe-pill {
+      width: 100%;
+      background: #00FF87;
+      color: #0A0A0A;
+      font-size: 24px;
+      font-weight: 900;
+      padding: 26px 0;
+      border-radius: 9999px;
+      text-align: center;
+      box-shadow: 0 15px 40px rgba(0, 255, 135, 0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .swipe-hint {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      color: #666;
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="story-frame">
+    <canvas id="vertCanvas" width="1080" height="1920"></canvas>
+
+    <!-- Top -->
+    <div class="story-header z-ui">
+      <div class="logo-badge">
+        <svg width="48" height="40" viewBox="0 0 46 38" fill="none">
+          <path d="M0 36L16 2H30L14 36H0Z" fill="#00FF87"/>
+          <path d="M18 36L28 12H42L31 36H18Z" fill="#00FF87" fill-opacity="0.85"/>
+          <path d="M0 37.5H42L40 40H-2L0 37.5Z" fill="#00FF87"/>
+        </svg>
+        <span class="logo-text">FOOTLINK</span>
+      </div>
+      <div class="distretto-tag">DISTRETTI 2026</div>
+    </div>
+
+    <!-- Center -->
+    <div class="story-center z-ui">
+      <div class="category-pill">✦ MANIFATTURA MODA 4.0</div>
+      <h1 class="big-headline">
+        IL FUTURO DELLA<br>
+        <span style="color:#00FF87;">CALZATURA</span><br>
+        NON USA PIÙ EXCEL.
+      </h1>
+      <p class="subtext">
+        Dalla distinta base a 3 livelli fino al passaporto digitale DPP UE in meno di 90 secondi. Con terzisti e façonisti inclusi a 0 € perpetui.
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-row">
+          <span class="feature-icon">⚡</span>
+          <div class="feature-info">
+            <h4>BOM Deep Copy in 90 Secondi</h4>
+            <p>Clonazione atomica schede tecniche calzatura &amp; pelletteria</p>
+          </div>
+        </div>
+        <div class="feature-row">
+          <span class="feature-icon">🤝</span>
+          <div class="feature-info">
+            <h4>Zero Licenze per i Terzisti</h4>
+            <p>Magic Link protetto, validazione lotti in 3 tap, canone 0 €</p>
+          </div>
+        </div>
+        <div class="feature-row">
+          <span class="feature-icon">🛡️</span>
+          <div class="feature-info">
+            <h4>Conformità EUDR &amp; ESPR Garantita</h4>
+            <p>Vault certificati conceria LWG con crittografia SHA-256</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Swipe / CTA -->
+    <div class="story-footer z-ui">
+      <div class="swipe-pill">
+        <span>SCOPRI IL PILOTA GRATUITO</span>
+        <span>↑</span>
+      </div>
+      <div class="swipe-hint">SCORRI VERSO L'ALTO · FOOTLINK.IO</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("vertCanvas");
+    const ctx = canvas.getContext("2d");
+    let width = canvas.width = 1080;
+    let height = canvas.height = 1920;
+    let time = 0;
+
+    const trackingNodes = Array.from({ length: 18 }, (_, i) => ({
+      x: (i / 18) * width,
+      yRatio: 0.28 + ((i % 8) * 0.08),
+      radius: 3.0 + (i % 3) * 0.8,
+      speedX: 0.40 + ((i % 4) * 0.16),
+      waveOffset: i * 0.75,
+      waveAmp: 24 + (i % 4) * 10,
+      hue: i % 2 === 0 ? "green" : "red",
+      rotSpeed: (i % 2 === 0 ? 0.018 : -0.015) + (i % 3) * 0.003,
+      orbitRadius: 22 + (i % 3) * 5,
+      angle: (i * Math.PI) / 9
+    }));
+
+    function render() {
+      time += 1;
+      ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+
+      // Waves
+      const waves = [
+        { y: 0.40, amp: 65, freq: 0.0016, speed: 0.009, color: "rgba(0, 255, 135, 0.45)" },
+        { y: 0.52, amp: 75, freq: 0.0013, speed: -0.008, color: "rgba(255, 51, 102, 0.50)" },
+        { y: 0.65, amp: 55, freq: 0.0020, speed: 0.011, color: "rgba(16, 185, 129, 0.40)" },
+        { y: 0.48, amp: 85, freq: 0.0011, speed: 0.006, color: "rgba(0, 255, 135, 0.55)" }
+      ];
+
+      waves.forEach(w => {
+        ctx.beginPath();
+        ctx.strokeStyle = w.color;
+        ctx.lineWidth = 3.2;
+        ctx.shadowColor = w.color;
+        ctx.shadowBlur = 14;
+        for (let x = 0; x <= width; x += 10) {
+          const y = height * w.y + Math.sin(x * w.freq + time * w.speed) * w.amp;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      });
+
+      // Orbiting Telemetry Nodes
+      trackingNodes.forEach(node => {
+        node.x = (node.x + node.speedX) % (width + 60);
+        const curX = node.x - 30;
+        const curY = height * node.yRatio + Math.sin(time * 0.018 + node.waveOffset) * node.waveAmp;
+        node.angle += node.rotSpeed;
+
+        const isGreen = node.hue === "green";
+        const mainColor = isGreen ? "#00FF87" : "#FF3366";
+
+        if (curX >= -20 && curX <= width + 20) {
+          ctx.beginPath();
+          ctx.arc(curX, curY, node.radius, 0, Math.PI * 2);
+          ctx.fillStyle = mainColor;
+          ctx.shadowColor = mainColor;
+          ctx.shadowBlur = 10;
+          ctx.fill();
+
+          ctx.save();
+          ctx.translate(curX, curY);
+          ctx.rotate(node.angle);
+
+          ctx.strokeStyle = isGreen ? "rgba(0, 255, 135, 0.35)" : "rgba(255, 51, 102, 0.35)";
+          ctx.lineWidth = 0.9;
+          ctx.setLineDash([2, 4]);
+          ctx.beginPath();
+          ctx.arc(0, 0, node.orbitRadius, 0, Math.PI * 1.65);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          const coordText = `[X:${Math.round(curX)} Y:${Math.round(curY)}]`;
+          ctx.font = '9px "JetBrains Mono", monospace';
+          ctx.fillStyle = isGreen ? "rgba(0, 255, 135, 0.9)" : "rgba(255, 75, 110, 0.9)";
+          ctx.fillText(coordText, node.orbitRadius + 4, 0);
+
+          ctx.restore();
+        }
+      });
+
+      ctx.restore();
+      requestAnimationFrame(render);
+    }
+    render();
+  </script>
+</body>
+</html>

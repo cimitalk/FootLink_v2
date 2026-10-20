@@ -18,6 +18,7 @@ Questo registro raccoglie tutte le decisioni architetturali, di governance, di b
 | [ADR-007](./ADR-007-flexible-data-model-seasons-collections-domain-registries.md) | Architettura Modello Dati Dinamico, Gerarchia Stagione/Collezione 1:N, Anagrafiche di Dominio e Streamlining UX | 🟢 Approvata (L1) | CTO + CPO | CGO / Founder | 2026-10-19 | [`FTL-GOV-005`](../tasks/FTL-GOV-005.json) |
 | [ADR-008](./ADR-008-production-orders-tannery-traceability-subcontractor-lifecycle.md) | Architettura PaaS Distrettuale Multi-Tenant (3 Livelli), Commesse di Produzione, Tracciabilità Lotti Conceria con Certificazioni Documentali e Matrice Taglie/Sfrido BOM | 🟡 Proposta (L3/L6) | CGO + CTO + CPO | Founder (L3/L6) | 2026-10-19 | [`FTL-GOV-006`](../tasks/FTL-GOV-006.json) |
 | [ADR-009](./ADR-009-pause-work-orders-hub-and-refocus-plm-pim-leather-vault.md) | Sospensione Temporanea Work Orders Hub e Focalizzazione Architetturale su Separazione Area Prodotti PLM, PIM Feed E-Commerce e Vault Conceria | 🟢 Approvata (L1/L2/L3/L4) | Founder + CGO + CTO + CPO | Founder | 2026-10-19 | [`FTL-CEO-011`](../tasks/FTL-CEO-011.json) |
+| [ADR-010](./ADR-010-product-hierarchies-merchandising-classifiers-and-bom-cloning.md) | Gerarchia Prodotti Multi-Livello, Classificatori Commerciali di Merchandising e Motore di Caricamento Rapido e Clonazione BOM | 🟢 Approvata (L1/L6) | Founder + C-Suite | Founder | 2026-10-20 | [`FTL-GOV-007`](../tasks/FTL-GOV-007.json) |
 
 ---
 

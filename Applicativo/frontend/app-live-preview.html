@@ -203,8 +203,10 @@
     <!-- SECTION 1: HOME LAUNCHPAD (Executive & Operational Launchpad)         -->
     <!-- ===================================================================== -->
     <div id="section-home">
-      <!-- Spotlight Hero Block -->
-      <div style="background:var(--bg-black); color:#FFFFFF; border-radius:24px; padding:40px; margin-bottom:32px;">
+      <!-- Spotlight Hero Block with Computer Graphics Fractal Animated Wave Background (FTL-TECH-015) -->
+      <div style="position:relative; overflow:hidden; background:#0a0a0a; color:#FFFFFF; border-radius:24px; padding:40px; margin-bottom:32px; border:1px solid #1f242e;">
+        <canvas id="fractalHeroCanvas" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:0; mix-blend-mode:screen;"></canvas>
+        <div style="position:relative; z-index:10;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:20px; margin-bottom:28px;">
           <div class="badge-pill" style="background:rgba(255,255,255,0.12); color:#FFFFFF;">
             <span class="live-dot" style="margin-right:6px;"></span>
@@ -250,6 +252,7 @@
             <div class="display-title" style="font-size:34px; margin-top:4px;">100% LIVE</div>
             <div style="font-size:11px; color:rgba(255,255,255,0.7); margin-top:2px;">QR Code SVG Navigabile</div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -1255,7 +1258,116 @@ ${pim.sku},${pim.gtin},"${pim.name}",${pim.season},${pim.category},${pim.priceWs
       }
     }
 
-    window.onload = init;
+    function initFractalCanvas() {
+      const canvas = document.getElementById("fractalHeroCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      let time = 0;
+      let width = (canvas.width = canvas.parentElement.clientWidth);
+      let height = (canvas.height = canvas.parentElement.clientHeight);
+
+      window.addEventListener("resize", () => {
+        if (!canvas.parentElement) return;
+        width = canvas.width = canvas.parentElement.clientWidth;
+        height = canvas.height = canvas.parentElement.clientHeight;
+      });
+
+      const waveLayers = [
+        { baseY: 0.42, amp: 38, freq: 0.0028, spd: 0.012, phase: 0.0, cStart: "rgba(0, 255, 136, 0.45)", cEnd: "rgba(255, 51, 102, 0.30)", lw: 2.2 },
+        { baseY: 0.50, amp: 45, freq: 0.0022, spd: 0.009, phase: 1.8, cStart: "rgba(16, 185, 129, 0.50)", cEnd: "rgba(239, 68, 68, 0.40)", lw: 2.8 },
+        { baseY: 0.58, amp: 42, freq: 0.0025, spd: -0.011, phase: 3.2, cStart: "rgba(255, 51, 102, 0.55)", cEnd: "rgba(0, 255, 136, 0.35)", lw: 2.5 },
+        { baseY: 0.52, amp: 52, freq: 0.0018, spd: 0.007, phase: 0.9, cStart: "rgba(0, 255, 136, 0.60)", cEnd: "rgba(239, 68, 68, 0.60)", lw: 3.2 }
+      ];
+
+      const trackingNodes = Array.from({ length: 12 }, (_, i) => ({
+        x: (i / 12) * width,
+        yRatio: 0.35 + ((i % 5) * 0.09),
+        radius: 2.5,
+        speedX: 0.35 + ((i % 3) * 0.15),
+        waveOffset: i * 0.9,
+        waveAmp: 16,
+        hue: i % 2 === 0 ? "green" : "red",
+        rotSpeed: i % 2 === 0 ? 0.02 : -0.018,
+        orbitRadius: 18,
+        angle: (i * Math.PI) / 6
+      }));
+
+      function renderFractal() {
+        time += 1;
+        ctx.clearRect(0, 0, width, height);
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+
+        waveLayers.forEach(l => {
+          const bY = height * l.baseY;
+          const grad = ctx.createLinearGradient(0, 0, width, 0);
+          grad.addColorStop(0, l.cStart);
+          grad.addColorStop(1, l.cEnd);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = l.lw;
+          ctx.shadowColor = l.cStart;
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          for (let x = 0; x <= width; x += 4) {
+            const tSpd = time * l.spd;
+            const y = bY + Math.sin(x * l.freq + tSpd + l.phase) * l.amp + Math.sin(x * l.freq * 2.1 + tSpd * 1.3) * (l.amp * 0.45);
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        });
+
+        // Walking particles with rotating telemetry coordinates
+        trackingNodes.forEach(node => {
+          node.x = (node.x + node.speedX) % (width + 60);
+          const cX = node.x - 30;
+          const cY = height * node.yRatio + Math.sin(time * 0.02 + node.waveOffset) * node.waveAmp;
+          node.angle += node.rotSpeed;
+          const isG = node.hue === "green";
+          const col = isG ? "#00FF87" : "#FF3366";
+
+          if (cX >= -10 && cX <= width + 10) {
+            ctx.beginPath();
+            ctx.arc(cX, cY, node.radius, 0, Math.PI * 2);
+            ctx.fillStyle = col;
+            ctx.shadowColor = col;
+            ctx.shadowBlur = 8;
+            ctx.fill();
+
+            // Rotating telemetry text
+            ctx.save();
+            ctx.translate(cX, cY);
+            ctx.rotate(node.angle);
+            ctx.strokeStyle = isG ? "rgba(0,255,136,0.3)" : "rgba(255,51,102,0.3)";
+            ctx.lineWidth = 0.8;
+            ctx.setLineDash([2, 3]);
+            ctx.beginPath();
+            ctx.arc(0, 0, node.orbitRadius, 0, Math.PI * 1.6);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.font = '8px monospace';
+            ctx.fillStyle = isG ? "rgba(0,255,136,0.9)" : "rgba(255,75,110,0.9)";
+            ctx.shadowColor = col;
+            ctx.shadowBlur = 4;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(`[${Math.round(cX)},${Math.round(cY)}]`, node.orbitRadius + 3, 0);
+            ctx.restore();
+          }
+        });
+
+        ctx.restore();
+        requestAnimationFrame(renderFractal);
+      }
+      renderFractal();
+    }
+
+    window.onload = function() {
+      init();
+      initFractalCanvas();
+    };
   </script>
 </body>
 </html>

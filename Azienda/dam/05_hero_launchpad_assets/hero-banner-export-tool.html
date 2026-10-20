@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Footlink DAM · Hero Banner 4K Export Tool</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: #080808;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .top-toolbar {
+      background: #111;
+      border-bottom: 1px solid #222;
+      padding: 16px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-title {
+      font-weight: 900;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    select, button {
+      background: #1A1A1A;
+      color: #fff;
+      border: 1px solid #333;
+      padding: 9px 18px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    select:focus, button:hover {
+      border-color: #00FF87;
+    }
+    button.primary-btn {
+      background: #00FF87;
+      color: #0A0A0A;
+      border-color: #00FF87;
+      font-weight: 800;
+    }
+    button.primary-btn:hover {
+      background: #fff;
+      border-color: #fff;
+    }
+    .canvas-viewport {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      overflow: auto;
+    }
+    .canvas-wrapper {
+      position: relative;
+      border: 1px solid #252525;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 30px 100px rgba(0,0,0,0.8);
+      background: #0A0A0A;
+    }
+    canvas {
+      display: block;
+      mix-blend-mode: screen;
+    }
+    .hud-overlay {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      pointer-events: none;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: #00FF87;
+      background: rgba(10,10,10,0.7);
+      backdrop-filter: blur(8px);
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,255,135,0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-toolbar">
+    <div class="brand-group">
+      <span style="color:#00FF87; font-size:18px;">✦</span>
+      <span class="brand-title">FOOTLINK DAM · HERO 4K EXPORTER</span>
+      <span style="font-family:'JetBrains Mono', monospace; font-size:11px; color:#707072;">[STANDALONE GENERATOR]</span>
+    </div>
+
+    <div class="toolbar-actions">
+      <label style="font-size:11px; font-weight:700; color:#888;">FORMATO:</label>
+      <select id="resSelect" onchange="changeResolution()">
+        <option value="1200x630">LinkedIn / Meta Feed (1200 × 630)</option>
+        <option value="1920x1080" selected>Full HD Desktop (1920 × 1080)</option>
+        <option value="1080x1080">Instagram Feed Square (1080 × 1080)</option>
+        <option value="1080x1920">Vertical Story 9:16 (1080 × 1920)</option>
+        <option value="3840x2160">Ultra HD 4K (3840 × 2160)</option>
+      </select>
+
+      <button id="toggleBtn" onclick="toggleEngine()">⏸ Pausa</button>
+      <button class="primary-btn" onclick="exportPNG()">📸 Scarica PNG ad Alta Risoluzione</button>
+    </div>
+  </div>
+
+  <div class="canvas-viewport">
+    <div class="canvas-wrapper">
+      <div class="hud-overlay" id="hudStatus">FPS: 60 · NODES: 16 · TELEMETRY: ACTIVE</div>
+      <canvas id="exportCanvas" width="1920" height="1080" style="max-width: 90vw; max-height: 80vh; width: auto; height: auto;"></canvas>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createFractalTelemetryEngine } from "./fractal-telemetry-engine.js";
+
+    const canvas = document.getElementById("exportCanvas");
+    let currentEngine = createFractalTelemetryEngine(canvas, { width: 1920, height: 1080, nodeCount: 16 });
+    let running = true;
+
+    window.toggleEngine = () => {
+      const btn = document.getElementById("toggleBtn");
+      if (running) {
+        currentEngine.stop();
+        btn.innerText = "▶ Riprendi";
+      } else {
+        currentEngine.start();
+        btn.innerText = "⏸ Pausa";
+      }
+      running = !running;
+    };
+
+    window.changeResolution = () => {
+      const val = document.getElementById("resSelect").value;
+      const [w, h] = val.split("x").map(Number);
+      currentEngine.stop();
+      currentEngine = createFractalTelemetryEngine(canvas, { width: w, height: h, nodeCount: Math.round(w / 120) });
+      document.getElementById("hudStatus").innerText = `RES: ${w}×${h} · NODES: ${Math.round(w / 120)} · 60FPS`;
+      running = true;
+      document.getElementById("toggleBtn").innerText = "⏸ Pausa";
+    };
+
+    window.exportPNG = () => {
+      const link = document.createElement("a");
+      link.download = `footlink-hero-telemetry-${document.getElementById("resSelect").value}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    };
+  </script>
+</body>
+</html>

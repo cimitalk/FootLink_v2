@@ -545,7 +545,7 @@ def list_all_docs():
             return "CPO"
         if "role_cro" in low or "/finops/" in low or "ftl-rev" in low:
             return "CRO"
-        if "role_cmo" in low or "/marketing/" in low or "ftl-mkt" in low:
+        if "role_cmo" in low or "/marketing/" in low or "/dam/" in low or "ftl-mkt" in low:
             return "CMO"
         if "manifesto" in low:
             return "CEO"
@@ -608,6 +608,14 @@ def list_all_docs():
         )
         if "__pycache__" not in p and "node_modules" not in p and ".pytest_cache" not in p
     ]
+    dam_files = [
+        os.path.relpath(p, ROOT_DIR)
+        for p in sorted(
+            glob.glob(os.path.join(ROOT_DIR, "Azienda", "dam", "**", "*.md"), recursive=True)
+            + glob.glob(os.path.join(ROOT_DIR, "Azienda", "dam", "**", "*.html"), recursive=True)
+            + glob.glob(os.path.join(ROOT_DIR, "Azienda", "dam", "**", "*.svg"), recursive=True)
+        )
+    ]
     portale_files = [
         os.path.relpath(p, ROOT_DIR)
         for p in sorted(
@@ -617,7 +625,7 @@ def list_all_docs():
     ]
     root_files = ["README.md", "AGENTS.md", ".github/workflows/ci.yml"]
 
-    candidates = azienda_core + adr_files + task_json_files + doc_files + applicativo_files + portale_files + root_files
+    candidates = azienda_core + adr_files + task_json_files + doc_files + dam_files + applicativo_files + portale_files + root_files
     seen = set()
     for rel in candidates:
         full_p = os.path.join(ROOT_DIR, rel)
@@ -628,15 +636,33 @@ def list_all_docs():
                     "Portale_Founder_Control" if rel.startswith("Portale_Founder_Control/") else "Root"
                 )
             )
+            title = extract_title(full_p)
+            is_founder_directive = False
+            title_lower = title.lower()
+            rel_lower = rel.lower()
+            if "direttiva founder" in title_lower or "direttiva esecutiva" in title_lower or "founder" in title_lower or "direttiva" in title_lower or "founder" in rel_lower or rel.startswith("Azienda/USER.md"):
+                is_founder_directive = True
+            else:
+                try:
+                    with open(full_p, "r", encoding="utf-8", errors="ignore") as f_head:
+                        h = f_head.read(1500).lower()
+                        if "direttiva founder" in h or "direttiva esecutiva" in h or "founder (control center)" in h:
+                            is_founder_directive = True
+                except Exception:
+                    pass
+
             docs.append({
                 "path": rel,
                 "pillar": pillar,
                 "role": infer_role(rel),
-                "title": extract_title(full_p),
+                "title": title,
                 "ext": os.path.splitext(rel)[1].lower(),
                 "size": os.path.getsize(full_p),
                 "mtime": datetime.datetime.fromtimestamp(os.path.getmtime(full_p)).strftime("%Y-%m-%d %H:%M:%S"),
+                "is_founder_directive": is_founder_directive,
             })
+    # Ordinamento decrescente per data ultima modifica DESC (FTL-TECH-013)
+    docs.sort(key=lambda d: d.get("mtime", ""), reverse=True)
     return docs
 
 
@@ -1350,9 +1376,21 @@ INDEX_HTML = r"""<!DOCTYPE html>
     <button class="btn btn-create-task" onclick="openCreateTaskModal()" title="Crea un nuovo task da assegnare alla C-Suite">
       <span>✨ Crea Task Founder</span>
     </button>
-    <a href="http://127.0.0.1:5173" target="_blank" rel="noopener noreferrer" class="btn btn-platform" title="Apri l'applicazione Web React Vite su http://127.0.0.1:5173">
+    <a href="http://localhost:5173" target="_blank" rel="noopener noreferrer" class="btn btn-platform" title="Apri l'applicazione Web React Vite su http://localhost:5173">
       <span>👟 Piattaforma Footlink</span>
       <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Frontend :5173 ↗</span>
+    </a>
+    <a href="http://localhost:5173/dam/index.html" target="_blank" rel="noopener noreferrer" class="btn" style="background:#14231b;border-color:#166534;color:#4ade80;" title="Archivio DAM Asset Pubblicitari, Social e Newsletter">
+      <span>📁 Archivio DAM</span>
+      <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Adv &amp; Social ↗</span>
+    </a>
+    <a href="/codebase-dashboard" target="_blank" rel="noopener noreferrer" class="btn" style="background:#1e1b4b;border-color:#4338ca;color:#a5b4fc;" title="Dashboard Analitica sulla Codebase (FTL-TECH-017)">
+      <span>📊 Codebase Analytics</span>
+      <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Real-Time ↗</span>
+    </a>
+    <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noopener noreferrer" class="btn" style="background:#1e293b;border-color:#334155;color:#38bdf8;" title="Documentazione interattiva API FastAPI Swagger su http://127.0.0.1:8000/docs">
+      <span>📖 API Docs</span>
+      <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">:8000/docs ↗</span>
     </a>
     <span class="pill green" id="quota-pill">⚡ AI Quota: ACTIVE (€21.99 Pro + €30 Credits)</span>
     <span class="pill amber">🛡️ Spend Policy: €0 Autonomous (L2 Founder Lock)</span>
@@ -1378,18 +1416,29 @@ INDEX_HTML = r"""<!DOCTYPE html>
       <div class="value" style="font-size:18px;margin-top:4px;">Piattaforma PLM + PIM</div>
       <div class="sub"><code>backend/</code> (FastAPI :8000) • <code>frontend/</code> (React :5173)</div>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="http://127.0.0.1:5173" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-approve" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+        <a href="http://localhost:5173" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-approve" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
           🚀 Apri Frontend (:5173) ↗
+        </a>
+        <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+          📖 Documentazione API (:8000/docs) ↗
         </a>
         <button class="btn btn-sm" onclick="openDoc('Applicativo/frontend/app-live-preview.html')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;display:inline-flex;align-items:center;gap:4px;">
           👁️ Live Preview Standalone
         </button>
+        <a href="http://localhost:5173/dam/index.html" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:rgba(16,185,129,0.15);border-color:#10b981;color:#6ee7b7;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+          📁 Archivio DAM Adv &amp; Social ↗
+        </a>
       </div>
     </div>
     <div class="kpi-card" style="border-left:4px solid #a855f7;">
       <div class="label">🎛️ Pilastro 3 — Portale Founder Control/</div>
       <div class="value" style="font-size:18px;">Cabina di Regia L1–L6</div>
       <div class="sub"><code>control_center.py</code> • Gatekeeper &amp; Real-Time Sync</div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="/codebase-dashboard" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:rgba(168,85,247,0.15);border-color:#a855f7;color:#d8b4fe;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+          📊 Dashboard Codebase (SLOC &amp; Git) ↗
+        </a>
+      </div>
     </div>
   </div>
 
@@ -1428,6 +1477,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
         <button class="filter-chip" data-ext=".html" onclick="setDocFilterExt('.html')">🌐 HTML / Preview (.html)</button>
         <button class="filter-chip" data-ext=".json" onclick="setDocFilterExt('.json')">⚙️ JSON Task</button>
         <button class="filter-chip" data-ext=".py" onclick="setDocFilterExt('.py')">🐍 Codice (.py / .tsx)</button>
+        <button class="filter-chip" id="chip-founder-directives" onclick="toggleFounderDirectivesFilter()" style="border-color:#f59e0b;color:#fbbf24;">👑 Direttive Founder</button>
       </div>
     </div>
 
@@ -2358,11 +2408,13 @@ function toggleShowAllDone() {
 let hubFilter = {
   role: 'TUTTI',
   ext: 'all',
+  founderOnly: false,
   query: ''
 };
 
 function renderKnowledgeHub() {
   const allDocs = currentState.docs || [];
+  allDocs.sort((a, b) => (b.mtime || '').localeCompare(a.mtime || ''));
 
   const rolesList = [
     { key: 'TUTTI', label: '🏢 Tutti i Documenti' },
@@ -2392,6 +2444,9 @@ function renderKnowledgeHub() {
   }
 
   let filtered = allDocs.filter(d => {
+    if (hubFilter.founderOnly && !d.is_founder_directive) {
+      return false;
+    }
     if (hubFilter.role !== 'TUTTI' && d.role !== hubFilter.role) {
       return false;
     }
@@ -2418,7 +2473,7 @@ function renderKnowledgeHub() {
 
   const metaEl = document.getElementById('hub-results-meta');
   if (metaEl) {
-    metaEl.textContent = `Mostrando ${filtered.length} file • Filtro: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.query ? ' • Ricerca: "' + hubFilter.query + '"' : ''}`;
+    metaEl.textContent = `Mostrando ${filtered.length} file • Filtro: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.founderOnly ? ' • 👑 Solo Direttive Founder' : ''}${hubFilter.query ? ' • Ricerca: "' + hubFilter.query + '"' : ''}`;
   }
 
   const gridEl = document.getElementById('hub-docs-grid');
@@ -2457,6 +2512,7 @@ function renderKnowledgeHub() {
           <div class="doc-card-top">
             <span class="doc-role-badge role-${d.role}">${emoji} ${d.role}</span>
             <span class="doc-type-badge type-${cleanExt}">${cleanExt.toUpperCase()}</span>
+            ${d.is_founder_directive ? `<span class="doc-role-badge" style="background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.4);font-weight:bold;font-size:10px;">👑 Direttiva Founder</span>` : ''}
             <span class="doc-size" style="font-size:11px;color:var(--muted);">${(d.size/1024).toFixed(1)} KB</span>
           </div>
           <div class="doc-card-title" title="${escapeHtml(d.title)}">${escapeHtml(d.title)}</div>
@@ -2474,6 +2530,13 @@ function renderKnowledgeHub() {
       </div>
     `;
   }).join('');
+}
+
+function toggleFounderDirectivesFilter() {
+  hubFilter.founderOnly = !hubFilter.founderOnly;
+  const chip = document.getElementById('chip-founder-directives');
+  if (chip) chip.classList.toggle('active', hubFilter.founderOnly);
+  renderKnowledgeHub();
 }
 
 function setDocFilterRole(role) {
@@ -2857,8 +2920,31 @@ class ControlCenterHandler(BaseHTTPRequestHandler):
                 return
             else:
                 self.send_response(302)
-                self.send_header("Location", "http://127.0.0.1:5173")
+                self.send_header("Location", "http://localhost:5173")
                 self.end_headers()
+                return
+        elif parsed.path in ("/codebase", "/codebase-dashboard"):
+            try:
+                from codebase_analytics import generate_codebase_dashboard_html
+                dash_html = generate_codebase_dashboard_html()
+                body = dash_html.encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            except Exception as e:
+                self.send_error(500, f"Error generating codebase dashboard: {e}")
+                return
+        elif parsed.path == "/api/codebase_stats":
+            try:
+                from codebase_analytics import get_git_metrics, get_sloc_metrics
+                self._send_json({"git": get_git_metrics(), "sloc": get_sloc_metrics()})
+                return
+            except Exception as e:
+                self._send_json({"error": str(e)}, status=500)
                 return
         elif parsed.path == "/api/state":
             sync_dependencies_and_readme()

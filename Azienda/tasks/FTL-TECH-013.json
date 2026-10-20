@@ -1,0 +1,35 @@
+{
+  "task_id": "FTL-TECH-013",
+  "title": "Link presenti su portale founder controllccenter",
+  "description": "Link corretto alla piattaforma in localhots: http://localhost:5173 e non http://127.0.0.1:5173 come ora\nAggiugnere box con link Documentazione API: http://127.0.0.1:8000/docs\nArchivio Documentale & Deliverable C-Suite: ordinare i documenti visualizzati per dataultima modifica DESC\nArchivio Documentale & Deliverable C-Suite: aggiungere filtro per documenti con badge \"👑Direttiva Founder\"",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-20T20:33:25+02:00",
+  "updated_at": "2026-10-20T21:05:00+02:00",
+  "due_date": "2026-11-19T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "S (0.5gg)",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "file:///Users/a.ciminaritodsgroup.com/Projects/FootLink_v2/Portale_Founder_Control/control_center.py"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-010",
+  "tags": [
+    "product",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Link piattaforma aggiornato a http://localhost:5173",
+    "Box link documentazione API FastAPI http://127.0.0.1:8000/docs",
+    "Archivio documentale ordinato per data modifica decrescente (DESC)",
+    "Filtro interattivo e badge per deliverable con 👑 Direttiva Founder"
+  ],
+  "notes": "Completato e verificato nel Founder Control Center."
+}

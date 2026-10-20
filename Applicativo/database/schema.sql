@@ -331,3 +331,40 @@ CREATE INDEX IF NOT EXISTS idx_production_orders_variant ON production_orders(pl
 CREATE INDEX IF NOT EXISTS idx_order_sizes_order ON order_size_breakdown(order_id);
 CREATE INDEX IF NOT EXISTS idx_order_phases_order ON production_order_phases(order_id);
 CREATE INDEX IF NOT EXISTS idx_order_phases_token ON production_order_phases(magic_token);
+
+-- ============================================================================
+-- Sprint 7: Product Categories Hierarchy (Multi-level Tree), Classifiers & BOM Templates
+-- Architecture Reference: ADR-010
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS product_categories_hierarchy (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id VARCHAR(64) NOT NULL UNIQUE,
+    parent_id VARCHAR(64) NULL,
+    level INTEGER NOT NULL DEFAULT 1 CHECK (level BETWEEN 1 AND 4),
+    code VARCHAR(64) NOT NULL,
+    slug_path VARCHAR(255) NOT NULL,
+    label_it VARCHAR(255) NOT NULL,
+    label_en VARCHAR(255) NOT NULL,
+    icon VARCHAR(32) DEFAULT '🏷️',
+    is_active BOOLEAN NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES product_categories_hierarchy(category_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS bom_templates (
+    template_id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    category_id VARCHAR(64) NOT NULL,
+    construction_type VARCHAR(64) NOT NULL DEFAULT 'cassetta_cucita',
+    description TEXT NOT NULL DEFAULT '',
+    items_json TEXT NOT NULL DEFAULT '[]',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_cat_hier_parent ON product_categories_hierarchy(parent_id);
+CREATE INDEX IF NOT EXISTS idx_cat_hier_slug ON product_categories_hierarchy(slug_path);
+CREATE INDEX IF NOT EXISTS idx_cat_hier_level ON product_categories_hierarchy(level, is_active);
+CREATE INDEX IF NOT EXISTS idx_bom_templates_cat ON bom_templates(category_id);
+

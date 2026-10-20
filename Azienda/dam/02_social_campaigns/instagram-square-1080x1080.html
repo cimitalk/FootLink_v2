@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1080, initial-scale=1.0">
+  <title>Footlink DAM · Square Feed Carousel (1080x1080)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 30px;
+    }
+    .carousel-container {
+      width: 1080px;
+      height: 1080px;
+      background: #0A0A0A;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #222;
+      border-radius: 24px;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 0 60px rgba(0, 255, 135, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 80px 80px;
+    }
+    canvas#squareCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1080px;
+      height: 1080px;
+      z-index: 1;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+    .z-ui {
+      position: relative;
+      z-index: 10;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .brand-title {
+      font-weight: 900;
+      font-size: 32px;
+      letter-spacing: -0.04em;
+    }
+    .slide-badge {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #00FF87;
+      background: rgba(0, 255, 135, 0.1);
+      border: 1px solid rgba(0, 255, 135, 0.3);
+      padding: 8px 18px;
+      border-radius: 9999px;
+    }
+    .slide-content {
+      margin-top: 40px;
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .slide-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #00FF87;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 16px;
+    }
+    .slide-title {
+      font-size: 64px;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .slide-desc {
+      font-size: 24px;
+      line-height: 1.45;
+      color: #B0B0B0;
+      max-width: 820px;
+      font-weight: 500;
+    }
+    .slide-feature-box {
+      margin-top: 36px;
+      display: flex;
+      gap: 20px;
+    }
+    .feature-chip {
+      background: rgba(25, 25, 25, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 18px 24px;
+      backdrop-filter: blur(10px);
+    }
+    .chip-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .chip-subtitle {
+      font-size: 13px;
+      color: #707072;
+      font-family: "JetBrains Mono", monospace;
+      margin-top: 4px;
+    }
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 30px;
+      border-top: 1px solid #1E1E1E;
+    }
+    .dots-nav {
+      display: flex;
+      gap: 12px;
+    }
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #252525;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .dot.active {
+      background: #00FF87;
+      box-shadow: 0 0 12px #00FF87;
+      width: 38px;
+      border-radius: 999px;
+    }
+    .controls {
+      display: flex;
+      gap: 14px;
+    }
+    .ctrl-btn {
+      background: #191919;
+      color: #fff;
+      border: 1px solid #333;
+      padding: 14px 28px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ctrl-btn:hover {
+      background: #fff;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="carousel-container">
+    <canvas id="squareCanvas" width="1080" height="1080"></canvas>
+
+    <!-- Header -->
+    <div class="top-bar z-ui">
+      <div class="brand-mark">
+        <svg width="44" height="36" viewBox="0 0 46 38" fill="none">
+          <path d="M0 36L16 2H30L14 36H0Z" fill="#00FF87"/>
+          <path d="M18 36L28 12H42L31 36H18Z" fill="#00FF87" fill-opacity="0.85"/>
+          <path d="M0 37.5H42L40 40H-2L0 37.5Z" fill="#00FF87"/>
+        </svg>
+        <span class="brand-title">FOOTLINK</span>
+      </div>
+      <div class="slide-badge" id="slideBadge">SLIDE 01 / 04</div>
+    </div>
+
+    <!-- Active Slide Content -->
+    <div class="slide-content z-ui" id="slideContent">
+      <!-- Injected via JS -->
+    </div>
+
+    <!-- Footer Controls -->
+    <div class="bottom-bar z-ui">
+      <div class="dots-nav">
+        <div class="dot active" onclick="setSlide(0)"></div>
+        <div class="dot" onclick="setSlide(1)"></div>
+        <div class="dot" onclick="setSlide(2)"></div>
+        <div class="dot" onclick="setSlide(3)"></div>
+      </div>
+      <div class="controls">
+        <button class="ctrl-btn" onclick="prevSlide()">← Precedente</button>
+        <button class="ctrl-btn" onclick="nextSlide()">Successivo →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const slides = [
+      {
+        tag: "01 · L'OS della Filiera Moda",
+        title: "DALLA FABBRICA<br>ALLA BOUTIQUE.",
+        desc: "La prima piattaforma integrata PLM + PIM pensata per la manifattura d'eccellenza. Zero attriti, piena conformità normativa e tracciabilità certificata.",
+        chips: [
+          { t: "1:N", s: "1 PIM · N PLM LABS" },
+          { t: "LWG / EUDR", s: "PELLAMI VERIFICATI" },
+          { t: "60 FPS", s: "PERFORMANCE ATTIVA" }
+        ]
+      },
+      {
+        tag: "02 · Onboarding Rapido",
+        title: "DISTINTA BASE IN<br><span style='color:#00FF87'>90 SECONDI.</span>",
+        desc: "Crea e clona strutture BOM a 3 livelli: Componenti finiti, Materiali e Lotti di conceria. Configura piramidi di collezione (Carryover e Trend) senza toccare codice JSON.",
+        chips: [
+          { t: "< 90s", s: "TEMPO MEDIO CLONAZIONE" },
+          { t: "3 Livelli", s: "ALBERO BOM ATOMICO" },
+          { t: "Zero JSON", s: "CONFIGURATORE VISUALE" }
+        ]
+      },
+      {
+        tag: "03 · Modello Distrettuale",
+        title: "LABORATORI TERZISTI<br><span style='color:#FF3366'>A CANONE 0 €.</span>",
+        desc: "Coinvolgi orlatori, giunterie e façoni senza costi di licenza. Accesso ultrarapido via Magic Link, senza login complessi e con validazione in 3 tocchi.",
+        chips: [
+          { t: "0,00 €", s: "COSTO TERZISTI SEMPRE" },
+          { t: "3 Tap", s: "AVANZAMENTO FASE" },
+          { t: "L6 Protected", s: "SEGREGAZIONE COSTI" }
+        ]
+      },
+      {
+        tag: "04 · Normativa UE 2026",
+        title: "PASSAPORTO DPP<br>E CONFORMITÀ ESPR.",
+        desc: "Genera QR Code dinamici e schede di trasparenza pubblica con l'impronta di carbonio, provenienza conceria e riparabilità del manufatto.",
+        chips: [
+          { t: "100%", s: "CONFORME ESPR UE" },
+          { t: "SHA-256", s: "DOCUMENT VAULT PELLE" },
+          { t: "QR Dinamico", s: "CARTELLINO DIGITALE" }
+        ]
+      }
+    ];
+
+    let currentSlide = 0;
+
+    function renderSlide() {
+      const s = slides[currentSlide];
+      document.getElementById("slideBadge").innerText = `SLIDE 0${currentSlide + 1} / 04`;
+      document.getElementById("slideContent").innerHTML = `
+        <div class="slide-tag">${s.tag}</div>
+        <h1 class="slide-title">${s.title}</h1>
+        <p class="slide-desc">${s.desc}</p>
+        <div class="slide-feature-box">
+          ${s.chips.map(c => `
+            <div class="feature-chip">
+              <div class="chip-title">${c.t}</div>
+              <div class="chip-subtitle">${c.s}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      document.querySelectorAll(".dot").forEach((d, i) => {
+        d.classList.toggle("active", i === currentSlide);
+      });
+    }
+
+    function setSlide(idx) {
+      currentSlide = idx;
+      renderSlide();
+    }
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % slides.length;
+      renderSlide();
+    }
+    function prevSlide() {
+      currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+      renderSlide();
+    }
+
+    renderSlide();
+
+    // Canvas 2D Wave & Telemetry
+    const canvas = document.getElementById("squareCanvas");
+    const ctx = canvas.getContext("2d");
+    let width = canvas.width = 1080;
+    let height = canvas.height = 1080;
+    let time = 0;
+
+    const trackingNodes = Array.from({ length: 16 }, (_, i) => ({
+      x: (i / 16) * width,
+      yRatio: 0.35 + ((i % 6) * 0.09),
+      radius: 2.8 + (i % 3) * 0.8,
+      speedX: 0.45 + ((i % 4) * 0.15),
+      waveOffset: i * 0.8,
+      waveAmp: 18 + (i % 4) * 8,
+      hue: i % 2 === 0 ? "green" : "red",
+      rotSpeed: (i % 2 === 0 ? 0.016 : -0.014) + (i % 3) * 0.003,
+      orbitRadius: 20 + (i % 3) * 4,
+      angle: (i * Math.PI) / 8
+    }));
+
+    function renderAnim() {
+      time += 1;
+      ctx.clearRect(0, 0, width, height);
+
+      // Waves
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+
+      const waves = [
+        { y: 0.45, amp: 48, freq: 0.0022, speed: 0.010, color: "rgba(0, 255, 135, 0.45)" },
+        { y: 0.55, amp: 54, freq: 0.0018, speed: -0.008, color: "rgba(255, 51, 102, 0.50)" },
+        { y: 0.65, amp: 40, freq: 0.0026, speed: 0.012, color: "rgba(16, 185, 129, 0.40)" }
+      ];
+
+      waves.forEach(w => {
+        ctx.beginPath();
+        ctx.strokeStyle = w.color;
+        ctx.lineWidth = 2.6;
+        ctx.shadowColor = w.color;
+        ctx.shadowBlur = 10;
+        for (let x = 0; x <= width; x += 8) {
+          const y = height * w.y + Math.sin(x * w.freq + time * w.speed) * w.amp;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      });
+
+      // Nodes & Telemetry
+      trackingNodes.forEach(node => {
+        node.x = (node.x + node.speedX) % (width + 60);
+        const curX = node.x - 30;
+        const curY = height * node.yRatio + Math.sin(time * 0.018 + node.waveOffset) * node.waveAmp;
+        node.angle += node.rotSpeed;
+
+        const isGreen = node.hue === "green";
+        const mainColor = isGreen ? "#00FF87" : "#FF3366";
+
+        if (curX >= -20 && curX <= width + 20) {
+          ctx.beginPath();
+          ctx.arc(curX, curY, node.radius, 0, Math.PI * 2);
+          ctx.fillStyle = mainColor;
+          ctx.shadowColor = mainColor;
+          ctx.shadowBlur = 8;
+          ctx.fill();
+
+          ctx.save();
+          ctx.translate(curX, curY);
+          ctx.rotate(node.angle);
+
+          ctx.strokeStyle = isGreen ? "rgba(0, 255, 135, 0.3)" : "rgba(255, 51, 102, 0.3)";
+          ctx.lineWidth = 0.8;
+          ctx.setLineDash([2, 3]);
+          ctx.beginPath();
+          ctx.arc(0, 0, node.orbitRadius, 0, Math.PI * 1.6);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          const coordText = `[X:${Math.round(curX)} Y:${Math.round(curY)}]`;
+          ctx.font = '8px "JetBrains Mono", monospace';
+          ctx.fillStyle = isGreen ? "rgba(0, 255, 135, 0.85)" : "rgba(255, 75, 110, 0.85)";
+          ctx.fillText(coordText, node.orbitRadius + 4, 0);
+
+          ctx.restore();
+        }
+      });
+
+      ctx.restore();
+      requestAnimationFrame(renderAnim);
+    }
+    renderAnim();
+  </script>
+</body>
+</html>

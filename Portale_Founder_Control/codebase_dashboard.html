@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Footlink — Codebase Analytics &amp; Architecture Dashboard (FTL-TECH-017)</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: #080808;
+      color: #FFFFFF;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      padding: 30px;
+    }
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+    header.dashboard-header {
+      background: #101010;
+      border: 1px solid #222222;
+      border-radius: 20px;
+      padding: 26px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+    .brand-title {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn {
+      background: #1A1A1A;
+      color: #FFFFFF;
+      border: 1px solid #333333;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #FFFFFF;
+      color: #0A0A0A;
+      border-color: #FFFFFF;
+    }
+    .btn-primary {
+      background: #00FF87;
+      color: #0A0A0A;
+      border-color: #00FF87;
+      font-weight: 800;
+    }
+    .btn-primary:hover {
+      background: #FFFFFF;
+      border-color: #FFFFFF;
+    }
+
+    /* 4 Crystal Clear KPIs */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+    .kpi-card {
+      background: #111111;
+      border: 1px solid #222222;
+      border-radius: 16px;
+      padding: 22px 24px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #707072;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .kpi-val {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: #FFFFFF;
+      margin: 12px 0 6px 0;
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: #A0A0A0;
+      line-height: 1.4;
+    }
+
+    /* 2 Columns Layout */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+    @media(max-width: 992px) {
+      .grid-2col { grid-template-columns: 1fr; }
+    }
+
+    .section-card {
+      background: #111111;
+      border: 1px solid #222222;
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .card-head {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1E1E1E;
+      padding-bottom: 14px;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    table.data-table th {
+      text-align: left;
+      font-size: 10px;
+      font-weight: 800;
+      color: #707072;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1F1F1F;
+    }
+    table.data-table td {
+      padding: 10px 6px;
+      border-bottom: 1px solid #191919;
+      vertical-align: middle;
+    }
+
+    .pill-breakdown {
+      display: flex;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Header -->
+    <header class="dashboard-header">
+      <div>
+        <div class="brand-title">
+          <svg width="30" height="24" viewBox="0 0 46 38" fill="none">
+            <path d="M0 36L16 2H30L14 36H0Z" fill="#00FF87"/>
+            <path d="M18 36L28 12H42L31 36H18Z" fill="#00FF87" fill-opacity="0.85"/>
+            <path d="M0 37.5H42L40 40H-2L0 37.5Z" fill="#00FF87"/>
+          </svg>
+          <span>FOOTLINK · CODEBASE ANALYTICS</span>
+        </div>
+        <p style="color:#707072; font-size:12px; margin-top:4px; font-family:'JetBrains Mono', monospace;">
+          Telemetria architettura software reale · Ultimo aggiornamento: <strong>2026-10-20 22:01:04</strong>
+        </p>
+      </div>
+
+      <div class="header-actions">
+        <a href="http://127.0.0.1:8080" class="btn">
+          <span>← Founder Control Center</span>
+        </a>
+        <button class="btn btn-primary" onclick="window.location.reload()">
+          <span>🔄 Ricarica Dati Real-Time</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 4 Clear Executive KPIs -->
+    <div class="kpi-grid">
+      <!-- KPI 1 -->
+      <div class="kpi-card" style="border-left: 4px solid #00FF87;">
+        <div class="kpi-label">
+          <span>01 · Dimensioni &amp; Volume SLOC</span>
+          <span style="color:#00FF87;">3 PILASTRI</span>
+        </div>
+        <div class="kpi-val">52,985</div>
+        <div class="kpi-sub">
+          Righe di codice sorgente autoriale distribuite su <strong>207 file</strong> senza dipendenze vendor esterne.
+        </div>
+      </div>
+
+      <!-- KPI 2 -->
+      <div class="kpi-card" style="border-left: 4px solid #38bdf8;">
+        <div class="kpi-label">
+          <span>02 · Cadenza &amp; Velocity Git</span>
+          <span style="color:#38bdf8;">SPRINT 1–7</span>
+        </div>
+        <div class="kpi-val">19</div>
+        <div class="kpi-sub">
+          Commit strutturali registrati nel repository con cronologia lineare, 0 merge conflicts e piena tracciabilità OKR.
+        </div>
+      </div>
+
+      <!-- KPI 3 -->
+      <div class="kpi-card" style="border-left: 4px solid #FF3366;">
+        <div class="kpi-label">
+          <span>03 · Hotspot Moduli Core</span>
+          <span style="color:#FF3366;">FREQUENZA EDIT</span>
+        </div>
+        <div class="kpi-val" style="font-size:30px; line-height:1.2;">
+          FastAPI &amp; PLM
+        </div>
+        <div class="kpi-sub">
+          I moduli più soggetti a evoluzione guidata: <code>control_center.py</code>, <code>database.py</code> e <code>PlmProductsManager.tsx</code>.
+        </div>
+      </div>
+
+      <!-- KPI 4 -->
+      <div class="kpi-card" style="border-left: 4px solid #fbbf24;">
+        <div class="kpi-label">
+          <span>04 · Test &amp; Salute FinOps</span>
+          <span style="color:#fbbf24;">L2 ZERO-SPEND</span>
+        </div>
+        <div class="kpi-val" style="color:#00FF87;">100% OK</div>
+        <div class="kpi-sub">
+          <strong>25/25 Pytest passati</strong> · 0 errori TypeScript · Spesa infrastrutturale <strong>0,00 €/mese</strong> perpetua.
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 1: Commit Velocity Trend Chart & Pillar Breakdown -->
+    <div class="grid-2col">
+      <!-- Commit Trend -->
+      <div class="section-card">
+        <div class="card-head">
+          <span>📈 Tendenza Commit nel Tempo (Git Velocity)</span>
+          <span style="font-family:'JetBrains Mono', monospace; font-size:11px; color:#00FF87;">DATI REALI LOCALI</span>
+        </div>
+        
+      <svg width="580" height="160" viewBox="0 0 580 160" style="width:100%; height:auto;">
+        <line x1="20" y1="134" x2="560" y2="134" stroke="#222222" stroke-width="1" />
+        
+          <rect x="40" y="20" width="48" height="110" rx="6" fill="#00FF87" fill-opacity="0.85" />
+          <text x="64.0" y="12" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700">7</text>
+          <text x="64.0" y="150" text-anchor="middle" fill="#707072" font-family="'JetBrains Mono', monospace" font-size="10">2026-10-17</text>
+        
+          <rect x="148" y="20" width="48" height="110" rx="6" fill="#00FF87" fill-opacity="0.85" />
+          <text x="172.0" y="12" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700">7</text>
+          <text x="172.0" y="150" text-anchor="middle" fill="#707072" font-family="'JetBrains Mono', monospace" font-size="10">2026-10-18</text>
+        
+          <rect x="256" y="52" width="48" height="78" rx="6" fill="#00FF87" fill-opacity="0.85" />
+          <text x="280.0" y="44" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700">5</text>
+          <text x="280.0" y="150" text-anchor="middle" fill="#707072" font-family="'JetBrains Mono', monospace" font-size="10">2026-10-19</text>
+        
+      </svg>
+    
+        <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace; margin-top:10px; text-align:center;">
+          Andamento della produttività e frequenza di merge per sessione di sviluppo
+        </div>
+      </div>
+
+      <!-- 3-Pillar & Tech Stack Distribution -->
+      <div class="section-card">
+        <div class="card-head">
+          <span>🏛️ Ripartizione Architetturale a 3 Pilastri (ADR-005)</span>
+          <span style="font-family:'JetBrains Mono', monospace; font-size:11px; color:#a78bfa;">SLOC %</span>
+        </div>
+
+        <div class="pill-breakdown">
+          <div style="width:58.9%; background:#38bdf8;" title="Applicativo: 58.9%"></div>
+          <div style="width:33.7%; background:#a78bfa;" title="Azienda: 33.7%"></div>
+          <div style="width:7.0%; background:#34d399;" title="Portale: 7.0%"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:18px;">
+          <div><strong style="color:#38bdf8;">Applicativo/</strong> 31,216 (58.9%)</div>
+          <div><strong style="color:#a78bfa;">Azienda/</strong> 17,878 (33.7%)</div>
+          <div><strong style="color:#34d399;">Portale/</strong> 3,728 (7.0%)</div>
+        </div>
+
+        <div style="font-size:12px; font-weight:700; color:#888; text-transform:uppercase; margin-bottom:10px;">
+          Stack Tecnologico Dettagliato:
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px;">
+          <div style="background:#171717; padding:10px 14px; border-radius:8px; border:1px solid #252525;">
+            <div style="color:#38bdf8; font-weight:800;">TypeScript / React</div>
+            <div style="font-size:16px; font-weight:900; margin-top:2px;">16,839 SLOC</div>
+          </div>
+          <div style="background:#171717; padding:10px 14px; border-radius:8px; border:1px solid #252525;">
+            <div style="color:#fbbf24; font-weight:800;">Python 3 / FastAPI</div>
+            <div style="font-size:16px; font-weight:900; margin-top:2px;">13,790 SLOC</div>
+          </div>
+          <div style="background:#171717; padding:10px 14px; border-radius:8px; border:1px solid #252525;">
+            <div style="color:#a78bfa; font-weight:800;">Markdown (Governance/DAM)</div>
+            <div style="font-size:16px; font-weight:900; margin-top:2px;">10,151 SLOC</div>
+          </div>
+          <div style="background:#171717; padding:10px 14px; border-radius:8px; border:1px solid #252525;">
+            <div style="color:#34d399; font-weight:800;">HTML / Web Assets</div>
+            <div style="font-size:16px; font-weight:900; margin-top:2px;">8,870 SLOC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Largest Files vs Git Churn Hotspots -->
+    <div class="grid-2col">
+      <!-- Largest Files -->
+      <div class="section-card">
+        <div class="card-head">
+          <span>📏 File più Grandi per Righe di Codice (Top 10)</span>
+          <span style="font-family:'JetBrains Mono', monospace; font-size:11px; color:#707072;">SLOC EFFETTIVE</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome File &amp; Path</th>
+              <th>Pilastro</th>
+              <th style="text-align:right;">SLOC</th>
+              <th>Peso Relativo</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#1</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>control_center.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Portale_Founder_Control/control_center.py</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#34d39922; color:#34d399; border:1px solid #34d39955;">
+                Portale
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              3,065
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:95%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#2</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>database.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/app/database.py</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#38bdf822; color:#38bdf8; border:1px solid #38bdf855;">
+                Applicativo
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              2,805
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:87%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#3</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>main.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/app/main.py</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#38bdf822; color:#38bdf8; border:1px solid #38bdf855;">
+                Applicativo
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              2,548
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:79%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#4</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>PlmProductsManager.tsx</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/frontend/src/components/PlmProductsManager.tsx</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#38bdf822; color:#38bdf8; border:1px solid #38bdf855;">
+                Applicativo
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              2,442
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:76%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#5</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>DomainRegistriesManager.tsx</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/frontend/src/components/DomainRegistriesManager.tsx</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#38bdf822; color:#38bdf8; border:1px solid #38bdf855;">
+                Applicativo
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              2,121
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:66%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#6</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>App.tsx</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/frontend/src/App.tsx</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#38bdf822; color:#38bdf8; border:1px solid #38bdf855;">
+                Applicativo
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              1,821
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:56%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#7</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>mockSeedData.ts</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/frontend/src/mockSeedData.ts</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#38bdf822; color:#38bdf8; border:1px solid #38bdf855;">
+                Applicativo
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              1,788
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:55%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#8</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>landing-page-b2b-live.html</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Azienda/docs/marketing/landing-page-b2b-live.html</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#a78bfa22; color:#a78bfa; border:1px solid #a78bfa55;">
+                Azienda
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              1,649
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:51%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#9</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>seed.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/app/seed.py</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#38bdf822; color:#38bdf8; border:1px solid #38bdf855;">
+                Applicativo
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              1,636
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:51%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#10</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>landing-page-prototype.html</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Azienda/docs/marketing/landing-page-prototype.html</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#a78bfa22; color:#a78bfa; border:1px solid #a78bfa55;">
+                Azienda
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              1,608
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:50%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#11</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>app-live-preview.html</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/frontend/app-live-preview.html</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#38bdf822; color:#38bdf8; border:1px solid #38bdf855;">
+                Applicativo
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              1,373
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:42%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#12</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>test_main.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/tests/test_main.py</div>
+            </td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:#38bdf822; color:#38bdf8; border:1px solid #38bdf855;">
+                Applicativo
+              </span>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#00FF87; width:100px;">
+              1,345
+            </td>
+            <td style="width:120px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#00FF87; height:8px; width:42%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Git Churn Hotspots -->
+      <div class="section-card">
+        <div class="card-head">
+          <span>🔥 File più Soggetti a Modifiche (Git Churn Hotspots)</span>
+          <span style="font-family:'JetBrains Mono', monospace; font-size:11px; color:#FF3366;">COMMIT FREQUENCY</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome File &amp; Path</th>
+              <th style="text-align:right;">Frequenza</th>
+              <th>Attività</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#1</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>footlink.db</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/database/footlink.db</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              6 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:90%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#2</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>Manifesto_Fondazione_Footlink.md</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Manifesto_Fondazione_Footlink.md</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              5 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:75%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#3</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>main.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/app/main.py</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              4 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:60%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#4</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>models.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/app/models.py</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              4 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:60%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#5</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>test_main.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/tests/test_main.py</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              4 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:60%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#6</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>README.md</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">README.md</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              4 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:60%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#7</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>_compat.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/app/_compat.py</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              3 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:45%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#8</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>database.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/app/database.py</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              3 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:45%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#9</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>seed.py</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/backend/app/seed.py</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              3 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:45%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          <tr>
+            <td style="color:#707072; font-family:'JetBrains Mono', monospace; width:36px;">#10</td>
+            <td style="font-weight:700; color:#FFFFFF;">
+              <div>schema.sql</div>
+              <div style="font-size:11px; color:#707072; font-family:'JetBrains Mono', monospace;">Applicativo/database/schema.sql</div>
+            </td>
+            <td style="text-align:right; font-family:'JetBrains Mono', monospace; font-weight:700; color:#FF3366; width:80px;">
+              3 commit
+            </td>
+            <td style="width:100px;">
+              <div style="background:#1E1E1E; border-radius:4px; height:8px; overflow:hidden;">
+                <div style="background:#FF3366; height:8px; width:45%;"></div>
+              </div>
+            </td>
+          </tr>
+        
+          </tbody>
+        </table>
+
+        <!-- Recent Commit Log Snippet -->
+        <div style="margin-top:24px;">
+          <div style="font-size:12px; font-weight:800; color:#888; text-transform:uppercase; margin-bottom:10px;">
+            Ultimi Commit nel Repository:
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            
+          <div style="padding:10px 14px; background:#141414; border:1px solid #222222; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <code style="color:#00FF87; font-size:11px; font-weight:700;">11aad13</code>
+              <span style="font-size:12px; font-weight:600; color:#DDD;">fix(api): fix FastAPI response_model and min_length for Pydantic v2 in routes and models</span>
+            </div>
+            <span style="font-size:10px; color:#707072; font-family:'JetBrains Mono', monospace; white-space:nowrap;">2026-10-19</span>
+          </div>
+        
+          <div style="padding:10px 14px; background:#141414; border:1px solid #222222; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <code style="color:#00FF87; font-size:11px; font-weight:700;">3aa4785</code>
+              <span style="font-size:12px; font-weight:600; color:#DDD;">fix(ci): rename pytest.py to test_runner.py to prevent module shadowing, and conform tasks to schema v1.0</span>
+            </div>
+            <span style="font-size:10px; color:#707072; font-family:'JetBrains Mono', monospace; white-space:nowrap;">2026-10-19</span>
+          </div>
+        
+          <div style="padding:10px 14px; background:#141414; border:1px solid #222222; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <code style="color:#00FF87; font-size:11px; font-weight:700;">8306769</code>
+              <span style="font-size:12px; font-weight:600; color:#DDD;">fix(ci): resolve ModuleNotFoundError app by adding pytest.ini, PYTHONPATH and sys.path setup</span>
+            </div>
+            <span style="font-size:10px; color:#707072; font-family:'JetBrains Mono', monospace; white-space:nowrap;">2026-10-19</span>
+          </div>
+        
+          <div style="padding:10px 14px; background:#141414; border:1px solid #222222; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <code style="color:#00FF87; font-size:11px; font-weight:700;">6d28cf4</code>
+              <span style="font-size:12px; font-weight:600; color:#DDD;">feat(sprint-6): implement district paas, tannery vault, plm & pim hub, certified size scales, quick edit and target gender (ADR-008, ADR-009)</span>
+            </div>
+            <span style="font-size:10px; color:#707072; font-family:'JetBrains Mono', monospace; white-space:nowrap;">2026-10-19</span>
+          </div>
+        
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

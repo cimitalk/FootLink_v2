@@ -100,6 +100,20 @@ export const App: React.FC = () => {
   );
 
   // Sync with FastAPI backend if running on localhost:8000
+  const refreshPimItems = () => {
+    fetch(`${API_BASE}/api/v1/pim-items`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Offline");
+        return res.json();
+      })
+      .then((items: PimCommercialItem[]) => {
+        if (items && items.length > 0) {
+          setPimItems(items);
+        }
+      })
+      .catch(() => {});
+  };
+
   useEffect(() => {
     fetch(`${API_BASE}/api/v1/pim-items`)
       .then((res) => {
@@ -441,6 +455,8 @@ export const App: React.FC = () => {
       sample_base_size?: string;
       size_grading_step_pct?: number;
       lifecycle_status?: PlmLifecycleStatus;
+      construction_type?: string;
+      carryover_status?: string;
       custom_attributes?: Record<string, any>;
     }
   ) => {
@@ -459,6 +475,8 @@ export const App: React.FC = () => {
             size_grading_step_pct: payload.size_grading_step_pct ?? v.size_grading_step_pct,
             target_gender: payload.target_gender ?? v.target_gender,
             lifecycle_status: payload.lifecycle_status ?? v.lifecycle_status,
+            construction_type: payload.construction_type ?? v.construction_type,
+            carryover_status: payload.carryover_status ?? v.carryover_status,
             custom_attributes: payload.custom_attributes
               ? { ...(v.custom_attributes || {}), ...payload.custom_attributes }
               : v.custom_attributes,
@@ -472,6 +490,7 @@ export const App: React.FC = () => {
           category: payload.category ?? item.category,
           target_gender: payload.target_gender ?? item.target_gender,
           season_id: payload.season_id ?? item.season_id,
+          carryover_status: payload.carryover_status ?? item.carryover_status,
           plm_variants: updatedVariants,
         };
       })
@@ -549,6 +568,105 @@ export const App: React.FC = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newBom),
+        }
+      ).catch(() => {});
+    }
+  };
+
+  const handleUpdateBomItem = (updatedBom: BomItem) => {
+    const updatedItems = pimItems.map((item) => {
+      if (item.pim_item_id !== currentPim.pim_item_id) return item;
+      return {
+        ...item,
+        plm_variants: item.plm_variants.map((v) =>
+          v.plm_variant_id === currentVariant.plm_variant_id
+            ? {
+                ...v,
+                bom_items: v.bom_items.map((b) =>
+                  b.bom_item_id === updatedBom.bom_item_id ? updatedBom : b
+                ),
+              }
+            : v
+        ),
+      };
+    });
+    setPimItems(updatedItems);
+
+    if (backendConnected) {
+      fetch(
+        `${API_BASE}/api/v1/pim-items/${currentPim.pim_item_id}/plm-variants/${currentVariant.plm_variant_id}/bom-items/${updatedBom.bom_item_id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedBom),
+        }
+      ).catch(() => {});
+    }
+  };
+
+  const handleDeleteBomItem = (bomItemId: string) => {
+    const currentVariantBoms = currentVariant.bom_items;
+    const toDelete = new Set<string>([bomItemId]);
+    let added = true;
+    while (added) {
+      added = false;
+      for (const b of currentVariantBoms) {
+        if (b.parent_bom_item_id && toDelete.has(b.parent_bom_item_id) && !toDelete.has(b.bom_item_id)) {
+          toDelete.add(b.bom_item_id);
+          added = true;
+        }
+      }
+    }
+
+    const updatedItems = pimItems.map((item) => {
+      if (item.pim_item_id !== currentPim.pim_item_id) return item;
+      return {
+        ...item,
+        plm_variants: item.plm_variants.map((v) =>
+          v.plm_variant_id === currentVariant.plm_variant_id
+            ? { ...v, bom_items: v.bom_items.filter((b) => !toDelete.has(b.bom_item_id)) }
+            : v
+        ),
+      };
+    });
+    setPimItems(updatedItems);
+
+    if (backendConnected) {
+      fetch(
+        `${API_BASE}/api/v1/pim-items/${currentPim.pim_item_id}/plm-variants/${currentVariant.plm_variant_id}/bom-items/${bomItemId}`,
+        { method: "DELETE" }
+      ).catch(() => {});
+    }
+  };
+
+  const handleMoveBomItem = (bomItemId: string, newLevel: number, newParentId: string | null) => {
+    const updatedItems = pimItems.map((item) => {
+      if (item.pim_item_id !== currentPim.pim_item_id) return item;
+      return {
+        ...item,
+        plm_variants: item.plm_variants.map((v) =>
+          v.plm_variant_id === currentVariant.plm_variant_id
+            ? {
+                ...v,
+                bom_items: v.bom_items.map((b) =>
+                  b.bom_item_id === bomItemId
+                    ? { ...b, level: newLevel, parent_bom_item_id: newLevel === 1 ? null : newParentId }
+                    : b
+                ),
+              }
+            : v
+        ),
+      };
+    });
+    setPimItems(updatedItems);
+
+    if (backendConnected) {
+      fetch(
+        `${API_BASE}/api/v1/pim-items/${currentPim.pim_item_id}/plm-variants/${currentVariant.plm_variant_id}/bom-items/${bomItemId}/move`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ new_level: newLevel, new_parent_id: newParentId }),
         }
       ).catch(() => {});
     }
@@ -1541,6 +1659,10 @@ export const App: React.FC = () => {
             onUpdateVariantLifecycle={handleUpdateVariantLifecycle}
             onUpdateProductVariant={handleUpdateProductVariant}
             onAddBomItem={handleAddBomItem}
+            onUpdateBomItem={handleUpdateBomItem}
+            onDeleteBomItem={handleDeleteBomItem}
+            onMoveBomItem={handleMoveBomItem}
+            onRefreshData={refreshPimItems}
           />
         )}
 
@@ -1620,6 +1742,9 @@ export const App: React.FC = () => {
                   pimItem={currentPim}
                   viewerRole={viewerRole}
                   onAddBomItem={handleAddBomItem}
+                  onUpdateBomItem={handleUpdateBomItem}
+                  onDeleteBomItem={handleDeleteBomItem}
+                  onMoveBomItem={handleMoveBomItem}
                 />
               )}
             </div>
@@ -1676,6 +1801,9 @@ export const App: React.FC = () => {
                 pimItem={currentPim}
                 viewerRole={viewerRole}
                 onAddBomItem={handleAddBomItem}
+                onUpdateBomItem={handleUpdateBomItem}
+                onDeleteBomItem={handleDeleteBomItem}
+                onMoveBomItem={handleMoveBomItem}
               />
             </div>
           </div>

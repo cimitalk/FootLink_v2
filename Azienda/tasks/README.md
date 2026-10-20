@@ -81,18 +81,34 @@ Task e direttive inseriti direttamente dal Founder via **Founder Control Center*
 | [`FTL-CEO-010`](./FTL-CEO-010.json) | **CEO** | Revisione Modulo 04 in PIM Hub: Default 1:1, Aggregazione 1:N, Export Cataloghi & E-Commerce Feeds | 🟠 `high` | ✅ `done` | `FTL-CEO-009`, `FTL-CEO-011` | Sì (`L4`) |
 | [`FTL-CEO-011`](./FTL-CEO-011.json) | **CEO** | Sospensione Temporanea Modulo 02 Work Orders Hub (ADR-009) & Allineamento C-Suite | 🟠 `high` | ✅ `done` | — | No (`L1`) |
 | [`FTL-CEO-012`](./FTL-CEO-012.json) | **CEO** | Revisione Modulo 03: Vault Conceria, Upload File PDF Reali, Vincolo BOM Pelle & Import Excel | 🟠 `high` | ✅ `done` | `FTL-CEO-011` | No (`L2`) |
+| [`FTL-CEO-013`](./FTL-CEO-013.json) | **CEO** | Direttiva Esecutiva Sprint 7: Gerarchia Prodotti, Classificatori Merchandising e Motore di Caricamento Rapido Articoli & BOM | 🔴 `critical` | ✅ `done` | `FTL-CEO-008`, `FTL-CEO-009` | No (`L1`) |
+| [`FTL-CEO-014`](./FTL-CEO-014.json) | **CTO** | Preset BOM | 🟠 `high` | ✅ `done` | — | No (`L1`) |
+| [`FTL-CEO-015`](./FTL-CEO-015.json) | **CTO** | Miglioria su scala taglie | 🟠 `high` | ✅ `done` | — | No (`L1`) |
+| [`FTL-CEO-016`](./FTL-CEO-016.json) | **CEO** | Rivedere la piramide di collezione | 🟠 `high` | 📥 `backlog` | — | Sì (`L2`) |
 | [`FTL-GOV-006`](./FTL-GOV-006.json) | **CGO** | Governance PaaS Distrettuale 3 Tier, Formalizzazione ADR-008 e Presidio Gatekeeping L1-L6 | 🔴 `critical` | ✅ `done` | `FTL-GOV-005`, `FTL-CEO-008` | Sì (`L3`) |
+| [`FTL-GOV-007`](./FTL-GOV-007.json) | **CGO** | ADR-010: Architettura Tassonomia Multi-Livello, Merchandising Matrix e Motore Atomico di Import/Clonazione BOM con Segregazione L6 | 🔴 `critical` | ✅ `done` | `FTL-CEO-013` | No (`L1`) |
 | [`FTL-MKT-005`](./FTL-MKT-005.json) | **CMO** | Posizionamento PaaS Distrettuale & Storytelling Tracciabilità Conceria EUDR/LWG | 🟠 `high` | ✅ `done` | `FTL-CEO-008`, `FTL-PROD-006` | Sì (`L5`) |
+| [`FTL-MKT-006`](./FTL-MKT-006.json) | **CMO** | Glossario Tassonomia Moda/Lusso, Allineamento Standard B2B (NuORDER/JOOR) e Guide Visive all'Onboarding Rapido di Campionario | 🟠 `high` | ✅ `done` | `FTL-CEO-013`, `FTL-PROD-010` | No (`L1`) |
+| [`FTL-MKT-007`](./FTL-MKT-007.json) | **CMO** | Modifica Materiali di comunicazione | 🟠 `high` | ✅ `done` | — | No (`L2`) |
 | [`FTL-PROD-006`](./FTL-PROD-006.json) | **CPO** | PRD-006: PaaS Distrettuale 3 Tier, Work Orders Hub con Matrice Taglie/Sfrido BOM e Vault Lotti Conceria | 🔴 `critical` | ✅ `done` | `FTL-CEO-006`, `FTL-CEO-007`, `FTL-PROD-005` | No (`L1`) |
 | [`FTL-PROD-007`](./FTL-PROD-007.json) | **CPO** | PRD-007: Nuova Area PRODOTTI (PLM & BOM), Modulo PIM Catalogo Commerciale e Revisione Vault Conceria | 🔴 `critical` | ✅ `done` | `FTL-CEO-009`, `FTL-CEO-010`, `FTL-CEO-011`, `FTL-CEO-012` | No (`L1`) |
 | [`FTL-PROD-008`](./FTL-PROD-008.json) | **CPO** | 06 Anagrafiche di Dominio | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-PROD-009`](./FTL-PROD-009.json) | **CPO** | 02 Prodotti (PLM & BOM) - + Nodo BOM (L1/L2/L3) | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-PROD-010`](./FTL-PROD-010.json) | **CPO** | PRD-008: Specifiche Funzionali e Interaction Design per Tassonomia a 3 Livelli, Classificatori di Collezione, Deep Copy BOM e Bulk Import Wizard | 🔴 `critical` | ✅ `done` | `FTL-CEO-013`, `FTL-GOV-007` | No (`L1`) |
+| [`FTL-PROD-011`](./FTL-PROD-011.json) | **CPO** | PIRAMIDE e TIPO DI COSTRUZIONE editabili | 🟠 `high` | ✅ `done` | — | No (`L1`) |
 | [`FTL-REV-005`](./FTL-REV-005.json) | **CRO** | Packaging Commerciale PaaS Distrettuale 3 Tier & Analisi FinOps Invarianza 0 € Terzisti | 🟠 `high` | ✅ `done` | `FTL-CEO-008`, `FTL-PROD-006` | Sì (`L4`) |
+| [`FTL-REV-006`](./FTL-REV-006.json) | **CRO** | Analisi Impatto Commerciale & FinOps Sprint 7: Riduzione TTV a < 2h, Enablement Vendite Enterprise e Tutela Gratuita Terzisti | 🟠 `high` | ✅ `done` | `FTL-CEO-013`, `FTL-PROD-010` | No (`L1`) |
 | [`FTL-TECH-007`](./FTL-TECH-007.json) | **CTO** | Sviluppo Full-Stack PaaS Distrettuale 3 Tier, Vault Lotti Conceria SHA-256 e Matrice Taglie/Sfrido BOM | 🔴 `critical` | ✅ `done` | `FTL-PROD-006`, `FTL-GOV-006` | Sì (`L3`) |
 | [`FTL-TECH-008`](./FTL-TECH-008.json) | **CTO** | 02 Prodotti (PLM & BOM) - Azione Quick Edit | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-009`](./FTL-TECH-009.json) | **CTO** | 02 Prodotti (PLM & BOM) - Gestione taglie | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-010`](./FTL-TECH-010.json) | **CTO** | 03 PIM (Catalogo & Feed) - "+ NUOVO MODELLO PIM" | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-011`](./FTL-TECH-011.json) | **CTO** | 02 Prodotti (PLM & BOM) - Genere Target non disponibile | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-TECH-012`](./FTL-TECH-012.json) | **CTO** | Sviluppo Full-Stack: DDL Gerarchia Categorie, Query CTE Ricorsive, API Deep Copy BOM, Template Engine, Parser Bulk Import Atomico e Componenti UI React | 🔴 `critical` | ✅ `done` | `FTL-PROD-010`, `FTL-GOV-007` | No (`L1`) |
+| [`FTL-TECH-013`](./FTL-TECH-013.json) | **CTO** | Link presenti su portale founder controllccenter | 🟠 `high` | ✅ `done` | — | No (`L1`) |
+| [`FTL-TECH-014`](./FTL-TECH-014.json) | **CTO** | Gestione ALBERO BOM A 3 LIVELLI | 🟠 `high` | ✅ `done` | — | No (`L1`) |
+| [`FTL-TECH-015`](./FTL-TECH-015.json) | **CTO** | Modifica banner su home | 🔴 `critical` | ✅ `done` | — | No (`L1`) |
+| [`FTL-TECH-016`](./FTL-TECH-016.json) | **CTO** | Gestione Piramidi di Collezione con json da migliorare | 🟠 `high` | ✅ `done` | — | No (`L2`) |
+| [`FTL-TECH-017`](./FTL-TECH-017.json) | **CTO** | Reportistica su codebase | 🟠 `high` | ✅ `done` | — | No (`L2`) |
 
 ---
 

@@ -16,6 +16,8 @@ from app.models import (
     AttributeTargetEntity,
     BomComponentType,
     BomItem,
+    BomTemplateCreate,
+    BomTemplateItem,
     CollectionCreate,
     CollectionStatus,
     CompanyBusinessType,
@@ -29,6 +31,7 @@ from app.models import (
     PlmLifecycleStatus,
     PlmProductionVariant,
     ProductCategory,
+    ProductCategoryCreate,
     ProductionOrderCreate,
     ProductionOrderStatus,
     ProductionPhase,
@@ -804,6 +807,83 @@ def seed_domain_registries(db: FootlinkSQLitePersistence) -> None:
             metadata={"min_recycled_pct": 20},
             sort_order=3,
         ),
+        # Sprint 7 / FTL-PROD-011 & FTL-TECH-016: Piramidi di Collezione
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="collection_pyramids",
+            entry_code="carryover_continuativo",
+            label_it="⭐ Continuativo / Carryover (No Saldi)",
+            label_en="Iconic Carryover (Always in Stock)",
+            metadata={
+                "priority": "iconic",
+                "lifecycle_years": 3,
+                "discount_allowed": False,
+                "target_mix_pct": 40,
+                "target_margin_pct": 68,
+                "replenishment_type": "continuous",
+                "dependencies": ["Never Out of Stock (NOS)", "Full-Price Protected", "BOM Standardizzata"],
+            },
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="collection_pyramids",
+            entry_code="seasonal_core",
+            label_it="🌿 Stagionale Core",
+            label_en="Seasonal Core Collection",
+            metadata={
+                "priority": "core",
+                "lifecycle_years": 1,
+                "discount_allowed": True,
+                "target_mix_pct": 40,
+                "target_margin_pct": 62,
+                "replenishment_type": "seasonal_preorder",
+                "depends_on": "carryover_continuativo",
+                "dependencies": ["Campionario Stagionale", "Saldi Ammessi Fine Stagione", "Pre-Order Showroom"],
+            },
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="collection_pyramids",
+            entry_code="trend_drop",
+            label_it="⚡ Trend Drop / Capsule",
+            label_en="Trend Drop / Flash Release",
+            metadata={
+                "priority": "high_energy",
+                "lifecycle_years": 0.5,
+                "discount_allowed": True,
+                "target_mix_pct": 15,
+                "target_margin_pct": 70,
+                "replenishment_type": "on_demand",
+                "depends_on": "seasonal_core",
+                "dependencies": ["Quick Response (Lead Time < 21gg)", "Lancio Social / Drop", "Tiratura Flessibile"],
+            },
+            sort_order=3,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PIM,
+            registry_name="collection_pyramids",
+            entry_code="capsule_limited",
+            label_it="💎 Capsule Limited Edition",
+            label_en="Capsule Limited Edition",
+            metadata={
+                "priority": "luxury_numbered",
+                "lifecycle_years": 0.5,
+                "discount_allowed": False,
+                "target_mix_pct": 5,
+                "target_margin_pct": 75,
+                "replenishment_type": "one_shot",
+                "depends_on": "carryover_continuativo",
+                "dependencies": [
+                    "Numerazione di Serie",
+                    "Tiratura Singola (No Riordini)",
+                    "Full-Price Protected",
+                    "Pellame LWG Gold Obbligatorio",
+                ],
+            },
+            sort_order=4,
+        ),
         # PLM Registries
         DomainRegistryEntryCreate(
             registry_domain=RegistryDomain.PLM,
@@ -958,13 +1038,87 @@ def seed_domain_registries(db: FootlinkSQLitePersistence) -> None:
             metadata={"district": "Riviera del Brenta", "specialty": "Donna Lusso", "license_fee_eur": 0.0},
             sort_order=2,
         ),
+        # Sprint 7 / FTL-PROD-011: Tipi di Costruzione legati gerarchicamente alla Categoria
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="construction_types",
+            entry_code="cassetta_cucita",
+            label_it="Fondo Cassetta Cucita",
+            label_en="Stitched Cupsole",
+            metadata={"category": "footwear", "description": "Fondo in gomma scatolata cucito lateralmente alla tomaia."},
+            sort_order=1,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="construction_types",
+            entry_code="blake",
+            label_it="Lavorazione Blake Artigianale",
+            label_en="Blake Stitching",
+            metadata={"category": "footwear", "description": "Cucitura passante tra suola, tomaia e sottopiede di montaggio."},
+            sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="construction_types",
+            entry_code="goodyear",
+            label_it="Goodyear Welton Pregiato",
+            label_en="Goodyear Welted",
+            metadata={"category": "footwear", "description": "Doppia cucitura con guardolo interposto per risuolatura infinita."},
+            sort_order=3,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="construction_types",
+            entry_code="sacchetto",
+            label_it="Lavorazione a Sacchetto (Bologna)",
+            label_en="Sacchetto / Bologna Construction",
+            metadata={"category": "footwear", "description": "Fodera chiusa a guanto, massima flessibilità e morbidezza."},
+            sort_order=4,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="construction_types",
+            entry_code="slip_lasting",
+            label_it="Slip Lasting / Strobel",
+            label_en="Slip Lasting / Strobel",
+            metadata={"category": "footwear", "description": "Cucitura Strobel tra tomaia e soletta in tessuto per sneakers leggere."},
+            sort_order=5,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="construction_types",
+            entry_code="tubolare",
+            label_it="Tubolare Mocassino",
+            label_en="Tubular Moccasin",
+            metadata={"category": "footwear", "description": "Tomaia che avvolge il piede inferiormente cucita a mascherina."},
+            sort_order=6,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="construction_types",
+            entry_code="costa_taglio_vivo",
+            label_it="Costa a Taglio Vivo Tinto",
+            label_en="Raw Edge Painted Finish",
+            metadata={"category": "leather_goods", "description": "Bordo smussato, tinto a mano e lucidato a caldo per borse."},
+            sort_order=7,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="construction_types",
+            entry_code="rimboccato",
+            label_it="Costruzione Rimboccata Lusso",
+            label_en="Folded Edge Luxury Construction",
+            metadata={"category": "leather_goods", "description": "Pelle ripiegata all'interno con interfodera rinforzata."},
+            sort_order=8,
+        ),
+        # Sprint 7 / FTL-CEO-015: Scale Taglie legate a Categoria e Genere Target
         DomainRegistryEntryCreate(
             registry_domain=RegistryDomain.PLM,
             registry_name="size_scales",
             entry_code="eu_shoes_woman",
             label_it="Calzature Donna EU 35-42",
             label_en="Women Shoes EU 35-42",
-            metadata={"min": 35, "max": 42, "step": 1.0, "base": 37},
+            metadata={"category": "footwear", "target_gender": "donna", "min": 35, "max": 42, "step": 1.0, "base": 37, "sizes": ["35", "36", "37", "38", "39", "40", "41", "42"]},
             sort_order=1,
         ),
         DomainRegistryEntryCreate(
@@ -973,8 +1127,35 @@ def seed_domain_registries(db: FootlinkSQLitePersistence) -> None:
             entry_code="eu_shoes_man",
             label_it="Calzature Uomo EU 38-46",
             label_en="Men Shoes EU 38-46",
-            metadata={"min": 38, "max": 46, "step": 1.0, "base": 42},
+            metadata={"category": "footwear", "target_gender": "uomo", "min": 38, "max": 46, "step": 1.0, "base": 42, "sizes": ["38", "39", "40", "41", "42", "43", "44", "45", "46"]},
             sort_order=2,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="size_scales",
+            entry_code="it_apparel_standard",
+            label_it="Abbigliamento IT 44-56",
+            label_en="Apparel IT 44-56",
+            metadata={"category": "apparel", "target_gender": "unisex", "min": 44, "max": 56, "step": 2.0, "base": 50, "sizes": ["IT 44", "IT 46", "IT 48", "IT 50", "IT 52", "IT 54", "IT 56"]},
+            sort_order=3,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="size_scales",
+            entry_code="tu_leather_goods",
+            label_it="Pelletteria Taglia Unica (TU)",
+            label_en="Leather Goods One Size (TU)",
+            metadata={"category": "leather_goods", "target_gender": "unisex", "min": 1, "max": 1, "base": 1, "sizes": ["TU (Taglia Unica)"]},
+            sort_order=4,
+        ),
+        DomainRegistryEntryCreate(
+            registry_domain=RegistryDomain.PLM,
+            registry_name="size_scales",
+            entry_code="eu_shoes_kid",
+            label_it="Calzature Bambino EU 24-34",
+            label_en="Kids Shoes EU 24-34",
+            metadata={"category": "footwear", "target_gender": "bambino", "min": 24, "max": 34, "base": 28, "sizes": ["24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34"]},
+            sort_order=5,
         ),
         DomainRegistryEntryCreate(
             registry_domain=RegistryDomain.PLM,
@@ -1289,6 +1470,129 @@ def seed_production_orders(db: FootlinkSQLitePersistence) -> None:
     db.save_production_order(order)
 
 
+def seed_product_categories_hierarchy(db: FootlinkSQLitePersistence) -> None:
+    """Populate hierarchical product taxonomy (Macro-Settore > Famiglia > Sotto-famiglia/Tipologia) per ADR-010."""
+    categories = [
+        # Level 1: Macro-Settori
+        ProductCategoryCreate(category_id="cat_footwear", parent_id=None, level=1, code="footwear", slug_path="footwear", label_it="Calzature", label_en="Footwear", icon="👞", sort_order=10),
+        ProductCategoryCreate(category_id="cat_leather_goods", parent_id=None, level=1, code="leather_goods", slug_path="leather_goods", label_it="Pelletteria", label_en="Leather Goods", icon="👜", sort_order=20),
+        ProductCategoryCreate(category_id="cat_apparel", parent_id=None, level=1, code="apparel", slug_path="apparel", label_it="Abbigliamento", label_en="Apparel", icon="🧥", sort_order=30),
+
+        # Level 2: Famiglie Calzature
+        ProductCategoryCreate(category_id="cat_fw_sneakers", parent_id="cat_footwear", level=2, code="sneakers", slug_path="footwear/sneakers", label_it="Sneakers", label_en="Sneakers", icon="👟", sort_order=10),
+        ProductCategoryCreate(category_id="cat_fw_formal", parent_id="cat_footwear", level=2, code="formal", slug_path="footwear/formal", label_it="Scarpe Classiche / Eleganti", label_en="Formal & Classic", icon="👞", sort_order=20),
+        ProductCategoryCreate(category_id="cat_fw_loafers", parent_id="cat_footwear", level=2, code="loafers", slug_path="footwear/loafers", label_it="Mocassini", label_en="Loafers", icon="👞", sort_order=30),
+        ProductCategoryCreate(category_id="cat_fw_boots", parent_id="cat_footwear", level=2, code="boots", slug_path="footwear/boots", label_it="Stivali & Stivaletti", label_en="Boots & Ankle Boots", icon="🥾", sort_order=40),
+        ProductCategoryCreate(category_id="cat_fw_pumps", parent_id="cat_footwear", level=2, code="pumps", slug_path="footwear/pumps", label_it="Décolleté & Tacchi", label_en="Pumps & Heels", icon="👠", sort_order=50),
+        ProductCategoryCreate(category_id="cat_fw_sandals", parent_id="cat_footwear", level=2, code="sandals", slug_path="footwear/sandals", label_it="Sandali & Ciabatte", label_en="Sandals", icon="👡", sort_order=60),
+
+        # Level 3: Sotto-famiglie Sneakers
+        ProductCategoryCreate(category_id="cat_fw_snk_cupsole", parent_id="cat_fw_sneakers", level=3, code="low_top_cupsole", slug_path="footwear/sneakers/low-top-cupsole", label_it="Bassa Fondo Cassetta", label_en="Low-Top Cupsole", icon="👟", sort_order=10),
+        ProductCategoryCreate(category_id="cat_fw_snk_runner", parent_id="cat_fw_sneakers", level=3, code="retro_runner", slug_path="footwear/sneakers/retro-runner", label_it="Running Retrò", label_en="Retro Runner", icon="🏃", sort_order=20),
+        ProductCategoryCreate(category_id="cat_fw_snk_chunky", parent_id="cat_fw_sneakers", level=3, code="chunky_platform", slug_path="footwear/sneakers/chunky-platform", label_it="Chunky & Platform", label_en="Chunky Platform", icon="🧱", sort_order=30),
+
+        # Level 3: Sotto-famiglie Classiche
+        ProductCategoryCreate(category_id="cat_fw_for_derby", parent_id="cat_fw_formal", level=3, code="derby", slug_path="footwear/formal/derby", label_it="Derby Francesina Aperta", label_en="Derby", icon="👞", sort_order=10),
+        ProductCategoryCreate(category_id="cat_fw_for_oxford", parent_id="cat_fw_formal", level=3, code="oxford", slug_path="footwear/formal/oxford", label_it="Oxford Francesina Chiusa", label_en="Oxford", icon="👞", sort_order=20),
+        ProductCategoryCreate(category_id="cat_fw_for_monk", parent_id="cat_fw_formal", level=3, code="monkstrap", slug_path="footwear/formal/monkstrap", label_it="Doppia Fibbia / Monkstrap", label_en="Monkstrap", icon="👞", sort_order=30),
+
+        # Level 3: Sotto-famiglie Mocassini
+        ProductCategoryCreate(category_id="cat_fw_loa_penny", parent_id="cat_fw_loafers", level=3, code="penny_loafer", slug_path="footwear/loafers/penny-loafer", label_it="Penny Loafer con Mascherina", label_en="Penny Loafer", icon="👞", sort_order=10),
+        ProductCategoryCreate(category_id="cat_fw_loa_driving", parent_id="cat_fw_loafers", level=3, code="driving_shoe", slug_path="footwear/loafers/driving-shoe", label_it="Gommino da Guida Tubolare", label_en="Driving Shoe", icon="🚗", sort_order=20),
+        ProductCategoryCreate(category_id="cat_fw_loa_tassel", parent_id="cat_fw_loafers", level=3, code="tassel_loafer", slug_path="footwear/loafers/tassel-loafer", label_it="Mocassino con Nappine", label_en="Tassel Loafer", icon="👞", sort_order=30),
+
+        # Level 3: Sotto-famiglie Stivali
+        ProductCategoryCreate(category_id="cat_fw_boo_chelsea", parent_id="cat_fw_boots", level=3, code="chelsea_boot", slug_path="footwear/boots/chelsea-boot", label_it="Tronchetto Chelsea con Elastico", label_en="Chelsea Boot", icon="🥾", sort_order=10),
+        ProductCategoryCreate(category_id="cat_fw_boo_combat", parent_id="cat_fw_boots", level=3, code="combat_boot", slug_path="footwear/boots/combat-boot", label_it="Anfibio / Stringato Militare", label_en="Combat Boot", icon="🥾", sort_order=20),
+
+        # Level 3: Sotto-famiglie Tacchi
+        ProductCategoryCreate(category_id="cat_fw_pmp_85", parent_id="cat_fw_pumps", level=3, code="pump_heel_85", slug_path="footwear/pumps/pump-heel-85", label_it="Décolleté Tacco 85 a Spillo", label_en="Classic Pump 85mm", icon="👠", sort_order=10),
+        ProductCategoryCreate(category_id="cat_fw_pmp_sling", parent_id="cat_fw_pumps", level=3, code="slingback", slug_path="footwear/pumps/slingback", label_it="Slingback Tallone Scoperto", label_en="Slingback Pump", icon="👠", sort_order=20),
+
+        # Level 2 & 3: Pelletteria
+        ProductCategoryCreate(category_id="cat_lg_bags", parent_id="cat_leather_goods", level=2, code="bags", slug_path="leather_goods/bags", label_it="Borse", label_en="Bags", icon="👜", sort_order=10),
+        ProductCategoryCreate(category_id="cat_lg_bag_tote", parent_id="cat_lg_bags", level=3, code="tote_bag", slug_path="leather_goods/bags/tote-bag", label_it="Borsa Shopping / Tote", label_en="Tote Bag", icon="👜", sort_order=10),
+        ProductCategoryCreate(category_id="cat_lg_bag_shoulder", parent_id="cat_lg_bags", level=3, code="shoulder_bag", slug_path="leather_goods/bags/shoulder-bag", label_it="Borsa a Tracolla", label_en="Crossbody Bag", icon="👜", sort_order=20),
+        ProductCategoryCreate(category_id="cat_lg_slg", parent_id="cat_leather_goods", level=2, code="small_leather_goods", slug_path="leather_goods/small-leather-goods", label_it="Piccola Pelletteria", label_en="Small Leather Goods", icon="👛", sort_order=20),
+        ProductCategoryCreate(category_id="cat_lg_slg_wallet", parent_id="cat_lg_slg", level=3, code="wallet", slug_path="leather_goods/small-leather-goods/wallet", label_it="Portafoglio Bifold / Zip", label_en="Wallet", icon="👛", sort_order=10),
+
+        # Level 2 & 3: Abbigliamento
+        ProductCategoryCreate(category_id="cat_ap_outerwear", parent_id="cat_apparel", level=2, code="outerwear", slug_path="apparel/outerwear", label_it="Capispalla & Giacche", label_en="Outerwear", icon="🧥", sort_order=10),
+        ProductCategoryCreate(category_id="cat_ap_out_leather_jacket", parent_id="cat_ap_outerwear", level=3, code="leather_jacket", slug_path="apparel/outerwear/leather-jacket", label_it="Giacca di Pelle / Biker", label_en="Leather Jacket", icon="🧥", sort_order=10),
+    ]
+
+    for cat in categories:
+        db.save_category(cat)
+
+
+def seed_bom_templates(db: FootlinkSQLitePersistence) -> None:
+    """Populate pre-configured 3-level BOM standard templates per ADR-010."""
+    templates = [
+        BomTemplateCreate(
+            template_id="BOM-TPL-SNEAKER-CUPSOLE",
+            name="Preset Standard Sneaker Fondo Cassetta",
+            category_id="cat_fw_snk_cupsole",
+            construction_type="cassetta_cucita",
+            description="Distinta base 3 livelli per sneaker con tomaia vitello, fodera pelle, suola a cassetta TR cucita e minuteria.",
+            items=[
+                BomTemplateItem(level=1, template_item_id="TPL-SNK-UPP", component_type=BomComponentType.UPPER, material_name="Vitello Pieno Fiore Concia Cromo 1.4mm", supplier_name="Conceria Distretto Veneto", origin_country_iso2="IT", unit_of_measure="dm2", unit_consumption=18.5, waste_percentage=15.0, recycled_content_pct=0.0, certifications=["LWG Gold", "ICEC TS 410", "REACH", "EUDR"], unit_cost_eur=14.50),
+                BomTemplateItem(level=1, template_item_id="TPL-SNK-LIN", component_type=BomComponentType.LINING, material_name="Fodera Vitello Naturale Traspirante", supplier_name="Conceria Distretto Veneto", origin_country_iso2="IT", unit_of_measure="dm2", unit_consumption=12.0, waste_percentage=10.0, recycled_content_pct=0.0, certifications=["LWG Gold", "REACH"], unit_cost_eur=8.50),
+                BomTemplateItem(level=2, parent_template_item_id="TPL-SNK-UPP", template_item_id="TPL-SNK-SALPA", component_type=BomComponentType.SUB_ASSEMBLY, material_name="Salpa Termoadesiva Contrafforte Tallone", supplier_name="Componenti Fermo-Macerata", origin_country_iso2="IT", unit_of_measure="pz", unit_consumption=1.0, waste_percentage=2.0, recycled_content_pct=25.0, certifications=["GRS", "OEKO-TEX"], unit_cost_eur=1.80),
+                BomTemplateItem(level=2, template_item_id="TPL-SNK-SOLE", component_type=BomComponentType.OUTSOLE, material_name="Suola Monoblocco TR Gomma Cassetta", supplier_name="Suolificio Marchigiano", origin_country_iso2="IT", unit_of_measure="pa", unit_consumption=1.0, waste_percentage=1.0, recycled_content_pct=15.0, certifications=["GRS", "REACH"], unit_cost_eur=9.50),
+                BomTemplateItem(level=2, template_item_id="TPL-SNK-FUSS", component_type=BomComponentType.INSOLE, material_name="Fussbett Anatomico Memory Foam Estraibile", supplier_name="Plantari & Soletti Srl", origin_country_iso2="IT", unit_of_measure="pa", unit_consumption=1.0, waste_percentage=1.0, recycled_content_pct=20.0, certifications=["REACH"], unit_cost_eur=3.80),
+                BomTemplateItem(level=3, template_item_id="TPL-SNK-LACES", component_type=BomComponentType.HARDWARE, material_name="Lacci Cotone Cerato 120cm", supplier_name="Filati & Treccia Lucca", origin_country_iso2="IT", unit_of_measure="pa", unit_consumption=1.0, waste_percentage=0.0, recycled_content_pct=30.0, certifications=["GOTS", "OEKO-TEX"], unit_cost_eur=0.90),
+                BomTemplateItem(level=3, template_item_id="TPL-SNK-EYE", component_type=BomComponentType.HARDWARE, material_name="Occhielli Alluminio Nichel-Free Galvanizzati", supplier_name="Minuterie Toscane", origin_country_iso2="IT", unit_of_measure="pz", unit_consumption=14.0, waste_percentage=2.0, recycled_content_pct=0.0, certifications=["REACH"], unit_cost_eur=0.08),
+            ],
+        ),
+        BomTemplateCreate(
+            template_id="BOM-TPL-LOAFER-CUOIO",
+            name="Preset Mocassino Classico Fondo Cuoio",
+            category_id="cat_fw_loa_penny",
+            construction_type="tubolare_sacchetto",
+            description="Distinta base 3 livelli per mocassino lavorazione tubolare con mascherina, fondo cuoio doppio e tacco con sottotacco in gomma.",
+            items=[
+                BomTemplateItem(level=1, template_item_id="TPL-LOA-UPP", component_type=BomComponentType.UPPER, material_name="Vitello Francese Spazzolato Pieno Fiore", supplier_name="Conceria Santa Croce sull'Arno", origin_country_iso2="IT", unit_of_measure="dm2", unit_consumption=16.0, waste_percentage=18.0, recycled_content_pct=0.0, certifications=["LWG Gold", "REACH", "EUDR"], unit_cost_eur=16.00),
+                BomTemplateItem(level=1, template_item_id="TPL-LOA-LIN", component_type=BomComponentType.LINING, material_name="Fodera Capretto Naturale Morbido", supplier_name="Conceria Santa Croce sull'Arno", origin_country_iso2="IT", unit_of_measure="dm2", unit_consumption=10.0, waste_percentage=8.0, recycled_content_pct=0.0, certifications=["LWG Gold", "REACH"], unit_cost_eur=9.20),
+                BomTemplateItem(level=2, template_item_id="TPL-LOA-SOLE", component_type=BomComponentType.OUTSOLE, material_name="Suola Cuoio Primofiore Concia Vegetale Lenta", supplier_name="Cuoificio Valdarno", origin_country_iso2="IT", unit_of_measure="pa", unit_consumption=1.0, waste_percentage=2.0, recycled_content_pct=0.0, certifications=["ICEC TS 410", "REACH"], unit_cost_eur=18.50),
+                BomTemplateItem(level=2, template_item_id="TPL-LOA-HEEL", component_type=BomComponentType.HEEL, material_name="Tacco Cuoio Sovrapposto con Inserto Gomma", supplier_name="Tacchi & Forme Montegranaro", origin_country_iso2="IT", unit_of_measure="pa", unit_consumption=1.0, waste_percentage=1.0, recycled_content_pct=0.0, certifications=["REACH"], unit_cost_eur=5.80),
+                BomTemplateItem(level=3, template_item_id="TPL-LOA-THREAD", component_type=BomComponentType.HARDWARE, material_name="Filo Cerato 1.2mm per Cucitura Vaschetta", supplier_name="Filati Cucirini SpA", origin_country_iso2="IT", unit_of_measure="mt", unit_consumption=4.5, waste_percentage=5.0, recycled_content_pct=0.0, certifications=["OEKO-TEX"], unit_cost_eur=0.45),
+            ],
+        ),
+        BomTemplateCreate(
+            template_id="BOM-TPL-DECOLLETE-PUMP",
+            name="Preset Décolleté Tacco 85 a Spillo",
+            category_id="cat_fw_pmp_85",
+            construction_type="ago",
+            description="Distinta base 3 livelli per scarpa da donna tacco alto 85mm con tacco rivestito e suola cuoio laccato.",
+            items=[
+                BomTemplateItem(level=1, template_item_id="TPL-PMP-UPP", component_type=BomComponentType.UPPER, material_name="Camoscio Baby Calf Idrorepellente", supplier_name="Conceria Chiampo", origin_country_iso2="IT", unit_of_measure="dm2", unit_consumption=12.0, waste_percentage=16.0, recycled_content_pct=0.0, certifications=["LWG Gold", "REACH"], unit_cost_eur=15.00),
+                BomTemplateItem(level=1, template_item_id="TPL-PMP-LIN", component_type=BomComponentType.LINING, material_name="Fodera Capretto Laminato Oro", supplier_name="Conceria Santa Croce", origin_country_iso2="IT", unit_of_measure="dm2", unit_consumption=9.0, waste_percentage=8.0, recycled_content_pct=0.0, certifications=["LWG Gold"], unit_cost_eur=10.50),
+                BomTemplateItem(level=2, template_item_id="TPL-PMP-HEEL", component_type=BomComponentType.HEEL, material_name="Tacco Strutturale ABS 85mm con Perno Acciaio", supplier_name="Tacchificio Riviera del Brenta", origin_country_iso2="IT", unit_of_measure="pa", unit_consumption=1.0, waste_percentage=1.0, recycled_content_pct=0.0, certifications=["REACH"], unit_cost_eur=6.20),
+                BomTemplateItem(level=2, template_item_id="TPL-PMP-INSOLE", component_type=BomComponentType.INSOLE, material_name="Sottopiede Sagomato con Cambrione Temprato", supplier_name="Solettificio Brenta", origin_country_iso2="IT", unit_of_measure="pa", unit_consumption=1.0, waste_percentage=1.0, recycled_content_pct=0.0, certifications=["REACH"], unit_cost_eur=4.10),
+                BomTemplateItem(level=2, template_item_id="TPL-PMP-SOLE", component_type=BomComponentType.OUTSOLE, material_name="Suola Cuoio Verniciata Bordo Tinto Nero", supplier_name="Cuoificio Valdarno", origin_country_iso2="IT", unit_of_measure="pa", unit_consumption=1.0, waste_percentage=2.0, recycled_content_pct=0.0, certifications=["REACH"], unit_cost_eur=14.00),
+                BomTemplateItem(level=3, template_item_id="TPL-PMP-TOPLIFT", component_type=BomComponentType.HARDWARE, material_name="Sottotacco Poliuretano Anti-Rumore", supplier_name="Tacchificio Riviera del Brenta", origin_country_iso2="IT", unit_of_measure="pa", unit_consumption=1.0, waste_percentage=0.0, recycled_content_pct=0.0, certifications=["REACH"], unit_cost_eur=0.85),
+            ],
+        ),
+        BomTemplateCreate(
+            template_id="BOM-TPL-TOTE-BAG",
+            name="Preset Borsa Shopping Tote Bag",
+            category_id="cat_lg_bag_tote",
+            construction_type="cassetta_cucita",
+            description="Distinta base 3 livelli per borsa shopping a spalla in pelle con fodera in tela resinata e minuteria metallica galvanizzata.",
+            items=[
+                BomTemplateItem(level=1, template_item_id="TPL-BAG-UPP", component_type=BomComponentType.UPPER, material_name="Toro Pieno Fiore Granato Spessore 1.8mm", supplier_name="Conceria Ponte a Egola", origin_country_iso2="IT", unit_of_measure="dm2", unit_consumption=65.0, waste_percentage=20.0, recycled_content_pct=0.0, certifications=["LWG Gold", "REACH", "EUDR"], unit_cost_eur=13.50),
+                BomTemplateItem(level=1, template_item_id="TPL-BAG-LIN", component_type=BomComponentType.LINING, material_name="Tessuto Twill Cotone Resinato Idrorepellente", supplier_name="Tessitura Prato", origin_country_iso2="IT", unit_of_measure="mt", unit_consumption=0.85, waste_percentage=5.0, recycled_content_pct=40.0, certifications=["GRS", "OEKO-TEX"], unit_cost_eur=7.50),
+                BomTemplateItem(level=2, parent_template_item_id="TPL-BAG-UPP", template_item_id="TPL-BAG-SALPA", component_type=BomComponentType.SUB_ASSEMBLY, material_name="Salpa Rigenerata di Rinforzo Fondo e Manici", supplier_name="Salpificio Scandicci", origin_country_iso2="IT", unit_of_measure="pz", unit_consumption=1.0, waste_percentage=2.0, recycled_content_pct=80.0, certifications=["GRS"], unit_cost_eur=2.80),
+                BomTemplateItem(level=3, template_item_id="TPL-BAG-ZIP", component_type=BomComponentType.HARDWARE, material_name="Cerniera Lampo Metallo Trancia Ottone 45cm", supplier_name="Cerniere Lampo Firenze", origin_country_iso2="IT", unit_of_measure="pz", unit_consumption=1.0, waste_percentage=0.0, recycled_content_pct=0.0, certifications=["REACH"], unit_cost_eur=3.40),
+                BomTemplateItem(level=3, template_item_id="TPL-BAG-HOOKS", component_type=BomComponentType.HARDWARE, material_name="Moschettoni e Anelli Tracolla Ottone Massiccio", supplier_name="Accessori Moda Scandicci", origin_country_iso2="IT", unit_of_measure="pz", unit_consumption=4.0, waste_percentage=0.0, recycled_content_pct=0.0, certifications=["REACH"], unit_cost_eur=1.90),
+            ],
+        ),
+    ]
+
+    for tpl in templates:
+        db.save_bom_template(tpl)
+
+
 def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = False) -> List[PimCommercialItem]:
     """Populate the SQLite/PostgreSQL database with initial Made-in-Italy seed data if empty (or when force=True)."""
     if force:
@@ -1301,6 +1605,12 @@ def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = 
         seed_domain_registries(db)
     if len(db.list_attribute_definitions()) == 0:
         seed_schema_attribute_definitions(db)
+
+    # Sprint 7 Seeds: Product Categories Hierarchy (3+1 Levels) & BOM Templates
+    if len(db.list_categories()) == 0:
+        seed_product_categories_hierarchy(db)
+    if len(db.list_bom_templates()) == 0:
+        seed_bom_templates(db)
 
     # Sprint 6 Seeds: District Companies, Users, Tannery Batches, Documents & Production Orders
     if len(db.list_companies()) == 0:
@@ -1316,6 +1626,7 @@ def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = 
         seed_production_orders(db)
 
     return db.list_pim_items()
+
 
 
 if __name__ == "__main__":

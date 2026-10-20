@@ -14,6 +14,9 @@ interface BomThreeLevelTreeProps {
   pimItem?: PimCommercialItem;
   viewerRole?: ViewerSecurityRole;
   onAddBomItem: (bom: BomItem) => void;
+  onUpdateBomItem?: (bom: BomItem) => void;
+  onDeleteBomItem?: (bomItemId: string) => void;
+  onMoveBomItem?: (bomItemId: string, newLevel: number, newParentId: string | null) => void;
 }
 
 const LEVEL_TAGS: Record<number, { label: string; desc: string }> = {
@@ -27,6 +30,9 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   pimItem,
   viewerRole = "brand",
   onAddBomItem,
+  onUpdateBomItem,
+  onDeleteBomItem,
+  onMoveBomItem,
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSizeGrading, setShowSizeGrading] = useState(true);
@@ -45,6 +51,27 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   const [recycledPct, setRecycledPct] = useState<number>(50);
   const [unitCostEur, setUnitCostEur] = useState<number>(6.5);
   const [certsInput, setCertsInput] = useState("LWG Gold, REACH");
+
+  // FTL-TECH-014: Edit Modal State
+  const [editingItem, setEditingItem] = useState<BomItem | null>(null);
+  const [editMaterialName, setEditMaterialName] = useState("");
+  const [editSupplierName, setEditSupplierName] = useState("");
+  const [editComponentType, setEditComponentType] = useState<BomComponentType>("upper");
+  const [editOriginIso, setEditOriginIso] = useState("IT");
+  const [editUom, setEditUom] = useState("dm2");
+  const [editConsumption, setEditConsumption] = useState<number>(1.0);
+  const [editWastePct, setEditWastePct] = useState<number>(3.0);
+  const [editRecycledPct, setEditRecycledPct] = useState<number>(0);
+  const [editUnitCostEur, setEditUnitCostEur] = useState<number>(8.5);
+  const [editCertsInput, setEditCertsInput] = useState("");
+
+  // FTL-TECH-014: Move Modal State
+  const [movingItem, setMovingItem] = useState<BomItem | null>(null);
+  const [moveTargetLevel, setMoveTargetLevel] = useState<number>(1);
+  const [moveTargetParentId, setMoveTargetParentId] = useState<string>("");
+
+  // FTL-TECH-014: Delete Confirmation State
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
 
   const tree = buildClientBomTree(variant.bom_items);
 
@@ -123,6 +150,76 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
     setMaterialName("");
     setSupplierName("");
     setShowAddForm(false);
+  };
+
+  // FTL-TECH-014: Edit, Move, Delete handlers
+  const openEditModal = (item: BomItem) => {
+    setEditingItem(item);
+    setEditMaterialName(item.material_name);
+    setEditSupplierName(item.supplier_name);
+    setEditComponentType(item.component_type);
+    setEditOriginIso(item.origin_country_iso2 || "IT");
+    setEditUom(item.unit_of_measure || "dm2");
+    setEditConsumption(item.unit_consumption);
+    setEditWastePct(item.waste_percentage);
+    setEditRecycledPct(item.recycled_content_pct);
+    setEditUnitCostEur(item.unit_cost_eur ?? 8.5);
+    setEditCertsInput((item.certifications || []).join(", "));
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    const updated: BomItem = {
+      ...editingItem,
+      material_name: editMaterialName.trim(),
+      supplier_name: editSupplierName.trim(),
+      component_type: editComponentType,
+      origin_country_iso2: editOriginIso.trim().toUpperCase().slice(0, 2) || "IT",
+      unit_of_measure: editUom.trim() || "pcs",
+      unit_consumption: Number(editConsumption) || 1.0,
+      waste_percentage: Number(editWastePct) || 0,
+      recycled_content_pct: Number(editRecycledPct) || 0,
+      unit_cost_eur: Number(editUnitCostEur) || 0,
+      certifications: editCertsInput
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    };
+    if (onUpdateBomItem) {
+      onUpdateBomItem(updated);
+    }
+    setEditingItem(null);
+  };
+
+  const openMoveModal = (item: BomItem) => {
+    setMovingItem(item);
+    setMoveTargetLevel(item.level);
+    setMoveTargetParentId(item.parent_bom_item_id || "");
+  };
+
+  const handleSaveMove = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!movingItem) return;
+    if (moveTargetLevel > 1 && !moveTargetParentId) {
+      alert("Per i livelli 2 e 3 è obbligatorio selezionare un nodo genitore!");
+      return;
+    }
+    if (onMoveBomItem) {
+      onMoveBomItem(
+        movingItem.bom_item_id,
+        moveTargetLevel,
+        moveTargetLevel === 1 ? null : moveTargetParentId
+      );
+    }
+    setMovingItem(null);
+  };
+
+  const handleConfirmDelete = (itemId: string) => {
+    if (onDeleteBomItem) {
+      onDeleteBomItem(itemId);
+    }
+    setDeletingItemId(null);
   };
 
   const renderNode = (node: BomTreeNode, depth = 0): React.ReactNode => {
@@ -213,6 +310,44 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
               ))}
             </div>
           )}
+
+          {/* Action buttons: Edit, Move, Delete (FTL-TECH-014) */}
+          <div className="mt-3 pt-2.5 border-t border-[#E5E5E5] flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="text-[11px] text-[#707072] flex items-center gap-2">
+              <span>ID: <strong className="mono-code text-[#111111]">{node.bom_item_id}</strong></span>
+              {node.children.length > 0 && (
+                <span className="font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-full text-[10px] border border-emerald-300">
+                  {node.children.length} sotto-elementi
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => openEditModal(node)}
+                title="Modifica parametri elemento BOM"
+                className="px-2.5 py-1 rounded-lg border border-[#D5D5D5] bg-white hover:border-[#111111] hover:bg-[#F9F9F9] text-[#111111] text-[11px] font-semibold flex items-center gap-1 transition shadow-2xs"
+              >
+                ✏️ <span>Modifica</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openMoveModal(node)}
+                title="Sposta o riassegna livello gerarchico"
+                className="px-2.5 py-1 rounded-lg border border-[#D5D5D5] bg-white hover:border-[#111111] hover:bg-[#F9F9F9] text-[#111111] text-[11px] font-semibold flex items-center gap-1 transition shadow-2xs"
+              >
+                🔀 <span>Sposta</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeletingItemId(node.bom_item_id)}
+                title="Elimina questo elemento e relativi figli"
+                className="px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-[11px] font-semibold flex items-center gap-1 transition shadow-2xs"
+              >
+                🗑️ <span>Elimina</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {node.children.length > 0 && (
@@ -680,6 +815,323 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
 
         {/* Tree Render */}
         <div className="mt-2">{tree.map((rootNode) => renderNode(rootNode, 0))}</div>
+
+        {/* FTL-TECH-014: Modal Modifica Elemento BOM */}
+        {editingItem && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-[#CCCCCC] animate-in fade-in zoom-in-95">
+              <div className="flex items-center justify-between pb-4 border-b border-[#E5E5E5]">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#707072]">
+                    ✏️ MODIFICA COMPONENTE DISTINTA BASE
+                  </div>
+                  <div className="text-lg font-bold text-[#111111]">
+                    {editingItem.material_name} ({editingItem.bom_item_id})
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditingItem(null)}
+                  className="w-8 h-8 rounded-full border border-[#CCCCCC] hover:bg-[#F5F5F5] flex items-center justify-center font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEdit} className="mt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Nome Materiale *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editMaterialName}
+                      onChange={(e) => setEditMaterialName(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Fornitore Distrettuale *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editSupplierName}
+                      onChange={(e) => setEditSupplierName(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Tipologia Componente
+                    </label>
+                    <select
+                      value={editComponentType}
+                      onChange={(e) => setEditComponentType(e.target.value as BomComponentType)}
+                      className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold"
+                    >
+                      <option value="upper">Tomaia / Taglio Esterno</option>
+                      <option value="lining">Fodera Interna</option>
+                      <option value="insole">Sottopiede / Fussbett</option>
+                      <option value="outsole">Suola / Fondo Monoblocco</option>
+                      <option value="heel">Tacco / Zeppa</option>
+                      <option value="sub_assembly">Salpa / Rinforzo / Puntale</option>
+                      <option value="hardware">Minuteria Metallica / Accessorio</option>
+                      <option value="chemical">Adesivo / Finissaggio Chimico</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Origine Paese ISO
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={2}
+                      value={editOriginIso}
+                      onChange={(e) => setEditOriginIso(e.target.value.toUpperCase())}
+                      className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Unità Misura (UoM)
+                    </label>
+                    <select
+                      value={editUom}
+                      onChange={(e) => setEditUom(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold"
+                    >
+                      <option value="sqft">Piedi Quadri (sqft)</option>
+                      <option value="dm2">Decimetri Quadri (dm2)</option>
+                      <option value="mt">Metri Lineari (mt)</option>
+                      <option value="pa">Paia (pa)</option>
+                      <option value="pz">Pezzi (pz)</option>
+                      <option value="kg">Chilogrammi (kg)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                      Consumo Netto
+                    </label>
+                    <input
+                      type="number"
+                      step={0.01}
+                      min={0.01}
+                      value={editConsumption}
+                      onChange={(e) => setEditConsumption(Number(e.target.value))}
+                      className="w-full p-2 rounded-xl border border-[#CCCCCC] text-xs font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                      Scarto (%)
+                    </label>
+                    <input
+                      type="number"
+                      step={0.1}
+                      min={0}
+                      value={editWastePct}
+                      onChange={(e) => setEditWastePct(Number(e.target.value))}
+                      className="w-full p-2 rounded-xl border border-[#CCCCCC] text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                      Riciclato (%)
+                    </label>
+                    <input
+                      type="number"
+                      step={1}
+                      min={0}
+                      max={100}
+                      value={editRecycledPct}
+                      onChange={(e) => setEditRecycledPct(Number(e.target.value))}
+                      className="w-full p-2 rounded-xl border border-[#CCCCCC] text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                      Costo Unitario € (L6)
+                    </label>
+                    <input
+                      type="number"
+                      step={0.05}
+                      min={0}
+                      value={editUnitCostEur}
+                      onChange={(e) => setEditUnitCostEur(Number(e.target.value))}
+                      className="w-full p-2 rounded-xl border border-[#CCCCCC] text-xs font-mono font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Certificazioni Sostenibilità (separate da virgola)
+                  </label>
+                  <input
+                    type="text"
+                    value={editCertsInput}
+                    onChange={(e) => setEditCertsInput(e.target.value)}
+                    placeholder="LWG Gold, REACH, GRS, OEKO-TEX, EUDR"
+                    className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E5E5]">
+                  <button
+                    type="button"
+                    onClick={() => setEditingItem(null)}
+                    className="px-4 py-2 rounded-full border border-[#CCCCCC] text-xs font-bold text-[#707072] hover:bg-[#F5F5F5] transition"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 rounded-full bg-[#111111] text-white font-bold text-xs hover:bg-black transition shadow-sm"
+                  >
+                    Salva Modifiche Componente
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* FTL-TECH-014: Modal Sposta Elemento BOM */}
+        {movingItem && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#CCCCCC] animate-in fade-in zoom-in-95">
+              <div className="flex items-center justify-between pb-4 border-b border-[#E5E5E5]">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#707072]">
+                    🔀 SPOSTA / RIASSEGNA NODO ALBERO BOM
+                  </div>
+                  <div className="text-base font-bold text-[#111111]">
+                    {movingItem.material_name} ({movingItem.bom_item_id})
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMovingItem(null)}
+                  className="w-8 h-8 rounded-full border border-[#CCCCCC] hover:bg-[#F5F5F5] flex items-center justify-center font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveMove} className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Nuovo Livello Gerarchico *
+                  </label>
+                  <select
+                    value={moveTargetLevel}
+                    onChange={(e) => {
+                      const lvl = Number(e.target.value);
+                      setMoveTargetLevel(lvl);
+                      if (lvl === 1) setMoveTargetParentId("");
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold"
+                  >
+                    <option value={1}>Livello 1: Macro-Componente / Assieme (Root)</option>
+                    <option value={2}>Livello 2: Semilavorato / Materiale (Figlio di L1)</option>
+                    <option value={3}>Livello 3: Materia Prima / Chimico / Minuteria (Figlio di L2 o L1)</option>
+                  </select>
+                </div>
+
+                {moveTargetLevel > 1 && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Seleziona Nodo Genitore (Parent) *
+                    </label>
+                    <select
+                      value={moveTargetParentId}
+                      required
+                      onChange={(e) => setMoveTargetParentId(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold"
+                    >
+                      <option value="">-- Seleziona elemento padre --</option>
+                      {variant.bom_items
+                        .filter(
+                          (b) =>
+                            b.bom_item_id !== movingItem.bom_item_id &&
+                            b.level < moveTargetLevel
+                        )
+                        .map((b) => (
+                          <option key={b.bom_item_id} value={b.bom_item_id}>
+                            [L{b.level}] {b.material_name} ({b.bom_item_id})
+                          </option>
+                        ))}
+                    </select>
+                    <p className="text-[10px] text-[#707072] mt-1">
+                      Per garantire la coerenza dell'albero a 3 livelli, il nodo padre deve appartenere a un livello gerarchico superiore.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E5E5]">
+                  <button
+                    type="button"
+                    onClick={() => setMovingItem(null)}
+                    className="px-4 py-2 rounded-full border border-[#CCCCCC] text-xs font-bold text-[#707072] hover:bg-[#F5F5F5] transition"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 rounded-full bg-[#111111] text-white font-bold text-xs hover:bg-black transition shadow-sm"
+                  >
+                    Applica Spostamento Albero
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* FTL-TECH-014: Modal Conferma Eliminazione */}
+        {deletingItemId && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-red-200 animate-in fade-in zoom-in-95">
+              <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mb-3">
+                🗑️
+              </div>
+              <h4 className="text-lg font-bold text-[#111111]">
+                Conferma eliminazione componente BOM?
+              </h4>
+              <p className="text-xs text-[#707072] mt-2">
+                Stai per eliminare il nodo <strong className="text-[#111111]">{deletingItemId}</strong>.
+                Se questo elemento contiene sotto-componenti gerarchici (L2 o L3), verranno rimossi ricorsivamente a cascata per garantire l'integrità della distinta base.
+              </p>
+
+              <div className="flex items-center justify-end gap-2 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setDeletingItemId(null)}
+                  className="px-4 py-2 rounded-full border border-[#CCCCCC] text-xs font-bold text-[#707072] hover:bg-[#F5F5F5] transition"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleConfirmDelete(deletingItemId)}
+                  className="px-5 py-2 rounded-full bg-red-600 text-white font-bold text-xs hover:bg-red-700 transition shadow-sm"
+                >
+                  Elimina Definitivamente
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,44 @@
+{
+  "task_id": "FTL-TECH-012",
+  "title": "Sviluppo Full-Stack: DDL Gerarchia Categorie, Query CTE Ricorsive, API Deep Copy BOM, Template Engine, Parser Bulk Import Atomico e Componenti UI React",
+  "description": "Progettare e implementare l'architettura tecnica full-stack per: (1) DDL relazionale product_categories_hierarchy e query CTE ricorsive compatibili SQLite e PostgreSQL, (2) Estensione di PimCommercialItem e PlmProductionVariant con category_id, sub_category_id e classificatori commerciali, (3) Endpoint e servizio transazionale backend per clone_variant_with_bom con rimappatura parent_id e sostituzione materiali, (4) Endpoint e gestione template BOM, (5) Servizio di bulk import/export con endpoint /validate (dry-run) e /commit atomico, (6) Aggiornamento componenti React (PlmProductsManager, PimCatalogManager, BomThreeLevelTree, DomainRegistriesManager) e suite test Pytest 100% passante.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder",
+  "created_at": "2026-10-20T19:40:00+02:00",
+  "updated_at": "2026-10-20T20:10:00+02:00",
+  "due_date": "2026-11-30T23:59:59+02:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": "L (3-10gg)",
+  "dependencies": [
+    "FTL-PROD-010",
+    "FTL-GOV-007"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/backend/app/models.py",
+    "Applicativo/backend/app/database.py",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/components/PimCatalogManager.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-010",
+  "tags": [
+    "infra",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Creazione tabella product_categories_hierarchy con CTE ricorsive ad alte prestazioni",
+    "Implementazione endpoint POST /api/v1/plm-variants/{id}/deep-clone con clonazione integrale della BOM a 3 livelli",
+    "Implementazione endpoint POST /api/v1/bulk-import/validate e /commit con gestione rollback transazionale",
+    "Aggiornamento interfaccia utente React con selettori gerarchici, modal di duplicazione e widget di import massivo",
+    "Esecuzione della suite Pytest con esito 100% passante e build frontend senza errori di compilazione"
+  ],
+  "notes": "Sviluppo tecnologico full-stack core di Sprint 7."
+}

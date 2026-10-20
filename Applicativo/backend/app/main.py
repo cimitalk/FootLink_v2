@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
 from app._compat import (
+    BaseModel,
     CORSMiddleware,
     FastAPI,
     HTMLResponse,
@@ -29,10 +30,16 @@ from app.models import (
     AttributeTargetEntity,
     BomHierarchySummary,
     BomItem,
+    BomItemMoveRequest,
     BomRequirementsCalculationRequest,
     BomRequirementsCalculationResult,
     BomSizeRequirementItem,
+    BomTemplate,
+    BomTemplateCreate,
     BomTreeNode,
+    BulkImportCommitRequest,
+    BulkImportCommitResponse,
+    BulkImportValidationResponse,
     Collection,
     CollectionCreate,
     Company,
@@ -42,6 +49,7 @@ from app.models import (
     CompanyMembershipCreate,
     CompanyTier,
     CompanyUpdate,
+    CreateBomTemplateFromVariantRequest,
     DigitalProductPassport,
     DistrictUserRole,
     DomainRegistryEntry,
@@ -54,6 +62,9 @@ from app.models import (
     PlmLifecycleStatus,
     PlmProductionVariant,
     PlmProductionVariantCreate,
+    ProductCategoryCreate,
+    ProductCategoryHierarchyNode,
+    ProductCategoryUpdate,
     ProductionOrder,
     ProductionOrderCreate,
     ProductionOrderPhaseItem,
@@ -78,6 +89,7 @@ from app.models import (
     TanneryProcess,
     User,
     UserCreate,
+    VariantDeepCloneRequest,
 )
 from app.seed import seed_initial_data
 
@@ -729,6 +741,12 @@ def get_plm_variant_costing_sheet(
     status_code=status.HTTP_201_CREATED,
     tags=["plm", "bom"],
 )
+@app.post(
+    "/api/v1/pim-items/{pim_item_id}/plm-variants/{plm_variant_id}/bom-items",
+    response_model=PlmProductionVariant,
+    status_code=status.HTTP_201_CREATED,
+    tags=["plm", "bom"],
+)
 def append_bom_item(
     pim_item_id: str,
     plm_variant_id: str,
@@ -755,7 +773,140 @@ def append_bom_item(
                     )
             variant.bom_items.append(bom_item)
             PIM_STORE[pim_item_id] = item
+            try:
+                db_manager.save_pim_item(item)
+            except Exception:
+                pass
             return variant
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PLM Production Variant not found.")
+
+
+@app.put(
+    "/api/v1/pim-items/{pim_item_id}/plm-variants/{plm_variant_id}/bom-items/{bom_item_id}",
+    response_model=BomItem,
+    tags=["plm", "bom", "sprint7"],
+)
+def update_bom_item(
+    pim_item_id: str,
+    plm_variant_id: str,
+    bom_item_id: str,
+    updated_item: BomItem,
+) -> BomItem:
+    """Update an existing BOM component item in a PLM Production Variant (FTL-TECH-014)."""
+    item = PIM_STORE.get(pim_item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PIM Commercial Item not found.")
+
+    for variant in item.plm_variants:
+        if variant.plm_variant_id == plm_variant_id:
+            found_idx = None
+            for idx, b in enumerate(variant.bom_items):
+                if b.bom_item_id == bom_item_id:
+                    found_idx = idx
+                    break
+            if found_idx is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"BOM item '{bom_item_id}' not found.")
+
+            updated_item.bom_item_id = bom_item_id
+            variant.bom_items[found_idx] = updated_item
+            PIM_STORE[pim_item_id] = item
+            try:
+                db_manager.update_bom_item(plm_variant_id, bom_item_id, updated_item)
+            except Exception:
+                pass
+            return updated_item
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PLM Production Variant not found.")
+
+
+@app.delete(
+    "/api/v1/pim-items/{pim_item_id}/plm-variants/{plm_variant_id}/bom-items/{bom_item_id}",
+    tags=["plm", "bom", "sprint7"],
+)
+def delete_bom_item(
+    pim_item_id: str,
+    plm_variant_id: str,
+    bom_item_id: str,
+) -> Dict[str, Any]:
+    """Delete a BOM item and all its children from a PLM Production Variant (FTL-TECH-014)."""
+    item = PIM_STORE.get(pim_item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PIM Commercial Item not found.")
+
+    for variant in item.plm_variants:
+        if variant.plm_variant_id == plm_variant_id:
+            to_delete = {bom_item_id}
+            added = True
+            while added:
+                added = False
+                for b in variant.bom_items:
+                    if b.parent_bom_item_id in to_delete and b.bom_item_id not in to_delete:
+                        to_delete.add(b.bom_item_id)
+                        added = True
+
+            variant.bom_items = [b for b in variant.bom_items if b.bom_item_id not in to_delete]
+            PIM_STORE[pim_item_id] = item
+            try:
+                db_manager.delete_bom_item(plm_variant_id, bom_item_id)
+            except Exception:
+                pass
+            return {"status": "success", "deleted_bom_item_ids": list(to_delete)}
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PLM Production Variant not found.")
+
+
+@app.patch(
+    "/api/v1/pim-items/{pim_item_id}/plm-variants/{plm_variant_id}/bom-items/{bom_item_id}/move",
+    response_model=BomItem,
+    tags=["plm", "bom", "sprint7"],
+)
+def move_bom_item(
+    pim_item_id: str,
+    plm_variant_id: str,
+    bom_item_id: str,
+    move_req: BomItemMoveRequest,
+) -> BomItem:
+    """Move / reparent a BOM item in the 3-level tree (FTL-TECH-014)."""
+    item = PIM_STORE.get(pim_item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PIM Commercial Item not found.")
+
+    for variant in item.plm_variants:
+        if variant.plm_variant_id == plm_variant_id:
+            target_b = next((b for b in variant.bom_items if b.bom_item_id == bom_item_id), None)
+            if not target_b:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"BOM item '{bom_item_id}' not found.")
+
+            if move_req.new_level == 1:
+                target_b.level = 1
+                target_b.parent_bom_item_id = None
+            else:
+                if not move_req.new_parent_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail="Items with level > 1 must specify new_parent_id.",
+                    )
+                parent_b = next((b for b in variant.bom_items if b.bom_item_id == move_req.new_parent_id), None)
+                if not parent_b:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=f"Parent BOM item '{move_req.new_parent_id}' not found in variant.",
+                    )
+                if parent_b.level >= move_req.new_level:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=f"Parent item must be at a higher hierarchical level than Level {move_req.new_level}.",
+                    )
+                target_b.level = move_req.new_level
+                target_b.parent_bom_item_id = move_req.new_parent_id
+
+            PIM_STORE[pim_item_id] = item
+            try:
+                db_manager.move_bom_item(plm_variant_id, bom_item_id, move_req.new_level, target_b.parent_bom_item_id)
+            except Exception:
+                pass
+            return target_b
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PLM Production Variant not found.")
 
@@ -2133,17 +2284,265 @@ def export_plm_variants_csv() -> Response:
     """Export tabular PLM production variants as CSV for technical factory sheets (FTL-CEO-009)."""
     items = db_manager.list_pim_items()
     rows = [
-        "plm_variant_id,variant_code,model_name,category,colorway_name,lifecycle_status,size_range,bom_items_count"
+        "plm_variant_id,variant_code,model_name,category,construction_type,carryover_status,brand_line,colorway_name,lifecycle_status,size_range,bom_items_count"
     ]
     for item in items:
         for v in item.plm_variants:
+            const_type = getattr(v, "construction_type", "cassetta_cucita") or "cassetta_cucita"
+            carryover = getattr(v, "carryover_status", "seasonal_core") or getattr(item, "carryover_status", "seasonal_core")
+            brand_line = getattr(item, "brand_line", "Main Line") or "Main Line"
             rows.append(
-                f'"{v.plm_variant_id}","{v.variant_code}","{item.model_name}","{item.category}","{v.colorway_name}","{v.lifecycle_status}","{v.size_range}",{len(v.bom_items)}'
+                f'"{v.plm_variant_id}","{v.variant_code}","{item.model_name}","{item.category}","{const_type}","{carryover}","{brand_line}","{v.colorway_name}","{v.lifecycle_status}","{v.size_range}",{len(v.bom_items)}'
             )
     return Response(
         content="\n".join(rows) + "\n",
         media_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="footlink_plm_variants_export.csv"'},
     )
+
+
+# ============================================================================
+# Sprint 7: Product Categories Hierarchy Endpoints (ADR-010)
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/categories",
+    response_model=List[ProductCategoryHierarchyNode],
+    tags=["categories", "sprint7"],
+)
+def list_categories(
+    parent_id: Optional[str] = None,
+    level: Optional[int] = None,
+) -> List[ProductCategoryHierarchyNode]:
+    """List hierarchical categories, optionally filtered by parent_id or depth level."""
+    return db_manager.list_categories(parent_id=parent_id, level=level)
+
+
+@app.get(
+    "/api/v1/categories/tree",
+    response_model=List[ProductCategoryHierarchyNode],
+    tags=["categories", "sprint7"],
+)
+def get_categories_tree() -> List[ProductCategoryHierarchyNode]:
+    """Get the full nested product category tree (Macro > Famiglia > Sotto-Famiglia > Costruzione)."""
+    return db_manager.get_category_tree()
+
+
+@app.post(
+    "/api/v1/categories",
+    response_model=ProductCategoryHierarchyNode,
+    status_code=status.HTTP_201_CREATED,
+    tags=["categories", "sprint7"],
+)
+def create_category(payload: ProductCategoryCreate) -> ProductCategoryHierarchyNode:
+    """Create or update a category node in the hierarchy."""
+    return db_manager.save_category(payload)
+
+
+@app.get(
+    "/api/v1/categories/{category_id}",
+    response_model=ProductCategoryHierarchyNode,
+    tags=["categories", "sprint7"],
+)
+def get_category(category_id: str) -> ProductCategoryHierarchyNode:
+    cat = db_manager.get_category(category_id)
+    if not cat:
+        raise HTTPException(status_code=404, detail=f"Category '{category_id}' not found.")
+    return cat
+
+
+@app.delete(
+    "/api/v1/categories/{category_id}",
+    tags=["categories", "sprint7"],
+)
+def delete_category(category_id: str) -> Dict[str, Any]:
+    deleted = db_manager.delete_category(category_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Category '{category_id}' not found.")
+    return {"status": "success", "deleted_category_id": category_id}
+
+
+# ============================================================================
+# Sprint 7: Deep Clone Variant & 3-Level BOM (ADR-010)
+# ============================================================================
+
+
+@app.post(
+    "/api/v1/plm-variants/{plm_variant_id}/deep-clone",
+    response_model=PlmProductionVariant,
+    status_code=status.HTTP_201_CREATED,
+    tags=["plm", "bom", "sprint7"],
+)
+def deep_clone_variant(plm_variant_id: str, payload: VariantDeepCloneRequest) -> PlmProductionVariant:
+    """Clone a technical variant and recursively duplicate its entire 3-level BOM with material replacements."""
+    try:
+        return db_manager.deep_clone_variant(plm_variant_id, payload)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+# ============================================================================
+# Sprint 7: BOM Templates Library (ADR-010)
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/bom-templates",
+    response_model=List[BomTemplate],
+    tags=["bom_templates", "sprint7"],
+)
+def list_bom_templates(category_id: Optional[str] = None) -> List[BomTemplate]:
+    """List available standard BOM templates, optionally filtered by category."""
+    return db_manager.list_bom_templates(category_id=category_id)
+
+
+@app.post(
+    "/api/v1/bom-templates",
+    response_model=BomTemplate,
+    status_code=status.HTTP_201_CREATED,
+    tags=["bom_templates", "sprint7"],
+)
+def create_bom_template(payload: BomTemplateCreate) -> BomTemplate:
+    """Create a new reusable 3-level BOM standard template."""
+    return db_manager.save_bom_template(payload)
+
+
+@app.get(
+    "/api/v1/bom-templates/{template_id}",
+    response_model=BomTemplate,
+    tags=["bom_templates", "sprint7"],
+)
+def get_bom_template(template_id: str) -> BomTemplate:
+    tpl = db_manager.get_bom_template(template_id)
+    if not tpl:
+        raise HTTPException(status_code=404, detail=f"BOM Template '{template_id}' not found.")
+    return tpl
+
+
+@app.delete(
+    "/api/v1/bom-templates/{template_id}",
+    tags=["bom_templates", "sprint7"],
+)
+def delete_bom_template(template_id: str) -> Dict[str, Any]:
+    deleted = db_manager.delete_bom_template(template_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"BOM Template '{template_id}' not found.")
+    return {"status": "success", "deleted_template_id": template_id}
+
+
+@app.post(
+    "/api/v1/bom-templates/{template_id}/apply-to-variant/{plm_variant_id}",
+    response_model=List[BomItem],
+    tags=["bom_templates", "sprint7"],
+)
+def apply_bom_template_to_variant(template_id: str, plm_variant_id: str) -> List[BomItem]:
+    """Populate a PLM variant's bill of materials instantly from a pre-configured BOM template."""
+    try:
+        return db_manager.apply_bom_template_to_variant(template_id, plm_variant_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.put(
+    "/api/v1/bom-templates/{template_id}",
+    response_model=BomTemplate,
+    tags=["bom_templates", "sprint7"],
+)
+def update_bom_template(template_id: str, payload: BomTemplateCreate) -> BomTemplate:
+    """Update an existing BOM Preset / Template (FTL-CEO-014)."""
+    payload.template_id = template_id
+    existing = db_manager.get_bom_template(template_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"BOM Template '{template_id}' not found.")
+    return db_manager.save_bom_template(payload)
+
+
+@app.post(
+    "/api/v1/bom-templates/create-from-variant/{plm_variant_id}",
+    response_model=BomTemplate,
+    status_code=status.HTTP_201_CREATED,
+    tags=["bom_templates", "sprint7"],
+)
+def create_bom_template_from_variant(
+    plm_variant_id: str,
+    payload: CreateBomTemplateFromVariantRequest,
+) -> BomTemplate:
+    """Extract all BOM items from an existing PLM variant and save them as a new reusable BOM Preset (FTL-CEO-014)."""
+    try:
+        return db_manager.create_bom_template_from_variant(
+            plm_variant_id=plm_variant_id,
+            name=payload.name,
+            category_id=payload.category_id,
+            construction_type=payload.construction_type,
+            description=payload.description,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ============================================================================
+# Sprint 7: Bulk Data Onboarding (Import/Export Massivo con Dry-Run)
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/bulk-import/template/{template_type}",
+    response_class=Response,
+    tags=["bulk_import", "sprint7"],
+)
+def download_bulk_import_template(template_type: str) -> Response:
+    """Download standard CSV template for bulk onboarding of articles or BOMs."""
+    if template_type == "articles":
+        header = "sku_code,model_name,season,category,variant_code,colorway_name,size_range,last_or_pattern_code,construction_type,wholesale_price_eur,retail_price_eur,carryover_status,brand_line,target_occasion,price_tier\n"
+        sample1 = "SKU-MONTE-PE26,Sneaker Montecarlo Cupsole,PE26,footwear,MONTE-01-NER,Vitello Nero,39-46,LAST-SNK-42,cassetta_cucita,160.00,420.00,carryover,Main Line,smart_casual,core_luxury\n"
+        sample2 = "SKU-MONTE-PE26,Sneaker Montecarlo Cupsole,PE26,footwear,MONTE-02-BIA,Vitello Bianco Ghiaccio,39-46,LAST-SNK-42,cassetta_cucita,160.00,420.00,seasonal_core,Main Line,smart_casual,core_luxury\n"
+        sample3 = "SKU-TOTE-FW26,Borsa Shopping Firenze,FW26,leather_goods,TOTE-01-COG,Toro Pieno Fiore Cognac,TU,PAT-BAG-TOTE,cassetta_cucita,280.00,750.00,carryover,Studio,business_formal,high_luxury\n"
+        content = header + sample1 + sample2 + sample3
+        filename = "footlink_template_articolie_varianti.csv"
+
+    elif template_type == "bom":
+        header = "variant_code,level,parent_bom_item_id,component_type,material_name,supplier_name,unit_of_measure,unit_consumption,waste_percentage,unit_cost_eur\n"
+        sample1 = "MONTE-01-NER,1,,upper,Vitello Pieno Fiore 1.4mm,Conceria Distretto Veneto,dm2,18.5,15.0,14.50\n"
+        sample2 = "MONTE-01-NER,1,,lining,Fodera Vitello Traspirante,Conceria Distretto Veneto,dm2,12.0,10.0,8.50\n"
+        sample3 = "MONTE-01-NER,2,,outsole,Suola Monoblocco TR Cassetta,Suolificio Marchigiano,pa,1.0,1.0,9.50\n"
+        sample4 = "MONTE-01-NER,3,,hardware,Lacci Cotone Cerato 120cm,Filati Lucca,pa,1.0,0.0,0.90\n"
+        content = header + sample1 + sample2 + sample3 + sample4
+        filename = "footlink_template_distinta_base_bom.csv"
+
+    else:
+        raise HTTPException(status_code=400, detail="Invalid template_type. Use 'articles' or 'bom'.")
+
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+class BulkImportValidateRequest(BaseModel):
+    import_type: str = "articles"  # 'articles' | 'bom'
+    csv_content: str
+
+
+@app.post(
+    "/api/v1/bulk-import/validate",
+    response_model=BulkImportValidationResponse,
+    tags=["bulk_import", "sprint7"],
+)
+def validate_bulk_import(payload: BulkImportValidateRequest) -> BulkImportValidationResponse:
+    """Dry-Run validation of CSV import content without persisting to the database."""
+    return db_manager.validate_bulk_import(payload.import_type, payload.csv_content)
+
+
+@app.post(
+    "/api/v1/bulk-import/commit",
+    response_model=BulkImportCommitResponse,
+    tags=["bulk_import", "sprint7"],
+)
+def commit_bulk_import(payload: BulkImportCommitRequest) -> BulkImportCommitResponse:
+    """Atomic commit of validated rows into the relational database."""
+    return db_manager.commit_bulk_import(payload)
+
 
 

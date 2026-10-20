@@ -12,6 +12,68 @@
 
 export type ProductCategory = "footwear" | "leather_goods" | "apparel";
 
+export type CarryoverStatus = "carryover" | "seasonal_core" | "seasonal_trend" | "capsule_drop";
+
+export type ConstructionType = "cassetta_cucita" | "blake" | "goodyear" | "tubolare_sacchetto" | "strobel" | "ago";
+
+export interface ProductCategoryHierarchyNode {
+  category_id: string;
+  parent_id?: string | null;
+  level: number;
+  code: string;
+  slug_path: string;
+  label_it: string;
+  label_en: string;
+  icon?: string;
+  is_active: boolean;
+  sort_order: number;
+  children?: ProductCategoryHierarchyNode[];
+}
+
+export interface BomTemplateItem {
+  level: number;
+  parent_template_item_id?: string | null;
+  template_item_id: string;
+  component_type: BomComponentType;
+  material_name: string;
+  supplier_name: string;
+  origin_country_iso2: string;
+  unit_of_measure: string;
+  unit_consumption: number;
+  waste_percentage: number;
+  recycled_content_pct: number;
+  certifications: string[];
+  unit_cost_eur: number;
+}
+
+export interface BomTemplate {
+  template_id: string;
+  name: string;
+  category_id: string;
+  construction_type: string;
+  description: string;
+  items: BomTemplateItem[];
+  created_at?: string;
+}
+
+export interface BulkImportValidationRow {
+  row_number: number;
+  entity_type: string;
+  identifier: string;
+  is_valid: boolean;
+  errors: string[];
+  parsed_data: Record<string, any>;
+}
+
+export interface BulkImportValidationResponse {
+  total_rows: number;
+  valid_rows_count: number;
+  invalid_rows_count: number;
+  rows: BulkImportValidationRow[];
+  summary: string;
+}
+
+
 export type PlmLifecycleStatus =
   | "prototype"
   | "sample"
@@ -106,6 +168,7 @@ export interface DomainRegistryEntry {
   label_it: string;
   label_en: string;
   metadata?: Record<string, any>;
+  meta?: Record<string, any>;
   is_active: boolean;
   sort_order: number;
   created_at?: string;
@@ -196,6 +259,10 @@ export interface PlmProductionVariant {
   category_specific_specs?: Record<string, any>;
   custom_attributes?: Record<string, any>;
   target_gender?: string;
+  category_id?: string | null;
+  sub_category_id?: string | null;
+  construction_type?: string;
+  carryover_status?: CarryoverStatus | string;
   bom_items: BomItem[];
   subcontractor_assignments: SubcontractorAssignment[];
   created_at?: string;
@@ -211,7 +278,13 @@ export interface PimCommercialItem {
   collection_id?: string | null;
   collection_name?: string | null;
   category: ProductCategory;
+  category_id?: string | null;
+  sub_category_id?: string | null;
   target_gender?: string;
+  carryover_status?: CarryoverStatus | string;
+  brand_line?: string;
+  target_occasion?: string;
+  price_tier?: string;
   commercial_description_it: string;
   commercial_description_en: string;
   retail_channels: string[];
@@ -313,6 +386,7 @@ export interface Company {
   phone?: string;
   website?: string;
   metadata?: Record<string, any>;
+  meta?: Record<string, any>;
   is_active: boolean;
   created_at?: string;
 }
@@ -396,6 +470,7 @@ export interface TanneryBatch {
   thickness_mm: string;
   available_qty_sqft: number;
   metadata?: Record<string, any>;
+  meta?: Record<string, any>;
   is_active: boolean;
   documents: TanneryDocument[];
   created_at?: string;
@@ -463,6 +538,7 @@ export interface ProductionOrder {
   size_breakdown: OrderSizeBreakdownItem[];
   phases: ProductionOrderPhaseItem[];
   metadata?: Record<string, any>;
+  meta?: Record<string, any>;
   created_at?: string;
 }
 

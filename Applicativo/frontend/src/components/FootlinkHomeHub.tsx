@@ -1,5 +1,6 @@
 import React from "react";
 import { evaluateClientDataQuality } from "../mockSeedData";
+import { FractalWaveBackground } from "./FractalWaveBackground";
 import {
   ActiveWorkspaceModule,
   PimCommercialItem,
@@ -127,115 +128,129 @@ export const FootlinkHomeHub: React.FC<FootlinkHomeHubProps> = ({
 
   return (
     <section className="space-y-8">
-      {/* Spotlight Hero Block (#111111 Pitch Black - Nike Editorial Minimalism) */}
-      <div className="bg-[#111111] text-white rounded-2xl p-6 sm:p-10 border border-[#111111]">
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/15">
-          <div className="inline-flex items-center gap-2.5 bg-white/10 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider">
-            <span className="w-2 h-2 rounded-full bg-[#10B981] inline-block" />
-            <span>HOME OPERATIVA FOOTLINK OS · DESIGN SYSTEM V2.0</span>
+      {/* Spotlight Hero Block with Computer Graphics Fractal Animated Wave Background (FTL-TECH-015) */}
+      <div className="relative overflow-hidden bg-[#0a0a0a] text-white rounded-2xl p-6 sm:p-10 border border-[#1f242e] shadow-2xl">
+        <FractalWaveBackground />
+
+        <div className="relative z-10">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/15">
+            <div className="inline-flex items-center gap-2.5 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-[#10B981] inline-block shadow-[0_0_8px_#10B981]" />
+              <span>HOME OPERATIVA FOOTLINK OS · DESIGN SYSTEM V2.0</span>
+            </div>
+
+            {/* L6 Security Role Switcher */}
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md p-1 rounded-full">
+              <button
+                type="button"
+                onClick={() => onChangeViewerRole("brand")}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
+                  viewerRole === "brand"
+                    ? "bg-white text-[#111111]"
+                    : "text-white/80 hover:text-white"
+                }`}
+              >
+                Vista Brand / PMI (Costi L6 Visibili)
+              </button>
+              <button
+                type="button"
+                onClick={() => onChangeViewerRole("subcontractor")}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
+                  viewerRole === "subcontractor"
+                    ? "bg-white text-[#111111]"
+                    : "text-white/80 hover:text-white"
+                }`}
+              >
+                Vista Terzista 0 € (Costi Oscurati L6)
+              </button>
+            </div>
           </div>
 
-          {/* L6 Security Role Switcher */}
-          <div className="flex items-center gap-2 bg-white/10 p-1 rounded-full">
-            <button
-              type="button"
-              onClick={() => onChangeViewerRole("brand")}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
-                viewerRole === "brand"
-                  ? "bg-white text-[#111111]"
-                  : "text-white/80 hover:text-white"
-              }`}
-            >
-              Vista Brand / PMI (Costi L6 Visibili)
-            </button>
-            <button
-              type="button"
-              onClick={() => onChangeViewerRole("subcontractor")}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
-                viewerRole === "subcontractor"
-                  ? "bg-white text-[#111111]"
-                  : "text-white/80 hover:text-white"
-              }`}
-            >
-              Vista Terzista 0 € (Costi Oscurati L6)
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-7 items-end">
-          <div className="lg:col-span-8 space-y-4">
-            <h2 className="display-title text-4xl sm:text-6xl text-white">
-              DAL LABORATORIO AL PASSAPORTO DIGITALE UE. IN UN UNICO SISTEMA.
-            </h2>
-            <p className="text-sm sm:text-base text-white/75 max-w-3xl leading-relaxed">
-              Benvenuto nella cabina operativa di <strong>Footlink</strong>. Seleziona uno dei{" "}
-              <strong>6 moduli principali</strong> per governare il catalogo commerciale PIM,
-              le varianti tecniche di fabbrica PLM per Calzature, Pelletteria e Abbigliamento,
-              la distinta base a 3 livelli, i laboratori terzisti a 0 € e il Passaporto Digitale UE.
-            </p>
-          </div>
-          <div className="lg:col-span-4 flex flex-wrap lg:justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => onNavigateModule("all")}
-              className="px-7 py-3.5 rounded-full bg-white text-[#111111] font-semibold text-sm hover:bg-[#F5F5F5] transition"
-            >
-              Apri Workspace Integrato Completo →
-            </button>
-          </div>
-        </div>
-
-        {/* 5 Live Executive KPIs */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-8 pt-6 border-t border-white/15">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-            <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
-              1. Catalogo Vendita (PIM)
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-7 items-end">
+            <div className="lg:col-span-8 space-y-4">
+              <h2 className="display-title text-4xl sm:text-6xl text-white tracking-tight">
+                DAL LABORATORIO AL PASSAPORTO DIGITALE UE. IN UN UNICO SISTEMA.
+              </h2>
+              <p className="text-sm sm:text-base text-white/80 max-w-3xl leading-relaxed">
+                Benvenuto nella cabina operativa di <strong>Footlink</strong>. Seleziona uno dei{" "}
+                <strong>6 moduli principali</strong> per governare il catalogo commerciale PIM,
+                le varianti tecniche di fabbrica PLM per Calzature, Pelletteria e Abbigliamento,
+                la distinta base a 3 livelli, i laboratori terzisti a 0 € e il Passaporto Digitale UE.
+              </p>
             </div>
-            <div className="display-title text-3xl sm:text-4xl text-white mt-1">
-              {totalPim} SKU MASTER
+            <div className="lg:col-span-4 flex flex-wrap lg:justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => onNavigateModule("all")}
+                className="px-6 py-3.5 rounded-full bg-white text-[#111111] font-semibold text-sm hover:bg-[#F5F5F5] transition shadow-lg hover:shadow-xl"
+              >
+                Apri Workspace Integrato Completo →
+              </button>
+              <a
+                href="/dam/index.html"
+                target="_blank"
+                rel="noreferrer"
+                className="px-5 py-3.5 rounded-full bg-[#1A1A1A] text-white border border-[#333333] hover:border-[#00FF87] hover:text-[#00FF87] font-semibold text-sm transition shadow-lg flex items-center gap-2"
+                title="Archivio DAM con tutti gli asset pubblicitari, social, banner e newsletter"
+              >
+                <span>📁</span>
+                <span>Archivio DAM Adv &amp; Social</span>
+              </a>
             </div>
-            <div className="text-xs text-white/70 mt-1">Calzature · Pelletteria · Abbigliamento</div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-            <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
-              2. Varianti Fabbrica (PLM)
+          {/* 5 Live Executive KPIs */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-8 pt-6 border-t border-white/15">
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+              <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
+                1. Catalogo Vendita (PIM)
+              </div>
+              <div className="display-title text-3xl sm:text-4xl text-white mt-1">
+                {totalPim} SKU MASTER
+              </div>
+              <div className="text-xs text-white/70 mt-1">Calzature · Pelletteria · Abbigliamento</div>
             </div>
-            <div className="display-title text-3xl sm:text-4xl text-white mt-1">
-              {totalPlm} LINEE PLM
-            </div>
-            <div className="text-xs text-white/70 mt-1">Ponte Nativo 1 PIM ↔ N PLM</div>
-          </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-            <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
-              3. PIM Data Quality (FEAT-05)
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+              <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
+                2. Varianti Fabbrica (PLM)
+              </div>
+              <div className="display-title text-3xl sm:text-4xl text-white mt-1">
+                {totalPlm} LINEE PLM
+              </div>
+              <div className="text-xs text-white/70 mt-1">Ponte Nativo 1 PIM ↔ N PLM</div>
             </div>
-            <div className="display-title text-3xl sm:text-4xl text-white mt-1">
-              {avgDataQuality}% READY
-            </div>
-            <div className="text-xs text-white/70 mt-1">10/10 Criteri ESPR Verificati</div>
-          </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-            <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
-              4. Rete Terzisti a 0 €
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+              <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
+                3. PIM Data Quality (FEAT-05)
+              </div>
+              <div className="display-title text-3xl sm:text-4xl text-white mt-1">
+                {avgDataQuality}% READY
+              </div>
+              <div className="text-xs text-white/70 mt-1">10/10 Criteri ESPR Verificati</div>
             </div>
-            <div className="display-title text-3xl sm:text-4xl text-white mt-1">
-              {confirmedSubs}/{allSubs.length} FASI
-            </div>
-            <div className="text-xs text-white/70 mt-1">Confermate in 3 Clic a 0 €</div>
-          </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 col-span-2 sm:col-span-1">
-            <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
-              5. Passaporto UE (ESPR)
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+              <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
+                4. Rete Terzisti a 0 €
+              </div>
+              <div className="display-title text-3xl sm:text-4xl text-white mt-1">
+                {confirmedSubs}/{allSubs.length} FASI
+              </div>
+              <div className="text-xs text-white/70 mt-1">Confermate in 3 Clic a 0 €</div>
             </div>
-            <div className="display-title text-3xl sm:text-4xl text-white mt-1 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
-              100% LIVE
+
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 col-span-2 sm:col-span-1">
+              <div className="text-[11px] uppercase tracking-wider text-white/60 font-semibold">
+                5. Passaporto UE (ESPR)
+              </div>
+              <div className="display-title text-3xl sm:text-4xl text-white mt-1 flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]" />
+                100% LIVE
+              </div>
+              <div className="text-xs text-white/70 mt-1">QR Code SVG + Vista Dogane</div>
             </div>
-            <div className="text-xs text-white/70 mt-1">QR Code SVG + Vista Dogane</div>
           </div>
         </div>
       </div>

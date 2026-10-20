@@ -941,4 +941,405 @@ def test_domain_registry_editing_founder_directive():
     assert updated["metadata"]["luster"] == "high-gloss"
 
 
+# ============================================================================
+# SPRINT 7 TEST SUITE (ADR-010): Product Hierarchies, Deep Clone, BOM Templates & Bulk Onboarding
+# ============================================================================
+
+
+def test_product_categories_hierarchy_sprint7():
+    """Verify hierarchical categories (3+1 levels): list, tree, create, get."""
+    # 1. List categories
+    resp = client.get("/api/v1/categories")
+    assert resp.status_code == 200
+    cats = resp.json()
+    assert len(cats) >= 10
+    slugs = [c["slug_path"] for c in cats]
+    assert "footwear" in slugs
+    assert "footwear/sneakers" in slugs
+    assert "footwear/sneakers/low-top-cupsole" in slugs
+
+    # 2. Get tree
+    tree_resp = client.get("/api/v1/categories/tree")
+    assert tree_resp.status_code == 200
+    tree = tree_resp.json()
+    assert len(tree) >= 3  # footwear, leather_goods, apparel
+    fw_node = next(n for n in tree if n["code"] == "footwear")
+    assert len(fw_node["children"]) >= 4  # sneakers, formal, loafers, boots...
+
+    # 3. Create a custom sub-category
+    custom_cat = {
+        "category_id": "cat_fw_snk_slipon",
+        "parent_id": "cat_fw_sneakers",
+        "level": 3,
+        "code": "slip_on",
+        "label_it": "Sneaker Slip-On Senza Lacci",
+        "label_en": "Slip-On Sneaker",
+        "icon": "👟",
+        "sort_order": 99,
+    }
+    create_resp = client.post("/api/v1/categories", json=custom_cat)
+    assert create_resp.status_code == 201
+    created = create_resp.json()
+    assert created["slug_path"] == "footwear/sneakers/slip_on"
+    assert created["level"] == 3
+
+    # 4. Get by ID
+    get_resp = client.get("/api/v1/categories/cat_fw_snk_slipon")
+    assert get_resp.status_code == 200
+    assert get_resp.json()["label_it"] == "Sneaker Slip-On Senza Lacci"
+
+
+def test_bom_templates_and_apply_sprint7():
+    """Verify reusable BOM templates listing and applying to variant."""
+    # 1. List seeded templates
+    resp = client.get("/api/v1/bom-templates")
+    assert resp.status_code == 200
+    templates = resp.json()
+    assert len(templates) >= 3
+    t_ids = [t["template_id"] for t in templates]
+    assert "BOM-TPL-SNEAKER-CUPSOLE" in t_ids
+
+    # 2. Get specific template
+    tpl_resp = client.get("/api/v1/bom-templates/BOM-TPL-SNEAKER-CUPSOLE")
+    assert tpl_resp.status_code == 200
+    tpl = tpl_resp.json()
+    assert len(tpl["items"]) >= 5
+
+    # 3. Create a test item & variant with empty BOM
+    test_sku = "SKU-TPL-TEST-01"
+    pim_payload = {
+        "sku_code": test_sku,
+        "model_name": "Modello Per Test Template",
+        "brand_tenant_id": "brand-test",
+        "season": "PE26",
+        "category": "footwear",
+        "commercial_description_it": "Scarpa di test per applicazione template",
+        "commercial_description_en": "Test shoe for template application",
+        "wholesale_price_eur": 120.0,
+        "retail_price_eur": 300.0,
+        "initial_plm_variants": [
+            {
+                "variant_code": "VAR-TPL-TEST-A",
+                "colorway_name": "Bianco Test",
+                "size_range": "39-46",
+                "last_or_pattern_code": "LAST-TPL-01",
+            }
+        ],
+    }
+    pim_resp = client.post("/api/v1/pim-items", json=pim_payload)
+    assert pim_resp.status_code == 201
+    created_pim = pim_resp.json()
+    created_var = created_pim["plm_variants"][0]
+    var_id = created_var["plm_variant_id"]
+
+    # 4. Apply BOM template
+    apply_resp = client.post(f"/api/v1/bom-templates/BOM-TPL-SNEAKER-CUPSOLE/apply-to-variant/{var_id}")
+    assert apply_resp.status_code == 200
+    applied_boms = apply_resp.json()
+    assert len(applied_boms) >= 5
+
+    # 5. Verify BOM is now populated on variant
+    get_pim = client.get(f"/api/v1/pim-items/{created_pim['pim_item_id']}")
+    assert get_pim.status_code == 200
+    var_updated = get_pim.json()["plm_variants"][0]
+    assert len(var_updated["bom_items"]) >= 5
+
+
+def test_variant_deep_clone_with_bom_sprint7():
+    """Verify deep cloning of technical variant with recursive 3-level BOM and material replacement."""
+    # Find a product with BOM
+    items_resp = client.get("/api/v1/pim-items")
+    assert items_resp.status_code == 200
+    items = items_resp.json()
+    target_var = None
+    for it in items:
+        for v in it["plm_variants"]:
+            if len(v["bom_items"]) >= 2:
+                target_var = v
+                break
+        if target_var:
+            break
+
+    assert target_var is not None, "At least one variant must have a BOM."
+    orig_var_id = target_var["plm_variant_id"]
+    orig_bom_count = len(target_var["bom_items"])
+
+    # Deep clone with replacement
+    clone_req = {
+        "new_variant_code": f"CLONE-VAR-{target_var['variant_code'][-4:]}",
+        "new_colorway_name": "Camoscio Tortora Speciale",
+        "new_size_range": "35-42",
+        "clone_bom": True,
+        "material_replacements": {
+            "Vitello": "Camoscio Tortora Lusso",
+        },
+    }
+    clone_resp = client.post(f"/api/v1/plm-variants/{orig_var_id}/deep-clone", json=clone_req)
+    assert clone_resp.status_code == 201
+    cloned = clone_resp.json()
+    assert cloned["variant_code"] == clone_req["new_variant_code"]
+    assert cloned["colorway_name"] == "Camoscio Tortora Speciale"
+    assert len(cloned["bom_items"]) == orig_bom_count
+    assert cloned["lifecycle_status"] == "prototype"
+
+    # Verify material replacement took place
+    cloned_materials = [b["material_name"] for b in cloned["bom_items"]]
+    assert any("Camoscio Tortora Lusso" in m for m in cloned_materials)
+
+
+def test_bulk_import_validation_and_commit_sprint7():
+    """Verify bulk import Dry-Run validation and transactional commit."""
+    # 1. Download templates
+    t_art = client.get("/api/v1/bulk-import/template/articles")
+    assert t_art.status_code == 200
+    assert "sku_code,model_name" in t_art.text
+
+    t_bom = client.get("/api/v1/bulk-import/template/bom")
+    assert t_bom.status_code == 200
+    assert "variant_code,level" in t_bom.text
+
+    # 2. Dry-Run Validate articles CSV (1 valid row, 1 invalid row)
+    csv_sample = """sku_code,model_name,season,category,variant_code,colorway_name,size_range,wholesale_price_eur,retail_price_eur,carryover_status,brand_line
+SKU-BULK-VALID,Sneaker Bulk Valida,PE26,footwear,BULK-VAR-01,Nero,39-46,140.00,380.00,carryover,Main Line
+,Modello Senza SKU,PE26,invalid_category,BULK-VAR-02,Marrone,39-46,140.00,380.00,seasonal_core,Main Line
+"""
+    val_resp = client.post(
+        "/api/v1/bulk-import/validate",
+        json={"import_type": "articles", "csv_content": csv_sample},
+    )
+    assert val_resp.status_code == 200
+    val_data = val_resp.json()
+    assert val_data["total_rows"] == 2
+    assert val_data["valid_rows_count"] == 1
+    assert val_data["invalid_rows_count"] == 1
+    assert val_data["rows"][0]["is_valid"] is True
+    assert val_data["rows"][1]["is_valid"] is False
+    assert len(val_data["rows"][1]["errors"]) >= 2
+
+    # 3. Commit the valid row
+    commit_payload = {
+        "import_type": "articles",
+        "valid_rows": [val_data["rows"][0]["parsed_data"]],
+    }
+    commit_resp = client.post("/api/v1/bulk-import/commit", json=commit_payload)
+    assert commit_resp.status_code == 200
+    commit_data = commit_resp.json()
+    assert commit_data["success"] is True
+    assert commit_data["imported_items_count"] == 1
+    assert commit_data["imported_variants_count"] == 1
+
+    # 4. Verify item exists in PIM list
+    all_pim = client.get("/api/v1/pim-items")
+    skus = [i["sku_code"] for i in all_pim.json()]
+    assert "SKU-BULK-VALID" in skus
+
+
+def test_bom_three_level_interactive_crud():
+    """Sprint 7 (FTL-TECH-014): Interactive BOM Tree management: update, move, delete."""
+    # 1. Get an existing PIM item & variant
+    resp = client.get("/api/v1/pim-items")
+    assert resp.status_code == 200
+    pim = resp.json()[0]
+    pim_id = pim["pim_item_id"]
+    variant = pim["plm_variants"][0]
+    var_id = variant["plm_variant_id"]
+
+    # 2. Add an L1 item and an L2 item
+    l1_item = {
+        "bom_item_id": "BOM-TEST-L1-001",
+        "level": 1,
+        "parent_bom_item_id": None,
+        "component_type": "upper",
+        "material_name": "Tomaia Pelle Test",
+        "supplier_name": "Conceria Test LWG",
+        "origin_country_iso2": "IT",
+        "unit_of_measure": "sqft",
+        "unit_consumption": 1.5,
+        "waste_percentage": 5.0,
+        "recycled_content_pct": 20.0,
+        "certifications": ["LWG Gold"],
+        "unit_cost_eur": 12.0,
+        "lot_certificate_id": "CERT-TPL-01",
+        "custom_attributes": {},
+    }
+    add_resp = client.post(f"/api/v1/pim-items/{pim_id}/plm-variants/{var_id}/bom-items", json=l1_item)
+    assert add_resp.status_code == 201
+
+    l2_item = {
+        "bom_item_id": "BOM-TEST-L2-001",
+        "level": 2,
+        "parent_bom_item_id": "BOM-TEST-L1-001",
+        "component_type": "lining",
+        "material_name": "Fodera Vitello",
+        "supplier_name": "Conceria Fodere",
+        "origin_country_iso2": "IT",
+        "unit_of_measure": "sqft",
+        "unit_consumption": 0.8,
+        "waste_percentage": 3.0,
+        "recycled_content_pct": 0.0,
+        "certifications": ["REACH"],
+        "unit_cost_eur": 7.5,
+        "lot_certificate_id": "CERT-TPL-02",
+        "custom_attributes": {},
+    }
+    add_resp2 = client.post(f"/api/v1/pim-items/{pim_id}/plm-variants/{var_id}/bom-items", json=l2_item)
+    assert add_resp2.status_code == 201
+
+    # 3. Update the L2 item
+    l2_item["material_name"] = "Fodera Vitello Pieno Fiore Modificata"
+    l2_item["unit_consumption"] = 0.95
+    put_resp = client.put(
+        f"/api/v1/pim-items/{pim_id}/plm-variants/{var_id}/bom-items/BOM-TEST-L2-001",
+        json=l2_item,
+    )
+    assert put_resp.status_code == 200
+    assert put_resp.json()["material_name"] == "Fodera Vitello Pieno Fiore Modificata"
+    assert put_resp.json()["unit_consumption"] == 0.95
+
+    # 4. Sposta / Move item (promote L2 to L1)
+    move_resp = client.patch(
+        f"/api/v1/pim-items/{pim_id}/plm-variants/{var_id}/bom-items/BOM-TEST-L2-001/move",
+        json={"new_level": 1, "new_parent_id": None},
+    )
+    assert move_resp.status_code == 200
+    assert move_resp.json()["level"] == 1
+    assert move_resp.json()["parent_bom_item_id"] is None
+
+    # 5. Delete item (recursive cascade)
+    del_resp = client.delete(
+        f"/api/v1/pim-items/{pim_id}/plm-variants/{var_id}/bom-items/BOM-TEST-L1-001"
+    )
+    assert del_resp.status_code == 200
+    assert "BOM-TEST-L1-001" in del_resp.json()["deleted_bom_item_ids"]
+
+
+def test_bom_preset_management():
+    """Sprint 7 (FTL-CEO-014): BOM Presets CRUD & creation from variant."""
+    # 1. Get an existing variant
+    resp = client.get("/api/v1/pim-items")
+    assert resp.status_code == 200
+    pim = resp.json()[0]
+    var_id = pim["plm_variants"][0]["plm_variant_id"]
+
+    # 2. Create Preset from Variant
+    create_req = {
+        "name": "Preset Test Sneakers Runner",
+        "category_id": "footwear",
+        "construction_type": "cassetta_cucita",
+        "description": "Preset standard per sneakers suola cassetta",
+    }
+    create_resp = client.post(
+        f"/api/v1/bom-templates/create-from-variant/{var_id}",
+        json=create_req,
+    )
+    assert create_resp.status_code == 201
+    tpl_data = create_resp.json()
+    tpl_id = tpl_data["template_id"]
+    assert tpl_data["name"] == "Preset Test Sneakers Runner"
+    assert len(tpl_data["items"]) > 0
+
+    # 3. Update Preset
+    tpl_data["name"] = "Preset Test Sneakers Runner V2"
+    tpl_data["description"] = "Descrizione aggiornata"
+    put_resp = client.put(f"/api/v1/bom-templates/{tpl_id}", json=tpl_data)
+    assert put_resp.status_code == 200
+    assert put_resp.json()["name"] == "Preset Test Sneakers Runner V2"
+
+    # 4. List Presets and find newly created
+    list_resp = client.get("/api/v1/bom-templates")
+    assert list_resp.status_code == 200
+    all_tpl_ids = [t["template_id"] for t in list_resp.json()]
+    assert tpl_id in all_tpl_ids
+
+    # 5. Delete Preset
+    del_resp = client.delete(f"/api/v1/bom-templates/{tpl_id}")
+    assert del_resp.status_code == 200
+    assert del_resp.json()["deleted_template_id"] == tpl_id
+
+    # 6. Verify 404
+    get_resp = client.get(f"/api/v1/bom-templates/{tpl_id}")
+    assert get_resp.status_code == 404
+
+
+def test_collection_pyramids_dependencies_and_metadata_api():
+    """FTL-TECH-016: Verify Collection Pyramids merchandising hierarchy, dependencies, and Zero-JSON parameters."""
+    # 1. Fetch collection pyramids
+    resp = client.get("/api/v1/registries/pim/collection_pyramids")
+    assert resp.status_code == 200
+    pyramids = resp.json()
+    assert len(pyramids) >= 4
+    carryover = next((p for p in pyramids if p["entry_code"] == "carryover_continuativo"), None)
+    assert carryover is not None
+    assert carryover["metadata"]["priority"] == "iconic"
+    assert carryover["metadata"]["discount_allowed"] is False
+
+    # 2. Create custom pyramid with hierarchy dependency and rules (Zero JSON visual builder payload)
+    new_pyramid = {
+        "registry_domain": "pim",
+        "registry_name": "collection_pyramids",
+        "entry_code": "artisan_exclusive_capsule",
+        "label_it": "💎 Capsule Artigianale Numerata",
+        "label_en": "Numbered Artisan Capsule Exclusive",
+        "metadata": {
+            "priority": "luxury_numbered",
+            "lifecycle_years": 0.5,
+            "discount_allowed": False,
+            "replenishment_type": "one_shot",
+            "target_mix_pct": 8,
+            "target_margin_pct": 74,
+            "depends_on": "carryover_continuativo",
+            "dependencies": [
+                "Numerazione di Serie",
+                "Full-Price Protected",
+                "Pellame LWG Gold Obbligatorio",
+                "Lavorazione Fatta a Mano",
+            ],
+        },
+        "is_active": True,
+        "sort_order": 5,
+    }
+    create_resp = client.post("/api/v1/registries/pim/collection_pyramids", json=new_pyramid)
+    assert create_resp.status_code == 201
+    created_data = create_resp.json()
+    assert created_data["entry_code"] == "artisan_exclusive_capsule"
+    assert created_data["metadata"]["depends_on"] == "carryover_continuativo"
+    assert len(created_data["metadata"]["dependencies"]) == 4
+
+    # 3. Update pyramid metadata and rules
+    update_payload = {
+        "label_it": "💎 Capsule Artigianale Numerata (Edizione 2026)",
+        "label_en": "Numbered Artisan Capsule Exclusive (2026 Edition)",
+        "metadata": {
+            "priority": "luxury_numbered",
+            "lifecycle_years": 0.5,
+            "discount_allowed": False,
+            "replenishment_type": "one_shot",
+            "target_mix_pct": 10,
+            "target_margin_pct": 76,
+            "depends_on": "carryover_continuativo",
+            "dependencies": [
+                "Numerazione di Serie",
+                "Full-Price Protected",
+                "Pellame LWG Gold Obbligatorio",
+                "Certificato Tracciabilità Passaporto DPP",
+            ],
+        },
+        "is_active": True,
+        "sort_order": 5,
+    }
+    upd_resp = client.put("/api/v1/registries/pim/collection_pyramids/artisan_exclusive_capsule", json=update_payload)
+    assert upd_resp.status_code == 200
+    upd_data = upd_resp.json()
+    assert upd_data["label_it"] == "💎 Capsule Artigianale Numerata (Edizione 2026)"
+    assert upd_data["metadata"]["target_mix_pct"] == 10
+    assert "Certificato Tracciabilità Passaporto DPP" in upd_data["metadata"]["dependencies"]
+
+    # 4. Clean up
+    del_resp = client.delete("/api/v1/registries/pim/collection_pyramids/artisan_exclusive_capsule")
+    assert del_resp.status_code == 200
+    assert del_resp.json()["status"] == "deleted"
+
+
+
+
 

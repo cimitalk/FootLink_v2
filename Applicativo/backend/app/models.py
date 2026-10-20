@@ -43,6 +43,38 @@ class BomComponentType(str, Enum):
     SUB_ASSEMBLY = "sub_assembly"
 
 
+class CarryoverStatus(str, Enum):
+    CARRYOVER = "carryover"
+    SEASONAL_CORE = "seasonal_core"
+    SEASONAL_TREND = "seasonal_trend"
+    CAPSULE_DROP = "capsule_drop"
+
+
+class TargetOccasion(str, Enum):
+    BUSINESS_FORMAL = "business_formal"
+    SMART_CASUAL = "smart_casual"
+    EVENING_GALA = "evening_gala"
+    URBAN_ACTIVE = "urban_active"
+    OUTDOOR_LEISURE = "outdoor_leisure"
+
+
+class PriceTier(str, Enum):
+    ENTRY_LUXURY = "entry_luxury"
+    CORE_LUXURY = "core_luxury"
+    HIGH_LUXURY = "high_luxury"
+    BESPOKE = "bespoke"
+
+
+class ConstructionType(str, Enum):
+    CASSETTA_CUCITA = "cassetta_cucita"
+    BLAKE = "blake"
+    GOODYEAR = "goodyear"
+    TUBOLARE_SACCHETTO = "tubolare_sacchetto"
+    STROBEL = "strobel"
+    AGO = "ago"
+
+
+
 class ProductionPhase(str, Enum):
     TANNING_MATERIAL = "tanning_material"
     CUTTING = "cutting"
@@ -300,6 +332,129 @@ class BomHierarchySummary(BaseModel):
 
 
 # ============================================================================
+# Sprint 7: Product Categories Hierarchy (Multi-Level Tree) & BOM Templates (ADR-010)
+# ============================================================================
+
+
+class ProductCategoryHierarchyNode(BaseModel):
+    category_id: str
+    parent_id: Optional[str] = None
+    level: int = 1
+    code: str
+    slug_path: str
+    label_it: str
+    label_en: str
+    icon: str = "🏷️"
+    is_active: bool = True
+    sort_order: int = 0
+    children: List[ProductCategoryHierarchyNode] = Field(default_factory=list)
+    created_at: Optional[datetime] = None
+
+
+class ProductCategoryCreate(BaseModel):
+    category_id: Optional[str] = None
+    parent_id: Optional[str] = None
+    level: int = 1
+    code: str
+    slug_path: Optional[str] = None
+    label_it: str
+    label_en: str
+    icon: str = "🏷️"
+    is_active: bool = True
+    sort_order: int = 0
+
+
+class ProductCategoryUpdate(BaseModel):
+    parent_id: Optional[str] = None
+    label_it: Optional[str] = None
+    label_en: Optional[str] = None
+    icon: Optional[str] = None
+    is_active: Optional[bool] = None
+    sort_order: Optional[int] = None
+
+
+class BomTemplateItem(BaseModel):
+    level: int = 1
+    parent_template_item_id: Optional[str] = None
+    template_item_id: str
+    component_type: BomComponentType
+    material_name: str
+    supplier_name: str = "Fornitore Distrettuale Certificato"
+    origin_country_iso2: str = "IT"
+    unit_of_measure: str = "dm2"
+    unit_consumption: float = 1.0
+    waste_percentage: float = 5.0
+    recycled_content_pct: float = 0.0
+    certifications: List[str] = Field(default_factory=list)
+    unit_cost_eur: float = 10.0
+
+
+class BomTemplateCreate(BaseModel):
+    template_id: Optional[str] = None
+    name: str = Field(..., min_length=3)
+    category_id: str
+    construction_type: str = "cassetta_cucita"
+    description: str = ""
+    items: List[BomTemplateItem] = Field(default_factory=list)
+
+
+class BomTemplate(BomTemplateCreate):
+    template_id: str
+    created_at: Optional[datetime] = None
+
+
+class CreateBomTemplateFromVariantRequest(BaseModel):
+    name: str = Field(..., min_length=3)
+    category_id: str
+    construction_type: str = "cassetta_cucita"
+    description: str = ""
+
+
+class BomItemMoveRequest(BaseModel):
+    new_level: int = Field(..., ge=1, le=3)
+    new_parent_id: Optional[str] = None
+
+
+class VariantDeepCloneRequest(BaseModel):
+    new_variant_code: str = Field(..., min_length=3)
+    new_colorway_name: str = Field(..., min_length=2)
+    new_size_range: Optional[str] = "35-42"
+    new_last_or_pattern_code: Optional[str] = None
+    clone_bom: bool = True
+    material_replacements: Optional[Dict[str, str]] = None
+
+
+class BulkImportValidationRow(BaseModel):
+    row_number: int
+    entity_type: str
+    identifier: str
+    is_valid: bool
+    errors: List[str] = Field(default_factory=list)
+    parsed_data: Dict[str, Any] = Field(default_factory=dict)
+
+
+class BulkImportValidationResponse(BaseModel):
+    total_rows: int
+    valid_rows_count: int
+    invalid_rows_count: int
+    rows: List[BulkImportValidationRow] = Field(default_factory=list)
+    summary: str
+
+
+class BulkImportCommitRequest(BaseModel):
+    import_type: str = "articles"  # 'articles' | 'bom' | 'all_in_one'
+    valid_rows: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class BulkImportCommitResponse(BaseModel):
+    success: bool
+    imported_items_count: int = 0
+    imported_variants_count: int = 0
+    imported_bom_count: int = 0
+    message: str
+
+
+# ============================================================================
 # PLM Production Variants & PIM Commercial Items
 # ============================================================================
 
@@ -319,6 +474,10 @@ class PlmProductionVariantCreate(BaseModel):
     standard_labor_cost_eur: float = Field(default=28.0, ge=0.0, description="Internal Brand/PMI L6 assembly/labor cost in EUR")
     collection_id: Optional[str] = Field(default=None, description="Optional variant-specific collection override")
     target_gender: Optional[str] = Field(default="unisex", description="Target gender: uomo, donna, unisex, bambino")
+    category_id: Optional[str] = Field(default=None, description="FK to product_categories_hierarchy")
+    sub_category_id: Optional[str] = Field(default=None, description="FK to sub-category hierarchy node")
+    construction_type: Optional[str] = Field(default="cassetta_cucita", description="Manufacturing construction method")
+    carryover_status: Optional[str] = Field(default="seasonal_core", description="Merchandising status: carryover, seasonal_core, seasonal_trend, capsule_drop")
     category_specific_specs: Dict[str, Any] = Field(
         default_factory=dict,
         description="Sector-specific technical attributes (Footwear: last/construction/sole; Leather Goods: CAD/galvanic/edge; Apparel: fit/gsm/POM)",
@@ -350,7 +509,13 @@ class PimCommercialItemCreate(BaseModel):
     collection_id: Optional[str] = Field(default=None, description="FK to Collection entity")
     collection_name: Optional[str] = Field(default=None, description="Human-readable collection name")
     category: ProductCategory = Field(default=ProductCategory.FOOTWEAR)
+    category_id: Optional[str] = Field(default=None, description="FK to product_categories_hierarchy")
+    sub_category_id: Optional[str] = Field(default=None, description="FK to sub-category hierarchy node")
     target_gender: Optional[str] = Field(default="unisex", description="Target gender: uomo, donna, unisex, bambino")
+    carryover_status: Optional[str] = Field(default="seasonal_core", description="Merchandising status: carryover, seasonal_core, seasonal_trend, capsule_drop")
+    brand_line: Optional[str] = Field(default="Main Line", description="Brand line: Main Line, Studio, Heritage, Atelier")
+    target_occasion: Optional[str] = Field(default="smart_casual", description="Lifestyle occasion: business_formal, smart_casual, evening_gala, urban_active, outdoor_leisure")
+    price_tier: Optional[str] = Field(default="core_luxury", description="Price segment: entry_luxury, core_luxury, high_luxury, bespoke")
     commercial_description_it: str = Field(..., min_length=5)
     commercial_description_en: str = Field(..., min_length=5)
     retail_channels: List[str] = Field(default_factory=lambda: ["B2B Showroom", "E-Commerce", "Wholesale"])
@@ -387,7 +552,13 @@ class PimCommercialItem(BaseModel):
     collection_id: Optional[str] = Field(default=None)
     collection_name: Optional[str] = Field(default=None)
     category: ProductCategory
+    category_id: Optional[str] = Field(default=None)
+    sub_category_id: Optional[str] = Field(default=None)
     target_gender: Optional[str] = Field(default="unisex", description="Target gender: uomo, donna, unisex, bambino")
+    carryover_status: Optional[str] = Field(default="seasonal_core")
+    brand_line: Optional[str] = Field(default="Main Line")
+    target_occasion: Optional[str] = Field(default="smart_casual")
+    price_tier: Optional[str] = Field(default="core_luxury")
     commercial_description_it: str
     commercial_description_en: str
     retail_channels: List[str]
@@ -405,6 +576,7 @@ class PimCommercialItem(BaseModel):
     custom_attributes: Dict[str, Any] = Field(default_factory=dict)
     plm_variants: List[PlmProductionVariant] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 
 # ============================================================================

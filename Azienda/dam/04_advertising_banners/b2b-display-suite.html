@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Footlink DAM · B2B Display Advertising Suite (Standard IAB)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050505;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 40px;
+    }
+    .page-header {
+      max-width: 1100px;
+      margin: 0 auto 40px auto;
+      border-bottom: 1px solid #222;
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    h1 { font-size: 28px; font-weight: 900; letter-spacing: -0.03em; }
+    .subtitle { color: #707072; font-size: 14px; margin-top: 6px; }
+    .badge {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: #00FF87;
+      background: rgba(0, 255, 135, 0.1);
+      border: 1px solid rgba(0, 255, 135, 0.3);
+      padding: 6px 14px;
+      border-radius: 9999px;
+    }
+    .banners-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 50px;
+    }
+    .banner-wrapper {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .banner-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      color: #707072;
+    }
+
+    /* 1. Leaderboard 728x90 */
+    .banner-728x90 {
+      width: 728px;
+      height: 90px;
+      background: #0A0A0A;
+      border: 1px solid #292929;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      margin: 0 auto;
+    }
+
+    /* 2. Half Page 300x600 & MPU 300x250 container */
+    .columns-row {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+    }
+
+    /* Half Page 300x600 */
+    .banner-300x600 {
+      width: 300px;
+      height: 600px;
+      background: #0A0A0A;
+      border: 1px solid #292929;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 30px 24px;
+    }
+
+    /* MPU 300x250 */
+    .banner-300x250 {
+      width: 300px;
+      height: 250px;
+      background: #0A0A0A;
+      border: 1px solid #292929;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 22px 20px;
+    }
+
+    canvas.banner-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      z-index: 1;
+    }
+    .z-top {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Microcopy & CTA */
+    .brand-sm { font-weight: 900; font-size: 16px; letter-spacing: -0.03em; color: #fff; }
+    .btn-pill-sm {
+      background: #00FF87;
+      color: #0A0A0A;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      text-decoration: none;
+      display: inline-block;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(0,255,135,0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div>
+      <h1>Suite Banner Display B2B (Standard IAB)</h1>
+      <p class="subtitle">Asset grafici ad alte prestazioni per campagne stampa digitale, PambiancoNews, FashionNetwork ed editoria Moda.</p>
+    </div>
+    <div class="badge">DAM · CAMPAIGN READY · 60 FPS CANVAS</div>
+  </div>
+
+  <div class="banners-grid">
+
+    <!-- 1. Leaderboard 728x90 -->
+    <div class="banner-wrapper">
+      <div class="banner-meta">
+        <span>FORMATO IAB: LEADERBOARD</span>
+        <span>DIMENSIONI: 728 × 90 PX (DESKTOP HEADER)</span>
+      </div>
+      <div class="banner-728x90">
+        <canvas class="banner-canvas" id="canvas728"></canvas>
+        <div class="z-top" style="display:flex; align-items:center; gap:16px;">
+          <span class="brand-sm">✦ FOOTLINK</span>
+          <div style="font-size:13px; font-weight:800; color:#fff; text-transform:uppercase; letter-spacing:-0.02em;">
+            La distinta base in 90 secondi. <span style="color:#00FF87;">Terzisti a 0 €.</span>
+          </div>
+        </div>
+        <div class="z-top">
+          <a href="#" class="btn-pill-sm">PROVA IL PILOTA →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Side-by-side: Half Page & MPU -->
+    <div class="banner-wrapper">
+      <div class="banner-meta">
+        <span>FORMATI VERTICALI &amp; SIDEBAR</span>
+        <span>HALF PAGE (300×600) + MEDIUM RECTANGLE (300×250)</span>
+      </div>
+
+      <div class="columns-row">
+        <!-- Half Page 300x600 -->
+        <div class="banner-300x600">
+          <canvas class="banner-canvas" id="canvas300x600"></canvas>
+          <div class="z-top">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="brand-sm">✦ FOOTLINK</span>
+              <span style="font-family:'JetBrains Mono', monospace; font-size:9px; color:#00FF87; font-weight:700;">2026 READY</span>
+            </div>
+            <div style="font-family:'JetBrains Mono', monospace; font-size:10px; color:#00FF87; text-transform:uppercase; margin-top:24px; font-weight:700;">
+              PAAS DISTRETTUALE MODA
+            </div>
+            <h2 style="font-size:26px; font-weight:900; line-height:1.1; letter-spacing:-0.04em; text-transform:uppercase; margin-top:8px;">
+              IL PASSAPORTO<br>DIGITALE PARTE<br><span style="color:#00FF87;">DALLA FILIERA.</span>
+            </h2>
+            <p style="font-size:13px; color:#A0A0A0; margin-top:14px; line-height:1.4;">
+              Piattaforma cloud 1:N per calzaturifici, pelletterie e façonisti.
+            </p>
+          </div>
+
+          <div class="z-top">
+            <div style="background:rgba(20,20,20,0.8); border:1px solid #333; border-radius:10px; padding:12px; margin-bottom:16px;">
+              <div style="font-size:18px; font-weight:900; color:#fff;">&lt; 90 Secondi</div>
+              <div style="font-size:10px; color:#707072; font-family:'JetBrains Mono', monospace;">Onboarding distinta base</div>
+            </div>
+            <a href="#" class="btn-pill-sm" style="display:block; text-align:center; padding:12px 0;">ACCEDI AL PILOTA →</a>
+          </div>
+        </div>
+
+        <!-- MPU 300x250 & Info Card -->
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <!-- 300x250 -->
+          <div class="banner-300x250">
+            <canvas class="banner-canvas" id="canvas300x250"></canvas>
+            <div class="z-top">
+              <span class="brand-sm">✦ FOOTLINK</span>
+              <div style="font-size:18px; font-weight:900; line-height:1.15; letter-spacing:-0.03em; text-transform:uppercase; margin-top:10px;">
+                Campionario Rapido.<br><span style="color:#00FF87;">Zero Fogli Excel.</span>
+              </div>
+            </div>
+            <div class="z-top">
+              <p style="font-size:11px; color:#888; margin-bottom:12px;">Validazione lotti conceria &amp; passaporto DPP UE in tempo reale.</p>
+              <a href="#" class="btn-pill-sm" style="display:block; text-align:center;">RICHIEDI DEMO →</a>
+            </div>
+          </div>
+
+          <!-- Specs Info Box -->
+          <div style="width:300px; background:#141414; border:1px solid #222; border-radius:12px; padding:18px; font-size:11px; color:#888; font-family:'JetBrains Mono', monospace;">
+            <div style="font-weight:700; color:#00FF87; margin-bottom:6px;">✦ NOTE TECNICHE ASSET:</div>
+            <div>• Peso file: &lt; 25 KB gzipped</div>
+            <div>• Zero cookie / GDPR compliant</div>
+            <div>• Motore Canvas 2D 60fps</div>
+            <div>• Blending screen ad alto contrasto</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Shared Mini Wave Engine for the 3 Ad Banners
+    function initBannerCanvas(id, w, h) {
+      const cvs = document.getElementById(id);
+      cvs.width = w;
+      cvs.height = h;
+      const ctx = cvs.getContext("2d");
+      let t = 0;
+
+      // 4 mini tracking nodes per banner
+      const nodes = Array.from({ length: 4 }, (_, i) => ({
+        x: (i / 4) * w,
+        y: h * (0.35 + i * 0.12),
+        speed: 0.5 + i * 0.2,
+        angle: i,
+        hue: i % 2 === 0 ? "#00FF87" : "#FF3366"
+      }));
+
+      function anim() {
+        t += 1;
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+
+        // Waves
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(0, 255, 135, 0.45)";
+        ctx.lineWidth = 1.8;
+        for (let x = 0; x <= w; x += 6) {
+          const y = h * 0.5 + Math.sin(x * 0.006 + t * 0.02) * (h * 0.22);
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(255, 51, 102, 0.40)";
+        ctx.lineWidth = 1.6;
+        for (let x = 0; x <= w; x += 6) {
+          const y = h * 0.6 + Math.cos(x * 0.005 + t * 0.018) * (h * 0.20);
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Nodes
+        nodes.forEach(n => {
+          n.x = (n.x + n.speed) % (w + 40);
+          const cx = n.x - 20;
+          const cy = n.y + Math.sin(t * 0.03 + n.angle) * 8;
+          n.angle += 0.025;
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = n.hue;
+          ctx.fill();
+
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(n.angle);
+          ctx.strokeStyle = n.hue;
+          ctx.lineWidth = 0.6;
+          ctx.setLineDash([2, 3]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 12, 0, Math.PI * 1.5);
+          ctx.stroke();
+
+          ctx.font = '7px "JetBrains Mono", monospace';
+          ctx.fillStyle = n.hue;
+          ctx.fillText(`[${Math.round(cx)},${Math.round(cy)}]`, 15, 0);
+          ctx.restore();
+        });
+
+        ctx.restore();
+        requestAnimationFrame(anim);
+      }
+      anim();
+    }
+
+    initBannerCanvas("canvas728", 728, 90);
+    initBannerCanvas("canvas300x600", 300, 600);
+    initBannerCanvas("canvas300x250", 300, 250);
+  </script>
+</body>
+</html>

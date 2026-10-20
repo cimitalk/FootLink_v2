@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PimCommercialItem,
   PlmProductionVariant,
@@ -8,6 +8,11 @@ import {
   Season,
   BomItem,
   DomainRegistryEntry,
+  CarryoverStatus,
+  ConstructionType,
+  ProductCategoryHierarchyNode,
+  BomTemplate,
+  BulkImportValidationResponse,
 } from "../types";
 import { BomThreeLevelTree } from "./BomThreeLevelTree";
 
@@ -25,6 +30,8 @@ interface PlmProductsManagerProps {
     last_or_pattern_code: string;
     lifecycle_status: PlmLifecycleStatus;
     target_gender?: string;
+    construction_type?: string;
+    carryover_status?: string;
     custom_attributes?: Record<string, any>;
   }) => void;
   onCreatePimItem: (item: {
@@ -39,6 +46,10 @@ interface PlmProductsManagerProps {
     retail_price_eur: number;
     commercial_description_it?: string;
     commercial_description_en?: string;
+    carryover_status?: string;
+    brand_line?: string;
+    target_occasion?: string;
+    price_tier?: string;
   }) => void;
   onUpdateVariantLifecycle: (variantId: string, status: PlmLifecycleStatus) => void;
   onUpdateProductVariant?: (
@@ -57,10 +68,16 @@ interface PlmProductsManagerProps {
       sample_base_size?: string;
       size_grading_step_pct?: number;
       lifecycle_status?: PlmLifecycleStatus;
+      construction_type?: string;
+      carryover_status?: string;
       custom_attributes?: Record<string, any>;
     }
   ) => void;
   onAddBomItem?: (bom: BomItem) => void;
+  onUpdateBomItem?: (bom: BomItem) => void;
+  onDeleteBomItem?: (bomItemId: string) => void;
+  onMoveBomItem?: (bomItemId: string, newLevel: number, newParentId: string | null) => void;
+  onRefreshData?: () => void;
 }
 
 export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
@@ -75,6 +92,10 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   onUpdateVariantLifecycle,
   onUpdateProductVariant,
   onAddBomItem,
+  onUpdateBomItem,
+  onDeleteBomItem,
+  onMoveBomItem,
+  onRefreshData,
 }) => {
   const [selectedPimId, setSelectedPimId] = useState<string>(pimItems[0]?.pim_item_id || "");
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
@@ -83,12 +104,69 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [genderFilter, setGenderFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [carryoverFilter, setCarryoverFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [onlyActive, setOnlyActive] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showQuickEditModal, setShowQuickEditModal] = useState(false);
   const [editingVariant, setEditingVariant] = useState<PlmProductionVariant & { parentPim: PimCommercialItem } | null>(null);
   const [cloneBomFromId, setCloneBomFromId] = useState<string>("");
+
+  // Sprint 7: Deep Clone Modal State
+  const [showDeepCloneModal, setShowDeepCloneModal] = useState(false);
+  const [cloneTargetItem, setCloneTargetItem] = useState<(PlmProductionVariant & { parentPim: PimCommercialItem }) | null>(null);
+  const [cloneNewCode, setCloneNewCode] = useState("");
+  const [cloneNewColorway, setCloneNewColorway] = useState("");
+  const [cloneNewSizeRange, setCloneNewSizeRange] = useState("35-42");
+  const [cloneIncludeBom, setCloneIncludeBom] = useState(true);
+  const [cloneReplacements, setCloneReplacements] = useState<Record<string, string>>({});
+  const [isCloning, setIsCloning] = useState(false);
+
+  // Sprint 7: BOM Template Library Modal State (FTL-CEO-014)
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateTargetItem, setTemplateTargetItem] = useState<(PlmProductionVariant & { parentPim: PimCommercialItem }) | null>(null);
+  const [availableTemplates, setAvailableTemplates] = useState<BomTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
+  const [templateModalTab, setTemplateModalTab] = useState<"apply" | "create_from_variant" | "edit_preset">("apply");
+  const [newPresetName, setNewPresetName] = useState("");
+  const [newPresetCategory, setNewPresetCategory] = useState("footwear");
+  const [newPresetConstruction, setNewPresetConstruction] = useState("cassetta_cucita");
+  const [newPresetDesc, setNewPresetDesc] = useState("");
+  const [isSavingPreset, setIsSavingPreset] = useState(false);
+  const [editPresetName, setEditPresetName] = useState("");
+  const [editPresetCategory, setEditPresetCategory] = useState("footwear");
+  const [editPresetConstruction, setEditPresetConstruction] = useState("cassetta_cucita");
+  const [editPresetDesc, setEditPresetDesc] = useState("");
+
+  // Sprint 7: Bulk Import Modal State
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [bulkImportTab, setBulkImportTab] = useState<"template" | "validate" | "commit">("template");
+  const [bulkImportType, setBulkImportType] = useState<"articles" | "bom">("articles");
+  const [bulkCsvText, setBulkCsvText] = useState("");
+  const [bulkValidationResult, setBulkValidationResult] = useState<BulkImportValidationResponse | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [isCommitting, setIsCommitting] = useState(false);
+  const [commitMessage, setCommitMessage] = useState("");
+
+  // Sprint 7: Category Hierarchy
+  const [categoriesList, setCategoriesList] = useState<ProductCategoryHierarchyNode[]>([]);
+
+  // Fetch categories and templates from backend
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/v1/categories")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setCategoriesList(data))
+      .catch(() => {});
+
+    fetch("http://127.0.0.1:8000/api/v1/bom-templates")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: BomTemplate[]) => {
+        setAvailableTemplates(data);
+        if (data.length > 0) setSelectedTemplateId(data[0].template_id);
+      })
+      .catch(() => {});
+  }, []);
 
   // Quick Edit Full Form State
   const [editModelName, setEditModelName] = useState("");
@@ -103,6 +181,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   const [editSampleBaseSize, setEditSampleBaseSize] = useState("");
   const [editGradingStepPct, setEditGradingStepPct] = useState(2.8);
   const [editLifecycleStatus, setEditLifecycleStatus] = useState<PlmLifecycleStatus>("prototype");
+  const [editConstructionType, setEditConstructionType] = useState<string>("cassetta_cucita");
+  const [editCarryoverStatus, setEditCarryoverStatus] = useState<string>("seasonal_core");
 
   // New Product Form State
   const [newModelName, setNewModelName] = useState("");
@@ -113,6 +193,9 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   const [newSizeRange, setNewSizeRange] = useState("Donna EU 35-42");
   const [newLastCode, setNewLastCode] = useState("FORMA-FM-108");
   const [newSeasonId, setNewSeasonId] = useState(seasons[0]?.season_id || "");
+  const [newConstructionType, setNewConstructionType] = useState<string>("cassetta_cucita");
+  const [newCarryoverStatus, setNewCarryoverStatus] = useState<string>("seasonal_core");
+
 
   // Flatten all variants with parent PIM context
   const allVariantsWithParent = pimItems.flatMap((pim) =>
@@ -136,6 +219,10 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
       if (g !== genderFilter.toLowerCase()) return false;
     }
     if (statusFilter !== "ALL" && item.lifecycle_status !== statusFilter) return false;
+    if (carryoverFilter !== "ALL") {
+      const co = (item.carryover_status || item.parentPim.carryover_status || "seasonal_core").toLowerCase();
+      if (co !== carryoverFilter.toLowerCase()) return false;
+    }
     if (onlyActive && !item.isActive) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -144,7 +231,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
       const matchColor = item.colorway_name.toLowerCase().includes(q);
       const matchLast = (item.last_or_pattern_code || "").toLowerCase().includes(q);
       const matchGender = (item.target_gender || item.parentPim.target_gender || "").toLowerCase().includes(q);
-      if (!matchCode && !matchName && !matchColor && !matchLast && !matchGender) return false;
+      const matchCarryover = (item.carryover_status || item.parentPim.carryover_status || "").toLowerCase().includes(q);
+      if (!matchCode && !matchName && !matchColor && !matchLast && !matchGender && !matchCarryover) return false;
     }
     return true;
   });
@@ -160,11 +248,259 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
     }
   };
 
+  // Sprint 7: Deep Clone Handlers
+  const handleOpenDeepClone = (item: PlmProductionVariant & { parentPim: PimCommercialItem }) => {
+    setCloneTargetItem(item);
+    setCloneNewCode(`${item.variant_code}-V2`);
+    setCloneNewColorway(`${item.colorway_name} (Variante)`);
+    setCloneNewSizeRange(item.size_range || "35-42");
+    setCloneIncludeBom(true);
+    const mats: Record<string, string> = {};
+    item.bom_items.filter((b) => b.level === 1).forEach((b) => {
+      mats[b.material_name] = b.material_name;
+    });
+    setCloneReplacements(mats);
+    setShowDeepCloneModal(true);
+  };
+
+  const handleExecuteDeepClone = async () => {
+    if (!cloneTargetItem || !cloneNewCode.trim()) return;
+    setIsCloning(true);
+    try {
+      const payload = {
+        new_variant_code: cloneNewCode.trim().toUpperCase(),
+        new_colorway_name: cloneNewColorway.trim(),
+        new_size_range: cloneNewSizeRange,
+        clone_bom: cloneIncludeBom,
+        material_replacements: cloneReplacements,
+      };
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/plm-variants/${cloneTargetItem.plm_variant_id}/deep-clone`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setShowDeepCloneModal(false);
+        if (onRefreshData) onRefreshData();
+      }
+    } catch (err) {
+      console.warn("Clone request error:", err);
+    } finally {
+      setIsCloning(false);
+    }
+  };
+
+  // Sprint 7: Apply BOM Template Handlers
+  const handleOpenTemplateModal = (item: PlmProductionVariant & { parentPim: PimCommercialItem }) => {
+    setTemplateTargetItem(item);
+    if (availableTemplates.length > 0) {
+      setSelectedTemplateId(availableTemplates[0].template_id);
+    }
+    setShowTemplateModal(true);
+  };
+
+  const handleExecuteApplyTemplate = async () => {
+    if (!templateTargetItem || !selectedTemplateId) return;
+    setIsApplyingTemplate(true);
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/v1/bom-templates/${selectedTemplateId}/apply-to-variant/${templateTargetItem.plm_variant_id}`,
+        { method: "POST" }
+      );
+      if (res.ok) {
+        setShowTemplateModal(false);
+        if (onRefreshData) onRefreshData();
+      }
+    } catch (err) {
+      console.warn("Apply template error:", err);
+    } finally {
+      setIsApplyingTemplate(false);
+    }
+  };
+
+  // FTL-CEO-014: Preset BOM Management Handlers
+  const handleCreatePresetFromVariant = async () => {
+    if (!templateTargetItem || !newPresetName.trim()) return;
+    setIsSavingPreset(true);
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/v1/bom-templates/create-from-variant/${templateTargetItem.plm_variant_id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newPresetName.trim(),
+            category_id: newPresetCategory,
+            construction_type: newPresetConstruction,
+            description: newPresetDesc.trim(),
+          }),
+        }
+      );
+      if (res.ok) {
+        const created: BomTemplate = await res.json();
+        setAvailableTemplates((prev) => [...prev, created]);
+        setSelectedTemplateId(created.template_id);
+        setNewPresetName("");
+        setNewPresetDesc("");
+        setTemplateModalTab("apply");
+      }
+    } catch (err) {
+      console.warn("Create preset error:", err);
+    } finally {
+      setIsSavingPreset(false);
+    }
+  };
+
+  const handleUpdatePreset = async () => {
+    const tpl = availableTemplates.find((t) => t.template_id === selectedTemplateId);
+    if (!tpl || !editPresetName.trim()) return;
+    setIsSavingPreset(true);
+    try {
+      const updatedPayload = {
+        ...tpl,
+        name: editPresetName.trim(),
+        category_id: editPresetCategory,
+        construction_type: editPresetConstruction,
+        description: editPresetDesc.trim(),
+      };
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/bom-templates/${selectedTemplateId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedPayload),
+      });
+      if (res.ok) {
+        const updated: BomTemplate = await res.json();
+        setAvailableTemplates((prev) =>
+          prev.map((t) => (t.template_id === updated.template_id ? updated : t))
+        );
+        setTemplateModalTab("apply");
+      }
+    } catch (err) {
+      console.warn("Update preset error:", err);
+    } finally {
+      setIsSavingPreset(false);
+    }
+  };
+
+  const handleDeletePreset = async (templateId: string) => {
+    if (!window.confirm("Sei sicuro di voler eliminare definitivamente questo preset BOM?")) return;
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/bom-templates/${templateId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        const remaining = availableTemplates.filter((t) => t.template_id !== templateId);
+        setAvailableTemplates(remaining);
+        if (remaining.length > 0) {
+          setSelectedTemplateId(remaining[0].template_id);
+        } else {
+          setSelectedTemplateId("");
+        }
+        setTemplateModalTab("apply");
+      }
+    } catch (err) {
+      console.warn("Delete preset error:", err);
+    }
+  };
+
+  // FTL-CEO-015: Group size scales by category & gender
+  const getSizeScaleOptions = (cat: string, gender: string) => {
+    const scales = registries.filter((r) => r.registry_name === "size_scales" && r.is_active);
+    if (scales.length === 0) return null;
+
+    const recommended: typeof scales = [];
+    const others: typeof scales = [];
+
+    scales.forEach((s) => {
+      const metaCat = s.meta?.main_category || s.meta?.category;
+      const metaGender = s.meta?.target_gender;
+
+      const catMatches = !metaCat || metaCat === cat;
+      const genderMatches =
+        !metaGender ||
+        metaGender === "unisex" ||
+        gender === "unisex" ||
+        metaGender.toLowerCase() === gender.toLowerCase();
+
+      if (catMatches && genderMatches) {
+        recommended.push(s);
+      } else {
+        others.push(s);
+      }
+    });
+
+    return { recommended, others };
+  };
+
+  // FTL-PROD-011: Group construction types by category
+  const getConstructionTypeOptions = (cat: string) => {
+    const constructions = registries.filter((r) => r.registry_name === "construction_types" && r.is_active);
+    if (constructions.length === 0) return null;
+
+    const categorySpecific = constructions.filter((c) => {
+      const cCat = c.meta?.category || "footwear";
+      return cCat === cat;
+    });
+    const others = constructions.filter((c) => {
+      const cCat = c.meta?.category || "footwear";
+      return cCat !== cat;
+    });
+
+    return { categorySpecific, others };
+  };
+
+  // Sprint 7: Bulk Import Handlers
+  const handleValidateBulk = async () => {
+    if (!bulkCsvText.trim()) return;
+    setIsValidating(true);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/bulk-import/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ import_type: bulkImportType, csv_content: bulkCsvText }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBulkValidationResult(data);
+        setBulkImportTab("validate");
+      }
+    } catch (err) {
+      console.warn("Validate bulk error:", err);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const handleCommitBulk = async () => {
+    if (!bulkValidationResult || bulkValidationResult.valid_rows_count === 0) return;
+    setIsCommitting(true);
+    try {
+      const validRows = bulkValidationResult.rows.filter((r) => r.is_valid).map((r) => r.parsed_data);
+      const res = await fetch("http://127.0.0.1:8000/api/v1/bulk-import/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ import_type: bulkImportType, valid_rows: validRows }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCommitMessage(data.message);
+        setBulkImportTab("commit");
+        if (onRefreshData) onRefreshData();
+      }
+    } catch (err) {
+      console.warn("Commit bulk error:", err);
+    } finally {
+      setIsCommitting(false);
+    }
+  };
+
   const handleExportCsv = () => {
     const headers = [
       "Codice Variante PLM",
       "Modello Industriale",
       "Categoria",
+      "Lavorazione",
+      "Piramide Collezione",
       "Genere Target",
       "Colore / Variante",
       "Forma / Patron",
@@ -188,6 +524,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
         `"${item.variant_code}"`,
         `"${item.parentPim.model_name}"`,
         `"${item.parentPim.category}"`,
+        `"${item.construction_type || 'cassetta_cucita'}"`,
+        `"${item.carryover_status || item.parentPim.carryover_status || 'seasonal_core'}"`,
         `"${item.target_gender || item.parentPim.target_gender || 'unisex'}"`,
         `"${item.colorway_name}"`,
         `"${item.last_or_pattern_code || 'N/D'}"`,
@@ -228,6 +566,10 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
       season_id: targetSeason?.season_id,
       wholesale_price_eur: 145.0,
       retail_price_eur: 380.0,
+      carryover_status: newCarryoverStatus,
+      brand_line: "Main Line",
+      target_occasion: "smart_casual",
+      price_tier: "core_luxury",
     });
 
     // Create PLM Production Variant
@@ -237,6 +579,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
       size_range: newSizeRange.trim(),
       last_or_pattern_code: newLastCode.trim().toUpperCase(),
       target_gender: newTargetGender,
+      construction_type: newConstructionType,
+      carryover_status: newCarryoverStatus,
       lifecycle_status: "prototype",
       custom_attributes: {
         cloned_bom_source: cloneBomFromId || null,
@@ -263,6 +607,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
     setEditSampleBaseSize(item.sample_base_size || (item.parentPim.category === "apparel" ? "IT 50" : "42"));
     setEditGradingStepPct(item.size_grading_step_pct || (item.parentPim.category === "apparel" ? 3.4 : 2.8));
     setEditLifecycleStatus(item.lifecycle_status);
+    setEditConstructionType(item.construction_type || "cassetta_cucita");
+    setEditCarryoverStatus(item.carryover_status || item.parentPim.carryover_status || "seasonal_core");
     setShowQuickEditModal(true);
   };
 
@@ -284,6 +630,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
         sample_base_size: editSampleBaseSize.trim(),
         size_grading_step_pct: Number(editGradingStepPct) || 2.8,
         lifecycle_status: editLifecycleStatus,
+        construction_type: editConstructionType,
+        carryover_status: editCarryoverStatus,
       });
     } else {
       onUpdateVariantLifecycle(editingVariant.plm_variant_id, editLifecycleStatus);
@@ -315,6 +663,16 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setBulkImportTab("template");
+                setShowBulkImportModal(true);
+              }}
+              className="px-4 py-2.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
+            >
+              <span>📥 Import Massivo CSV</span>
+            </button>
             <button
               type="button"
               onClick={handleExportCsv}
@@ -412,6 +770,18 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
               <option value="archived">Archiviato</option>
             </select>
 
+            <select
+              value={carryoverFilter}
+              onChange={(e) => setCarryoverFilter(e.target.value)}
+              className="px-3 py-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-full text-xs font-semibold text-[#111111]"
+            >
+              <option value="ALL">Tutte le Piramidi</option>
+              <option value="carryover_continuativo">⭐ Continuativo / Carryover</option>
+              <option value="seasonal_core">🌿 Stagionale Core</option>
+              <option value="trend_drop">⚡ Trend Drop</option>
+              <option value="capsule_limited">💎 Capsule Limited</option>
+            </select>
+
             <label className="flex items-center gap-1.5 text-xs font-bold text-[#707072] cursor-pointer">
               <input
                 type="checkbox"
@@ -435,8 +805,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
               <tr>
                 <th className="py-3 px-4">Codice Variante PLM</th>
                 <th className="py-3 px-4">Modello Industriale</th>
-                <th className="py-3 px-4">Categoria</th>
-                <th className="py-3 px-4">Genere Target</th>
+                <th className="py-3 px-4">Categoria &amp; Costruzione</th>
+                <th className="py-3 px-4">Piramide &amp; Genere</th>
                 <th className="py-3 px-4">Forma / Patron</th>
                 <th className="py-3 px-4">Scala Taglie</th>
                 <th className="py-3 px-4">Stato Ciclo Vita</th>
@@ -454,6 +824,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 );
                 const totalCost = matCost + (item.standard_labor_cost_eur || 28.0);
                 const gender = (item.target_gender || item.parentPim.target_gender || "unisex").toLowerCase();
+                const construction = item.construction_type || "cassetta_cucita";
+                const carryover = item.carryover_status || item.parentPim.carryover_status || "seasonal_core";
 
                 return (
                   <tr
@@ -471,30 +843,68 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                       <div className="font-bold text-[#111111]">{item.parentPim.model_name}</div>
                       <div className="text-[11px] text-[#707072]">{item.colorway_name}</div>
                     </td>
-                    <td className="py-3 px-4 capitalize">
-                      {item.parentPim.category === "footwear" ? "👟 Calzatura" : item.parentPim.category}
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-[#111111] capitalize">
+                        {item.parentPim.category === "footwear" ? "👟 Calzatura" : item.parentPim.category === "leather_goods" ? "👜 Pelletteria" : item.parentPim.category === "apparel" ? "🧥 Abbigliamento" : item.parentPim.category}
+                      </div>
+                      <div className="mt-1">
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-neutral-100 text-neutral-700 border border-neutral-200">
+                          {construction === "cassetta_cucita" ? "Cassetta Cucita" :
+                           construction === "blake" ? "Blake Artigianale" :
+                           construction === "goodyear" ? "Goodyear Welton" :
+                           construction === "sacchetto" ? "Sacchetto (Bologna)" :
+                           construction === "slip_lasting" ? "Slip Lasting / Strobel" :
+                           construction === "tubolare" ? "Tubolare Mocassino" :
+                           construction === "costa_taglio_vivo" ? "Costa Taglio Vivo" :
+                           construction === "rimboccato" ? "Rimboccato Lusso" : construction}
+                        </span>
+                      </div>
                     </td>
                     <td className="py-3 px-4">
-                      {gender === "donna" && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 text-pink-700 border border-pink-200">
-                          ♀ Donna
-                        </span>
-                      )}
-                      {gender === "uomo" && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700 border border-sky-200">
-                          ♂ Uomo
-                        </span>
-                      )}
-                      {gender === "bambino" && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
-                          🧒 Bambino
-                        </span>
-                      )}
-                      {gender !== "donna" && gender !== "uomo" && gender !== "bambino" && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">
-                          ⚥ Unisex
-                        </span>
-                      )}
+                      <div className="mb-1">
+                        {carryover === "carryover_continuativo" && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                            ⭐ Carryover
+                          </span>
+                        )}
+                        {carryover === "trend_drop" && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-50 text-purple-800 border border-purple-300">
+                            ⚡ Trend Drop
+                          </span>
+                        )}
+                        {carryover === "capsule_limited" && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-800 border border-blue-300">
+                            💎 Capsule
+                          </span>
+                        )}
+                        {carryover === "seasonal_core" && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                            🌿 Seasonal Core
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        {gender === "donna" && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-pink-100 text-pink-700 border border-pink-200">
+                            ♀ Donna
+                          </span>
+                        )}
+                        {gender === "uomo" && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-100 text-sky-700 border border-sky-200">
+                            ♂ Uomo
+                          </span>
+                        )}
+                        {gender === "bambino" && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                            🧒 Bambino
+                          </span>
+                        )}
+                        {gender !== "donna" && gender !== "uomo" && gender !== "bambino" && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-700 border border-purple-200">
+                            ⚥ Unisex
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4 font-mono text-neutral-600">
                       {item.last_or_pattern_code || "FORMA-STD"}
@@ -539,16 +949,41 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                       )}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenQuickEdit(item);
-                        }}
-                        className="px-3 py-1 rounded-full border border-[#D5D5D5] bg-white hover:bg-[#F5F5F5] font-bold text-[10px] text-[#111111] hover:border-black transition"
-                      >
-                        Quick Edit
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          title="Modifica Rapida Parametri"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenQuickEdit(item);
+                          }}
+                          className="px-2.5 py-1 rounded-full border border-[#D5D5D5] bg-white hover:bg-[#F5F5F5] font-bold text-[10px] text-[#111111] hover:border-black transition"
+                        >
+                          Modifica
+                        </button>
+                        <button
+                          type="button"
+                          title="Duplica variante con distinta base ricorsiva"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDeepClone(item);
+                          }}
+                          className="px-2.5 py-1 rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold text-[10px] text-blue-700 hover:border-blue-400 transition flex items-center gap-1"
+                        >
+                          <span>📋 Duplica</span>
+                        </button>
+                        <button
+                          type="button"
+                          title="Applica architettura BOM certificata"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenTemplateModal(item);
+                          }}
+                          className="px-2.5 py-1 rounded-full border border-purple-200 bg-purple-50 hover:bg-purple-100 font-bold text-[10px] text-purple-700 hover:border-purple-400 transition flex items-center gap-1"
+                        >
+                          <span>✨ Preset BOM</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -585,6 +1020,9 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
             pimItem={currentPim}
             viewerRole={viewerRole}
             onAddBomItem={onAddBomItem || (() => {})}
+            onUpdateBomItem={onUpdateBomItem}
+            onDeleteBomItem={onDeleteBomItem}
+            onMoveBomItem={onMoveBomItem}
           />
         </div>
       )}
@@ -701,33 +1139,128 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Scala Taglie Certificata *</label>
-                  {registries.filter((r) => r.registry_name === "size_scales" && r.is_active).length > 0 ? (
+                  {(() => {
+                    const scaleOpts = getSizeScaleOptions(newCategory, newTargetGender);
+                    if (!scaleOpts) {
+                      return (
+                        <input
+                          type="text"
+                          required
+                          placeholder="Donna EU 35-42"
+                          value={newSizeRange}
+                          onChange={(e) => setNewSizeRange(e.target.value)}
+                          className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
+                        />
+                      );
+                    }
+                    return (
+                      <select
+                        value={newSizeRange}
+                        onChange={(e) => setNewSizeRange(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono font-semibold"
+                      >
+                        {scaleOpts.recommended.length > 0 && (
+                          <optgroup label={`⭐ Scale Consigliate (${newCategory} · ${newTargetGender})`}>
+                            {scaleOpts.recommended.map((reg) => (
+                              <option key={reg.entry_code} value={reg.label_it}>
+                                {reg.label_it} ({reg.entry_code})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {scaleOpts.others.length > 0 && (
+                          <optgroup label="Altre Scale di Dominio">
+                            {scaleOpts.others.map((reg) => (
+                              <option key={reg.entry_code} value={reg.label_it}>
+                                {reg.label_it} ({reg.entry_code})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </select>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Tipo di Costruzione *</label>
+                  {(() => {
+                    const constOpts = getConstructionTypeOptions(newCategory);
+                    if (!constOpts) {
+                      return (
+                        <select
+                          value={newConstructionType}
+                          onChange={(e) => setNewConstructionType(e.target.value)}
+                          className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                        >
+                          <option value="cassetta_cucita">Fondo Cassetta Cucita</option>
+                          <option value="blake">Lavorazione Blake</option>
+                          <option value="goodyear">Goodyear Welton</option>
+                          <option value="sacchetto">Sacchetto (Bologna)</option>
+                          <option value="slip_lasting">Slip Lasting / Strobel</option>
+                          <option value="tubolare">Tubolare Mocassino</option>
+                          <option value="costa_taglio_vivo">Costa Taglio Vivo</option>
+                          <option value="rimboccato">Rimboccato Pregiato</option>
+                        </select>
+                      );
+                    }
+                    return (
+                      <select
+                        value={newConstructionType}
+                        onChange={(e) => setNewConstructionType(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                      >
+                        {constOpts.categorySpecific.length > 0 && (
+                          <optgroup label={`🔨 Costruzioni per ${newCategory.toUpperCase()}`}>
+                            {constOpts.categorySpecific.map((reg) => (
+                              <option key={reg.entry_code} value={reg.entry_code}>
+                                {reg.label_it} ({reg.entry_code})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {constOpts.others.length > 0 && (
+                          <optgroup label="Altre Costruzioni e Lavorazioni">
+                            {constOpts.others.map((reg) => (
+                              <option key={reg.entry_code} value={reg.entry_code}>
+                                {reg.label_it} ({reg.entry_code})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </select>
+                    );
+                  })()}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Piramide di Collezione *</label>
+                  {registries.filter((r) => r.registry_name === "collection_pyramids" && r.is_active).length > 0 ? (
                     <select
-                      value={newSizeRange}
-                      onChange={(e) => setNewSizeRange(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono font-semibold"
+                      value={newCarryoverStatus}
+                      onChange={(e) => setNewCarryoverStatus(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
                     >
                       {registries
-                        .filter((r) => r.registry_name === "size_scales" && r.is_active)
+                        .filter((r) => r.registry_name === "collection_pyramids" && r.is_active)
                         .map((reg) => (
-                          <option key={reg.entry_code} value={reg.label_it}>
-                            {reg.label_it} ({reg.entry_code})
+                          <option key={reg.entry_code} value={reg.entry_code}>
+                            {reg.label_it}
                           </option>
                         ))}
-                      <option value="Donna EU 35-42">Donna EU 35-42 (Default)</option>
-                      <option value="Uomo EU 38-46">Uomo EU 38-46</option>
-                      <option value="Abbigliamento IT 44-56">Abbigliamento IT 44-56</option>
-                      <option value="Pelletteria TU">Pelletteria Taglia Unica (TU)</option>
                     </select>
                   ) : (
-                    <input
-                      type="text"
-                      required
-                      placeholder="Donna EU 35-42"
-                      value={newSizeRange}
-                      onChange={(e) => setNewSizeRange(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
-                    />
+                    <select
+                      value={newCarryoverStatus}
+                      onChange={(e) => setNewCarryoverStatus(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                    >
+                      <option value="carryover_continuativo">⭐ Continuativo / Carryover (No Saldi)</option>
+                      <option value="seasonal_core">🌿 Stagionale Core</option>
+                      <option value="trend_drop">⚡ Trend Drop / Capsule</option>
+                      <option value="capsule_limited">💎 Capsule Limited Edition</option>
+                    </select>
                   )}
                 </div>
               </div>
@@ -828,7 +1361,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-4 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
                       Categoria *
@@ -842,6 +1375,37 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                       <option value="leather_goods">👜 Pelletteria</option>
                       <option value="apparel">🧥 Abbigliamento</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Piramide *
+                    </label>
+                    {registries.filter((r) => r.registry_name === "collection_pyramids" && r.is_active).length > 0 ? (
+                      <select
+                        value={editCarryoverStatus}
+                        onChange={(e) => setEditCarryoverStatus(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                      >
+                        {registries
+                          .filter((r) => r.registry_name === "collection_pyramids" && r.is_active)
+                          .map((reg) => (
+                            <option key={reg.entry_code} value={reg.entry_code}>
+                              {reg.label_it}
+                            </option>
+                          ))}
+                      </select>
+                    ) : (
+                      <select
+                        value={editCarryoverStatus}
+                        onChange={(e) => setEditCarryoverStatus(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                      >
+                        <option value="carryover_continuativo">⭐ Continuativo / Carryover</option>
+                        <option value="seasonal_core">🌿 Stagionale Core</option>
+                        <option value="trend_drop">⚡ Trend Drop</option>
+                        <option value="capsule_limited">💎 Capsule Limited</option>
+                      </select>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
@@ -926,33 +1490,46 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                     <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
                       Scala Taglie Certificata *
                     </label>
-                    {registries.filter((r) => r.registry_name === "size_scales" && r.is_active).length > 0 ? (
-                      <select
-                        value={editSizeRange}
-                        onChange={(e) => setEditSizeRange(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono font-semibold"
-                      >
-                        {registries
-                          .filter((r) => r.registry_name === "size_scales" && r.is_active)
-                          .map((reg) => (
-                            <option key={reg.entry_code} value={reg.label_it}>
-                              {reg.label_it} ({reg.entry_code})
-                            </option>
-                          ))}
-                        <option value="Donna EU 35-42">Donna EU 35-42</option>
-                        <option value="Uomo EU 38-46">Uomo EU 38-46</option>
-                        <option value="Abbigliamento IT 44-56">Abbigliamento IT 44-56</option>
-                        <option value="Pelletteria TU">Pelletteria TU</option>
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        required
-                        value={editSizeRange}
-                        onChange={(e) => setEditSizeRange(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
-                      />
-                    )}
+                    {(() => {
+                      const scaleOpts = getSizeScaleOptions(editCategory, editTargetGender);
+                      if (!scaleOpts) {
+                        return (
+                          <input
+                            type="text"
+                            required
+                            value={editSizeRange}
+                            onChange={(e) => setEditSizeRange(e.target.value)}
+                            className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
+                          />
+                        );
+                      }
+                      return (
+                        <select
+                          value={editSizeRange}
+                          onChange={(e) => setEditSizeRange(e.target.value)}
+                          className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono font-semibold"
+                        >
+                          {scaleOpts.recommended.length > 0 && (
+                            <optgroup label={`⭐ Scale Consigliate (${editCategory} · ${editTargetGender})`}>
+                              {scaleOpts.recommended.map((reg) => (
+                                <option key={reg.entry_code} value={reg.label_it}>
+                                  {reg.label_it} ({reg.entry_code})
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                          {scaleOpts.others.length > 0 && (
+                            <optgroup label="Altre Scale di Dominio">
+                              {scaleOpts.others.map((reg) => (
+                                <option key={reg.entry_code} value={reg.label_it}>
+                                  {reg.label_it} ({reg.entry_code})
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                        </select>
+                      );
+                    })()}
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
@@ -981,22 +1558,76 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
-                    Stato Ciclo di Vita *
-                  </label>
-                  <select
-                    value={editLifecycleStatus}
-                    onChange={(e) => setEditLifecycleStatus(e.target.value as PlmLifecycleStatus)}
-                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-bold text-[#111111]"
-                  >
-                    <option value="new_from_pim">🏷️ Nuovo da PIM</option>
-                    <option value="prototype">Prototipo</option>
-                    <option value="sample">Campione</option>
-                    <option value="industrialized">Industrializzato</option>
-                    <option value="in_production">In Produzione</option>
-                    <option value="archived">Archiviato</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Tipo di Costruzione *
+                    </label>
+                    {(() => {
+                      const constOpts = getConstructionTypeOptions(editCategory);
+                      if (!constOpts) {
+                        return (
+                          <select
+                            value={editConstructionType}
+                            onChange={(e) => setEditConstructionType(e.target.value)}
+                            className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                          >
+                            <option value="cassetta_cucita">Fondo Cassetta Cucita</option>
+                            <option value="blake">Lavorazione Blake</option>
+                            <option value="goodyear">Goodyear Welton</option>
+                            <option value="sacchetto">Sacchetto (Bologna)</option>
+                            <option value="slip_lasting">Slip Lasting / Strobel</option>
+                            <option value="tubolare">Tubolare Mocassino</option>
+                            <option value="costa_taglio_vivo">Costa Taglio Vivo</option>
+                            <option value="rimboccato">Rimboccato Pregiato</option>
+                          </select>
+                        );
+                      }
+                      return (
+                        <select
+                          value={editConstructionType}
+                          onChange={(e) => setEditConstructionType(e.target.value)}
+                          className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                        >
+                          {constOpts.categorySpecific.length > 0 && (
+                            <optgroup label={`🔨 Costruzioni per ${editCategory.toUpperCase()}`}>
+                              {constOpts.categorySpecific.map((reg) => (
+                                <option key={reg.entry_code} value={reg.entry_code}>
+                                  {reg.label_it} ({reg.entry_code})
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                          {constOpts.others.length > 0 && (
+                            <optgroup label="Altre Costruzioni e Lavorazioni">
+                              {constOpts.others.map((reg) => (
+                                <option key={reg.entry_code} value={reg.entry_code}>
+                                  {reg.label_it} ({reg.entry_code})
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                        </select>
+                      );
+                    })()}
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Stato Ciclo di Vita *
+                    </label>
+                    <select
+                      value={editLifecycleStatus}
+                      onChange={(e) => setEditLifecycleStatus(e.target.value as PlmLifecycleStatus)}
+                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-bold text-[#111111]"
+                    >
+                      <option value="new_from_pim">🏷️ Nuovo da PIM</option>
+                      <option value="prototype">Prototipo</option>
+                      <option value="sample">Campione</option>
+                      <option value="industrialized">Industrializzato</option>
+                      <option value="in_production">In Produzione</option>
+                      <option value="archived">Archiviato</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1016,6 +1647,793 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal: Duplicazione Variante & Clonazione Ricorsiva Distinta Base (BOM) */}
+      {showDeepCloneModal && cloneTargetItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 animate-scaleUp my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EAEAEA]">
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                  Sprint 7 · Deep Variant &amp; BOM Cloning
+                </span>
+                <h3 className="text-lg font-bold text-[#111111] mt-1">
+                  Duplica Variante con Distinta Base Ricorsiva
+                </h3>
+                <p className="text-xs text-[#707072] font-mono">
+                  Sorgente: {cloneTargetItem.variant_code} ({cloneTargetItem.parentPim.model_name}) · {cloneTargetItem.bom_items.length} componenti BOM
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDeepCloneModal(false)}
+                className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-500 hover:text-black flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Nuovo Codice Variante PLM *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={cloneNewCode}
+                    onChange={(e) => setCloneNewCode(e.target.value)}
+                    placeholder="PLM-SNEAK-B1"
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono uppercase font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Nuovo Nome Colore / Variante *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={cloneNewColorway}
+                    onChange={(e) => setCloneNewColorway(e.target.value)}
+                    placeholder="Testa di Moro"
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                  Scala Taglie
+                </label>
+                <input
+                  type="text"
+                  value={cloneNewSizeRange}
+                  onChange={(e) => setCloneNewSizeRange(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
+                />
+              </div>
+
+              <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer font-bold text-[#111111]">
+                  <input
+                    type="checkbox"
+                    checked={cloneIncludeBom}
+                    onChange={(e) => setCloneIncludeBom(e.target.checked)}
+                    className="rounded text-blue-600 w-4 h-4"
+                  />
+                  <span>Clona ricorsivamente la distinta base a 3 livelli (BOM)</span>
+                </label>
+
+                {cloneIncludeBom && Object.keys(cloneReplacements).length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-neutral-200">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                      Sostituzione Materiali Livello 1 (Opzionale):
+                    </span>
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {Object.keys(cloneReplacements).map((origMat) => (
+                        <div key={origMat} className="grid grid-cols-2 gap-2 items-center bg-white p-2 rounded-lg border border-neutral-200">
+                          <span className="text-[11px] text-neutral-700 truncate font-medium" title={origMat}>
+                            {origMat}
+                          </span>
+                          <input
+                            type="text"
+                            value={cloneReplacements[origMat]}
+                            onChange={(e) =>
+                              setCloneReplacements({
+                                ...cloneReplacements,
+                                [origMat]: e.target.value,
+                              })
+                            }
+                            placeholder="Nuovo materiale..."
+                            className="p-1.5 rounded-lg border border-neutral-300 text-xs font-semibold"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#EAEAEA]">
+                <button
+                  type="button"
+                  onClick={() => setShowDeepCloneModal(false)}
+                  className="px-5 py-2.5 rounded-full border border-neutral-300 text-neutral-700 font-bold hover:bg-neutral-50 transition"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="button"
+                  disabled={isCloning || !cloneNewCode.trim()}
+                  onClick={handleExecuteDeepClone}
+                  className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isCloning ? "Duplicazione in corso..." : "📋 Duplica Variante & Genera BOM"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Libreria Preset Distinte Base (BOM Templates) - FTL-CEO-014 */}
+      {showTemplateModal && templateTargetItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 animate-scaleUp my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EAEAEA]">
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300">
+                  Sprint 7 · Gestione & Libreria Preset BOM (FTL-CEO-014)
+                </span>
+                <h3 className="text-lg font-bold text-[#111111] mt-1">
+                  Preset Distinte Base Industriali
+                </h3>
+                <p className="text-xs text-[#707072] font-mono">
+                  Variante Attiva: {templateTargetItem.variant_code} ({templateTargetItem.parentPim.model_name}) · {templateTargetItem.bom_items.length} componenti
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTemplateModal(false)}
+                className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-500 hover:text-black flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Sub-tabs navigation */}
+            <div className="flex border-b border-neutral-200 gap-2 pb-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setTemplateModalTab("apply")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition ${
+                  templateModalTab === "apply"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-neutral-600 hover:bg-neutral-100"
+                }`}
+              >
+                ⚡ Seleziona &amp; Applica
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentTpl = availableTemplates.find((t) => t.template_id === selectedTemplateId);
+                  if (currentTpl) {
+                    setEditPresetName(currentTpl.name);
+                    setEditPresetCategory(currentTpl.category_id);
+                    setEditPresetConstruction(currentTpl.construction_type || "cassetta_cucita");
+                    setEditPresetDesc(currentTpl.description || "");
+                  }
+                  setTemplateModalTab("edit_preset");
+                }}
+                disabled={!selectedTemplateId}
+                className={`px-3 py-1.5 rounded-lg font-bold transition disabled:opacity-40 ${
+                  templateModalTab === "edit_preset"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-neutral-600 hover:bg-neutral-100"
+                }`}
+              >
+                ✏️ Modifica Preset
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNewPresetName(`Preset da ${templateTargetItem.variant_code}`);
+                  setNewPresetCategory(templateTargetItem.parentPim.category || "footwear");
+                  setNewPresetConstruction(templateTargetItem.construction_type || "cassetta_cucita");
+                  setNewPresetDesc(`Preset estratto da ${templateTargetItem.variant_code} (${templateTargetItem.bom_items.length} componenti).`);
+                  setTemplateModalTab("create_from_variant");
+                }}
+                className={`px-3 py-1.5 rounded-lg font-bold transition ${
+                  templateModalTab === "create_from_variant"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-neutral-600 hover:bg-neutral-100"
+                }`}
+              >
+                ➕ Crea da Variante Attuale
+              </button>
+            </div>
+
+            {/* TAB 1: APPLICA PRESET */}
+            {templateModalTab === "apply" && (
+              <div className="space-y-4 text-xs">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase">
+                      Seleziona Preset BOM Disponibile *
+                    </label>
+                    {selectedTemplateId && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePreset(selectedTemplateId)}
+                        className="text-red-600 hover:text-red-800 font-bold text-[11px] flex items-center gap-1"
+                      >
+                        🗑️ Elimina Preset
+                      </button>
+                    )}
+                  </div>
+                  <select
+                    value={selectedTemplateId}
+                    onChange={(e) => setSelectedTemplateId(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-[#D5D5D5] bg-white font-semibold text-xs"
+                  >
+                    {availableTemplates.map((tpl) => (
+                      <option key={tpl.template_id} value={tpl.template_id}>
+                        {tpl.name} · ({tpl.items.length} componenti - {tpl.construction_type || tpl.category_id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Anteprima componenti del template selezionato */}
+                {availableTemplates.find((t) => t.template_id === selectedTemplateId) && (
+                  <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#111111] text-sm">
+                        {availableTemplates.find((t) => t.template_id === selectedTemplateId)?.name}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-200 text-neutral-800">
+                        {availableTemplates.find((t) => t.template_id === selectedTemplateId)?.construction_type || availableTemplates.find((t) => t.template_id === selectedTemplateId)?.category_id}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#707072]">
+                      {availableTemplates.find((t) => t.template_id === selectedTemplateId)?.description}
+                    </p>
+                    <div className="overflow-x-auto border border-neutral-200 rounded-xl bg-white max-h-52">
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-neutral-100 border-b border-neutral-200 font-bold text-neutral-600">
+                          <tr>
+                            <th className="p-2">Livello</th>
+                            <th className="p-2">Tipo</th>
+                            <th className="p-2">Materiale / Descrizione</th>
+                            <th className="p-2 text-right">Consumo</th>
+                            <th className="p-2 text-right">Sfrido %</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-neutral-100">
+                          {availableTemplates
+                            .find((t) => t.template_id === selectedTemplateId)
+                            ?.items.map((it, idx) => (
+                              <tr key={idx} className="hover:bg-neutral-50">
+                                <td className="p-2 font-mono font-bold text-purple-700">L{it.level}</td>
+                                <td className="p-2 capitalize">{it.component_type}</td>
+                                <td className="p-2 font-medium">{it.material_name}</td>
+                                <td className="p-2 text-right font-mono">
+                                  {it.unit_consumption} {it.unit_of_measure}
+                                </td>
+                                <td className="p-2 text-right font-mono text-amber-600">
+                                  +{it.waste_percentage}%
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800">
+                  ⚠️ <strong>Nota Applicativa:</strong> L&apos;applicazione del template popolerà istantaneamente la distinta base della variante {templateTargetItem.variant_code} con i codici e parametri pre-ingegnerizzati.
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#EAEAEA]">
+                  <button
+                    type="button"
+                    onClick={() => setShowTemplateModal(false)}
+                    className="px-5 py-2.5 rounded-full border border-neutral-300 text-neutral-700 font-bold hover:bg-neutral-50 transition"
+                  >
+                    Chiudi
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isApplyingTemplate || !selectedTemplateId}
+                    onClick={handleExecuteApplyTemplate}
+                    className="px-6 py-2.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isApplyingTemplate ? "Applicazione in corso..." : "✨ Applica Preset a BOM"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: MODIFICA PRESET */}
+            {templateModalTab === "edit_preset" && (
+              <div className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Nome Preset *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editPresetName}
+                    onChange={(e) => setEditPresetName(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Categoria di Riferimento *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editPresetCategory}
+                      onChange={(e) => setEditPresetCategory(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Tipo di Costruzione *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editPresetConstruction}
+                      onChange={(e) => setEditPresetConstruction(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Descrizione Tecnica Preset
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editPresetDesc}
+                    onChange={(e) => setEditPresetDesc(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#EAEAEA]">
+                  <button
+                    type="button"
+                    onClick={() => setTemplateModalTab("apply")}
+                    className="px-5 py-2.5 rounded-full border border-neutral-300 text-neutral-700 font-bold hover:bg-neutral-50 transition"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSavingPreset || !editPresetName.trim()}
+                    onClick={handleUpdatePreset}
+                    className="px-6 py-2.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSavingPreset ? "Salvataggio..." : "💾 Salva Modifiche Preset"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: CREA DA VARIANTE ATTUALE */}
+            {templateModalTab === "create_from_variant" && (
+              <div className="space-y-4 text-xs">
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-purple-900 text-xs">
+                  ✨ Verranno estratti <strong>{templateTargetItem.bom_items.length} componenti</strong> dall&apos;albero BOM attuale della variante <strong>{templateTargetItem.variant_code}</strong> e salvati come un preset riutilizzabile da tutta l&apos;azienda.
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Nome Nuovo Preset *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Es. Preset Sneakers Fondo Cassetta Marche"
+                    value={newPresetName}
+                    onChange={(e) => setNewPresetName(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Categoria *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newPresetCategory}
+                      onChange={(e) => setNewPresetCategory(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Tipo Costruzione *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newPresetConstruction}
+                      onChange={(e) => setNewPresetConstruction(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Descrizione Preset
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Descrivi l'architettura tecnica e le specifiche del preset..."
+                    value={newPresetDesc}
+                    onChange={(e) => setNewPresetDesc(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#EAEAEA]">
+                  <button
+                    type="button"
+                    onClick={() => setTemplateModalTab("apply")}
+                    className="px-5 py-2.5 rounded-full border border-neutral-300 text-neutral-700 font-bold hover:bg-neutral-50 transition"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSavingPreset || !newPresetName.trim() || templateTargetItem.bom_items.length === 0}
+                    onClick={handleCreatePresetFromVariant}
+                    className="px-6 py-2.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSavingPreset ? "Creazione in corso..." : "✨ Salva come Nuovo Preset BOM"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Wizard Onboarding Massivo CSV / Excel con Dry-Run */}
+      {showBulkImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-4 animate-scaleUp my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EAEAEA]">
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Sprint 7 · Fast Onboarding Wizard
+                </span>
+                <h3 className="text-lg font-bold text-[#111111] mt-1">
+                  Onboarding Massivo Articoli &amp; Distinte Base (BOM)
+                </h3>
+                <p className="text-xs text-[#707072]">
+                  Validazione preventiva Dry-Run, correzione errori in tempo reale e commit transazionale nel database.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBulkImportModal(false)}
+                className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-500 hover:text-black flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Navigazione Tab */}
+            <div className="flex border-b border-neutral-200 gap-4 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setBulkImportTab("template")}
+                className={`pb-2.5 border-b-2 transition ${
+                  bulkImportTab === "template"
+                    ? "border-emerald-600 text-emerald-600"
+                    : "border-transparent text-neutral-500 hover:text-black"
+                }`}
+              >
+                1. 📄 Template CSV &amp; Specifiche
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkImportTab("validate")}
+                className={`pb-2.5 border-b-2 transition ${
+                  bulkImportTab === "validate"
+                    ? "border-emerald-600 text-emerald-600"
+                    : "border-transparent text-neutral-500 hover:text-black"
+                }`}
+              >
+                2. 🔍 Validazione Dry-Run
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkImportTab("commit")}
+                className={`pb-2.5 border-b-2 transition ${
+                  bulkImportTab === "commit"
+                    ? "border-emerald-600 text-emerald-600"
+                    : "border-transparent text-neutral-500 hover:text-black"
+                }`}
+              >
+                3. 🚀 Conferma &amp; Commit
+              </button>
+            </div>
+
+            {/* TAB 1: Template CSV */}
+            {bulkImportTab === "template" && (
+              <div className="space-y-4 text-xs">
+                <p className="text-neutral-600 leading-relaxed">
+                  Scarica i modelli CSV ufficiali con le intestazioni conformi allo schema del database PostgreSQL FootLink. Compila i campi e incolla il contenuto nel tab successivo.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border border-neutral-200 rounded-2xl p-4 bg-neutral-50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#111111]">📦 Articoli &amp; Varianti PLM</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-200 text-neutral-700">PIM + PLM</span>
+                    </div>
+                    <p className="text-[11px] text-neutral-600">
+                      Include SKU, modello, categoria, genere, forma, lavorazione, piramide carryover, prezzi e taglie.
+                    </p>
+                    <a
+                      href="http://127.0.0.1:8000/api/v1/bulk-import/template/articles"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-neutral-300 hover:border-black font-bold text-xs text-[#111111] transition shadow-sm"
+                    >
+                      <span>📥 Scarica Template Articoli (.csv)</span>
+                    </a>
+                  </div>
+
+                  <div className="border border-neutral-200 rounded-2xl p-4 bg-neutral-50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#111111]">⚙️ Distinte Base (BOM a 3 Livelli)</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-200 text-neutral-700">BOM L1-L3</span>
+                    </div>
+                    <p className="text-[11px] text-neutral-600">
+                      Include codice variante, livello distinte (1, 2, 3), componenti, fornitore, consumo e sfrido %.
+                    </p>
+                    <a
+                      href="http://127.0.0.1:8000/api/v1/bulk-import/template/bom"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-neutral-300 hover:border-black font-bold text-xs text-[#111111] transition shadow-sm"
+                    >
+                      <span>📥 Scarica Template Distinte Base (.csv)</span>
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setBulkImportTab("validate")}
+                    className="px-6 py-2.5 rounded-full bg-[#111111] text-white font-bold hover:bg-neutral-800 transition shadow"
+                  >
+                    Procedi a Validazione Dry-Run →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: Validazione Dry-Run */}
+            {bulkImportTab === "validate" && (
+              <div className="space-y-4 text-xs">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <label className="text-[11px] font-bold text-[#707072] uppercase">Tipo Dati:</label>
+                    <select
+                      value={bulkImportType}
+                      onChange={(e) => {
+                        setBulkImportType(e.target.value as "articles" | "bom");
+                        setBulkValidationResult(null);
+                      }}
+                      className="p-2 rounded-xl border border-neutral-300 font-semibold bg-white"
+                    >
+                      <option value="articles">📦 Articoli &amp; Varianti PLM</option>
+                      <option value="bom">⚙️ Distinte Base (BOM)</option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`http://127.0.0.1:8000/api/v1/bulk-import/template/${bulkImportType}`);
+                        if (res.ok) {
+                          const txt = await res.text();
+                          setBulkCsvText(txt);
+                        }
+                      } catch {}
+                    }}
+                    className="text-emerald-700 hover:underline font-bold text-[11px]"
+                  >
+                    Carica Esempio Demo
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Incolla Contenuto CSV con intestazioni:
+                  </label>
+                  <textarea
+                    rows={6}
+                    value={bulkCsvText}
+                    onChange={(e) => setBulkCsvText(e.target.value)}
+                    placeholder="Incolla qui le righe CSV..."
+                    className="w-full p-3 font-mono text-[11px] rounded-2xl border border-neutral-300 bg-neutral-50 focus:bg-white focus:outline-none focus:border-black"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    disabled={isValidating || !bulkCsvText.trim()}
+                    onClick={handleValidateBulk}
+                    className="px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isValidating ? "Validazione Dry-Run in corso..." : "🔍 Esegui Validazione Dry-Run"}
+                  </button>
+
+                  {bulkValidationResult && (
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-neutral-100 text-neutral-800 border">
+                        Righe: {bulkValidationResult.total_rows}
+                      </span>
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Valide: {bulkValidationResult.valid_rows_count}
+                      </span>
+                      {bulkValidationResult.invalid_rows_count > 0 && (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                          Errori: {bulkValidationResult.invalid_rows_count}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Tabella Risultati Validazione */}
+                {bulkValidationResult && (
+                  <div className="space-y-3 pt-2">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">
+                      Report Validazione Preventiva:
+                    </div>
+                    <div className="overflow-x-auto border border-neutral-200 rounded-2xl max-h-56 bg-white">
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-neutral-100 border-b border-neutral-200 font-bold text-neutral-600">
+                          <tr>
+                            <th className="p-2">Riga #</th>
+                            <th className="p-2">Identificativo</th>
+                            <th className="p-2 text-center">Esito</th>
+                            <th className="p-2">Dettagli / Errori</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-neutral-100">
+                          {bulkValidationResult.rows.map((r) => (
+                            <tr key={r.row_number} className={r.is_valid ? "hover:bg-neutral-50" : "bg-rose-50/50"}>
+                              <td className="p-2 font-mono font-bold">{r.row_number}</td>
+                              <td className="p-2 font-mono font-semibold">
+                                {r.parsed_data.sku_code || r.parsed_data.variant_code || "N/D"}
+                              </td>
+                              <td className="p-2 text-center">
+                                {r.is_valid ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                    ✓ Valido
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                                    ✕ Non Valido
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-2">
+                                {r.is_valid ? (
+                                  <span className="text-neutral-500">Pronto per inserimento transazionale</span>
+                                ) : (
+                                  <span className="text-rose-700 font-semibold">{r.errors.join("; ")}</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {bulkValidationResult.valid_rows_count > 0 && (
+                      <div className="flex justify-end pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setBulkImportTab("commit")}
+                          className="px-6 py-2.5 rounded-full bg-[#111111] text-white font-bold hover:bg-neutral-800 transition shadow"
+                        >
+                          Procedi al Commit ({bulkValidationResult.valid_rows_count} righe) →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 3: Conferma & Commit */}
+            {bulkImportTab === "commit" && (
+              <div className="space-y-4 text-xs">
+                {commitMessage ? (
+                  <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-emerald-900 space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-sm">
+                      <span>🎉</span>
+                      <span>Importazione Massiva Completata con Successo!</span>
+                    </div>
+                    <p className="text-xs">{commitMessage}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowBulkImportModal(false);
+                        setCommitMessage("");
+                        setBulkValidationResult(null);
+                        setBulkCsvText("");
+                      }}
+                      className="mt-2 px-5 py-2 rounded-full bg-emerald-700 text-white font-bold hover:bg-emerald-800 transition"
+                    >
+                      Chiudi e Torna al Catalogo
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl space-y-2">
+                      <h4 className="font-bold text-[#111111]">Riepilogo Inserimento Transazionale</h4>
+                      <p className="text-neutral-600">
+                        Stai per inserire <strong>{bulkValidationResult?.valid_rows_count || 0}</strong> righe validate nel database FootLink.
+                      </p>
+                      <ul className="list-disc list-inside text-neutral-500 space-y-1">
+                        <li>I dati verranno salvati su PostgreSQL/SQLite in modalità transazionale ACID.</li>
+                        <li>Gli articoli e le varianti PLM risulteranno subito attivi nel catalogo e nel modulo BOM.</li>
+                      </ul>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setBulkImportTab("validate")}
+                        className="px-5 py-2.5 rounded-full border border-neutral-300 text-neutral-700 font-bold hover:bg-neutral-50 transition"
+                      >
+                        ← Indietro a Validazione
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isCommitting || !bulkValidationResult || bulkValidationResult.valid_rows_count === 0}
+                        onClick={handleCommitBulk}
+                        className="px-7 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {isCommitting ? "Inserimento in corso..." : "🚀 Conferma & Inserisci nel Database"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

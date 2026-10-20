@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Footlink Digital Asset Management (DAM) · Hub Ufficiale</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: #080808;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header.dam-header {
+      background: #0D0D0D;
+      border-bottom: 1px solid #1F1F1F;
+      padding: 30px 50px;
+      position: relative;
+      overflow: hidden;
+    }
+    canvas#heroCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.65;
+      z-index: 1;
+    }
+    .header-content {
+      position: relative;
+      z-index: 10;
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .brand-title {
+      font-weight: 900;
+      font-size: 26px;
+      letter-spacing: -0.04em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .dam-badge {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: #00FF87;
+      background: rgba(0, 255, 135, 0.1);
+      border: 1px solid rgba(0, 255, 135, 0.3);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-weight: 700;
+    }
+    main.dam-main {
+      flex: 1;
+      max-width: 1300px;
+      width: 100%;
+      margin: 40px auto;
+      padding: 0 40px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #FFFFFF;
+    }
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 24px;
+      margin-bottom: 50px;
+    }
+    .asset-card {
+      background: #111111;
+      border: 1px solid #222222;
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .asset-card:hover {
+      border-color: #00FF87;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5), 0 0 25px rgba(0, 255, 135, 0.08);
+    }
+    .card-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #00FF87;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      margin-bottom: 8px;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: #888888;
+      line-height: 1.45;
+      margin-bottom: 20px;
+    }
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .action-btn {
+      background: #1C1C1C;
+      color: #FFFFFF;
+      border: 1px solid #333333;
+      padding: 9px 18px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .action-btn:hover {
+      background: #FFFFFF;
+      color: #0A0A0A;
+      border-color: #FFFFFF;
+    }
+    .action-btn.primary {
+      background: #00FF87;
+      color: #0A0A0A;
+      border-color: #00FF87;
+      font-weight: 800;
+    }
+    .action-btn.primary:hover {
+      background: #FFFFFF;
+      border-color: #FFFFFF;
+    }
+    footer.dam-footer {
+      background: #0A0A0A;
+      border-top: 1px solid #1A1A1A;
+      padding: 30px 40px;
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: #555555;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated Header with Hero Canvas -->
+  <header class="dam-header">
+    <canvas id="heroCanvas"></canvas>
+    <div class="header-content">
+      <div>
+        <div class="brand-title">
+          <svg width="34" height="28" viewBox="0 0 46 38" fill="none">
+            <path d="M0 36L16 2H30L14 36H0Z" fill="#00FF87"/>
+            <path d="M18 36L28 12H42L31 36H18Z" fill="#00FF87" fill-opacity="0.85"/>
+            <path d="M0 37.5H42L40 40H-2L0 37.5Z" fill="#00FF87"/>
+          </svg>
+          <span>FOOTLINK DIGITAL ASSET MANAGEMENT (DAM)</span>
+        </div>
+        <p style="color:#888; font-size:14px; margin-top:6px;">
+          Archivio centralizzato asset per campagne pubblicitarie, social media B2B, newsletter e kit stampa.
+        </p>
+      </div>
+
+      <div class="dam-badge">
+        ✦ ARCHIVIO GENERATO · SPRINT 7
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <main class="dam-main">
+
+    <!-- 01. Brand Identity -->
+    <div class="section-title">
+      <span>01 · Brand Identity &amp; Guide Grafiche</span>
+    </div>
+    <div class="asset-grid">
+      <div class="asset-card">
+        <div>
+          <div class="card-tag">SVG VETTORIALE · MULTI-VARIANTE</div>
+          <div class="card-title">Footlink Logo Suite (Dark / Light / Ruby)</div>
+          <div class="card-desc">Suite vettoriale del logo Footlink priva di dicitura 1:N, con mark Dynamic Sole-Link, varianti neon green `#00FF87`, monochrome white e ruby red.</div>
+        </div>
+        <div class="card-actions">
+          <a href="01_brand_identity/footlink-logo-suite.svg" target="_blank" class="action-btn primary">Visualizza SVG →</a>
+          <a href="01_brand_identity/brand-styleguide-cheat-sheet.md" class="action-btn">Styleguide MD</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02. Campagne Social Media B2B -->
+    <div class="section-title">
+      <span>02 · Campagne Pubblicitarie &amp; Social Media</span>
+    </div>
+    <div class="asset-grid">
+      <!-- LinkedIn Card -->
+      <div class="asset-card">
+        <div>
+          <div class="card-tag">LINKEDIN / OPENGRAPH · 1200 × 630</div>
+          <div class="card-title">LinkedIn B2B Hero Card (Live 60fps)</div>
+          <div class="card-desc">Card interattiva retina 1200x630 con onde armoniche smeraldo/rubino, nodi traccianti e telemetria delle coordinate rotanti in tempo reale.</div>
+        </div>
+        <div class="card-actions">
+          <a href="02_social_campaigns/linkedin-card-1200x630.html" target="_blank" class="action-btn primary">Apri Live Card →</a>
+          <a href="02_social_campaigns/campaign-sprint7-fast-onboarding.md" class="action-btn">Copy &amp; Post</a>
+        </div>
+      </div>
+
+      <!-- Instagram Square -->
+      <div class="asset-card">
+        <div>
+          <div class="card-tag">INSTAGRAM / CAROUSEL · 1080 × 1080</div>
+          <div class="card-title">Square Feed Carousel (4 Slide Interattive)</div>
+          <div class="card-desc">Carosello quadrato a 4 slide per Instagram e LinkedIn feed: OS Moda, Fast Onboarding &lt;90s, Terzisti a 0 € e Passaporto DPP UE.</div>
+        </div>
+        <div class="card-actions">
+          <a href="02_social_campaigns/instagram-square-1080x1080.html" target="_blank" class="action-btn primary">Apri Carosello →</a>
+        </div>
+      </div>
+
+      <!-- Vertical Story -->
+      <div class="asset-card">
+        <div>
+          <div class="card-tag">STORIES / REELS COVER · 1080 × 1920</div>
+          <div class="card-title">Vertical Story 9:16 Canvas</div>
+          <div class="card-desc">Formato verticale a tutta altezza per Instagram Stories, LinkedIn Shorts e presentazioni smartphone con animazione fluida.</div>
+        </div>
+        <div class="card-actions">
+          <a href="02_social_campaigns/story-vertical-1080x1920.html" target="_blank" class="action-btn primary">Apri Story →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03. Newsletter & DEM -->
+    <div class="section-title">
+      <span>03 · Newsletter &amp; Campagne DEM</span>
+    </div>
+    <div class="asset-grid">
+      <div class="asset-card">
+        <div>
+          <div class="card-tag">EMAIL HTML RESPONSIVE · DARK/LIGHT</div>
+          <div class="card-title">Executive Briefing #07 Responsive Template</div>
+          <div class="card-desc">Template email compatibile con Apple Mail, Gmail e Outlook. Presenta le novità dello Sprint 7: distinta base a 3 livelli, piramidi carryover e inclusione terzisti.</div>
+        </div>
+        <div class="card-actions">
+          <a href="03_newsletters_dem/newsletter-template-responsive.html" target="_blank" class="action-btn primary">Anteprima DEM →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04. Banner Display Standard IAB -->
+    <div class="section-title">
+      <span>04 · Display Advertising IAB (Stampa &amp; Portali Moda)</span>
+    </div>
+    <div class="asset-grid">
+      <div class="asset-card">
+        <div>
+          <div class="card-tag">STANDARD IAB · 728×90, 300×600, 300×250</div>
+          <div class="card-title">B2B Display Banner Advertising Suite</div>
+          <div class="card-desc">Suite completa di banner web per PambiancoNews, FashionNetwork ed editoria di settore calzaturiero con Canvas 2D animato integrato.</div>
+        </div>
+        <div class="card-actions">
+          <a href="04_advertising_banners/b2b-display-suite.html" target="_blank" class="action-btn primary">Apri Suite Banner →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05. Hero Launchpad Engine & Exporter 4K -->
+    <div class="section-title">
+      <span>05 · Engine Grafico Hero &amp; Tool di Export 4K</span>
+    </div>
+    <div class="asset-grid">
+      <div class="asset-card">
+        <div>
+          <div class="card-tag">TOOL STANDALONE · ULTRA HD 4K / RETINA</div>
+          <div class="card-title">Hero Banner 4K Export Tool &amp; Engine JS</div>
+          <div class="card-desc">Generatore e selettore di risoluzione (1080p, 4K, Social) con motore JavaScript riutilizzabile e funzione di salvataggio istantaneo screenshot PNG.</div>
+        </div>
+        <div class="card-actions">
+          <a href="05_hero_launchpad_assets/hero-banner-export-tool.html" target="_blank" class="action-btn primary">Apri Tool di Export →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06. Press Kit & Comunicati Stampa -->
+    <div class="section-title">
+      <span>06 · Press Kit &amp; Comunicazione Istituzionale</span>
+    </div>
+    <div class="asset-grid">
+      <div class="asset-card">
+        <div>
+          <div class="card-tag">PRESS RELEASE UFFICIALE · SPRINT 7</div>
+          <div class="card-title">Comunicato Stampa: "Distinta Base in 90 Secondi e Terzisti a 0 €"</div>
+          <div class="card-desc">Comunicato formale per agenzie stampa e giornalisti di settore moda/lusso su conformità ESPR, passaporto DPP e modello FinOps distrettuale.</div>
+        </div>
+        <div class="card-actions">
+          <a href="06_press_and_pr_kit/press-release-footlink-sprint7-it.md" class="action-btn primary">Leggi Comunicato MD →</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="dam-footer">
+    FOOTLINK DIGITAL ASSET MANAGEMENT · C-SUITE GOVERNANCE · ACCESSO PROTETTO ARCHIVIO DAM
+  </footer>
+
+  <script>
+    // Header Wave Canvas
+    const canvas = document.getElementById("heroCanvas");
+    const ctx = canvas.getContext("2d");
+    let w = canvas.width = window.innerWidth;
+    let h = canvas.height = 120;
+    let t = 0;
+
+    window.addEventListener("resize", () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = 120;
+    });
+
+    function anim() {
+      t += 1;
+      ctx.clearRect(0, 0, w, h);
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+
+      // 2 gentle waves
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(0, 255, 135, 0.4)";
+      ctx.lineWidth = 2.0;
+      for (let x = 0; x <= w; x += 10) {
+        const y = h * 0.5 + Math.sin(x * 0.003 + t * 0.015) * 22;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(255, 51, 102, 0.35)";
+      ctx.lineWidth = 1.6;
+      for (let x = 0; x <= w; x += 10) {
+        const y = h * 0.6 + Math.cos(x * 0.004 + t * 0.012) * 18;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      ctx.restore();
+      requestAnimationFrame(anim);
+    }
+    anim();
+  </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "task_id": "FTL-PROD-011",
+  "title": "PIRAMIDE e TIPO DI COSTRUZIONE editabili",
+  "description": "PIRAMIDE e TIPO DI COSTRUZIONE devono essere editabili in 06 Anagrafiche di Dominio. TIPO DI COSTRUZIONE deve essere legato gerarchicamente sotto a CATEGORIA (Calzature, pelletteria, abbigliamento)",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-20T20:29:03+02:00",
+  "updated_at": "2026-10-20T21:05:00+02:00",
+  "due_date": "2026-11-19T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "M (1gg)",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "file:///Users/a.ciminaritodsgroup.com/Projects/FootLink_v2/Applicativo/frontend/src/components/DomainRegistriesManager.tsx",
+    "file:///Users/a.ciminaritodsgroup.com/Projects/FootLink_v2/Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "file:///Users/a.ciminaritodsgroup.com/Projects/FootLink_v2/Applicativo/backend/app/seed.py"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-010",
+  "tags": [
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "inserisco nuovi piramidi e tipi costruzione",
+    "tipo costruzione legato gerarchicamente a categoria (footwear, leather_goods, apparel)",
+    "selezione dinamica e raggruppata nel configuratore e quick edit PLM"
+  ],
+  "notes": "Completato e collaudato sia in 06 Anagrafiche di Dominio sia nel Modulo PLM."
+}

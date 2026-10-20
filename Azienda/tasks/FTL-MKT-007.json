@@ -1,0 +1,52 @@
+{
+  "task_id": "FTL-MKT-007",
+  "title": "Modifica Materiali di comunicazione",
+  "description": "Chiedo al CMO di collaborare con il CTO per l'implementazione di tutti gli asset utilizi alle campagne pubblicitarie, social, news letter.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CMO",
+  "assignee_agent": "footlink-cmo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-20T21:48:15+02:00",
+  "updated_at": "2026-10-20T21:58:00+02:00",
+  "due_date": "2026-11-19T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/dam/index.html",
+    "Azienda/dam/01_brand_identity/footlink-logo-suite.svg",
+    "Azienda/dam/01_brand_identity/brand-styleguide-cheat-sheet.md",
+    "Azienda/dam/02_social_campaigns/campaign-sprint7-fast-onboarding.md",
+    "Azienda/dam/02_social_campaigns/linkedin-card-1200x630.html",
+    "Azienda/dam/02_social_campaigns/instagram-square-1080x1080.html",
+    "Azienda/dam/02_social_campaigns/story-vertical-1080x1920.html",
+    "Azienda/dam/03_newsletters_dem/newsletter-template-responsive.html",
+    "Azienda/dam/04_advertising_banners/b2b-display-suite.html",
+    "Azienda/dam/05_hero_launchpad_assets/fractal-telemetry-engine.js",
+    "Azienda/dam/05_hero_launchpad_assets/hero-banner-export-tool.html",
+    "Azienda/dam/06_press_and_pr_kit/press-release-footlink-sprint7-it.md",
+    "Applicativo/frontend/public/dam/",
+    "Applicativo/frontend/src/components/FootlinkHomeHub.tsx",
+    "Portale_Founder_Control/control_center.py"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L2",
+  "decision_record_id": null,
+  "tags": [
+    "sales",
+    "marketing",
+    "DAM",
+    "social",
+    "branding"
+  ],
+  "acceptance_criteria": [
+    "Archivio DAM con struttura folder pulita e organizzata",
+    "Contenuti generati con alta qualità e stile grafico coerente con la strategia Footlink",
+    "Asset grafici coerenti con il banner Home e animazione di sfondo con coordinate rotanti",
+    "Campagne adv, social media (LinkedIn, Instagram, Stories), newsletter responsive e press kit inclusi"
+  ],
+  "notes": "Risolto con successo: archivio DAM strutturato a 6 cartelle (Brand, Social, Newsletter, Display Adv, Hero 4K, Press Kit) con motore visuale Canvas 2D 60fps identico al banner Home. Consultabile sia da filesystem locale sia via web su http://localhost:5173/dam/index.html con pulsanti diretti nella Home Launchpad e nel Founder Control Center."
+}

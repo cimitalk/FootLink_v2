@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
+import csv
 import hashlib
+import io
 import json
 import os
 import sqlite3
@@ -24,6 +26,14 @@ from app.models import (
     BomRequirementsCalculationRequest,
     BomRequirementsCalculationResult,
     BomSizeRequirementItem,
+    BomTemplate,
+    BomTemplateCreate,
+    BomTemplateItem,
+    BulkImportCommitRequest,
+    BulkImportCommitResponse,
+    BulkImportValidationResponse,
+    BulkImportValidationRow,
+    CarryoverStatus,
     Collection,
     CollectionCreate,
     CollectionStatus,
@@ -34,6 +44,7 @@ from app.models import (
     CompanyMembershipCreate,
     CompanyTier,
     CompanyUpdate,
+    ConstructionType,
     DistrictUserRole,
     DomainRegistryEntry,
     DomainRegistryEntryCreate,
@@ -41,7 +52,11 @@ from app.models import (
     PimCommercialItem,
     PlmLifecycleStatus,
     PlmProductionVariant,
+    PriceTier,
     ProductCategory,
+    ProductCategoryCreate,
+    ProductCategoryHierarchyNode,
+    ProductCategoryUpdate,
     ProductionOrder,
     ProductionOrderCreate,
     ProductionOrderPhaseItem,
@@ -64,8 +79,10 @@ from app.models import (
     TanneryDocumentType,
     TanneryDocumentVerifyResponse,
     TanneryProcess,
+    TargetOccasion,
     User,
     UserCreate,
+    VariantDeepCloneRequest,
 )
 from app.orm_models import HAS_SQLALCHEMY, Base
 
@@ -145,7 +162,17 @@ class FootlinkSQLitePersistence:
             for col_sql in (
                 "ALTER TABLE pim_commercial_items ADD COLUMN season_id VARCHAR(64) NULL",
                 "ALTER TABLE pim_commercial_items ADD COLUMN collection_id VARCHAR(64) NULL",
+                "ALTER TABLE pim_commercial_items ADD COLUMN category_id VARCHAR(64) NULL",
+                "ALTER TABLE pim_commercial_items ADD COLUMN sub_category_id VARCHAR(64) NULL",
+                "ALTER TABLE pim_commercial_items ADD COLUMN carryover_status VARCHAR(32) NOT NULL DEFAULT 'seasonal_core'",
+                "ALTER TABLE pim_commercial_items ADD COLUMN brand_line VARCHAR(64) NOT NULL DEFAULT 'Main Line'",
+                "ALTER TABLE pim_commercial_items ADD COLUMN target_occasion VARCHAR(64) NOT NULL DEFAULT 'smart_casual'",
+                "ALTER TABLE pim_commercial_items ADD COLUMN price_tier VARCHAR(64) NOT NULL DEFAULT 'core_luxury'",
                 "ALTER TABLE plm_production_variants ADD COLUMN collection_id VARCHAR(64) NULL",
+                "ALTER TABLE plm_production_variants ADD COLUMN category_id VARCHAR(64) NULL",
+                "ALTER TABLE plm_production_variants ADD COLUMN sub_category_id VARCHAR(64) NULL",
+                "ALTER TABLE plm_production_variants ADD COLUMN construction_type VARCHAR(64) NOT NULL DEFAULT 'cassetta_cucita'",
+                "ALTER TABLE plm_production_variants ADD COLUMN carryover_status VARCHAR(32) NOT NULL DEFAULT 'seasonal_core'",
             ):
                 try:
                     conn.execute(col_sql)
@@ -705,6 +732,13 @@ class FootlinkSQLitePersistence:
                 "care_instructions": item.care_instructions,
                 "end_of_life_guide": item.end_of_life_guide,
                 "collection_name": item.collection_name,
+                "target_gender": getattr(item, "target_gender", "unisex"),
+                "category_id": getattr(item, "category_id", None),
+                "sub_category_id": getattr(item, "sub_category_id", None),
+                "carryover_status": getattr(item, "carryover_status", "seasonal_core"),
+                "brand_line": getattr(item, "brand_line", "Main Line"),
+                "target_occasion": getattr(item, "target_occasion", "smart_casual"),
+                "price_tier": getattr(item, "price_tier", "core_luxury"),
                 "custom_attributes": item.custom_attributes,
             }
             conn.execute(
@@ -777,6 +811,11 @@ class FootlinkSQLitePersistence:
             "sample_base_size": variant.sample_base_size,
             "size_grading_step_pct": variant.size_grading_step_pct,
             "standard_labor_cost_eur": variant.standard_labor_cost_eur,
+            "target_gender": getattr(variant, "target_gender", "unisex"),
+            "category_id": getattr(variant, "category_id", None),
+            "sub_category_id": getattr(variant, "sub_category_id", None),
+            "construction_type": getattr(variant, "construction_type", "cassetta_cucita"),
+            "carryover_status": getattr(variant, "carryover_status", "seasonal_core"),
             "category_specific_specs": variant.category_specific_specs,
             "custom_attributes": variant.custom_attributes,
         }
@@ -984,6 +1023,11 @@ class FootlinkSQLitePersistence:
                     sample_base_size=str(var_meta.get("sample_base_size", "42")),
                     size_grading_step_pct=float(var_meta.get("size_grading_step_pct", 2.8)),
                     standard_labor_cost_eur=float(var_meta.get("standard_labor_cost_eur", 28.0)),
+                    target_gender=var_meta.get("target_gender", "unisex"),
+                    category_id=var_meta.get("category_id"),
+                    sub_category_id=var_meta.get("sub_category_id"),
+                    construction_type=var_meta.get("construction_type", "cassetta_cucita"),
+                    carryover_status=var_meta.get("carryover_status", "seasonal_core"),
                     category_specific_specs=var_meta.get("category_specific_specs", {}),
                     custom_attributes=var_meta.get("custom_attributes", {}),
                     bom_items=bom_items,
@@ -1007,6 +1051,13 @@ class FootlinkSQLitePersistence:
             collection_id=collection_id_val,
             collection_name=col_name,
             category=ProductCategory(row["category"]),
+            category_id=pim_meta.get("category_id"),
+            sub_category_id=pim_meta.get("sub_category_id"),
+            target_gender=pim_meta.get("target_gender", "unisex"),
+            carryover_status=pim_meta.get("carryover_status", "seasonal_core"),
+            brand_line=pim_meta.get("brand_line", "Main Line"),
+            target_occasion=pim_meta.get("target_occasion", "smart_casual"),
+            price_tier=pim_meta.get("price_tier", "core_luxury"),
             commercial_description_it=row["commercial_description_it"],
             commercial_description_en=row["commercial_description_en"],
             retail_channels=json.loads(row["retail_channels_json"] or "[]"),
@@ -1809,6 +1860,888 @@ class FootlinkSQLitePersistence:
                 total_leather_sqft_gross=round(total_leather_sqft, 2),
                 total_soles_pairs_gross=total_soles if total_soles > 0 else total_pairs,
                 calculated_at=datetime.now(timezone.utc),
+            )
+        finally:
+            self._close_if_file(conn)
+
+    # ========================================================================
+    # Sprint 7: Product Categories Hierarchy (ADR-010)
+    # ========================================================================
+
+    def save_category(self, cat_in: ProductCategoryCreate) -> ProductCategoryHierarchyNode:
+        conn = self.get_connection()
+        try:
+            cat_id = cat_in.category_id or f"cat_{uuid4().hex[:8]}"
+            level = cat_in.level
+            parent_id = cat_in.parent_id
+            code = cat_in.code.strip().lower()
+
+            if parent_id:
+                p_row = conn.execute(
+                    "SELECT slug_path, level FROM product_categories_hierarchy WHERE category_id = ?",
+                    (parent_id,),
+                ).fetchone()
+                if p_row:
+                    slug_path = cat_in.slug_path or f"{p_row['slug_path']}/{code}"
+                    level = p_row["level"] + 1
+                else:
+                    slug_path = cat_in.slug_path or code
+            else:
+                slug_path = cat_in.slug_path or code
+
+            now_str = datetime.now(timezone.utc).isoformat()
+            conn.execute(
+                """
+                INSERT INTO product_categories_hierarchy (
+                    category_id, parent_id, level, code, slug_path,
+                    label_it, label_en, icon, is_active, sort_order, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(category_id) DO UPDATE SET
+                    parent_id = excluded.parent_id,
+                    level = excluded.level,
+                    code = excluded.code,
+                    slug_path = excluded.slug_path,
+                    label_it = excluded.label_it,
+                    label_en = excluded.label_en,
+                    icon = excluded.icon,
+                    is_active = excluded.is_active,
+                    sort_order = excluded.sort_order
+                """,
+                (
+                    cat_id,
+                    parent_id,
+                    level,
+                    code,
+                    slug_path,
+                    cat_in.label_it,
+                    cat_in.label_en,
+                    cat_in.icon,
+                    1 if cat_in.is_active else 0,
+                    cat_in.sort_order,
+                    now_str,
+                ),
+            )
+            conn.commit()
+            return ProductCategoryHierarchyNode(
+                category_id=cat_id,
+                parent_id=parent_id,
+                level=level,
+                code=code,
+                slug_path=slug_path,
+                label_it=cat_in.label_it,
+                label_en=cat_in.label_en,
+                icon=cat_in.icon,
+                is_active=cat_in.is_active,
+                sort_order=cat_in.sort_order,
+                children=[],
+                created_at=datetime.now(timezone.utc),
+            )
+        finally:
+            self._close_if_file(conn)
+
+    def get_category(self, category_id: str) -> Optional[ProductCategoryHierarchyNode]:
+        conn = self.get_connection()
+        try:
+            r = conn.execute(
+                "SELECT * FROM product_categories_hierarchy WHERE category_id = ?",
+                (category_id,),
+            ).fetchone()
+            if not r:
+                return None
+            return ProductCategoryHierarchyNode(
+                category_id=r["category_id"],
+                parent_id=r["parent_id"],
+                level=r["level"],
+                code=r["code"],
+                slug_path=r["slug_path"],
+                label_it=r["label_it"],
+                label_en=r["label_en"],
+                icon=r["icon"] or "🏷️",
+                is_active=bool(r["is_active"]),
+                sort_order=r["sort_order"],
+                children=[],
+                created_at=self._parse_dt(r["created_at"]),
+            )
+        finally:
+            self._close_if_file(conn)
+
+    def list_categories(
+        self, parent_id: Optional[str] = None, level: Optional[int] = None
+    ) -> List[ProductCategoryHierarchyNode]:
+        conn = self.get_connection()
+        try:
+            query = "SELECT * FROM product_categories_hierarchy WHERE 1=1"
+            params: List[Any] = []
+            if parent_id is not None:
+                if parent_id == "root":
+                    query += " AND parent_id IS NULL"
+                else:
+                    query += " AND parent_id = ?"
+                    params.append(parent_id)
+            if level is not None:
+                query += " AND level = ?"
+                params.append(level)
+            query += " ORDER BY level ASC, sort_order ASC, label_it ASC"
+            rows = conn.execute(query, params).fetchall()
+            return [
+                ProductCategoryHierarchyNode(
+                    category_id=r["category_id"],
+                    parent_id=r["parent_id"],
+                    level=r["level"],
+                    code=r["code"],
+                    slug_path=r["slug_path"],
+                    label_it=r["label_it"],
+                    label_en=r["label_en"],
+                    icon=r["icon"] or "🏷️",
+                    is_active=bool(r["is_active"]),
+                    sort_order=r["sort_order"],
+                    children=[],
+                    created_at=self._parse_dt(r["created_at"]),
+                )
+                for r in rows
+            ]
+        finally:
+            self._close_if_file(conn)
+
+    def get_category_tree(self) -> List[ProductCategoryHierarchyNode]:
+        all_cats = self.list_categories()
+        cat_map = {c.category_id: c for c in all_cats}
+        tree: List[ProductCategoryHierarchyNode] = []
+        for c in all_cats:
+            if c.parent_id and c.parent_id in cat_map:
+                cat_map[c.parent_id].children.append(c)
+            else:
+                tree.append(c)
+        return tree
+
+    def delete_category(self, category_id: str) -> bool:
+        conn = self.get_connection()
+        try:
+            cur = conn.execute(
+                "DELETE FROM product_categories_hierarchy WHERE category_id = ?",
+                (category_id,),
+            )
+            conn.commit()
+            return cur.rowcount > 0
+        finally:
+            self._close_if_file(conn)
+
+    # ========================================================================
+    # Sprint 7: BOM Templates Library (ADR-010)
+    # ========================================================================
+
+    def save_bom_template(self, tpl: BomTemplateCreate) -> BomTemplate:
+        conn = self.get_connection()
+        try:
+            t_id = tpl.template_id or f"BOM-TPL-{uuid4().hex[:8].upper()}"
+            now_str = datetime.now(timezone.utc).isoformat()
+            items_dump = [item.model_dump() for item in tpl.items]
+            conn.execute(
+                """
+                INSERT INTO bom_templates (
+                    template_id, name, category_id, construction_type,
+                    description, items_json, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(template_id) DO UPDATE SET
+                    name = excluded.name,
+                    category_id = excluded.category_id,
+                    construction_type = excluded.construction_type,
+                    description = excluded.description,
+                    items_json = excluded.items_json
+                """,
+                (
+                    t_id,
+                    tpl.name,
+                    tpl.category_id,
+                    tpl.construction_type,
+                    tpl.description,
+                    json.dumps(items_dump),
+                    now_str,
+                ),
+            )
+            conn.commit()
+            return BomTemplate(
+                template_id=t_id,
+                name=tpl.name,
+                category_id=tpl.category_id,
+                construction_type=tpl.construction_type,
+                description=tpl.description,
+                items=tpl.items,
+                created_at=datetime.now(timezone.utc),
+            )
+        finally:
+            self._close_if_file(conn)
+
+    def get_bom_template(self, template_id: str) -> Optional[BomTemplate]:
+        conn = self.get_connection()
+        try:
+            r = conn.execute("SELECT * FROM bom_templates WHERE template_id = ?", (template_id,)).fetchone()
+            if not r:
+                return None
+            raw_items = json.loads(r["items_json"] or "[]")
+            items = [BomTemplateItem(**it) for it in raw_items]
+            return BomTemplate(
+                template_id=r["template_id"],
+                name=r["name"],
+                category_id=r["category_id"],
+                construction_type=r["construction_type"],
+                description=r["description"],
+                items=items,
+                created_at=self._parse_dt(r["created_at"]),
+            )
+        finally:
+            self._close_if_file(conn)
+
+    def list_bom_templates(self, category_id: Optional[str] = None) -> List[BomTemplate]:
+        conn = self.get_connection()
+        try:
+            query = "SELECT * FROM bom_templates"
+            params: List[Any] = []
+            if category_id:
+                query += " WHERE category_id = ?"
+                params.append(category_id)
+            query += " ORDER BY name ASC"
+            rows = conn.execute(query, params).fetchall()
+            templates: List[BomTemplate] = []
+            for r in rows:
+                raw_items = json.loads(r["items_json"] or "[]")
+                items = [BomTemplateItem(**it) for it in raw_items]
+                templates.append(
+                    BomTemplate(
+                        template_id=r["template_id"],
+                        name=r["name"],
+                        category_id=r["category_id"],
+                        construction_type=r["construction_type"],
+                        description=r["description"],
+                        items=items,
+                        created_at=self._parse_dt(r["created_at"]),
+                    )
+                )
+            return templates
+        finally:
+            self._close_if_file(conn)
+
+    def delete_bom_template(self, template_id: str) -> bool:
+        conn = self.get_connection()
+        try:
+            cur = conn.execute("DELETE FROM bom_templates WHERE template_id = ?", (template_id,))
+            conn.commit()
+            return cur.rowcount > 0
+        finally:
+            self._close_if_file(conn)
+
+    def apply_bom_template_to_variant(self, template_id: str, plm_variant_id: str) -> List[BomItem]:
+        conn = self.get_connection()
+        try:
+            tpl_row = conn.execute("SELECT * FROM bom_templates WHERE template_id = ?", (template_id,)).fetchone()
+            if not tpl_row:
+                raise ValueError(f"BOM Template '{template_id}' not found.")
+            raw_items = json.loads(tpl_row["items_json"] or "[]")
+
+            # Map template items into real BomItems with unique IDs
+            id_map: Dict[str, str] = {}
+            for it in raw_items:
+                old_tid = it.get("template_item_id", "")
+                id_map[old_tid] = f"BOM-{uuid4().hex[:8].upper()}"
+
+            new_bom_items: List[BomItem] = []
+            for it in raw_items:
+                new_b_id = id_map.get(it.get("template_item_id", ""), f"BOM-{uuid4().hex[:8].upper()}")
+                new_p_id = (
+                    id_map.get(it.get("parent_template_item_id")) if it.get("parent_template_item_id") else None
+                )
+                bom_item = BomItem(
+                    bom_item_id=new_b_id,
+                    level=it.get("level", 1),
+                    parent_bom_item_id=new_p_id,
+                    component_type=BomComponentType(it.get("component_type", "upper")),
+                    material_name=it.get("material_name", "Materiale Standard"),
+                    supplier_name=it.get("supplier_name", "Fornitore Certificato"),
+                    origin_country_iso2=it.get("origin_country_iso2", "IT"),
+                    unit_of_measure=it.get("unit_of_measure", "dm2"),
+                    unit_consumption=float(it.get("unit_consumption", 1.0)),
+                    waste_percentage=float(it.get("waste_percentage", 5.0)),
+                    recycled_content_pct=float(it.get("recycled_content_pct", 0.0)),
+                    certifications=it.get("certifications", []),
+                    unit_cost_eur=float(it.get("unit_cost_eur", 10.0)),
+                    lot_certificate_id="CERT-ESPR-TPL",
+                    custom_attributes={},
+                )
+                new_bom_items.append(bom_item)
+
+            for bom in new_bom_items:
+                comp_val = (
+                    bom.component_type.value if isinstance(bom.component_type, BomComponentType) else str(bom.component_type)
+                )
+                bom_meta = {
+                    "unit_cost_eur": bom.unit_cost_eur,
+                    "lot_certificate_id": bom.lot_certificate_id,
+                    "custom_attributes": bom.custom_attributes,
+                }
+                conn.execute(
+                    """
+                    INSERT INTO bom_items (
+                        bom_item_id, plm_variant_id, level, parent_bom_item_id,
+                        component_type, material_name, supplier_name, origin_country_iso2,
+                        unit_of_measure, unit_consumption, waste_percentage, recycled_content_pct,
+                        certifications_json, metadata_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        bom.bom_item_id,
+                        plm_variant_id,
+                        bom.level,
+                        bom.parent_bom_item_id,
+                        comp_val,
+                        bom.material_name,
+                        bom.supplier_name,
+                        bom.origin_country_iso2,
+                        bom.unit_of_measure,
+                        bom.unit_consumption,
+                        bom.waste_percentage,
+                        bom.recycled_content_pct,
+                        json.dumps(bom.certifications),
+                        json.dumps(bom_meta),
+                    ),
+                )
+            conn.commit()
+            return new_bom_items
+        finally:
+            self._close_if_file(conn)
+
+    def update_bom_item(self, plm_variant_id: str, bom_item_id: str, updated_item: BomItem) -> BomItem:
+        """Update an existing BOM item's fields in SQLite database."""
+        conn = self.get_connection()
+        try:
+            cur = conn.execute(
+                "SELECT * FROM bom_items WHERE plm_variant_id = ? AND bom_item_id = ?",
+                (plm_variant_id, bom_item_id),
+            ).fetchone()
+            if not cur:
+                raise ValueError(f"BOM Item '{bom_item_id}' not found in variant '{plm_variant_id}'.")
+
+            comp_val = (
+                updated_item.component_type.value
+                if isinstance(updated_item.component_type, BomComponentType)
+                else str(updated_item.component_type)
+            )
+            bom_meta = {
+                "unit_cost_eur": updated_item.unit_cost_eur,
+                "lot_certificate_id": updated_item.lot_certificate_id,
+                "custom_attributes": updated_item.custom_attributes,
+            }
+            conn.execute(
+                """
+                UPDATE bom_items
+                SET level = ?, parent_bom_item_id = ?, component_type = ?,
+                    material_name = ?, supplier_name = ?, origin_country_iso2 = ?,
+                    unit_of_measure = ?, unit_consumption = ?, waste_percentage = ?,
+                    recycled_content_pct = ?, certifications_json = ?, metadata_json = ?
+                WHERE plm_variant_id = ? AND bom_item_id = ?
+                """,
+                (
+                    updated_item.level,
+                    updated_item.parent_bom_item_id,
+                    comp_val,
+                    updated_item.material_name,
+                    updated_item.supplier_name,
+                    updated_item.origin_country_iso2,
+                    updated_item.unit_of_measure,
+                    updated_item.unit_consumption,
+                    updated_item.waste_percentage,
+                    updated_item.recycled_content_pct,
+                    json.dumps(updated_item.certifications),
+                    json.dumps(bom_meta),
+                    plm_variant_id,
+                    bom_item_id,
+                ),
+            )
+            conn.commit()
+            return updated_item
+        finally:
+            self._close_if_file(conn)
+
+    def delete_bom_item(self, plm_variant_id: str, bom_item_id: str) -> bool:
+        """Delete a BOM item and all its recursive children in 3-level tree."""
+        conn = self.get_connection()
+        try:
+            ids_to_delete = {bom_item_id}
+            rows = conn.execute(
+                "SELECT bom_item_id, parent_bom_item_id FROM bom_items WHERE plm_variant_id = ?",
+                (plm_variant_id,),
+            ).fetchall()
+
+            added = True
+            while added:
+                added = False
+                for r in rows:
+                    bid = r["bom_item_id"]
+                    pid = r["parent_bom_item_id"]
+                    if pid in ids_to_delete and bid not in ids_to_delete:
+                        ids_to_delete.add(bid)
+                        added = True
+
+            placeholders = ",".join("?" for _ in ids_to_delete)
+            conn.execute(
+                f"DELETE FROM bom_items WHERE plm_variant_id = ? AND bom_item_id IN ({placeholders})",
+                [plm_variant_id] + list(ids_to_delete),
+            )
+            conn.commit()
+            return True
+        finally:
+            self._close_if_file(conn)
+
+    def move_bom_item(
+        self, plm_variant_id: str, bom_item_id: str, new_level: int, new_parent_id: Optional[str]
+    ) -> BomItem:
+        """Move / reparent a BOM item in the 3-level tree."""
+        conn = self.get_connection()
+        try:
+            r = conn.execute(
+                "SELECT * FROM bom_items WHERE plm_variant_id = ? AND bom_item_id = ?",
+                (plm_variant_id, bom_item_id),
+            ).fetchone()
+            if not r:
+                raise ValueError(f"BOM Item '{bom_item_id}' not found in variant '{plm_variant_id}'.")
+
+            if new_level == 1:
+                new_parent_id = None
+            elif not new_parent_id:
+                raise ValueError("BOM items with level > 1 must specify a parent_bom_item_id.")
+            else:
+                parent_row = conn.execute(
+                    "SELECT level FROM bom_items WHERE plm_variant_id = ? AND bom_item_id = ?",
+                    (plm_variant_id, new_parent_id),
+                ).fetchone()
+                if not parent_row:
+                    raise ValueError(f"Parent BOM Item '{new_parent_id}' does not exist in this variant.")
+                if parent_row["level"] >= new_level:
+                    raise ValueError(f"Parent item must be at a higher hierarchical level than Level {new_level}.")
+
+            conn.execute(
+                "UPDATE bom_items SET level = ?, parent_bom_item_id = ? WHERE plm_variant_id = ? AND bom_item_id = ?",
+                (new_level, new_parent_id, plm_variant_id, bom_item_id),
+            )
+            conn.commit()
+
+            updated_row = conn.execute(
+                "SELECT * FROM bom_items WHERE plm_variant_id = ? AND bom_item_id = ?",
+                (plm_variant_id, bom_item_id),
+            ).fetchone()
+            meta = json.loads(updated_row["metadata_json"] or "{}")
+            return BomItem(
+                bom_item_id=updated_row["bom_item_id"],
+                level=updated_row["level"],
+                parent_bom_item_id=updated_row["parent_bom_item_id"],
+                component_type=BomComponentType(updated_row["component_type"]),
+                material_name=updated_row["material_name"],
+                supplier_name=updated_row["supplier_name"],
+                origin_country_iso2=updated_row["origin_country_iso2"],
+                unit_of_measure=updated_row["unit_of_measure"],
+                unit_consumption=float(updated_row["unit_consumption"]),
+                waste_percentage=float(updated_row["waste_percentage"]),
+                recycled_content_pct=float(updated_row["recycled_content_pct"]),
+                certifications=json.loads(updated_row["certifications_json"] or "[]"),
+                unit_cost_eur=float(meta.get("unit_cost_eur", 8.5)),
+                lot_certificate_id=meta.get("lot_certificate_id", "CERT-ESPR-DEF"),
+                custom_attributes=meta.get("custom_attributes", {}),
+            )
+        finally:
+            self._close_if_file(conn)
+
+    def create_bom_template_from_variant(
+        self,
+        plm_variant_id: str,
+        name: str,
+        category_id: str,
+        construction_type: str = "cassetta_cucita",
+        description: str = "",
+    ) -> BomTemplate:
+        """Create a new reusable BomTemplate from an existing variant's BOM items."""
+        conn = self.get_connection()
+        try:
+            bom_rows = conn.execute(
+                "SELECT * FROM bom_items WHERE plm_variant_id = ? ORDER BY level ASC, id ASC",
+                (plm_variant_id,),
+            ).fetchall()
+            if not bom_rows:
+                raise ValueError(f"Variant '{plm_variant_id}' has no BOM items to convert into a template.")
+
+            tpl_items: List[BomTemplateItem] = []
+            id_map: Dict[str, str] = {}
+            for idx, r in enumerate(bom_rows):
+                new_tid = f"TPL-ITM-{idx + 1:03d}"
+                id_map[r["bom_item_id"]] = new_tid
+
+            for r in bom_rows:
+                tid = id_map[r["bom_item_id"]]
+                pid = id_map.get(r["parent_bom_item_id"]) if r["parent_bom_item_id"] else None
+                meta = json.loads(r["metadata_json"] or "{}")
+                tpl_items.append(
+                    BomTemplateItem(
+                        level=r["level"],
+                        parent_template_item_id=pid,
+                        template_item_id=tid,
+                        component_type=BomComponentType(r["component_type"]),
+                        material_name=r["material_name"],
+                        supplier_name=r["supplier_name"],
+                        origin_country_iso2=r["origin_country_iso2"],
+                        unit_of_measure=r["unit_of_measure"],
+                        unit_consumption=float(r["unit_consumption"]),
+                        waste_percentage=float(r["waste_percentage"]),
+                        recycled_content_pct=float(r["recycled_content_pct"]),
+                        certifications=json.loads(r["certifications_json"] or "[]"),
+                        unit_cost_eur=float(meta.get("unit_cost_eur", 10.0)),
+                    )
+                )
+
+            tpl_id = f"tpl_{name.lower().replace(' ', '_').replace('-', '_')[:32]}_{uuid4().hex[:4]}"
+            payload = BomTemplateCreate(
+                template_id=tpl_id,
+                name=name,
+                category_id=category_id,
+                construction_type=construction_type,
+                description=description,
+                items=tpl_items,
+            )
+            return self.save_bom_template(payload)
+        finally:
+            self._close_if_file(conn)
+
+    # ========================================================================
+    # Sprint 7: Deep Clone Variant & 3-Level BOM (ADR-010)
+    # ========================================================================
+
+    def deep_clone_variant(self, source_variant_id: str, req: VariantDeepCloneRequest) -> PlmProductionVariant:
+        conn = self.get_connection()
+        try:
+            vr = conn.execute(
+                "SELECT * FROM plm_production_variants WHERE plm_variant_id = ?",
+                (source_variant_id,),
+            ).fetchone()
+            if not vr:
+                raise ValueError(f"Source variant '{source_variant_id}' not found.")
+
+            pim_id = vr["pim_item_id"]
+            var_meta = json.loads(vr["metadata_json"] or "{}")
+            new_var_id = f"PLM-VAR-{uuid4().hex[:8].upper()}"
+
+            new_last = req.new_last_or_pattern_code or vr["last_or_pattern_code"]
+            new_size = req.new_size_range or vr["size_range"]
+
+            cloned_bom_items: List[BomItem] = []
+            if req.clone_bom:
+                old_bom_rows = conn.execute(
+                    "SELECT * FROM bom_items WHERE plm_variant_id = ? ORDER BY level ASC, id ASC",
+                    (source_variant_id,),
+                ).fetchall()
+
+                id_remap: Dict[str, str] = {}
+                for b in old_bom_rows:
+                    old_id = b["bom_item_id"]
+                    id_remap[old_id] = f"BOM-{uuid4().hex[:8].upper()}"
+
+                replacements = req.material_replacements or {}
+                for b in old_bom_rows:
+                    new_b_id = id_remap[b["bom_item_id"]]
+                    new_p_id = (
+                        id_remap.get(b["parent_bom_item_id"]) if b["parent_bom_item_id"] else None
+                    )
+                    mat_name = b["material_name"]
+                    if mat_name in replacements:
+                        mat_name = replacements[mat_name]
+                    else:
+                        for old_mat, rep_mat in replacements.items():
+                            if old_mat.lower() in mat_name.lower():
+                                mat_name = rep_mat
+                                break
+
+                    b_meta = json.loads(b["metadata_json"] or "{}")
+                    cloned_bom_items.append(
+                        BomItem(
+                            bom_item_id=new_b_id,
+                            level=b["level"],
+                            parent_bom_item_id=new_p_id,
+                            component_type=BomComponentType(b["component_type"]),
+                            material_name=mat_name,
+                            supplier_name=b["supplier_name"],
+                            origin_country_iso2=b["origin_country_iso2"],
+                            unit_of_measure=b["unit_of_measure"],
+                            unit_consumption=float(b["unit_consumption"]),
+                            waste_percentage=float(b["waste_percentage"]),
+                            recycled_content_pct=float(b["recycled_content_pct"]),
+                            certifications=json.loads(b["certifications_json"] or "[]"),
+                            unit_cost_eur=float(b_meta.get("unit_cost_eur", 10.0)),
+                            lot_certificate_id=str(b_meta.get("lot_certificate_id", "CERT-ESPR-CLONED")),
+                            custom_attributes=b_meta.get("custom_attributes", {}),
+                        )
+                    )
+
+            var_meta["bom_version"] = "v1.0 (Cloned)"
+            var_meta["bom_snapshot_locked"] = False
+            var_meta["cloned_from_variant_id"] = source_variant_id
+
+            new_variant = PlmProductionVariant(
+                plm_variant_id=new_var_id,
+                pim_item_id=pim_id,
+                collection_id=vr["collection_id"],
+                variant_code=req.new_variant_code.strip(),
+                colorway_name=req.new_colorway_name.strip(),
+                size_range=new_size,
+                last_or_pattern_code=new_last,
+                lifecycle_status=PlmLifecycleStatus.PROTOTYPE,
+                bom_version="v1.0 (Cloned)",
+                bom_snapshot_locked=False,
+                sample_base_size=str(var_meta.get("sample_base_size", "42")),
+                size_grading_step_pct=float(var_meta.get("size_grading_step_pct", 2.8)),
+                standard_labor_cost_eur=float(var_meta.get("standard_labor_cost_eur", 28.0)),
+                target_gender=var_meta.get("target_gender", "unisex"),
+                category_id=var_meta.get("category_id"),
+                sub_category_id=var_meta.get("sub_category_id"),
+                construction_type=var_meta.get("construction_type", "cassetta_cucita"),
+                carryover_status=var_meta.get("carryover_status", "seasonal_core"),
+                category_specific_specs=var_meta.get("category_specific_specs", {}),
+                custom_attributes=var_meta.get("custom_attributes", {}),
+                bom_items=cloned_bom_items,
+                subcontractor_assignments=[],
+                created_at=datetime.now(timezone.utc),
+            )
+
+            self._insert_variant_in_tx(conn, pim_id, new_variant)
+            conn.commit()
+            return new_variant
+        finally:
+            self._close_if_file(conn)
+
+    # ========================================================================
+    # Sprint 7: Bulk Data Onboarding (Import/Export Massivo con Dry-Run)
+    # ========================================================================
+
+    def validate_bulk_import(self, import_type: str, csv_content: str) -> BulkImportValidationResponse:
+        rows: List[BulkImportValidationRow] = []
+        valid_count = 0
+        invalid_count = 0
+
+        reader = csv.DictReader(io.StringIO(csv_content.strip()))
+        row_num = 1
+        for r in reader:
+            row_num += 1
+            errors: List[str] = []
+            cleaned_row = {k.strip(): (v.strip() if v else "") for k, v in r.items() if k}
+
+            if import_type == "articles":
+                sku = cleaned_row.get("sku_code", "")
+                model = cleaned_row.get("model_name", "")
+                variant_code = cleaned_row.get("variant_code", "")
+                cat_str = cleaned_row.get("category", "footwear").lower()
+
+                if not sku:
+                    errors.append("Colonna 'sku_code' mancante o vuota.")
+                if not model:
+                    errors.append("Colonna 'model_name' mancante o vuota.")
+                if not variant_code:
+                    errors.append("Colonna 'variant_code' mancante o vuota.")
+                if cat_str not in ("footwear", "leather_goods", "apparel"):
+                    errors.append(f"Categoria '{cat_str}' non valida (valori consentiti: footwear, leather_goods, apparel).")
+
+                is_valid = len(errors) == 0
+                if is_valid:
+                    valid_count += 1
+                else:
+                    invalid_count += 1
+
+                rows.append(
+                    BulkImportValidationRow(
+                        row_number=row_num,
+                        entity_type="article_variant",
+                        identifier=f"{sku} / {variant_code}",
+                        is_valid=is_valid,
+                        errors=errors,
+                        parsed_data=cleaned_row,
+                    )
+                )
+
+            elif import_type == "bom":
+                var_code = cleaned_row.get("variant_code", "")
+                mat_name = cleaned_row.get("material_name", "")
+                comp_type = cleaned_row.get("component_type", "upper").lower()
+                lvl_str = cleaned_row.get("level", "1")
+
+                if not var_code:
+                    errors.append("Colonna 'variant_code' mancante.")
+                if not mat_name:
+                    errors.append("Colonna 'material_name' mancante.")
+
+                try:
+                    lvl = int(lvl_str)
+                    if lvl not in (1, 2, 3):
+                        errors.append(f"Livello BOM '{lvl}' non valido (deve essere 1, 2 o 3).")
+                except ValueError:
+                    errors.append(f"Livello BOM '{lvl_str}' non numerico.")
+
+                valid_comps = ("upper", "lining", "insole", "outsole", "heel", "hardware", "fabric", "packaging", "sub_assembly")
+                if comp_type not in valid_comps:
+                    errors.append(f"Component type '{comp_type}' non valido.")
+
+                is_valid = len(errors) == 0
+                if is_valid:
+                    valid_count += 1
+                else:
+                    invalid_count += 1
+
+                rows.append(
+                    BulkImportValidationRow(
+                        row_number=row_num,
+                        entity_type="bom_item",
+                        identifier=f"{var_code} > {mat_name}",
+                        is_valid=is_valid,
+                        errors=errors,
+                        parsed_data=cleaned_row,
+                    )
+                )
+
+        summary = f"Totale righe: {len(rows)} | Valide: {valid_count} | Errori: {invalid_count}"
+        return BulkImportValidationResponse(
+            total_rows=len(rows),
+            valid_rows_count=valid_count,
+            invalid_rows_count=invalid_count,
+            rows=rows,
+            summary=summary,
+        )
+
+    def commit_bulk_import(self, req: BulkImportCommitRequest) -> BulkImportCommitResponse:
+        conn = self.get_connection()
+        try:
+            imported_items = 0
+            imported_variants = 0
+            imported_bom = 0
+
+            if req.import_type == "articles":
+                grouped: Dict[str, List[Dict[str, Any]]] = {}
+                for r in req.valid_rows:
+                    sku = r.get("sku_code", "")
+                    if sku not in grouped:
+                        grouped[sku] = []
+                    grouped[sku].append(r)
+
+                for sku, rows in grouped.items():
+                    first_r = rows[0]
+                    pim_id = f"PIM-{uuid4().hex[:8].upper()}"
+                    model_name = first_r.get("model_name", "Nuovo Modello")
+                    cat_val = first_r.get("category", "footwear").lower()
+                    season = first_r.get("season", "PE26")
+                    ws_price = float(first_r.get("wholesale_price_eur", 145.0) or 145.0)
+                    rt_price = float(first_r.get("retail_price_eur", 390.0) or 390.0)
+                    brand_line = first_r.get("brand_line", "Main Line")
+                    carryover = first_r.get("carryover_status", "seasonal_core")
+
+                    plm_variants: List[PlmProductionVariant] = []
+                    for vr in rows:
+                        v_code = vr.get("variant_code", f"VAR-{uuid4().hex[:6].upper()}")
+                        c_name = vr.get("colorway_name", "Nero")
+                        s_range = vr.get("size_range", "35-42")
+                        last_code = vr.get("last_or_pattern_code", "LAST-STD")
+                        const_type = vr.get("construction_type", "cassetta_cucita")
+                        v_id = f"PLM-VAR-{uuid4().hex[:8].upper()}"
+
+                        plm_variants.append(
+                            PlmProductionVariant(
+                                plm_variant_id=v_id,
+                                pim_item_id=pim_id,
+                                variant_code=v_code,
+                                colorway_name=c_name,
+                                size_range=s_range,
+                                last_or_pattern_code=last_code,
+                                lifecycle_status=PlmLifecycleStatus.PROTOTYPE,
+                                construction_type=const_type,
+                                carryover_status=carryover,
+                                bom_items=[],
+                                subcontractor_assignments=[],
+                            )
+                        )
+                        imported_variants += 1
+
+                    pim_item = PimCommercialItem(
+                        pim_item_id=pim_id,
+                        sku_code=sku,
+                        model_name=model_name,
+                        brand_tenant_id="brand-footlink-demo",
+                        season=season,
+                        category=ProductCategory(cat_val),
+                        commercial_description_it=f"{model_name} in pelle pregiata lavorata nei distretti Made in Italy.",
+                        commercial_description_en=f"{model_name} in premium leather crafted in Italian manufacturing districts.",
+                        retail_channels=["B2B Showroom", "E-Commerce"],
+                        wholesale_price_eur=ws_price,
+                        retail_price_eur=rt_price,
+                        brand_line=brand_line,
+                        carryover_status=carryover,
+                        plm_variants=plm_variants,
+                    )
+                    self.save_pim_item(pim_item)
+                    imported_items += 1
+
+            elif req.import_type == "bom":
+                for r in req.valid_rows:
+                    var_code = r.get("variant_code", "")
+                    vr = conn.execute(
+                        "SELECT plm_variant_id FROM plm_production_variants WHERE variant_code = ?",
+                        (var_code,),
+                    ).fetchone()
+                    if not vr:
+                        continue
+                    v_id = vr["plm_variant_id"]
+
+                    bom_id = f"BOM-{uuid4().hex[:8].upper()}"
+                    lvl = int(r.get("level", 1) or 1)
+                    p_id = r.get("parent_bom_item_id") or None
+                    comp_type = r.get("component_type", "upper").lower()
+                    mat_name = r.get("material_name", "Materiale")
+                    supp = r.get("supplier_name", "Fornitore Certificato")
+                    uom = r.get("unit_of_measure", "dm2")
+                    cons = float(r.get("unit_consumption", 1.0) or 1.0)
+                    waste = float(r.get("waste_percentage", 5.0) or 5.0)
+                    cost = float(r.get("unit_cost_eur", 10.0) or 10.0)
+
+                    bom_meta = {
+                        "unit_cost_eur": cost,
+                        "lot_certificate_id": "CERT-ESPR-BULK",
+                        "custom_attributes": {},
+                    }
+                    conn.execute(
+                        """
+                        INSERT INTO bom_items (
+                            bom_item_id, plm_variant_id, level, parent_bom_item_id,
+                            component_type, material_name, supplier_name, origin_country_iso2,
+                            unit_of_measure, unit_consumption, waste_percentage, recycled_content_pct,
+                            certifications_json, metadata_json
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            bom_id,
+                            v_id,
+                            lvl,
+                            p_id,
+                            comp_type,
+                            mat_name,
+                            supp,
+                            "IT",
+                            uom,
+                            cons,
+                            waste,
+                            0.0,
+                            json.dumps([]),
+                            json.dumps(bom_meta),
+                        ),
+                    )
+                    imported_bom += 1
+                conn.commit()
+
+            return BulkImportCommitResponse(
+                success=True,
+                imported_items_count=imported_items,
+                imported_variants_count=imported_variants,
+                imported_bom_count=imported_bom,
+                message=f"Importazione completata con successo: {imported_items} modelli PIM, {imported_variants} varianti PLM, {imported_bom} nodi BOM.",
             )
         finally:
             self._close_if_file(conn)

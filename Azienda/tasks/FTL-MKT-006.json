@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-MKT-006",
+  "title": "Glossario Tassonomia Moda/Lusso, Allineamento Standard B2B (NuORDER/JOOR) e Guide Visive all'Onboarding Rapido di Campionario",
+  "description": "Definire la tassonomia standard di prodotto e merchandising per calzature, pelletteria e abbigliamento in italiano e inglese, allineata con i protocolli internazionali della moda (NuORDER, JOOR, Fashion Weeks, ESPR/DPP). Creare la documentazione di product marketing e le guide visive 'Importa il tuo campionario in 3 passaggi' per accelerare l'adozione spontanea da parte dei team di stile e merchandising.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CMO",
+  "assignee_agent": "footlink-cmo",
+  "created_by": "Founder",
+  "created_at": "2026-10-20T19:40:00+02:00",
+  "updated_at": "2026-10-20T20:10:00+02:00",
+  "due_date": "2026-11-30T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "S (2-8h)",
+  "dependencies": [
+    "FTL-CEO-013",
+    "FTL-PROD-010"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/marketing/sprint-7-merchandising-taxonomy-and-fast-onboarding-guide.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-010",
+  "tags": [
+    "marketing",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Pubblicazione del glossario bilingue IT/EN delle famiglie merceologiche e costruzioni calzatura/pelletteria",
+    "Mappatura dei campi di classificazione commerciale verso i feed export NuORDER, JOOR e Shopify Plus",
+    "Realizzazione della guida illustrata per l'onboarding massivo e la clonazione BOM",
+    "Revisione del microcopy della UI per garantire chiarezza editoriale di standard lusso"
+  ],
+  "notes": "Marketing di prodotto e posizionamento di lusso per Sprint 7."
+}

@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-PROD-010",
+  "title": "PRD-008: Specifiche Funzionali e Interaction Design per Tassonomia a 3 Livelli, Classificatori di Collezione, Deep Copy BOM e Bulk Import Wizard",
+  "description": "Elaborare il PRD-008 dettagliando l'esperienza utente, le interfacce e i requisiti funzionali per: (1) Navigazione e selezione gerarchica della tassonomia merceologica (Divisione > Famiglia > Sotto-Famiglia > Costruzione), (2) Gestione visiva della piramide di collezione (Carryover iconici vs stagionali, linea, occasione, prezzo, canale), (3) Modal 'Duplica Variante' con clonazione integrale della distinta base a 3 livelli e sostituzione rapida materiali, (4) Libreria BOM Template/Presets e (5) Wizard di importazione massiva Excel/CSV con anteprima errori Dry-Run.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "Founder",
+  "created_at": "2026-10-20T19:40:00+02:00",
+  "updated_at": "2026-10-20T20:10:00+02:00",
+  "due_date": "2026-11-30T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "M (1-3gg)",
+  "dependencies": [
+    "FTL-CEO-013",
+    "FTL-GOV-007"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/PRD-008-product-hierarchies-and-fast-onboarding.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-010",
+  "tags": [
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Redazione del PRD-008 con user stories, wireframe concettuali e flow charts",
+    "Specifiche del selettore gerarchico a cascata per l'Area Prodotti PLM e PIM Hub",
+    "Specifiche dettagliate del flusso di Deep Copy BOM e sostituzione rapida materiali",
+    "Definizione del layout di importazione massiva con anteprima validazione preventiva Dry-Run"
+  ],
+  "notes": "Specifica di prodotto e UX design per lo Sprint 7."
+}

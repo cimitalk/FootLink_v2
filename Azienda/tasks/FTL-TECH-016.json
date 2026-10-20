@@ -1,0 +1,40 @@
+{
+  "task_id": "FTL-TECH-016",
+  "title": "Gestione Piramidi di Collezione con json da migliorare",
+  "description": "In fase di inserimento e modifica delle piramidi di collezione, risulta poco intuitivo compilare il campo \"Metadati e Parametri di Settore (JSON o note)\" che si aspetta un json.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-20T21:42:01+02:00",
+  "updated_at": "2026-10-20T21:52:00+02:00",
+  "due_date": "2026-11-19T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/DomainRegistriesManager.tsx",
+    "Applicativo/backend/app/seed.py",
+    "Applicativo/backend/tests/test_main.py"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L2",
+  "decision_record_id": null,
+  "tags": [
+    "product",
+    "PLM",
+    "PIM",
+    "UX"
+  ],
+  "acceptance_criteria": [
+    "Facilità nell'inserimento delle dipendenze nella piramide",
+    "Zero JSON form sia in creazione che in modifica",
+    "Preset rapidi per i 4 ruoli chiave (Continuativo, Seasonal Core, Trend Drop, Capsule Limited)",
+    "Dipendenza gerarchica tra piramidi selezionabile da menù a tendina",
+    "Chip interattivi per regole e vincoli operativi"
+  ],
+  "notes": "Risolto con successo: introdotto Configuratore Visuale Zero-JSON per Piramidi di Collezione con 4 preset rapidi, selezione gerarchica (↳ Dipende da), gestione a chip per dipendenze e vincoli di settore, parametri di merchandising (ciclo vita, no saldi, tipo riordino, mix %, margine %) e anteprima live. Test backend e frontend verificati con esito 100% positivo."
+}
