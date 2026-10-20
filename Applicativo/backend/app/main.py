@@ -911,6 +911,77 @@ def move_bom_item(
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PLM Production Variant not found.")
 
 
+@app.post(
+    "/api/v1/pim-items/{pim_item_id}/plm-variants/{plm_variant_id}/bom-items/{bom_item_id}/duplicate",
+    response_model=List[BomItem],
+    status_code=status.HTTP_201_CREATED,
+    tags=["plm", "bom", "sprint7"],
+)
+def duplicate_bom_item(
+    pim_item_id: str,
+    plm_variant_id: str,
+    bom_item_id: str,
+) -> List[BomItem]:
+    """Duplicate a BOM item and all its recursive children in the 3-level tree."""
+    item = PIM_STORE.get(pim_item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PIM Commercial Item not found.")
+
+    for variant in item.plm_variants:
+        if variant.plm_variant_id == plm_variant_id:
+            src_bom = next((b for b in variant.bom_items if b.bom_item_id == bom_item_id), None)
+            if not src_bom:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"BOM item '{bom_item_id}' not found.")
+
+            def get_subtree_items(parent_id: str) -> List[BomItem]:
+                direct_children = [b for b in variant.bom_items if b.parent_bom_item_id == parent_id]
+                res: List[BomItem] = []
+                for c in direct_children:
+                    res.append(c)
+                    res.extend(get_subtree_items(c.bom_item_id))
+                return res
+
+            subtree = [src_bom] + get_subtree_items(src_bom.bom_item_id)
+            id_mapping: Dict[str, str] = {}
+            for b in subtree:
+                id_mapping[b.bom_item_id] = f"BOM-L{b.level}-{uuid4().hex[:6].upper()}"
+
+            cloned_list: List[BomItem] = []
+            for b in subtree:
+                new_parent = (
+                    id_mapping[b.parent_bom_item_id]
+                    if b.parent_bom_item_id and b.parent_bom_item_id in id_mapping
+                    else b.parent_bom_item_id
+                )
+                cloned = BomItem(
+                    bom_item_id=id_mapping[b.bom_item_id],
+                    level=b.level,
+                    parent_bom_item_id=new_parent,
+                    component_type=b.component_type,
+                    material_name=f"{b.material_name} (Copia)",
+                    supplier_name=b.supplier_name,
+                    origin_country_iso2=b.origin_country_iso2,
+                    unit_of_measure=b.unit_of_measure,
+                    unit_consumption=b.unit_consumption,
+                    waste_percentage=b.waste_percentage,
+                    recycled_content_pct=b.recycled_content_pct,
+                    certifications=list(b.certifications) if b.certifications else [],
+                    unit_cost_eur=b.unit_cost_eur,
+                    lot_certificate_id=f"CERT-DUP-{uuid4().hex[:4].upper()}",
+                )
+                variant.bom_items.append(cloned)
+                cloned_list.append(cloned)
+
+            PIM_STORE[pim_item_id] = item
+            try:
+                db_manager.save_pim_item(item)
+            except Exception:
+                pass
+            return cloned_list
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PLM Production Variant not found.")
+
+
 @app.get(
     "/api/v1/pim-items/{pim_item_id}/plm-variants/{plm_variant_id}/bom-tree",
     response_model=List[BomTreeNode],

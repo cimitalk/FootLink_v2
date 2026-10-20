@@ -36,11 +36,9 @@
   "escalation_level": "L2",
   "decision_record_id": null,
   "tags": [
-    "sales",
     "marketing",
-    "DAM",
-    "social",
-    "branding"
+    "sales",
+    "product"
   ],
   "acceptance_criteria": [
     "Archivio DAM con struttura folder pulita e organizzata",

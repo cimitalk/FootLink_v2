@@ -27,8 +27,7 @@
   "tags": [
     "product",
     "infra",
-    "analytics",
-    "dashboard"
+    "governance"
   ],
   "acceptance_criteria": [
     "Dashboard informativa HTML funzionante con dati reali estratti da repository locale",

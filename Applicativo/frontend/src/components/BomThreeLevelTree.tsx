@@ -17,6 +17,7 @@ interface BomThreeLevelTreeProps {
   onUpdateBomItem?: (bom: BomItem) => void;
   onDeleteBomItem?: (bomItemId: string) => void;
   onMoveBomItem?: (bomItemId: string, newLevel: number, newParentId: string | null) => void;
+  onDuplicateBomItem?: (bomItemId: string) => void;
 }
 
 const LEVEL_TAGS: Record<number, { label: string; desc: string }> = {
@@ -33,6 +34,7 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   onUpdateBomItem,
   onDeleteBomItem,
   onMoveBomItem,
+  onDuplicateBomItem,
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSizeGrading, setShowSizeGrading] = useState(true);
@@ -72,6 +74,14 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
 
   // FTL-TECH-014: Delete Confirmation State
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
+
+  // FTL-TECH-018: Drag and Drop & Compact UX State
+  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [moveToast, setMoveToast] = useState<{
+    message: string;
+    type: "success" | "info" | "error";
+  } | null>(null);
 
   const tree = buildClientBomTree(variant.bom_items);
 
@@ -222,6 +232,241 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
     setDeletingItemId(null);
   };
 
+  // FTL-TECH-018: Drag-and-Drop Tree Validation & Traversal
+  const findNodeInTree = (nodes: BomTreeNode[], id: string): BomTreeNode | null => {
+    for (const n of nodes) {
+      if (n.bom_item_id === id) return n;
+      const found = findNodeInTree(n.children, id);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  const isDescendant = (parent: BomTreeNode, targetId: string): boolean => {
+    for (const c of parent.children) {
+      if (c.bom_item_id === targetId) return true;
+      if (isDescendant(c, targetId)) return true;
+    }
+    return false;
+  };
+
+  const getSubtreeDepth = (node: BomTreeNode): number => {
+    if (!node.children || node.children.length === 0) return 0;
+    return 1 + Math.max(...node.children.map(getSubtreeDepth));
+  };
+
+  const validateDrop = (
+    draggedId: string,
+    targetNode: BomTreeNode,
+    currentTree: BomTreeNode[]
+  ): { valid: boolean; reason?: string; newLevel: number; newParentId: string | null } => {
+    if (draggedId === targetNode.bom_item_id) {
+      return {
+        valid: false,
+        reason: "Non puoi rilasciare un elemento su se stesso.",
+        newLevel: 0,
+        newParentId: null,
+      };
+    }
+
+    const draggedNode = findNodeInTree(currentTree, draggedId);
+    if (!draggedNode) {
+      return {
+        valid: false,
+        reason: "Elemento trascinato non trovato.",
+        newLevel: 0,
+        newParentId: null,
+      };
+    }
+
+    if (isDescendant(draggedNode, targetNode.bom_item_id)) {
+      return {
+        valid: false,
+        reason: "Impossibile inserire un nodo in un suo sotto-elemento (ciclo non permesso).",
+        newLevel: 0,
+        newParentId: null,
+      };
+    }
+
+    if (targetNode.level >= 3) {
+      return {
+        valid: false,
+        reason: "Livello 3 massimo raggiunto: le materie prime non possono avere sotto-elementi.",
+        newLevel: 0,
+        newParentId: null,
+      };
+    }
+
+    const newLevel = targetNode.level + 1;
+    const draggedDepth = getSubtreeDepth(draggedNode);
+    if (newLevel + draggedDepth > 3) {
+      return {
+        valid: false,
+        reason: `Spostando questo elemento a Livello ${newLevel}, i sotto-elementi supererebbero il Livello 3 consentito.`,
+        newLevel,
+        newParentId: null,
+      };
+    }
+
+    if (draggedNode.parent_bom_item_id === targetNode.bom_item_id && draggedNode.level === newLevel) {
+      return {
+        valid: false,
+        reason: "Questo elemento è già posizionato sotto questo genitore.",
+        newLevel,
+        newParentId: targetNode.bom_item_id,
+      };
+    }
+
+    return { valid: true, newLevel, newParentId: targetNode.bom_item_id };
+  };
+
+  const handleDragStart = (e: React.DragEvent, node: BomTreeNode) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("input") || target.closest("select")) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.setData("text/plain", node.bom_item_id);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggedNodeId(node.bom_item_id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedNodeId(null);
+    setDropTargetId(null);
+  };
+
+  const handleDragOverNode = (e: React.DragEvent, node: BomTreeNode) => {
+    if (!draggedNodeId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dropTargetId !== node.bom_item_id) {
+      setDropTargetId(node.bom_item_id);
+    }
+  };
+
+  const handleDragLeaveNode = (e: React.DragEvent, node: BomTreeNode) => {
+    const relatedTarget = e.relatedTarget as HTMLElement | null;
+    if (relatedTarget && (e.currentTarget as HTMLElement).contains(relatedTarget)) {
+      return;
+    }
+    if (dropTargetId === node.bom_item_id) {
+      setDropTargetId(null);
+    }
+  };
+
+  const handleDropOnNode = (e: React.DragEvent, targetNode: BomTreeNode) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggedNodeId) return;
+
+    const validation = validateDrop(draggedNodeId, targetNode, tree);
+    if (!validation.valid) {
+      setMoveToast({
+        message: validation.reason || "Operazione di spostamento non consentita.",
+        type: "error",
+      });
+      setTimeout(() => setMoveToast(null), 4000);
+      setDraggedNodeId(null);
+      setDropTargetId(null);
+      return;
+    }
+
+    if (onMoveBomItem) {
+      onMoveBomItem(draggedNodeId, validation.newLevel, validation.newParentId);
+      setMoveToast({
+        message: `Elemento ${draggedNodeId} spostato sotto "${targetNode.material_name}" a Livello ${validation.newLevel}!`,
+        type: "success",
+      });
+      setTimeout(() => setMoveToast(null), 3500);
+    }
+
+    setDraggedNodeId(null);
+    setDropTargetId(null);
+  };
+
+  const handleDropOnRoot = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggedNodeId) return;
+
+    const draggedNode = findNodeInTree(tree, draggedNodeId);
+    if (draggedNode && draggedNode.level === 1 && !draggedNode.parent_bom_item_id) {
+      setMoveToast({
+        message: `L'elemento ${draggedNodeId} è già un macro-componente di Livello 1 (Radice).`,
+        type: "info",
+      });
+      setTimeout(() => setMoveToast(null), 3000);
+      setDraggedNodeId(null);
+      setDropTargetId(null);
+      return;
+    }
+
+    if (onMoveBomItem) {
+      onMoveBomItem(draggedNodeId, 1, null);
+      setMoveToast({
+        message: `Elemento ${draggedNodeId} promosso a Livello 1 (Radice / Macro-Componente)!`,
+        type: "success",
+      });
+      setTimeout(() => setMoveToast(null), 3500);
+    }
+
+    setDraggedNodeId(null);
+    setDropTargetId(null);
+  };
+
+  const handleDuplicateItem = (node: BomTreeNode) => {
+    if (onDuplicateBomItem) {
+      onDuplicateBomItem(node.bom_item_id);
+    } else {
+      // Fallback local subtree duplication
+      const cloneSubtree = (srcNode: BomTreeNode, newParentId: string | null): BomItem[] => {
+        const generatedId = `BOM-L${srcNode.level}-${Math.random()
+          .toString(36)
+          .substring(2, 6)
+          .toUpperCase()}`;
+
+        const clonedItem: BomItem = {
+          bom_item_id: generatedId,
+          level: srcNode.level,
+          parent_bom_item_id: newParentId,
+          component_type: srcNode.component_type,
+          material_name: `${srcNode.material_name} (Copia)`,
+          supplier_name: srcNode.supplier_name,
+          origin_country_iso2: srcNode.origin_country_iso2,
+          unit_of_measure: srcNode.unit_of_measure,
+          unit_consumption: srcNode.unit_consumption,
+          waste_percentage: srcNode.waste_percentage,
+          recycled_content_pct: srcNode.recycled_content_pct,
+          certifications: [...(srcNode.certifications || [])],
+          unit_cost_eur: srcNode.unit_cost_eur,
+          lot_certificate_id: `CERT-DUP-${Math.floor(1000 + Math.random() * 9000)}`,
+        };
+
+        const clonedItems: BomItem[] = [clonedItem];
+        if (srcNode.children && srcNode.children.length > 0) {
+          for (const child of srcNode.children) {
+            clonedItems.push(...cloneSubtree(child, generatedId));
+          }
+        }
+        return clonedItems;
+      };
+
+      const itemsToAdd = cloneSubtree(node, node.parent_bom_item_id ?? null);
+      for (const item of itemsToAdd) {
+        onAddBomItem(item);
+      }
+    }
+
+    setMoveToast({
+      message: `Elemento "${node.material_name}" duplicato con successo${
+        node.children.length > 0 ? ` (inclusi ${node.children.length} sotto-elementi)` : ""
+      }!`,
+      type: "success",
+    });
+    setTimeout(() => setMoveToast(null), 3500);
+  };
+
   const renderNode = (node: BomTreeNode, depth = 0): React.ReactNode => {
     const tag = LEVEL_TAGS[node.level] || LEVEL_TAGS[3];
     const grossConsumption = (
@@ -232,124 +477,226 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
       Number(grossConsumption) * (node.unit_cost_eur ?? 8.5)
     ).toFixed(2);
 
+    const isBeingDragged = draggedNodeId === node.bom_item_id;
+    const isCurrentDropTarget = dropTargetId === node.bom_item_id;
+    const dropValidation =
+      draggedNodeId && isCurrentDropTarget
+        ? validateDrop(draggedNodeId, node, tree)
+        : null;
+    const isDropValid = dropValidation?.valid ?? false;
+    const invalidDropReason = dropValidation?.reason;
+
     return (
       <div
         key={node.bom_item_id}
         className={`${
-          depth > 0 ? "ml-4 sm:ml-7 pl-4 border-l-2 border-[#111111] mt-3" : "mt-3"
+          depth > 0
+            ? "ml-3 sm:ml-5 pl-2.5 sm:pl-3.5 border-l-2 border-[#DCDCDC] mt-1.5"
+            : "mt-2"
         }`}
       >
-        <div className="p-4 rounded-2xl border border-[#E5E5E5] bg-[#F5F5F5] hover:border-[#111111] transition">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#111111] text-white">
-                {tag.label} · {tag.desc}
+        <div
+          draggable={true}
+          onDragStart={(e) => handleDragStart(e, node)}
+          onDragEnd={handleDragEnd}
+          onDragOver={(e) => handleDragOverNode(e, node)}
+          onDragLeave={(e) => handleDragLeaveNode(e, node)}
+          onDrop={(e) => handleDropOnNode(e, node)}
+          className={`p-2.5 rounded-xl border transition-all duration-150 ${
+            isBeingDragged
+              ? "opacity-35 border-dashed border-2 border-amber-500 bg-amber-50/40 scale-[0.99]"
+              : isCurrentDropTarget
+              ? isDropValid
+                ? "ring-2 ring-emerald-500 bg-emerald-50/80 border-emerald-500 shadow-md scale-[1.008]"
+                : "ring-2 ring-red-400 bg-red-50/60 border-red-300"
+              : draggedNodeId
+              ? "border-[#E0E0E0] bg-[#FAFAFA] hover:border-emerald-400"
+              : "border-[#E5E5E5] bg-[#FAFAFA] hover:bg-white hover:border-[#111111] shadow-2xs"
+          }`}
+        >
+          {/* Riga 1: Grip drag, badge livello compatto, ID, origine, costo L6 e azioni */}
+          <div className="flex flex-wrap items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Grip Handle per Drag & Drop */}
+              <span
+                className="cursor-grab active:cursor-grabbing text-[#9E9E9E] hover:text-[#111111] text-xs px-1 select-none transition"
+                title="Trascina per spostare questo componente nella gerarchia BOM"
+              >
+                ⠿
               </span>
-              <span className="mono-code text-xs text-[#707072]">
+
+              {/* Badge Livello Compatto */}
+              <span
+                className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md text-white ${
+                  node.level === 1
+                    ? "bg-[#111111]"
+                    : node.level === 2
+                    ? "bg-[#2563EB]"
+                    : "bg-[#4B5563]"
+                }`}
+                title={`${tag.label}: ${tag.desc}`}
+              >
+                L{node.level} · {node.level === 1 ? "Macro" : node.level === 2 ? "Semilav." : "Mat. Prima"}
+              </span>
+
+              {/* Tipo Componente Tecnico */}
+              <span className="text-[10px] font-semibold text-[#111111] bg-white border border-[#E0E0E0] px-2 py-0.5 rounded-md">
+                {node.component_type}
+              </span>
+
+              {/* Codice ID BOM */}
+              <span className="mono-code text-[10px] text-[#707072] font-semibold">
                 {node.bom_item_id}
               </span>
+
+              {/* Badge numero sotto-elementi se presenti */}
+              {node.children.length > 0 && (
+                <span className="font-semibold text-emerald-800 bg-emerald-100/80 px-1.5 py-0.2 rounded text-[9px] border border-emerald-300">
+                  {node.children.length} {node.children.length === 1 ? "figlio" : "figli"}
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="bg-white border border-[#E5E5E5] px-2.5 py-0.5 rounded-full text-[#111111] font-semibold">
-                Origine: <strong>{node.origin_country_iso2}</strong>
+
+            {/* Lato Destro Riga 1: Origine, Riciclato, Costo L6, Pulsanti */}
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="bg-white border border-[#E5E5E5] px-1.5 py-0.5 rounded text-[10px] text-[#111111] font-semibold">
+                {node.origin_country_iso2}
               </span>
-              <span className="bg-white border border-[#E5E5E5] px-2.5 py-0.5 rounded-full text-[#111111] font-semibold">
-                Riciclato: {node.recycled_content_pct}%
-              </span>
+              {node.recycled_content_pct > 0 && (
+                <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                  {node.recycled_content_pct}% ric.
+                </span>
+              )}
+
+              {viewerRole === "brand" ? (
+                <span className="mono-code text-[11px] font-bold text-[#111111] bg-white border border-[#E5E5E5] px-2 py-0.5 rounded">
+                  € {lineCost}
+                </span>
+              ) : (
+                <span className="mono-code text-[10px] text-[#707072] bg-white border border-[#E5E5E5] px-1.5 py-0.5 rounded">
+                  🔒 0 €
+                </span>
+              )}
+
+              {/* Pulsanti Azione Compatti (Edit, Move, Delete) */}
+              <div className="flex items-center gap-1 ml-1 pl-1 border-l border-[#E5E5E5]">
+                <button
+                  type="button"
+                  draggable={false}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEditModal(node);
+                  }}
+                  title="Modifica parametri elemento BOM"
+                  className="px-2 py-0.5 rounded-md border border-[#D5D5D5] bg-white hover:border-[#111111] hover:bg-[#F0F0F0] text-[#111111] text-[10px] font-semibold flex items-center gap-1 transition"
+                >
+                  ✏️ <span className="hidden sm:inline">Modifica</span>
+                </button>
+                <button
+                  type="button"
+                  draggable={false}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openMoveModal(node);
+                  }}
+                  title="Sposta o riassegna livello gerarchico (manuale)"
+                  className="px-2 py-0.5 rounded-md border border-[#D5D5D5] bg-white hover:border-[#111111] hover:bg-[#F0F0F0] text-[#111111] text-[10px] font-semibold flex items-center gap-1 transition"
+                >
+                  🔀 <span className="hidden sm:inline">Sposta</span>
+                </button>
+                <button
+                  type="button"
+                  draggable={false}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDuplicateItem(node);
+                  }}
+                  title="Duplica questa voce di distinta base (con eventuali sotto-elementi)"
+                  className="px-2 py-0.5 rounded-md border border-[#D5D5D5] bg-white hover:border-[#111111] hover:bg-[#F0F0F0] text-[#111111] text-[10px] font-semibold flex items-center gap-1 transition"
+                >
+                  📋 <span className="hidden sm:inline">Duplica</span>
+                </button>
+                <button
+                  type="button"
+                  draggable={false}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeletingItemId(node.bom_item_id);
+                  }}
+                  title="Elimina questo elemento e relativi figli"
+                  className="px-1.5 py-0.5 rounded-md border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-[10px] font-semibold flex items-center gap-1 transition"
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-2">
-            <div>
-              <div className="text-sm font-bold text-[#111111]">
+          {/* Riga 2: Nome materiale, fornitore, certificazioni e consumi */}
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#EAEAEA]">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-[#111111]">
                 {node.material_name}
-              </div>
-              <div className="text-xs text-[#707072]">
-                Fornitore: <span className="text-[#111111] font-semibold">{node.supplier_name}</span>{" "}
-                · Cert ID:{" "}
-                <span className="mono-code text-[11px]">
-                  {node.lot_certificate_id || "CERT-LWG-2026"}
-                </span>
-              </div>
+              </span>
+              <span className="text-[11px] text-[#707072]">
+                · Fornitore: <span className="text-[#111111] font-semibold">{node.supplier_name}</span>
+              </span>
+              {node.certifications.length > 0 && (
+                <div className="flex items-center gap-1 flex-wrap">
+                  {node.certifications.map((cert) => (
+                    <span
+                      key={cert}
+                      className="text-[9px] bg-white border border-[#E5E5E5] text-[#111111] px-1.5 py-0.2 rounded font-medium"
+                    >
+                      ✓ {cert}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="text-right text-xs text-[#707072]">
-              <div>
+            <div className="text-right text-[11px] text-[#707072]">
+              <span>
                 Netto:{" "}
                 <strong className="mono-code text-[#111111]">
                   {node.unit_consumption} {node.unit_of_measure}
                 </strong>{" "}
-                (+{node.waste_percentage}% scarto ={" "}
-                <strong className="mono-code text-[#111111]">
-                  {grossConsumption} {node.unit_of_measure}
-                </strong>
-                )
-              </div>
-              {viewerRole === "brand" ? (
-                <div className="mono-code text-[11px] font-bold text-[#111111] mt-0.5">
-                  Costo L6: € {(node.unit_cost_eur ?? 8.5).toFixed(2)}/{node.unit_of_measure} →{" "}
-                  <strong>€ {lineCost}</strong>
-                </div>
-              ) : (
-                <div className="mono-code text-[11px] text-[#707072] mt-0.5">
-                  🔒 Costo Unitario Oscurato (Vista Terzista 0 €)
-                </div>
+                (lordo {grossConsumption} con +{node.waste_percentage}% sfrido)
+              </span>
+              {viewerRole === "brand" && (
+                <span className="mono-code text-[10px] text-[#707072] ml-2">
+                  [€ {(node.unit_cost_eur ?? 8.5).toFixed(2)}/{node.unit_of_measure}]
+                </span>
               )}
             </div>
           </div>
 
-          {node.certifications.length > 0 && (
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {node.certifications.map((cert) => (
-                <span
-                  key={cert}
-                  className="text-[10px] bg-white border border-[#E5E5E5] text-[#111111] px-2.5 py-0.5 rounded-full font-semibold"
-                >
-                  ✓ {cert}
+          {/* Feedback visivo immediato durante l'hover del Drag & Drop */}
+          {isCurrentDropTarget && (
+            <div
+              className={`mt-1.5 pt-1 border-t border-dashed text-[11px] font-bold flex items-center justify-between ${
+                isDropValid
+                  ? "border-emerald-400 text-emerald-800"
+                  : "border-red-300 text-red-600"
+              }`}
+            >
+              {isDropValid ? (
+                <span>
+                  ↳ Rilascia qui per nidificare come <strong>Livello {node.level + 1}</strong> sotto &quot;{node.material_name}&quot;
                 </span>
-              ))}
+              ) : (
+                <span>
+                  ⛔ {invalidDropReason || "Operazione non consentita"}
+                </span>
+              )}
+              <span className="text-[10px] font-normal text-[#707072]">
+                Rilascia il pulsante del mouse per applicare
+              </span>
             </div>
           )}
-
-          {/* Action buttons: Edit, Move, Delete (FTL-TECH-014) */}
-          <div className="mt-3 pt-2.5 border-t border-[#E5E5E5] flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div className="text-[11px] text-[#707072] flex items-center gap-2">
-              <span>ID: <strong className="mono-code text-[#111111]">{node.bom_item_id}</strong></span>
-              {node.children.length > 0 && (
-                <span className="font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-full text-[10px] border border-emerald-300">
-                  {node.children.length} sotto-elementi
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => openEditModal(node)}
-                title="Modifica parametri elemento BOM"
-                className="px-2.5 py-1 rounded-lg border border-[#D5D5D5] bg-white hover:border-[#111111] hover:bg-[#F9F9F9] text-[#111111] text-[11px] font-semibold flex items-center gap-1 transition shadow-2xs"
-              >
-                ✏️ <span>Modifica</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => openMoveModal(node)}
-                title="Sposta o riassegna livello gerarchico"
-                className="px-2.5 py-1 rounded-lg border border-[#D5D5D5] bg-white hover:border-[#111111] hover:bg-[#F9F9F9] text-[#111111] text-[11px] font-semibold flex items-center gap-1 transition shadow-2xs"
-              >
-                🔀 <span>Sposta</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setDeletingItemId(node.bom_item_id)}
-                title="Elimina questo elemento e relativi figli"
-                className="px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-[11px] font-semibold flex items-center gap-1 transition shadow-2xs"
-              >
-                🗑️ <span>Elimina</span>
-              </button>
-            </div>
-          </div>
         </div>
 
+        {/* Render Ricorsivo dei Figli */}
         {node.children.length > 0 && (
           <div>{node.children.map((child) => renderNode(child, depth + 1))}</div>
         )}
@@ -813,8 +1160,80 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
           </form>
         )}
 
+        {/* FTL-TECH-018: Drag Feedback Toast */}
+        {moveToast && (
+          <div
+            className={`mt-3 p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between animate-in fade-in transition ${
+              moveToast.type === "success"
+                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                : moveToast.type === "error"
+                ? "bg-red-50 border-red-300 text-red-700"
+                : "bg-blue-50 border-blue-300 text-blue-800"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span>{moveToast.type === "success" ? "✅" : moveToast.type === "error" ? "⚠️" : "ℹ️"}</span>
+              <span>{moveToast.message}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMoveToast(null)}
+              className="text-xs hover:opacity-75 font-bold ml-2 px-1"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* FTL-TECH-018: Root Drop Zone (Livello 1 / Macro-Componenti) */}
+        {draggedNodeId ? (
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              setDropTargetId("__ROOT__");
+            }}
+            onDragLeave={() => {
+              if (dropTargetId === "__ROOT__") setDropTargetId(null);
+            }}
+            onDrop={handleDropOnRoot}
+            className={`mt-3 p-3 rounded-xl border-2 border-dashed transition-all duration-150 flex items-center justify-between gap-3 ${
+              dropTargetId === "__ROOT__"
+                ? "border-emerald-600 bg-emerald-50/90 ring-2 ring-emerald-400"
+                : "border-blue-300 bg-blue-50/50 hover:bg-blue-50"
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">📥</span>
+              <div>
+                <div className="text-xs font-bold text-[#111111]">
+                  Rilascia qui per promuovere al Livello 1 (Radice / Macro-Componente)
+                </div>
+                <div className="text-[10px] text-[#707072]">
+                  Il nodo trascinato <strong className="text-[#111111]">{draggedNodeId}</strong> diventerà un elemento primario indipendente senza genitore.
+                </div>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-[#111111] text-white">
+              Livello 1 (Root)
+            </span>
+          </div>
+        ) : (
+          <div className="mt-3 px-3 py-1.5 rounded-xl bg-[#F8F8F8] border border-[#E5E5E5] flex items-center justify-between text-[11px] text-[#707072]">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">💡</span>
+              <span>
+                <strong>Drag &amp; Drop attivo:</strong> trascina qualsiasi box tramite l&apos;icona <span className="font-mono font-bold text-black">⠿</span> per spostarlo nella gerarchia (o usa il pulsante <strong>🔀 Sposta</strong>).
+              </span>
+            </div>
+            <span className="text-[10px] uppercase font-semibold text-[#111111] hidden sm:inline">
+              Gerarchia L1 → L2 → L3
+            </span>
+          </div>
+        )}
+
         {/* Tree Render */}
-        <div className="mt-2">{tree.map((rootNode) => renderNode(rootNode, 0))}</div>
+        <div className="mt-2 space-y-1">{tree.map((rootNode) => renderNode(rootNode, 0))}</div>
 
         {/* FTL-TECH-014: Modal Modifica Elemento BOM */}
         {editingItem && (

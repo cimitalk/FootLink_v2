@@ -1,0 +1,44 @@
+{
+  "task_id": "FTL-TECH-019",
+  "title": "Duplicazione Ricorsiva Voci e Sotto-alberi Distinta Base (BOM)",
+  "description": "Funzionalità di duplicazione istantanea con clonazione ricorsiva dell'intero sotto-albero di nodi figli, rimappatura atomica dei parent_id e aggiornamento ottimistico dello stato UI.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-20T22:25:00+02:00",
+  "updated_at": "2026-10-20T22:38:00+02:00",
+  "due_date": "2026-11-19T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [
+    "FTL-TECH-014",
+    "FTL-TECH-018"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/tests/test_main.py",
+    "Applicativo/frontend/src/components/BomThreeLevelTree.tsx",
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/App.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L2",
+  "decision_record_id": null,
+  "tags": [
+    "PLM",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Pulsante dedicato Duplica su ciascuna card dell'albero BOM",
+    "Clonazione ricorsiva dell'intero sotto-albero di nodi figli",
+    "Rimappatura atomica dei parent_id per i nodi duplicati",
+    "Endpoint REST dedicato POST /api/v1/pim-items/{pim_id}/plm-variants/{variant_id}/bom-items/{bom_id}/duplicate",
+    "Aggiornamento ottimistico dello stato React e notifica toast all'utente",
+    "Test automatici backend unitari ed integrati superati al 100%"
+  ],
+  "notes": "Completato con successo: implementato endpoint backend FastAPI con clonazione ricorsiva e map ID genitore-figlio, integrato pulsante Duplica con feedback visivo e test pytest 26/26 passati."
+}

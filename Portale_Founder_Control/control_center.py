@@ -360,13 +360,25 @@ def sync_dependencies_and_readme():
     sprint2_ids = {"FTL-GOV-002", "FTL-CEO-002", "FTL-PROD-002", "FTL-TECH-002", "FTL-TECH-003", "FTL-MKT-002", "FTL-REV-002"}
     sprint3_ids = {"FTL-GOV-003", "FTL-CEO-003", "FTL-PROD-003", "FTL-TECH-004"}
     sprint4_ids = {"FTL-CEO-004", "FTL-GOV-004", "FTL-REV-003", "FTL-MKT-003", "FTL-PROD-004", "FTL-TECH-005"}
-    sprint5_ids = {"FTL-CEO-005", "FTL-GOV-005", "FTL-PROD-005", "FTL-TECH-006", "FTL-REV-004", "FTL-MKT-004"}
+    sprint5_ids = {"FTL-CEO-005", "FTL-GOV-005", "FTL-PROD-005", "FTL-TECH-006", "FTL-REV-004", "FTL-MKT-004", "FTL-CEO-006", "FTL-CEO-007"}
+    sprint6_ids = {
+        "FTL-CEO-008", "FTL-GOV-006", "FTL-PROD-006", "FTL-TECH-007", "FTL-REV-005", "FTL-MKT-005",
+        "FTL-CEO-009", "FTL-CEO-010", "FTL-CEO-011", "FTL-CEO-012", "FTL-PROD-007",
+        "FTL-PROD-008", "FTL-PROD-009", "FTL-TECH-008", "FTL-TECH-009", "FTL-TECH-010", "FTL-TECH-011"
+    }
+    sprint7_ids = {
+        "FTL-CEO-013", "FTL-GOV-007", "FTL-PROD-010", "FTL-TECH-012", "FTL-REV-006", "FTL-MKT-006",
+        "FTL-TECH-013", "FTL-PROD-011", "FTL-CEO-014", "FTL-CEO-015", "FTL-TECH-014", "FTL-TECH-015",
+        "FTL-TECH-016", "FTL-CEO-016", "FTL-MKT-007", "FTL-TECH-017", "FTL-TECH-018", "FTL-TECH-019", "FTL-TECH-020"
+    }
 
     sprint1 = [t for t in tasks if t["task_id"] in sprint1_ids]
     sprint2 = [t for t in tasks if t["task_id"] in sprint2_ids]
     sprint3 = [t for t in tasks if t["task_id"] in sprint3_ids]
     sprint4 = [t for t in tasks if t["task_id"] in sprint4_ids]
     sprint5 = [t for t in tasks if t["task_id"] in sprint5_ids]
+    sprint6 = [t for t in tasks if t["task_id"] in sprint6_ids]
+    sprint7 = [t for t in tasks if t["task_id"] in sprint7_ids]
 
     lines = [
         "# 📋 Founder Control Dashboard — Registro Task (`Azienda/tasks/`)",
@@ -470,7 +482,47 @@ def sync_dependencies_and_readme():
             esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
             lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
 
-    known_sprints = sprint1_ids | sprint2_ids | sprint3_ids | sprint4_ids | sprint5_ids
+    if sprint6:
+        lines.extend([
+            "",
+            "---",
+            "",
+            "## 🛡️ Sprint 6 — Tracciabilità Conceria EUDR, Vault Lotti, Work Orders & Perfezionamento PLM/PIM",
+            "",
+            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
+            "|---|:---:|---|:---:|:---:|---|:---:|",
+        ])
+        for t in sprint6:
+            tid = t["task_id"]
+            role = t["assignee_role"]
+            title = t["title"]
+            prio = prio_badges.get(t["priority"], t["priority"])
+            st = status_badges.get(t["status"], t["status"])
+            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
+            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
+            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
+
+    if sprint7:
+        lines.extend([
+            "",
+            "---",
+            "",
+            "## 👑👑 Sprint 7 — Tassonomia Multi-Livello, Bulk Onboarding, BOM Duplicazione/Drag&Drop & Codebase Analytics",
+            "",
+            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
+            "|---|:---:|---|:---:|:---:|---|:---:|",
+        ])
+        for t in sprint7:
+            tid = t["task_id"]
+            role = t["assignee_role"]
+            title = t["title"]
+            prio = prio_badges.get(t["priority"], t["priority"])
+            st = status_badges.get(t["status"], t["status"])
+            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
+            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
+            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
+
+    known_sprints = sprint1_ids | sprint2_ids | sprint3_ids | sprint4_ids | sprint5_ids | sprint6_ids | sprint7_ids
     new_founder_tasks = [t for t in tasks if t["task_id"] not in known_sprints]
     if new_founder_tasks:
         lines.extend([

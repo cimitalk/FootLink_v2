@@ -77,6 +77,7 @@ interface PlmProductsManagerProps {
   onUpdateBomItem?: (bom: BomItem) => void;
   onDeleteBomItem?: (bomItemId: string) => void;
   onMoveBomItem?: (bomItemId: string, newLevel: number, newParentId: string | null) => void;
+  onDuplicateBomItem?: (bomItemId: string) => void;
   onRefreshData?: () => void;
 }
 
@@ -95,6 +96,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   onUpdateBomItem,
   onDeleteBomItem,
   onMoveBomItem,
+  onDuplicateBomItem,
   onRefreshData,
 }) => {
   const [selectedPimId, setSelectedPimId] = useState<string>(pimItems[0]?.pim_item_id || "");
@@ -1023,6 +1025,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
             onUpdateBomItem={onUpdateBomItem}
             onDeleteBomItem={onDeleteBomItem}
             onMoveBomItem={onMoveBomItem}
+            onDuplicateBomItem={onDuplicateBomItem}
           />
         </div>
       )}

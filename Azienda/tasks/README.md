@@ -84,7 +84,9 @@ Task e direttive inseriti direttamente dal Founder via **Founder Control Center*
 | [`FTL-CEO-013`](./FTL-CEO-013.json) | **CEO** | Direttiva Esecutiva Sprint 7: Gerarchia Prodotti, Classificatori Merchandising e Motore di Caricamento Rapido Articoli & BOM | 🔴 `critical` | ✅ `done` | `FTL-CEO-008`, `FTL-CEO-009` | No (`L1`) |
 | [`FTL-CEO-014`](./FTL-CEO-014.json) | **CTO** | Preset BOM | 🟠 `high` | ✅ `done` | — | No (`L1`) |
 | [`FTL-CEO-015`](./FTL-CEO-015.json) | **CTO** | Miglioria su scala taglie | 🟠 `high` | ✅ `done` | — | No (`L1`) |
-| [`FTL-CEO-016`](./FTL-CEO-016.json) | **CEO** | Rivedere la piramide di collezione | 🟠 `high` | 📥 `backlog` | — | Sì (`L2`) |
+| [`FTL-CEO-016`](./FTL-CEO-016.json) | **CEO** | Rivedere la piramide di collezione | 🟠 `high` | ✅ `done` | `FTL-TECH-016` | No (`L2`) |
+| [`FTL-CEO-017`](./FTL-CEO-017.json) | **CEO** | Gestione Colori Intelligente | 🟠 `high` | 📥 `backlog` | — | Sì (`L2`) |
+| [`FTL-CEO-018`](./FTL-CEO-018.json) | **CEO** | Gestione dei fornitori ed albo centralizzata | 🟠 `high` | 📥 `backlog` | — | Sì (`L2`) |
 | [`FTL-GOV-006`](./FTL-GOV-006.json) | **CGO** | Governance PaaS Distrettuale 3 Tier, Formalizzazione ADR-008 e Presidio Gatekeeping L1-L6 | 🔴 `critical` | ✅ `done` | `FTL-GOV-005`, `FTL-CEO-008` | Sì (`L3`) |
 | [`FTL-GOV-007`](./FTL-GOV-007.json) | **CGO** | ADR-010: Architettura Tassonomia Multi-Livello, Merchandising Matrix e Motore Atomico di Import/Clonazione BOM con Segregazione L6 | 🔴 `critical` | ✅ `done` | `FTL-CEO-013` | No (`L1`) |
 | [`FTL-MKT-005`](./FTL-MKT-005.json) | **CMO** | Posizionamento PaaS Distrettuale & Storytelling Tracciabilità Conceria EUDR/LWG | 🟠 `high` | ✅ `done` | `FTL-CEO-008`, `FTL-PROD-006` | Sì (`L5`) |
@@ -109,6 +111,9 @@ Task e direttive inseriti direttamente dal Founder via **Founder Control Center*
 | [`FTL-TECH-015`](./FTL-TECH-015.json) | **CTO** | Modifica banner su home | 🔴 `critical` | ✅ `done` | — | No (`L1`) |
 | [`FTL-TECH-016`](./FTL-TECH-016.json) | **CTO** | Gestione Piramidi di Collezione con json da migliorare | 🟠 `high` | ✅ `done` | — | No (`L2`) |
 | [`FTL-TECH-017`](./FTL-TECH-017.json) | **CTO** | Reportistica su codebase | 🟠 `high` | ✅ `done` | — | No (`L2`) |
+| [`FTL-TECH-018`](./FTL-TECH-018.json) | **CTO** | Ottimizzazione Compattezza e Drag and Drop Nativo su Albero Distinta Base (BOM) | 🟠 `high` | ✅ `done` | `FTL-TECH-014` | No (`L2`) |
+| [`FTL-TECH-019`](./FTL-TECH-019.json) | **CTO** | Duplicazione Ricorsiva Voci e Sotto-alberi Distinta Base (BOM) | 🟠 `high` | ✅ `done` | `FTL-TECH-014`, `FTL-TECH-018` | No (`L2`) |
+| [`FTL-TECH-020`](./FTL-TECH-020.json) | **CTO** | Codebase Analytics: Impronta Disco Globale, Metriche MB su 3 Pilastri e Top Notice | 🟠 `high` | ✅ `done` | `FTL-TECH-017` | No (`L2`) |
 
 ---
 

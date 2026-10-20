@@ -1,0 +1,40 @@
+{
+  "task_id": "FTL-TECH-020",
+  "title": "Codebase Analytics: Impronta Disco Globale, Metriche MB su 3 Pilastri e Top Notice",
+  "description": "Arricchimento della dashboard Codebase Analytics con calcolo in tempo reale del peso in MB per ciascun pilastro architetturale (Applicativo, Azienda, Portale), colonna MB per file più grandi e hotspot, visualizzazione dell'impronta disco globale (codice proprietario vs node_modules vs bundle produzione vs metadati git) e banner informativo di chiarimento.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-20T22:35:00+02:00",
+  "updated_at": "2026-10-20T22:48:00+02:00",
+  "due_date": "2026-11-19T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [
+    "FTL-TECH-017"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Portale_Founder_Control/codebase_analytics.py",
+    "Portale_Founder_Control/codebase_dashboard.html",
+    "Applicativo/frontend/public/codebase_dashboard.html"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L2",
+  "decision_record_id": null,
+  "tags": [
+    "infra",
+    "governance"
+  ],
+  "acceptance_criteria": [
+    "Aggiunta del peso in MB nel grafico Ripartizione Architetturale a 3 Pilastri e totale soluzione",
+    "Aggiunta del peso in MB nelle tabelle File più Grandi per SLOC e Hotspot Git",
+    "Banner esplicativo in cima alla dashboard sul codice sorgente autoriale proprietario",
+    "Widget Impronta Globale su Disco: Codice Proprietario vs Vendor Dependencies vs Bundle Distribuito",
+    "Esecuzione FinOps locale a costo zero (€0,00)"
+  ],
+  "notes": "Completato con successo: estesa la scansione Python con calcolo MB per pilastri (3.19 MB totale codice autoriale), banner in evidenza, widget comparativo globale su disco (86.46 MB totali inclusi node_modules da 80.84 MB, dist da 0.65 MB e .git da 1.78 MB) e metriche integrate nella dashboard web."
+}

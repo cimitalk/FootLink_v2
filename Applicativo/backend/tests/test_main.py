@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import sys
+from uuid import uuid4
 
 # Ensure backend root directory is in sys.path regardless of execution environment
 backend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -1338,6 +1339,82 @@ def test_collection_pyramids_dependencies_and_metadata_api():
     del_resp = client.delete("/api/v1/registries/pim/collection_pyramids/artisan_exclusive_capsule")
     assert del_resp.status_code == 200
     assert del_resp.json()["status"] == "deleted"
+
+
+def test_bom_item_duplicate_with_recursive_subtree():
+    """Verify duplicating a BOM item with children duplicates both parent and children with correct IDs."""
+    # 1. Fetch first PIM item & variant
+    resp = client.get("/api/v1/pim-items")
+    assert resp.status_code == 200
+    pim = resp.json()[0]
+    pim_id = pim["pim_item_id"]
+    variant = pim["plm_variants"][0]
+    variant_id = variant["plm_variant_id"]
+
+    # 2. Create an L1 assembly and an L2 child component
+    l1_id = f"BOM-L1-SRC-{uuid4().hex[:4].upper()}"
+    l1_item = {
+        "bom_item_id": l1_id,
+        "level": 1,
+        "parent_bom_item_id": None,
+        "component_type": "upper",
+        "material_name": "Tomaia Assemblata Test",
+        "supplier_name": "Conceria Sperimentale",
+        "origin_country_iso2": "IT",
+        "unit_of_measure": "sqft",
+        "unit_consumption": 2.5,
+        "waste_percentage": 5.0,
+        "recycled_content_pct": 20,
+        "certifications": ["LWG Gold", "REACH"],
+        "unit_cost_eur": 12.0,
+        "lot_certificate_id": "CERT-TEST-L1",
+    }
+    client.post(f"/api/v1/pim-items/{pim_id}/plm-variants/{variant_id}/bom-items", json=l1_item)
+
+    l2_id = f"BOM-L2-SRC-{uuid4().hex[:4].upper()}"
+    l2_item = {
+        "bom_item_id": l2_id,
+        "level": 2,
+        "parent_bom_item_id": l1_id,
+        "component_type": "lining",
+        "material_name": "Fodera Interna Vitello",
+        "supplier_name": "Conceria Sperimentale",
+        "origin_country_iso2": "IT",
+        "unit_of_measure": "sqft",
+        "unit_consumption": 1.2,
+        "waste_percentage": 3.0,
+        "recycled_content_pct": 0,
+        "certifications": ["ICEC TS 410"],
+        "unit_cost_eur": 6.5,
+        "lot_certificate_id": "CERT-TEST-L2",
+    }
+    client.post(f"/api/v1/pim-items/{pim_id}/plm-variants/{variant_id}/bom-items", json=l2_item)
+
+    # 3. Call duplicate on the L1 item
+    dup_resp = client.post(f"/api/v1/pim-items/{pim_id}/plm-variants/{variant_id}/bom-items/{l1_id}/duplicate")
+    assert dup_resp.status_code == 201
+    cloned_items = dup_resp.json()
+    assert len(cloned_items) == 2
+
+    cloned_l1 = next(c for c in cloned_items if c["level"] == 1)
+    cloned_l2 = next(c for c in cloned_items if c["level"] == 2)
+
+    assert cloned_l1["bom_item_id"] != l1_id
+    assert cloned_l1["material_name"] == "Tomaia Assemblata Test (Copia)"
+    assert cloned_l1["parent_bom_item_id"] is None
+
+    assert cloned_l2["bom_item_id"] != l2_id
+    assert cloned_l2["material_name"] == "Fodera Interna Vitello (Copia)"
+    # The cloned L2 must have its parent set to the cloned L1 ID!
+    assert cloned_l2["parent_bom_item_id"] == cloned_l1["bom_item_id"]
+
+    # 4. Also test duplicating a single leaf item (L2)
+    leaf_dup_resp = client.post(f"/api/v1/pim-items/{pim_id}/plm-variants/{variant_id}/bom-items/{l2_id}/duplicate")
+    assert leaf_dup_resp.status_code == 201
+    leaf_clones = leaf_dup_resp.json()
+    assert len(leaf_clones) == 1
+    assert leaf_clones[0]["parent_bom_item_id"] == l1_id
+    assert leaf_clones[0]["material_name"] == "Fodera Interna Vitello (Copia)"
 
 
 

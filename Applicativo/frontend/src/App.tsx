@@ -548,18 +548,19 @@ export const App: React.FC = () => {
   };
 
   const handleAddBomItem = (newBom: BomItem) => {
-    const updatedItems = pimItems.map((item) => {
-      if (item.pim_item_id !== currentPim.pim_item_id) return item;
-      return {
-        ...item,
-        plm_variants: item.plm_variants.map((v) =>
-          v.plm_variant_id === currentVariant.plm_variant_id
-            ? { ...v, bom_items: [...v.bom_items, newBom] }
-            : v
-        ),
-      };
-    });
-    setPimItems(updatedItems);
+    setPimItems((prevPimItems) =>
+      prevPimItems.map((item) => {
+        if (item.pim_item_id !== currentPim.pim_item_id) return item;
+        return {
+          ...item,
+          plm_variants: item.plm_variants.map((v) =>
+            v.plm_variant_id === currentVariant.plm_variant_id
+              ? { ...v, bom_items: [...v.bom_items, newBom] }
+              : v
+          ),
+        };
+      })
+    );
 
     if (backendConnected) {
       fetch(
@@ -569,6 +570,65 @@ export const App: React.FC = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newBom),
         }
+      ).catch(() => {});
+    }
+  };
+
+  const handleDuplicateBomItem = (bomItemId: string) => {
+    const currentVariantBoms = currentVariant.bom_items;
+    const srcBom = currentVariantBoms.find((b) => b.bom_item_id === bomItemId);
+    if (!srcBom) return;
+
+    // Collect entire subtree
+    const getSubtreeItems = (parentId: string): BomItem[] => {
+      const direct = currentVariantBoms.filter((b) => b.parent_bom_item_id === parentId);
+      const res: BomItem[] = [];
+      for (const d of direct) {
+        res.push(d);
+        res.push(...getSubtreeItems(d.bom_item_id));
+      }
+      return res;
+    };
+
+    const subtree = [srcBom, ...getSubtreeItems(srcBom.bom_item_id)];
+    const idMap = new Map<string, string>();
+    subtree.forEach((b) => {
+      idMap.set(
+        b.bom_item_id,
+        `BOM-L${b.level}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+      );
+    });
+
+    const clonedItems: BomItem[] = subtree.map((b) => ({
+      ...b,
+      bom_item_id: idMap.get(b.bom_item_id)!,
+      parent_bom_item_id:
+        b.parent_bom_item_id && idMap.has(b.parent_bom_item_id)
+          ? idMap.get(b.parent_bom_item_id)!
+          : b.parent_bom_item_id,
+      material_name: `${b.material_name} (Copia)`,
+      certifications: [...(b.certifications || [])],
+      lot_certificate_id: `CERT-DUP-${Math.floor(1000 + Math.random() * 9000)}`,
+    }));
+
+    setPimItems((prevPimItems) =>
+      prevPimItems.map((item) => {
+        if (item.pim_item_id !== currentPim.pim_item_id) return item;
+        return {
+          ...item,
+          plm_variants: item.plm_variants.map((v) =>
+            v.plm_variant_id === currentVariant.plm_variant_id
+              ? { ...v, bom_items: [...v.bom_items, ...clonedItems] }
+              : v
+          ),
+        };
+      })
+    );
+
+    if (backendConnected) {
+      fetch(
+        `${API_BASE}/api/v1/pim-items/${currentPim.pim_item_id}/plm-variants/${currentVariant.plm_variant_id}/bom-items/${bomItemId}/duplicate`,
+        { method: "POST" }
       ).catch(() => {});
     }
   };
@@ -1662,6 +1722,7 @@ export const App: React.FC = () => {
             onUpdateBomItem={handleUpdateBomItem}
             onDeleteBomItem={handleDeleteBomItem}
             onMoveBomItem={handleMoveBomItem}
+            onDuplicateBomItem={handleDuplicateBomItem}
             onRefreshData={refreshPimItems}
           />
         )}
@@ -1745,6 +1806,7 @@ export const App: React.FC = () => {
                   onUpdateBomItem={handleUpdateBomItem}
                   onDeleteBomItem={handleDeleteBomItem}
                   onMoveBomItem={handleMoveBomItem}
+                  onDuplicateBomItem={handleDuplicateBomItem}
                 />
               )}
             </div>
@@ -1804,6 +1866,7 @@ export const App: React.FC = () => {
                 onUpdateBomItem={handleUpdateBomItem}
                 onDeleteBomItem={handleDeleteBomItem}
                 onMoveBomItem={handleMoveBomItem}
+                onDuplicateBomItem={handleDuplicateBomItem}
               />
             </div>
           </div>

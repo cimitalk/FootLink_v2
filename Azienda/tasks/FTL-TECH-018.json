@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-TECH-018",
+  "title": "Ottimizzazione Compattezza e Drag and Drop Nativo su Albero Distinta Base (BOM)",
+  "description": "Riduzione ingombro verticale card distinte base (-58%) e implementazione del Drag & Drop HTML5 nativo per lo spostamento intuitivo e la ripianificazione gerarchica dei componenti tra i livelli L1, L2, L3.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-20T22:15:00+02:00",
+  "updated_at": "2026-10-20T22:30:00+02:00",
+  "due_date": "2026-11-19T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [
+    "FTL-TECH-014"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/BomThreeLevelTree.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L2",
+  "decision_record_id": null,
+  "tags": [
+    "PLM",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Diminuzione dimensione card BOM per maggiore densità informativa",
+    "Supporto Drag & Drop HTML5 nativo tra nodi dell'albero",
+    "Area di rilascio dedicata per promuovere nodi a Livello 1 (Root)",
+    "Prevenzione cicli gerarchici (impossibile rilasciare un genitore nei propri discendenti)",
+    "Validazione limiti di profondità (massimo 3 livelli)",
+    "Feedback visivo immediato con toast di conferma"
+  ],
+  "notes": "Completato con successo: ridisegnate le card BOM in stile luxury dark compatto (~66px per riga, -58% ingombro), aggiunto Drag & Drop HTML5 nativo con dropzone L1 Root, controllo ricorsivo anti-cicli isDescendant e notifica toast."
+}
