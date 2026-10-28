@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { buildClientBomTree } from "../mockSeedData";
+import { buildClientBomTree, findMasterColorById } from "../mockSeedData";
 import {
   BomComponentType,
   BomItem,
   BomTreeNode,
+  MasterColor,
   PimCommercialItem,
   PlmProductionVariant,
+  VendorRecord,
   ViewerSecurityRole,
 } from "../types";
 
@@ -13,6 +15,8 @@ interface BomThreeLevelTreeProps {
   variant: PlmProductionVariant;
   pimItem?: PimCommercialItem;
   viewerRole?: ViewerSecurityRole;
+  vendors?: VendorRecord[];
+  colors?: MasterColor[];
   onAddBomItem: (bom: BomItem) => void;
   onUpdateBomItem?: (bom: BomItem) => void;
   onDeleteBomItem?: (bomItemId: string) => void;
@@ -30,6 +34,8 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   variant,
   pimItem,
   viewerRole = "brand",
+  vendors = [],
+  colors = [],
   onAddBomItem,
   onUpdateBomItem,
   onDeleteBomItem,
@@ -44,6 +50,10 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   );
   const [materialName, setMaterialName] = useState("");
   const [supplierName, setSupplierName] = useState("");
+  const [selectedVendorId, setSelectedVendorId] = useState<string>("");
+  const [selectedMasterColorId, setSelectedMasterColorId] = useState<string>(
+    variant.primary_color_id || ""
+  );
   const [componentType, setComponentType] =
     useState<BomComponentType>("sub_assembly");
   const [originIso, setOriginIso] = useState("IT");
@@ -58,6 +68,8 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   const [editingItem, setEditingItem] = useState<BomItem | null>(null);
   const [editMaterialName, setEditMaterialName] = useState("");
   const [editSupplierName, setEditSupplierName] = useState("");
+  const [editVendorId, setEditVendorId] = useState<string>("");
+  const [editMasterColorId, setEditMasterColorId] = useState<string>("");
   const [editComponentType, setEditComponentType] = useState<BomComponentType>("upper");
   const [editOriginIso, setEditOriginIso] = useState("IT");
   const [editUom, setEditUom] = useState("dm2");
@@ -128,6 +140,50 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
           { size: "EU 46", deltaSteps: 4 },
         ];
 
+  const handleSelectVendorForAdd = (vId: string) => {
+    setSelectedVendorId(vId);
+    const v = vendors.find((item) => item.vendor_id === vId);
+    if (v) {
+      setSupplierName(v.company_name);
+      setOriginIso(v.country_iso2 || "IT");
+      if (v.certifications && v.certifications.length > 0) {
+        setCertsInput(
+          v.certifications
+            .map((c) => c.cert_type.replace(/_/g, " "))
+            .join(", ")
+        );
+      }
+      if (
+        viewerRole === "brand" &&
+        typeof v.hourly_or_unit_rate_eur_l6 === "number"
+      ) {
+        setUnitCostEur(v.hourly_or_unit_rate_eur_l6);
+      }
+    }
+  };
+
+  const handleSelectVendorForEdit = (vId: string) => {
+    setEditVendorId(vId);
+    const v = vendors.find((item) => item.vendor_id === vId);
+    if (v) {
+      setEditSupplierName(v.company_name);
+      setEditOriginIso(v.country_iso2 || "IT");
+      if (v.certifications && v.certifications.length > 0) {
+        setEditCertsInput(
+          v.certifications
+            .map((c) => c.cert_type.replace(/_/g, " "))
+            .join(", ")
+        );
+      }
+      if (
+        viewerRole === "brand" &&
+        typeof v.hourly_or_unit_rate_eur_l6 === "number"
+      ) {
+        setEditUnitCostEur(v.hourly_or_unit_rate_eur_l6);
+      }
+    }
+  };
+
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!materialName.trim() || !supplierName.trim()) return;
@@ -144,6 +200,8 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
       component_type: componentType,
       material_name: materialName.trim(),
       supplier_name: supplierName.trim(),
+      vendor_id: selectedVendorId || null,
+      master_color_id: selectedMasterColorId || null,
       origin_country_iso2: originIso.trim().toUpperCase().slice(0, 2) || "IT",
       unit_of_measure: uom.trim() || "pcs",
       unit_consumption: Number(consumption) || 1.0,
@@ -159,6 +217,7 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
     onAddBomItem(newItem);
     setMaterialName("");
     setSupplierName("");
+    setSelectedVendorId("");
     setShowAddForm(false);
   };
 
@@ -167,6 +226,8 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
     setEditingItem(item);
     setEditMaterialName(item.material_name);
     setEditSupplierName(item.supplier_name);
+    setEditVendorId(item.vendor_id || "");
+    setEditMasterColorId(item.master_color_id || "");
     setEditComponentType(item.component_type);
     setEditOriginIso(item.origin_country_iso2 || "IT");
     setEditUom(item.unit_of_measure || "dm2");
@@ -184,6 +245,8 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
       ...editingItem,
       material_name: editMaterialName.trim(),
       supplier_name: editSupplierName.trim(),
+      vendor_id: editVendorId || null,
+      master_color_id: editMasterColorId || null,
       component_type: editComponentType,
       origin_country_iso2: editOriginIso.trim().toUpperCase().slice(0, 2) || "IT",
       unit_of_measure: editUom.trim() || "pcs",
@@ -632,15 +695,49 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
             </div>
           </div>
 
-          {/* Riga 2: Nome materiale, fornitore, certificazioni e consumi */}
+          {/* Riga 2: Nome materiale, swatch colore, fornitore albo, certificazioni e consumi */}
           <div className="mt-1 flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#EAEAEA]">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-[#111111]">
                 {node.material_name}
               </span>
+              {(() => {
+                const nodeColor = findMasterColorById(colors, node.master_color_id);
+                if (!nodeColor) return null;
+                return (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white border border-[#D5D5D5] text-[10px] font-semibold text-[#111111]">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full border border-slate-300"
+                      style={{ backgroundColor: nodeColor.hex_code }}
+                    />
+                    <span className="font-mono">{nodeColor.color_code}</span>
+                    <span>· {nodeColor.technical_name_it}</span>
+                  </span>
+                );
+              })()}
               <span className="text-[11px] text-[#707072]">
                 · Fornitore: <span className="text-[#111111] font-semibold">{node.supplier_name}</span>
               </span>
+              {(() => {
+                const matchedVendor = vendors.find(
+                  (v) =>
+                    v.vendor_id === node.vendor_id ||
+                    v.company_name.toLowerCase() === node.supplier_name.toLowerCase()
+                );
+                if (!matchedVendor) return null;
+                return (
+                  <>
+                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                      {matchedVendor.vendor_code}
+                    </span>
+                    {matchedVendor.has_expired_critical_certs && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300">
+                        🔴 Cert. LWG/EUDR Scaduto
+                      </span>
+                    )}
+                  </>
+                );
+              })()}
               {node.certifications.length > 0 && (
                 <div className="flex items-center gap-1 flex-wrap">
                   {node.certifications.map((cert) => (
@@ -946,9 +1043,9 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
               </div>
             </div>
 
-            {/* Step 2: Dati Materiale e Fornitore */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="sm:col-span-2">
+            {/* Step 2: Dati Materiale, Fornitore Qualificato da Albo 360° e Tinta Master */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div>
                 <label className="block text-[11px] font-bold text-[#111111] mb-1">
                   Nome Materiale &amp; Specifiche Tecniche *
                 </label>
@@ -961,20 +1058,73 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
                   className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
                 />
               </div>
+
               <div>
                 <label className="block text-[11px] font-bold text-[#111111] mb-1">
-                  Fornitore / Conceria Accreditata *
+                  Seleziona da Albo Fornitori 360°
+                </label>
+                <select
+                  value={selectedVendorId}
+                  onChange={(e) => handleSelectVendorForAdd(e.target.value)}
+                  className="w-full bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-2 text-xs font-semibold text-[#111111]"
+                >
+                  <option value="">— Scegli Partner Qualificato —</option>
+                  {vendors.map((v) => (
+                    <option key={v.vendor_id} value={v.vendor_id}>
+                      {v.vendor_code} · {v.company_name}{" "}
+                      {v.has_expired_critical_certs ? "🔴 [CERT. SCADUTO]" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#111111] mb-1">
+                  Ragione Sociale Fornitore *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Es. Conceria del Chienti SpA"
+                  placeholder="Es. Conceria Santa Croce S.p.A."
                   value={supplierName}
                   onChange={(e) => setSupplierName(e.target.value)}
                   className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
                 />
               </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#111111] mb-1">
+                  Tinta / Finitura Master (Color Intelligence)
+                </label>
+                <select
+                  value={selectedMasterColorId}
+                  onChange={(e) => setSelectedMasterColorId(e.target.value)}
+                  className="w-full bg-white border border-[#CCCCCC] rounded-xl px-2.5 py-2 text-xs font-semibold text-[#111111]"
+                >
+                  <option value="">— Nessun Colore Specifico —</option>
+                  {colors.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.color_code} · {c.technical_name_it} ({c.hex_code})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+
+            {(() => {
+              const chosenVendor = vendors.find((v) => v.vendor_id === selectedVendorId);
+              if (!chosenVendor || !chosenVendor.has_expired_critical_certs) return null;
+              return (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-950 text-xs font-bold flex items-center justify-between gap-2">
+                  <span>
+                    🔴 BLOCCO / ALERT COMPLIANCE FORNITORE: {chosenVendor.company_name} ({chosenVendor.vendor_code}) presenta certificazioni LWG / EUDR scadute nell&apos;Albo Fornitori 360°!
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-rose-200 text-rose-950 text-[10px]">
+                    Rischio Audit DPP UE
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* Step 3: Indicatori di Consumo & Costing con etichette chiare */}
             <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-3">
@@ -1284,6 +1434,57 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
                     />
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Collega Partner da Albo 360°
+                    </label>
+                    <select
+                      value={editVendorId}
+                      onChange={(e) => handleSelectVendorForEdit(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold bg-white"
+                    >
+                      <option value="">— Fornitore Manuale / Non Collegato —</option>
+                      {vendors.map((v) => (
+                        <option key={v.vendor_id} value={v.vendor_id}>
+                          {v.vendor_code} · {v.company_name}{" "}
+                          {v.has_expired_critical_certs ? "🔴 [SCADUTO]" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                      Tinta / Finitura Master
+                    </label>
+                    <select
+                      value={editMasterColorId}
+                      onChange={(e) => setEditMasterColorId(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold bg-white"
+                    >
+                      <option value="">— Nessun Colore Specifico —</option>
+                      {colors.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.color_code} · {c.technical_name_it} ({c.hex_code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {(() => {
+                  const chosenEditVendor = vendors.find(
+                    (v) => v.vendor_id === editVendorId
+                  );
+                  if (!chosenEditVendor || !chosenEditVendor.has_expired_critical_certs)
+                    return null;
+                  return (
+                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs font-bold">
+                      🔴 ALERT COMPLIANCE: {chosenEditVendor.company_name} presenta certificazioni LWG / EUDR scadute nell&apos;Albo Fornitori 360°!
+                    </div>
+                  );
+                })()}
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>

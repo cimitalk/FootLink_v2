@@ -1,0 +1,42 @@
+{
+  "task_id": "FTL-CEO-022",
+  "title": "Gestione Albo fornitori",
+  "description": "Ho visto che l'albo fornitori è completamente scollegato dall'Hub Distrettuale Aziende & Rete Operatori. è Corretto che sia così? Non potrebbero esserci delle sinergie nel fare questo aggancio ? Identificare le sinergie ed implementare tutte le funzionalità utili.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-28T17:36:43+02:00",
+  "updated_at": "2026-10-28T18:25:00+02:00",
+  "due_date": "2026-11-27T23:59:59+02:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": "1.5gg",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/database/schema.sql",
+    "Applicativo/backend/app/models.py",
+    "Applicativo/backend/app/database.py",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/frontend/src/components/VendorHub360.tsx",
+    "Azienda/adr/ADR-012-plm-ux-simplification-product-models-and-district-vendor-synergy.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L2",
+  "decision_record_id": "ADR-012",
+  "tags": [
+    "governance",
+    "product",
+    "PLM",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Devo poter collegare un fornitore dell'albo ad un fornitore presente nella gestione del distretto.",
+    "Colonna district_company_id su vendors_registry con FK verso companies.",
+    "API di collegamento, scollegamento e auto-link basato su P.IVA / Ragione Sociale.",
+    "UI VendorHub360 con badge distretto, stato licenza PaaS e modale di collegamento rapido."
+  ],
+  "notes": "Sinergia Albo Fornitori e Distretto PaaS approvata con ADR-012."
+}

@@ -20,9 +20,20 @@ APPLICATIVO_DIR = os.path.join(ROOT_DIR, "Applicativo")
 PORTALE_DIR = os.path.join(ROOT_DIR, "Portale_Founder_Control")
 
 TASKS_DIR = os.path.join(AZIENDA_DIR, "tasks")
+ARCHIVE_TASKS_DIR = os.path.join(TASKS_DIR, "archive_epoch_1")
 ADR_DIR = os.path.join(AZIENDA_DIR, "adr")
 DOCS_DIR = os.path.join(AZIENDA_DIR, "docs")
 PORT = int(os.environ.get("FOOTLINK_PORT", "8080"))
+
+
+def find_task_path(task_id: str) -> str:
+    p_active = os.path.join(TASKS_DIR, f"{task_id}.json")
+    if os.path.isfile(p_active):
+        return p_active
+    p_arch = os.path.join(ARCHIVE_TASKS_DIR, f"{task_id}.json")
+    if os.path.isfile(p_arch):
+        return p_arch
+    return p_active
 
 
 def now_iso() -> str:
@@ -56,7 +67,10 @@ VALID_TAGS = {"PLM", "PIM", "infra", "governance", "sales", "marketing", "produc
 
 def generate_next_task_id(role: str) -> str:
     prefix = PREFIX_MAP.get(role, "FTL-CEO")
-    existing = glob.glob(os.path.join(TASKS_DIR, f"{prefix}-*.json"))
+    existing = (
+        glob.glob(os.path.join(TASKS_DIR, f"{prefix}-*.json"))
+        + glob.glob(os.path.join(ARCHIVE_TASKS_DIR, f"{prefix}-*.json"))
+    )
     max_num = 0
     for p in existing:
         base = os.path.basename(p)
@@ -173,12 +187,13 @@ def handle_create_task(payload: dict) -> dict:
 
 
 def load_single_task(task_id: str) -> dict:
-    path = os.path.join(TASKS_DIR, f"{task_id}.json")
+    path = find_task_path(task_id)
     if os.path.isfile(path):
         try:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 data["_file"] = os.path.basename(path)
+                data["_rel_path"] = os.path.relpath(path, ROOT_DIR)
                 return data
         except Exception:
             pass
@@ -190,7 +205,7 @@ def handle_edit_task(payload: dict) -> dict:
     if not task_id:
         raise ValueError("Task ID mancante.")
 
-    path = os.path.join(TASKS_DIR, f"{task_id}.json")
+    path = find_task_path(task_id)
     if not os.path.isfile(path):
         raise ValueError(f"Task non trovato su disco: {task_id}")
 
@@ -261,23 +276,40 @@ def handle_edit_task(payload: dict) -> dict:
 
 def load_tasks():
     tasks = []
-    for path in sorted(glob.glob(os.path.join(TASKS_DIR, "FTL-*.json"))):
+    all_task_paths = sorted(
+        glob.glob(os.path.join(TASKS_DIR, "FTL-*.json"))
+        + glob.glob(os.path.join(ARCHIVE_TASKS_DIR, "FTL-*.json"))
+    )
+    for path in all_task_paths:
         try:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 data["_file"] = os.path.basename(path)
+                data["_rel_path"] = os.path.relpath(path, ROOT_DIR)
                 tasks.append(data)
         except Exception as e:
             print(f"Error loading {path}: {e}")
     order = [
-        # Sprint 1 (Bootstrap C-Suite)
+        # EPOCA II - Sprint 8 (La Ripartenza & La Verticalizzazione)
+        "FTL-CEO-017",
+        "FTL-CEO-018",
+        "FTL-CEO-019",
+        "FTL-GOV-008",
+        "FTL-PROD-012",
+        "FTL-TECH-021",
+        "FTL-REV-007",
+        "FTL-MKT-008",
+        "FTL-TECH-022",
+        "FTL-TECH-023",
+        "FTL-PROD-013",
+        # EPOCA I - Sprint 1 (Bootstrap C-Suite)
         "FTL-GOV-001",
         "FTL-CEO-001",
         "FTL-TECH-001",
         "FTL-PROD-001",
         "FTL-REV-001",
         "FTL-MKT-001",
-        # Sprint 2 (Three-Pillars Architecture, Full-Stack & GTM Execution)
+        # EPOCA I - Sprint 2 (Three-Pillars Architecture, Full-Stack & GTM Execution)
         "FTL-GOV-002",
         "FTL-CEO-002",
         "FTL-PROD-002",
@@ -285,25 +317,65 @@ def load_tasks():
         "FTL-TECH-003",
         "FTL-MKT-002",
         "FTL-REV-002",
-        # Sprint 3 (Design System v2.0, Home Hub & Core Process Convergence)
+        # EPOCA I - Sprint 3 (Design System v2.0, Home Hub & Core Process Convergence)
         "FTL-GOV-003",
         "FTL-CEO-003",
         "FTL-PROD-003",
         "FTL-TECH-004",
-        # Sprint 4 (Districts Pilot Onboarding, Zero-Training Mobile, Free-Tier Cloud Deploy)
+        # EPOCA I - Sprint 4 (Districts Pilot Onboarding, Zero-Training Mobile, Free-Tier Cloud Deploy)
         "FTL-CEO-004",
         "FTL-GOV-004",
         "FTL-REV-003",
         "FTL-MKT-003",
         "FTL-PROD-004",
         "FTL-TECH-005",
-        # Sprint 5 (Flexible Data Model, Seasons & Collections, Domain Registries, UI Simplification)
+        # EPOCA I - Sprint 5 (Flexible Data Model, Seasons & Collections, Domain Registries, UI Simplification)
         "FTL-CEO-005",
         "FTL-GOV-005",
         "FTL-PROD-005",
         "FTL-TECH-006",
         "FTL-REV-004",
         "FTL-MKT-004",
+        "FTL-CEO-006",
+        "FTL-CEO-007",
+        # EPOCA I - Sprint 6 (District PaaS 3 Tier, Tannery Vault SHA-256, PLM/PIM Split)
+        "FTL-CEO-008",
+        "FTL-GOV-006",
+        "FTL-PROD-006",
+        "FTL-TECH-007",
+        "FTL-REV-005",
+        "FTL-MKT-005",
+        "FTL-CEO-009",
+        "FTL-CEO-010",
+        "FTL-CEO-011",
+        "FTL-CEO-012",
+        "FTL-PROD-007",
+        "FTL-PROD-008",
+        "FTL-PROD-009",
+        "FTL-TECH-008",
+        "FTL-TECH-009",
+        "FTL-TECH-010",
+        "FTL-TECH-011",
+        # EPOCA I - Sprint 7 (Multilevel Taxonomy, Bulk Import, BOM Drag&Drop/Duplicate, DAM, Codebase Analytics)
+        "FTL-CEO-013",
+        "FTL-GOV-007",
+        "FTL-PROD-010",
+        "FTL-TECH-012",
+        "FTL-REV-006",
+        "FTL-MKT-006",
+        "FTL-TECH-013",
+        "FTL-PROD-011",
+        "FTL-CEO-014",
+        "FTL-CEO-015",
+        "FTL-TECH-014",
+        "FTL-TECH-015",
+        "FTL-TECH-016",
+        "FTL-CEO-016",
+        "FTL-MKT-007",
+        "FTL-TECH-017",
+        "FTL-TECH-018",
+        "FTL-TECH-019",
+        "FTL-TECH-020",
     ]
     tasks.sort(key=lambda t: (order.index(t["task_id"]) if t.get("task_id") in order else 999, t.get("task_id", "")))
     return tasks
@@ -311,7 +383,7 @@ def load_tasks():
 
 def save_task(task_data):
     task_id = task_data["task_id"]
-    path = os.path.join(TASKS_DIR, f"{task_id}.json")
+    path = find_task_path(task_id)
     clean = {k: v for k, v in task_data.items() if not k.startswith("_")}
     clean["updated_at"] = now_iso()
     with open(path, "w", encoding="utf-8") as f:
@@ -371,6 +443,13 @@ def sync_dependencies_and_readme():
         "FTL-TECH-013", "FTL-PROD-011", "FTL-CEO-014", "FTL-CEO-015", "FTL-TECH-014", "FTL-TECH-015",
         "FTL-TECH-016", "FTL-CEO-016", "FTL-MKT-007", "FTL-TECH-017", "FTL-TECH-018", "FTL-TECH-019", "FTL-TECH-020"
     }
+    sprint8_ids = {
+        "FTL-CEO-017", "FTL-CEO-018", "FTL-CEO-019", "FTL-GOV-008", "FTL-PROD-012",
+        "FTL-TECH-021", "FTL-REV-007", "FTL-MKT-008", "FTL-TECH-022", "FTL-TECH-023", "FTL-PROD-013"
+    }
+
+    epoch1_ids = sprint1_ids | sprint2_ids | sprint3_ids | sprint4_ids | sprint5_ids | sprint6_ids | sprint7_ids
+    known_sprints = epoch1_ids | sprint8_ids
 
     sprint1 = [t for t in tasks if t["task_id"] in sprint1_ids]
     sprint2 = [t for t in tasks if t["task_id"] in sprint2_ids]
@@ -379,20 +458,10 @@ def sync_dependencies_and_readme():
     sprint5 = [t for t in tasks if t["task_id"] in sprint5_ids]
     sprint6 = [t for t in tasks if t["task_id"] in sprint6_ids]
     sprint7 = [t for t in tasks if t["task_id"] in sprint7_ids]
+    sprint8 = [t for t in tasks if t["task_id"] in sprint8_ids]
+    new_founder_tasks = [t for t in tasks if t["task_id"] not in known_sprints]
 
-    lines = [
-        "# 📋 Founder Control Dashboard — Registro Task (`Azienda/tasks/`)",
-        "",
-        "Questa directory contiene i **Task Object JSON** della C-Suite di **Footlink**, validati secondo il [Task Object Schema v1.0](./schema/task-object-v1.schema.json) definito dal CGO e orchestrati tramite **Google Antigravity** (`OpenClaw` in stato *suspended*).",
-        "",
-        "---",
-        "",
-        "## 🚀 Sprint 1 — Bootstrap C-Suite & Fondamenta Governance",
-        "",
-        "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
-        "|---|:---:|---|:---:|:---:|---|:---:|",
-    ]
-    for t in sprint1:
+    def format_task_row(t):
         tid = t["task_id"]
         role = t["assignee_role"]
         title = t["title"]
@@ -400,136 +469,36 @@ def sync_dependencies_and_readme():
         st = status_badges.get(t["status"], t["status"])
         deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
         esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
-        lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
+        rel_link = f"./archive_epoch_1/{tid}.json" if tid in epoch1_ids else f"./{tid}.json"
+        return f"| [`{tid}`]({rel_link}) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |"
 
-    if sprint2:
-        lines.extend([
-            "",
-            "---",
-            "",
-            "## ⚡ Sprint 2 — Riorganizzazione 3 Pilastri, Core Applicativo PLM/PIM & Go-To-Market",
-            "",
-            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
-            "|---|:---:|---|:---:|:---:|---|:---:|",
-        ])
-        for t in sprint2:
-            tid = t["task_id"]
-            role = t["assignee_role"]
-            title = t["title"]
-            prio = prio_badges.get(t["priority"], t["priority"])
-            st = status_badges.get(t["status"], t["status"])
-            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
-            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
-            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
+    lines = [
+        "# 📋 Founder Control Dashboard — Registro Task Multi-Epoca (`Azienda/tasks/`)",
+        "",
+        "Questa directory contiene i **Task Object JSON** della C-Suite di **Footlink**, validati secondo il [Task Object Schema v1.0](./schema/task-object-v1.schema.json) definito dal CGO e orchestrati tramite **Google Antigravity** (`OpenClaw` in stato *suspended*).",
+        "",
+        "> **Architettura Multi-Epoca ([`ADR-011`](../adr/ADR-011-epoch-2-verticalization-governance-and-modular-depth.md)):**",
+        "> - **🚀 EPOCA II — LA VERTICALIZZAZIONE (Da Sprint 8 in poi):** Focalizzata sulla profondità funzionale verticale all'interno di ciascuno dei 9 moduli della piattaforma (*Zero Horizontal Bloat / Deep Vertical Capabilities*). Piano esecutivo: [`PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md`](../PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md).",
+        "> - **📦 EPOCA I — FONDAZIONE & ESPANSIONE ORIZZONTALE (Sprint 1–7):** Consolidata e archiviata fisicamente in [`./archive_epoch_1/`](./archive_epoch_1/) con **67/67 Task Completati (`done`)** e Doppio Riconoscimento del Founder (👑👑). Compendio storico ufficiale: [`epoch-1-historical-consolidation-sprints-1-7.md`](../docs/governance/epoch-1-historical-consolidation-sprints-1-7.md).",
+        "",
+        "---",
+        "",
+        "# 🚀 EPOCA II — LA VERTICALIZZAZIONE (Da Sprint 8)",
+        "",
+        "## 🎯 Sprint 8 — \"La Ripartenza\": Governance Multi-Epoca, Gestione Colori Intelligente & Albo Fornitori 360°",
+        "",
+        "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
+        "|---|:---:|---|:---:|:---:|---|:---:|",
+    ]
+    for t in sprint8:
+        lines.append(format_task_row(t))
 
-    if sprint3:
-        lines.extend([
-            "",
-            "---",
-            "",
-            "## 🎨 Sprint 3 — Convergenza UX/UI Design System v2.0, Home Hub Iniziale & Processi Core",
-            "",
-            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
-            "|---|:---:|---|:---:|:---:|---|:---:|",
-        ])
-        for t in sprint3:
-            tid = t["task_id"]
-            role = t["assignee_role"]
-            title = t["title"]
-            prio = prio_badges.get(t["priority"], t["priority"])
-            st = status_badges.get(t["status"], t["status"])
-            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
-            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
-            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
-
-    if sprint4:
-        lines.extend([
-            "",
-            "---",
-            "",
-            "## 🏭 Sprint 4 — Lancio Pilota nei Distretti, Validazione sul Campo 'Zero-Training Terzista', Deploy Free-Tier & Gate L2–L6",
-            "",
-            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
-            "|---|:---:|---|:---:|:---:|---|:---:|",
-        ])
-        for t in sprint4:
-            tid = t["task_id"]
-            role = t["assignee_role"]
-            title = t["title"]
-            prio = prio_badges.get(t["priority"], t["priority"])
-            st = status_badges.get(t["status"], t["status"])
-            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
-            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
-            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
-
-    if sprint5:
-        lines.extend([
-            "",
-            "---",
-            "",
-            "## 🚀 Sprint 5 — Modello Dati Flessibile, Gerarchia Stagioni & Collezioni, Tabelle Anagrafiche e Semplificazione UI",
-            "",
-            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
-            "|---|:---:|---|:---:|:---:|---|:---:|",
-        ])
-        for t in sprint5:
-            tid = t["task_id"]
-            role = t["assignee_role"]
-            title = t["title"]
-            prio = prio_badges.get(t["priority"], t["priority"])
-            st = status_badges.get(t["status"], t["status"])
-            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
-            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
-            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
-
-    if sprint6:
-        lines.extend([
-            "",
-            "---",
-            "",
-            "## 🛡️ Sprint 6 — Tracciabilità Conceria EUDR, Vault Lotti, Work Orders & Perfezionamento PLM/PIM",
-            "",
-            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
-            "|---|:---:|---|:---:|:---:|---|:---:|",
-        ])
-        for t in sprint6:
-            tid = t["task_id"]
-            role = t["assignee_role"]
-            title = t["title"]
-            prio = prio_badges.get(t["priority"], t["priority"])
-            st = status_badges.get(t["status"], t["status"])
-            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
-            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
-            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
-
-    if sprint7:
-        lines.extend([
-            "",
-            "---",
-            "",
-            "## 👑👑 Sprint 7 — Tassonomia Multi-Livello, Bulk Onboarding, BOM Duplicazione/Drag&Drop & Codebase Analytics",
-            "",
-            "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
-            "|---|:---:|---|:---:|:---:|---|:---:|",
-        ])
-        for t in sprint7:
-            tid = t["task_id"]
-            role = t["assignee_role"]
-            title = t["title"]
-            prio = prio_badges.get(t["priority"], t["priority"])
-            st = status_badges.get(t["status"], t["status"])
-            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
-            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
-            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
-
-    known_sprints = sprint1_ids | sprint2_ids | sprint3_ids | sprint4_ids | sprint5_ids | sprint6_ids | sprint7_ids
-    new_founder_tasks = [t for t in tasks if t["task_id"] not in known_sprints]
     if new_founder_tasks:
         lines.extend([
             "",
             "---",
             "",
-            "## 👑 Nuove Iniziative & Direttive Founder — Backlog C-Suite",
+            "## 👑 Nuove Iniziative & Direttive Founder — Backlog Epoca II",
             "",
             "Task e direttive inseriti direttamente dal Founder via **Founder Control Center** per analisi, prioritizzazione strategica (CEO/CGO) ed esecuzione da parte dei C-Level responsabili.",
             "",
@@ -537,23 +506,52 @@ def sync_dependencies_and_readme():
             "|---|:---:|---|:---:|:---:|---|:---:|",
         ])
         for t in new_founder_tasks:
-            tid = t["task_id"]
-            role = t["assignee_role"]
-            title = t["title"]
-            prio = prio_badges.get(t["priority"], t["priority"])
-            st = status_badges.get(t["status"], t["status"])
-            deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
-            esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
-            lines.append(f"| [`{tid}`](./{tid}.json) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |")
+            lines.append(format_task_row(t))
 
     lines.extend([
         "",
         "---",
         "",
+        "# 📦 ARCHIVIO CONSOLIDATO EPOCA I — FONDAZIONE & ESPANSIONE ORIZZONTALE (Sprint 1–7)",
+        "",
+        "Tutti i **67 Task Object** degli Sprint 1–7 sono formalmente chiusi (`done`), validati al 100% e storicizzati nel [Compendio Storico dell'Epoca I](../docs/governance/epoch-1-historical-consolidation-sprints-1-7.md).",
+        "",
+    ])
+
+    epoch1_sections = [
+        ("👑👑 Sprint 7 — Tassonomia Multi-Livello, Bulk Onboarding, BOM Duplicazione/Drag&Drop & Codebase Analytics (19/19 Done)", sprint7),
+        ("🛡️ Sprint 6 — Tracciabilità Conceria EUDR, Vault Lotti, Work Orders & Perfezionamento PLM/PIM (17/17 Done)", sprint6),
+        ("🚀 Sprint 5 — Modello Dati Flessibile, Gerarchia Stagioni & Collezioni, Tabelle Anagrafiche e Semplificazione UI (8/8 Done)", sprint5),
+        ("🏭 Sprint 4 — Lancio Pilota nei Distretti, Validazione sul Campo 'Zero-Training Terzista', Deploy Free-Tier & Gate L2–L6 (6/6 Done)", sprint4),
+        ("🎨 Sprint 3 — Convergenza UX/UI Design System v2.0, Home Hub Iniziale & Processi Core (4/4 Done)", sprint3),
+        ("⚡ Sprint 2 — Riorganizzazione 3 Pilastri, Core Applicativo PLM/PIM & Go-To-Market (7/7 Done)", sprint2),
+        ("🚀 Sprint 1 — Bootstrap C-Suite & Fondamenta Governance (6/6 Done)", sprint1),
+    ]
+
+    for sec_title, sec_tasks in epoch1_sections:
+        if sec_tasks:
+            lines.extend([
+                "<details>",
+                f"<summary><strong>{sec_title}</strong></summary>",
+                "",
+                "| Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |",
+                "|---|:---:|---|:---:|:---:|---|:---:|",
+            ])
+            for t in sec_tasks:
+                lines.append(format_task_row(t))
+            lines.extend([
+                "",
+                "</details>",
+                "",
+            ])
+
+    lines.extend([
+        "---",
+        "",
         "## ⚙️ Regole di Aggiornamento",
         "1. Ogni sub-agente di Google Antigravity, quando prende in carico un task, aggiorna `status` a `\"in_progress\"` e `updated_at` con il timestamp corrente.",
         "2. Al termine della produzione dei deliverable in `Azienda/docs/`, `Azienda/adr/` o `Applicativo/`, popola `output_artifacts`, imposta `status` a `\"review\"` (se richiede approvazione L2–L6 del Founder) oppure `\"done\"`.",
-        "3. Il **Founder Control Center** (`Portale_Founder_Control/control_center.py` su `http://127.0.0.1:8080`) mantiene sincronizzato questo registro in tempo reale.",
+        "3. Il **Founder Control Center v2.0** (`Portale_Founder_Control/control_center.py` su `http://127.0.0.1:8080`) mantiene sincronizzato questo registro multi-epoca in tempo reale.",
         "",
     ])
     os.makedirs(TASKS_DIR, exist_ok=True)
@@ -566,7 +564,10 @@ def list_all_docs():
     
     # Task artifacts to role mapping
     task_artifact_role = {}
-    task_files = sorted(glob.glob(os.path.join(TASKS_DIR, "FTL-*.json")))
+    task_files = sorted(
+        glob.glob(os.path.join(TASKS_DIR, "FTL-*.json"))
+        + glob.glob(os.path.join(ARCHIVE_TASKS_DIR, "FTL-*.json"))
+    )
     for p in task_files:
         try:
             with open(p, "r", encoding="utf-8") as f:
@@ -587,11 +588,11 @@ def list_all_docs():
             if norm.endswith(k) or k.endswith(norm):
                 return r
         low = norm.lower()
-        if "role_ceo" in low or "/okr/" in low or "ftl-ceo" in low:
+        if "piano_prosecuzione_strategico" in low or "role_ceo" in low or "/okr/" in low or "ftl-ceo" in low:
             return "CEO"
-        if "role_cgo" in low or "/adr/" in low or "/governance/" in low or "ftl-gov" in low or "portale_founder_control" in low:
+        if "archivio_epoche" in low or "role_cgo" in low or "/adr/" in low or "/governance/" in low or "ftl-gov" in low or "portale_founder_control" in low:
             return "CGO"
-        if "role_cto" in low or "applicativo/" in low or "ftl-tech" in low or ".github/" in low:
+        if "role_cto" in low or "/technical/" in low or "applicativo/" in low or "ftl-tech" in low or ".github/" in low:
             return "CTO"
         if "role_cpo" in low or "/prd/" in low or "ftl-prod" in low:
             return "CPO"
@@ -602,6 +603,40 @@ def list_all_docs():
         if "manifesto" in low:
             return "CEO"
         return "TUTTI"
+
+    def infer_epoch(rel_path):
+        low = rel_path.lower()
+        if any(k in low for k in ("epoch-3", "epoch_3", "epoca-3", "epoca_3", "sprint-13", "sprint-14")):
+            return "EPOCH_3"
+        if "archive_epoch_1/" in low or "memory/archive/" in low or "epoch-1" in low or "epoca-1" in low or "epoca_1" in low:
+            return "EPOCH_1"
+        if any(k in low for k in (
+            "piano_prosecuzione_strategico_epoca_2",
+            "epoch-2", "epoca-2", "epoca_2",
+            "sprint-8", "sprint-9", "sprint-10", "sprint-11", "sprint-12",
+            "prd-009", "adr-011", "2026-10-26.md"
+        )):
+            return "EPOCH_2"
+        if rel_path.startswith("Azienda/tasks/FTL-") and "archive_epoch_1" not in rel_path:
+            return "EPOCH_2"
+        if any(k in low for k in (
+            "sprint-1", "sprint-2", "sprint-3", "sprint-4", "sprint-5", "sprint-6", "sprint-7",
+            "prd-001", "prd-002", "prd-003", "prd-004", "prd-005", "prd-006", "prd-007", "prd-008",
+            "adr-000", "adr-001", "adr-002", "adr-003", "adr-004", "adr-005", "adr-006", "adr-007", "adr-008", "adr-009", "adr-010",
+            "q4-2026-okr", "district-pilot", "gtm-execution", "organic-launch",
+            "competitor-benchmark", "design-partner", "sales-playbook", "pilot-loi", "pilot-pipeline",
+            "audit-gdpr", "process_rules_v1", "governance-risk", "governance-triage",
+            "brand-guidelines", "dpp-espr-launch", "editorial-plan", "go-live-launch", "landing-page",
+            "c-suite-kickoff", "free-tier-deployment", "fast-onboarding",
+            "2026-10-18.md", "2026-10-19.md", "2026-10-20.md", "dam/"
+        )):
+            return "EPOCH_1"
+        if any(k in low for k in (
+            "manifesto", "role_", "identity.md", "soul.md", "user.md", "memory.md", "dreams.md",
+            "archivio_epoche"
+        )):
+            return "CORE"
+        return "CORE"
 
     def extract_title(full_path):
         ext = os.path.splitext(full_path)[1].lower()
@@ -631,6 +666,8 @@ def list_all_docs():
     azienda_core = [
         os.path.join("Azienda", f)
         for f in [
+            "PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md",
+            "ARCHIVIO_EPOCHE.md",
             "Manifesto_Fondazione_Footlink.md",
             "README.md",
             "IDENTITY.md",
@@ -641,7 +678,13 @@ def list_all_docs():
         ]
     ]
     adr_files = [os.path.relpath(p, ROOT_DIR) for p in sorted(glob.glob(os.path.join(ADR_DIR, "*.md")))]
-    task_json_files = [os.path.relpath(p, ROOT_DIR) for p in sorted(glob.glob(os.path.join(TASKS_DIR, "*.json")))]
+    task_json_files = [
+        os.path.relpath(p, ROOT_DIR)
+        for p in sorted(
+            glob.glob(os.path.join(TASKS_DIR, "*.json"))
+            + glob.glob(os.path.join(ARCHIVE_TASKS_DIR, "*.json"))
+        )
+    ]
     doc_files = [
         os.path.relpath(p, ROOT_DIR)
         for p in sorted(
@@ -668,6 +711,10 @@ def list_all_docs():
             + glob.glob(os.path.join(ROOT_DIR, "Azienda", "dam", "**", "*.svg"), recursive=True)
         )
     ]
+    memory_files = [
+        os.path.relpath(p, ROOT_DIR)
+        for p in sorted(glob.glob(os.path.join(ROOT_DIR, "Azienda", "memory", "**", "*.md"), recursive=True))
+    ]
     portale_files = [
         os.path.relpath(p, ROOT_DIR)
         for p in sorted(
@@ -677,7 +724,7 @@ def list_all_docs():
     ]
     root_files = ["README.md", "AGENTS.md", ".github/workflows/ci.yml"]
 
-    candidates = azienda_core + adr_files + task_json_files + doc_files + dam_files + applicativo_files + portale_files + root_files
+    candidates = azienda_core + adr_files + task_json_files + doc_files + dam_files + memory_files + applicativo_files + portale_files + root_files
     seen = set()
     for rel in candidates:
         full_p = os.path.join(ROOT_DIR, rel)
@@ -707,6 +754,7 @@ def list_all_docs():
                 "path": rel,
                 "pillar": pillar,
                 "role": infer_role(rel),
+                "epoch": infer_epoch(rel),
                 "title": title,
                 "ext": os.path.splitext(rel)[1].lower(),
                 "size": os.path.getsize(full_p),
@@ -1098,6 +1146,30 @@ INDEX_HTML = r"""<!DOCTYPE html>
   .type-md { color: #4ade80; background: rgba(34,197,94,0.15); }
   .type-html { color: #c084fc; background: rgba(168,85,247,0.15); }
   .type-json { color: #fbbf24; background: rgba(245,158,11,0.15); }
+  .epoch-card-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .epoch-card-badge.e1 { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35); }
+  .epoch-card-badge.e2 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
+  .epoch-card-badge.e3 { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
+  .epoch-card-badge.core { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+  .epoch-empty-default {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 56px 28px;
+    color: var(--muted);
+    background: rgba(15, 23, 42, 0.65);
+    border-radius: 14px;
+    border: 1px dashed rgba(56, 189, 248, 0.45);
+    margin: 10px 0;
+  }
   .doc-card-title {
     font-size: 14px;
     font-weight: 700;
@@ -1496,8 +1568,47 @@ INDEX_HTML = r"""<!DOCTYPE html>
 
   <div id="approval-queue-container"></div>
 
+  <!-- Multi-Epoch Governance Switcher Banner (ADR-011) -->
+  <div style="background:linear-gradient(90deg, rgba(16,185,129,0.12) 0%, rgba(56,189,248,0.12) 50%, rgba(168,85,247,0.12) 100%);border:1px solid rgba(56,189,248,0.4);border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="pill green" style="font-size:11px;">🏛️ GOVERNANCE MULTI-EPOCA (ADR-011)</span>
+        <strong style="font-size:15px;color:#f8fafc;" id="epoch-banner-title">🚀 EPOCA II: LA VERTICALIZZAZIONE (Da Sprint 8 — "La Ripartenza")</strong>
+      </div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;" id="epoch-banner-desc">
+        Focus su profondità funzionale verticale per modulo (Zero Horizontal Bloat) • Epoca I (Sprint 1–7, 67/67 Task Done 👑👑) consolidata e archiviata.
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-sm" id="btn-epoch-2" onclick="setEpochFilter('EPOCH_2')" style="background:linear-gradient(135deg,#0284c7,#6366f1);color:#fff;border-color:transparent;">
+        🚀 Epoca II: Sprint 8+ (Attiva)
+      </button>
+      <button class="btn btn-sm" id="btn-epoch-1" onclick="setEpochFilter('EPOCH_1')">
+        📦 Archivio Epoca I (S1–S7 • 67 Done 👑👑)
+      </button>
+      <button class="btn btn-sm" id="btn-epoch-3" onclick="setEpochFilter('EPOCH_3')" style="border-color:#38bdf8;color:#38bdf8;">
+        ✨ Nuova Epoca (Default Vuoto)
+      </button>
+      <button class="btn btn-sm" id="btn-epoch-core" onclick="setEpochFilter('CORE')">
+        🏛️ Costituzionali &amp; Core
+      </button>
+      <button class="btn btn-sm" id="btn-epoch-all" onclick="setEpochFilter('ALL')">
+        🌐 Tutte le Epoche
+      </button>
+      <button class="btn btn-sm" style="background:linear-gradient(135deg,rgba(245,158,11,0.25),rgba(234,179,8,0.35));border-color:#f59e0b;color:#fef08a;font-weight:700;" onclick="openDoc('Azienda/ARCHIVIO_EPOCHE.md', 'preview')" title="Apri il Registro Ufficiale dell'Archivio per Epoche">
+        🏛️ Registro Epoche
+      </button>
+      <button class="btn btn-sm btn-approve" onclick="openDoc('Azienda/docs/governance/epoch-1-historical-consolidation-sprints-1-7.md', 'preview')" title="Apri il Compendio Storico Ufficiale dell'Epoca I">
+        📜 Compendio Epoca I
+      </button>
+      <button class="btn btn-sm" style="background:rgba(168,85,247,0.18);border-color:#a855f7;color:#d8b4fe;" onclick="openDoc('Azienda/docs/okr/epoch-2-masterplan-and-sprint-8-kickoff.md', 'preview')" title="Apri il Master Plan Epoca II e Definizione Sprint 8">
+        🎯 Master Plan Sprint 8
+      </button>
+    </div>
+  </div>
+
   <div class="section-title">
-    <span>📊 C-Suite Task Board (Sprint 1–4 • Real-Time Sync con <code>Azienda/tasks/*.json</code>)</span>
+    <span id="kanban-section-title">📊 C-Suite Task Board — Epoca II: La Verticalizzazione (Sprint 8 • Real-Time Sync con <code>Azienda/tasks/*.json</code>)</span>
     <span style="font-size:12px;color:var(--muted)" id="last-sync"></span>
   </div>
   <div class="kanban" id="kanban-board"></div>
@@ -1510,6 +1621,25 @@ INDEX_HTML = r"""<!DOCTYPE html>
         <p>Consultazione rapida per ruolo C-Level, ricerca in tempo reale e anteprima interattiva (.md ed .html)</p>
       </div>
       <div class="hub-stats" id="hub-doc-count">0 Documenti</div>
+    </div>
+
+    <!-- Dedicated Epoch Selector Bar in Knowledge Hub -->
+    <div style="background:rgba(15,23,42,0.65);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:12px;font-weight:700;color:#94a3b8;letter-spacing:0.3px;display:flex;align-items:center;gap:6px;">
+          <span>🏛️</span> ARCHIVIO EPOCA:
+        </span>
+        <div class="epoch-chips-group" id="hub-epoch-chips" style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="filter-chip active" id="chip-epoch-2" onclick="setEpochFilter('EPOCH_2')">🚀 Epoca II: Verticalizzazione (Attiva)</button>
+          <button class="filter-chip" id="chip-epoch-1" onclick="setEpochFilter('EPOCH_1')">📦 Epoca I: Fondazione (S1–S7)</button>
+          <button class="filter-chip" id="chip-epoch-3" onclick="setEpochFilter('EPOCH_3')" style="border-color:#38bdf8;color:#38bdf8;">✨ Nuova Epoca (Default Vuoto)</button>
+          <button class="filter-chip" id="chip-epoch-core" onclick="setEpochFilter('CORE')">🏛️ Costituzionali &amp; Core</button>
+          <button class="filter-chip" id="chip-epoch-all" onclick="setEpochFilter('ALL')">🌐 Tutte le Epoche</button>
+        </div>
+      </div>
+      <div id="hub-epoch-active-desc" style="font-size:12px;color:#38bdf8;font-weight:600;">
+        Mostrando: Epoca II (Sprint 8+ • Attiva)
+      </div>
     </div>
 
     <!-- C-Level Role Filter Tabs -->
@@ -1943,12 +2073,122 @@ async function fetchState() {
   }
 }
 
+let activeEpochFilter = 'EPOCH_2';
+
+const SPRINT_MAP = {
+  // EPOCA I - Sprint 1
+  'FTL-GOV-001': 'S1', 'FTL-CEO-001': 'S1', 'FTL-TECH-001': 'S1', 'FTL-PROD-001': 'S1', 'FTL-REV-001': 'S1', 'FTL-MKT-001': 'S1',
+  // EPOCA I - Sprint 2
+  'FTL-GOV-002': 'S2', 'FTL-CEO-002': 'S2', 'FTL-PROD-002': 'S2', 'FTL-TECH-002': 'S2', 'FTL-TECH-003': 'S2', 'FTL-MKT-002': 'S2', 'FTL-REV-002': 'S2',
+  // EPOCA I - Sprint 3
+  'FTL-GOV-003': 'S3', 'FTL-CEO-003': 'S3', 'FTL-PROD-003': 'S3', 'FTL-TECH-004': 'S3',
+  // EPOCA I - Sprint 4
+  'FTL-CEO-004': 'S4', 'FTL-GOV-004': 'S4', 'FTL-REV-003': 'S4', 'FTL-MKT-003': 'S4', 'FTL-PROD-004': 'S4', 'FTL-TECH-005': 'S4',
+  // EPOCA I - Sprint 5
+  'FTL-CEO-005': 'S5', 'FTL-GOV-005': 'S5', 'FTL-PROD-005': 'S5', 'FTL-TECH-006': 'S5', 'FTL-REV-004': 'S5', 'FTL-MKT-004': 'S5', 'FTL-CEO-006': 'S5', 'FTL-CEO-007': 'S5',
+  // EPOCA I - Sprint 6
+  'FTL-CEO-008': 'S6', 'FTL-GOV-006': 'S6', 'FTL-PROD-006': 'S6', 'FTL-TECH-007': 'S6', 'FTL-REV-005': 'S6', 'FTL-MKT-005': 'S6',
+  'FTL-CEO-009': 'S6', 'FTL-CEO-010': 'S6', 'FTL-CEO-011': 'S6', 'FTL-CEO-012': 'S6', 'FTL-PROD-007': 'S6',
+  'FTL-PROD-008': 'S6', 'FTL-PROD-009': 'S6', 'FTL-TECH-008': 'S6', 'FTL-TECH-009': 'S6', 'FTL-TECH-010': 'S6', 'FTL-TECH-011': 'S6',
+  // EPOCA I - Sprint 7
+  'FTL-CEO-013': 'S7', 'FTL-GOV-007': 'S7', 'FTL-PROD-010': 'S7', 'FTL-TECH-012': 'S7', 'FTL-REV-006': 'S7', 'FTL-MKT-006': 'S7',
+  'FTL-TECH-013': 'S7', 'FTL-PROD-011': 'S7', 'FTL-CEO-014': 'S7', 'FTL-CEO-015': 'S7', 'FTL-TECH-014': 'S7', 'FTL-TECH-015': 'S7',
+  'FTL-TECH-016': 'S7', 'FTL-CEO-016': 'S7', 'FTL-MKT-007': 'S7', 'FTL-TECH-017': 'S7', 'FTL-TECH-018': 'S7', 'FTL-TECH-019': 'S7', 'FTL-TECH-020': 'S7',
+  // EPOCA II - Sprint 8 (La Ripartenza & La Verticalizzazione)
+  'FTL-CEO-017': 'S8', 'FTL-CEO-018': 'S8', 'FTL-CEO-019': 'S8', 'FTL-GOV-008': 'S8', 'FTL-PROD-012': 'S8',
+  'FTL-TECH-021': 'S8', 'FTL-REV-007': 'S8', 'FTL-MKT-008': 'S8', 'FTL-TECH-022': 'S8', 'FTL-TECH-023': 'S8', 'FTL-PROD-013': 'S8',
+};
+
+const EPOCH_1_SPRINTS = new Set(['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7']);
+
+function getTaskEpoch(taskId) {
+  const sp = SPRINT_MAP[taskId];
+  if (sp && EPOCH_1_SPRINTS.has(sp)) return 'EPOCH_1';
+  return 'EPOCH_2';
+}
+
+function setEpochFilter(epochKey) {
+  activeEpochFilter = epochKey;
+  const b2 = document.getElementById('btn-epoch-2');
+  const b1 = document.getElementById('btn-epoch-1');
+  const b3 = document.getElementById('btn-epoch-3');
+  const bcore = document.getElementById('btn-epoch-core');
+  const ball = document.getElementById('btn-epoch-all');
+  const activeStyle = 'background:linear-gradient(135deg,#0284c7,#6366f1);color:#fff;border-color:transparent;';
+  const inactiveStyle = '';
+  if (b2) b2.style.cssText = epochKey === 'EPOCH_2' ? activeStyle : inactiveStyle;
+  if (b1) b1.style.cssText = epochKey === 'EPOCH_1' ? activeStyle : inactiveStyle;
+  if (b3) b3.style.cssText = epochKey === 'EPOCH_3' ? activeStyle : 'border-color:#38bdf8;color:#38bdf8;';
+  if (bcore) bcore.style.cssText = epochKey === 'CORE' ? activeStyle : inactiveStyle;
+  if (ball) ball.style.cssText = epochKey === 'ALL' ? activeStyle : inactiveStyle;
+
+  // Sync Hub chips
+  const chipMap = {
+    'EPOCH_2': 'chip-epoch-2',
+    'EPOCH_1': 'chip-epoch-1',
+    'EPOCH_3': 'chip-epoch-3',
+    'CORE': 'chip-epoch-core',
+    'ALL': 'chip-epoch-all'
+  };
+  Object.entries(chipMap).forEach(([k, id]) => {
+    const chip = document.getElementById(id);
+    if (chip) chip.classList.toggle('active', k === epochKey);
+  });
+
+  const titleEl = document.getElementById('kanban-section-title');
+  const bannerTitle = document.getElementById('epoch-banner-title');
+  const bannerDesc = document.getElementById('epoch-banner-desc');
+  const hubEpochDesc = document.getElementById('hub-epoch-active-desc');
+
+  if (epochKey === 'EPOCH_2') {
+    if (titleEl) titleEl.innerHTML = '📊 C-Suite Task Board — <strong>Epoca II: La Verticalizzazione (Sprint 8+)</strong> • Real-Time Sync';
+    if (bannerTitle) bannerTitle.textContent = '🚀 EPOCA II: LA VERTICALIZZAZIONE (Da Sprint 8 — "La Ripartenza")';
+    if (bannerDesc) bannerDesc.textContent = 'Focus su profondità funzionale verticale per modulo (Zero Horizontal Bloat) • Epoca I (Sprint 1–7, 67/67 Task Done 👑👑) consolidata e archiviata.';
+    if (hubEpochDesc) hubEpochDesc.textContent = 'Mostrando: Epoca II (Sprint 8+ • Attiva)';
+  } else if (epochKey === 'EPOCH_1') {
+    if (titleEl) titleEl.innerHTML = '📦 Archivio Storico Consolidato — <strong>Epoca I: Fondazione Orizzontale (Sprint 1–7 • 67/67 Done 👑👑)</strong>';
+    if (bannerTitle) bannerTitle.textContent = '📦 EPOCA I: FONDAZIONE & ESPANSIONE ORIZZONTALE (Sprint 1–7 • Consolidata)';
+    if (bannerDesc) bannerDesc.textContent = 'Archivio storico completo sigillato con 67/67 Task completati, 10 ADR, 8 PRD e compendio ufficiale.';
+    if (hubEpochDesc) hubEpochDesc.textContent = 'Mostrando: Epoca I (Archivio Storico Sprint 1–7)';
+  } else if (epochKey === 'EPOCH_3') {
+    if (titleEl) titleEl.innerHTML = '✨ C-Suite Task Board — <strong>Nuova Epoca (Epoca III) • Default Vuoto</strong>';
+    if (bannerTitle) bannerTitle.textContent = '✨ NUOVA EPOCA: EPOCA III (Default Vuoto — Pronta per la Ripartenza)';
+    if (bannerDesc) bannerDesc.textContent = 'Ambiente a tabula rasa configurato a default vuoto per il Founder. Nessuna contaminazione da epoche pregresse.';
+    if (hubEpochDesc) hubEpochDesc.textContent = 'Mostrando: Nuova Epoca (Default Vuoto 📭)';
+  } else if (epochKey === 'CORE') {
+    if (titleEl) titleEl.innerHTML = '🏛️ C-Suite Board — <strong>Documenti Costituzionali &amp; Fondativi (Core)</strong>';
+    if (bannerTitle) bannerTitle.textContent = '🏛️ PATRIMONIO COSTITUZIONALE & CORE (Perenne e Permanente)';
+    if (bannerDesc) bannerDesc.textContent = 'Manifesto di Fondazione, Specifiche di Ruolo C-Suite, Registro Archivi e identità stabili trasversali a tutte le epoche.';
+    if (hubEpochDesc) hubEpochDesc.textContent = 'Mostrando: Documenti Costituzionali & Core';
+  } else {
+    if (titleEl) titleEl.innerHTML = '🌐 C-Suite Task Board Globale — <strong>Tutte le Epoche (Sprint 1–8)</strong>';
+    if (bannerTitle) bannerTitle.textContent = '🌐 PANORAMICA GLOBALE: TUTTE LE EPOCHE (Epoca I, Epoca II &amp; Costituzionali)';
+    if (bannerDesc) bannerDesc.textContent = 'Tutti i 3 Pilastri di Root consultabili in una vista integrata omnicomprensiva.';
+    if (hubEpochDesc) hubEpochDesc.textContent = 'Mostrando: Tutte le Epoche (Tutti i Documenti)';
+  }
+  renderAll();
+}
+
 function renderAll() {
-  const tasks = currentState.tasks || [];
+  const allTasks = currentState.tasks || [];
+  const epoch2Tasks = allTasks.filter(t => getTaskEpoch(t.task_id) === 'EPOCH_2');
+  const epoch1Tasks = allTasks.filter(t => getTaskEpoch(t.task_id) === 'EPOCH_1');
+  const epoch3Tasks = allTasks.filter(t => getTaskEpoch(t.task_id) === 'EPOCH_3');
+  let tasks = [];
+  if (activeEpochFilter === 'EPOCH_2') tasks = epoch2Tasks;
+  else if (activeEpochFilter === 'EPOCH_1') tasks = epoch1Tasks;
+  else if (activeEpochFilter === 'EPOCH_3') tasks = epoch3Tasks;
+  else if (activeEpochFilter === 'CORE') tasks = [];
+  else tasks = allTasks;
+
   const counts = { backlog: 0, todo: 0, in_progress: 0, review: 0, done: 0, paused_ai_quota: 0 };
   tasks.forEach(t => { counts[t.status] = (counts[t.status] || 0) + 1; });
 
-  const anyPaused = counts.paused_ai_quota > 0;
+  const e2Counts = { backlog: 0, todo: 0, in_progress: 0, review: 0, done: 0 };
+  epoch2Tasks.forEach(t => { e2Counts[t.status] = (e2Counts[t.status] || 0) + 1; });
+  const e1Done = epoch1Tasks.filter(t => t.status === 'done').length;
+
+  const anyPaused = allTasks.some(t => t.status === 'paused_ai_quota');
   const pill = document.getElementById('quota-pill');
   if (anyPaused) {
     pill.className = 'pill amber';
@@ -1959,20 +2199,20 @@ function renderAll() {
   }
 
   document.getElementById('kpi-grid').innerHTML = `
-    <div class="kpi-card">
-      <div class="label">Progresso Globale Sprint 1 &amp; 2</div>
-      <div class="value">${counts.done} / ${tasks.length} Done</div>
-      <div class="sub">${counts.in_progress} in esecuzione • ${counts.todo} pronti</div>
+    <div class="kpi-card" style="border-top:2px solid #38bdf8;">
+      <div class="label">🚀 Progresso Epoca II (Sprint 8+)</div>
+      <div class="value">${e2Counts.done} / ${epoch2Tasks.length} Done</div>
+      <div class="sub">${e2Counts.todo} pronti (todo) • ${e2Counts.backlog} in backlog • ${e2Counts.in_progress} in corso</div>
     </div>
-    <div class="kpi-card">
-      <div class="label">In Attesa Approvazione Founder</div>
-      <div class="value" style="color:${counts.review > 0 ? '#c084fc' : '#4ade80'}">${counts.review} Task</div>
-      <div class="sub">Escalation L1–L6 / Gatekeeper Check</div>
+    <div class="kpi-card" style="border-top:2px solid #22c55e;">
+      <div class="label">📦 Archivio Epoca I (Sprint 1–7)</div>
+      <div class="value" style="color:#4ade80">${e1Done} / ${epoch1Tasks.length} Done 👑👑</div>
+      <div class="sub">Consolidata al 100% • 10 ADR • 9 Moduli Base</div>
     </div>
-    <div class="kpi-card">
-      <div class="label">Target FinOps SaaS Margin</div>
-      <div class="value" style="color:#4ade80">&gt; 75%</div>
-      <div class="sub">Terzisti: 0 € • Spesa autonoma: 0 €</div>
+    <div class="kpi-card" style="border-top:2px solid #a855f7;">
+      <div class="label">✨ Nuova Epoca (Epoca III)</div>
+      <div class="value" style="color:#c084fc">Default Vuoto</div>
+      <div class="sub">0 Task attivi • Pronto per ripartenza</div>
     </div>
     <div class="kpi-card">
       <div class="label">File nei 3 Pilastri di Root</div>
@@ -1982,7 +2222,7 @@ function renderAll() {
   `;
 
   // Render Founder Approval Queue
-  const reviewTasks = tasks.filter(t => t.status === 'review');
+  const reviewTasks = allTasks.filter(t => t.status === 'review');
   const aq = document.getElementById('approval-queue-container');
   if (reviewTasks.length === 0) {
     aq.innerHTML = '';
@@ -2010,6 +2250,47 @@ function renderAll() {
   }
 
   // Render Kanban
+  if (activeEpochFilter === 'EPOCH_3') {
+    document.getElementById('kanban-board').innerHTML = `
+      <div style="grid-column: 1 / -1; background: rgba(15,23,42,0.7); border: 1px dashed rgba(56,189,248,0.45); border-radius: 14px; padding: 48px 24px; text-align: center; color: var(--muted); margin: 6px 0;">
+        <div style="font-size: 44px; margin-bottom: 12px;">📭</div>
+        <div style="display:inline-block;padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.4);color:#38bdf8;margin-bottom:12px;">
+          ✨ NUOVA EPOCA (EPOCA III) • DEFAULT VUOTO
+        </div>
+        <div style="font-size: 17px; font-weight: 700; color: #f8fafc;">Nessun Task Presente per la Nuova Epoca</div>
+        <div style="font-size: 13.5px; max-width: 580px; margin: 8px auto 20px; line-height: 1.6; color: #94a3b8;">
+          La cabina di regia per l'Epoca III è configurata a default vuoto, esattamente come richiesto dal Founder. Puoi inserire la prima direttiva o iniziativa strategica per avviare il backlog della nuova epoca.
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-approve" onclick="openCreateTaskModal()">✨ Crea Primo Task / Direttiva Founder</button>
+          <button class="btn" onclick="setEpochFilter('EPOCH_2')">↩️ Torna a Epoca II (Attiva)</button>
+        </div>
+      </div>
+    `;
+    renderKnowledgeHub();
+    document.getElementById('last-sync').textContent = 'Ultimo sync: ' + new Date().toLocaleTimeString('it-IT');
+    return;
+  }
+
+  if (activeEpochFilter === 'CORE') {
+    document.getElementById('kanban-board').innerHTML = `
+      <div style="grid-column: 1 / -1; background: rgba(15,23,42,0.7); border: 1px dashed rgba(245,158,11,0.4); border-radius: 14px; padding: 40px 24px; text-align: center; color: var(--muted); margin: 6px 0;">
+        <div style="font-size: 38px; margin-bottom: 10px;">🏛️</div>
+        <div style="display:inline-block;padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;margin-bottom:12px;">
+          PATRIMONIO COSTITUZIONALE &amp; CORE
+        </div>
+        <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">I Documenti Fondativi Non Hanno Task Operativi di Sprint</div>
+        <div style="font-size: 13px; max-width: 540px; margin: 8px auto 16px; line-height: 1.6; color: #94a3b8;">
+          Il Manifesto, le Specifiche di Ruolo e i registri costituzionali sono perenni e immutabili. Consulta l'archivio documentale sottostante.
+        </div>
+        <button class="btn" onclick="setEpochFilter('EPOCH_2')">↩️ Visualizza Task Epoca II</button>
+      </div>
+    `;
+    renderKnowledgeHub();
+    document.getElementById('last-sync').textContent = 'Ultimo sync: ' + new Date().toLocaleTimeString('it-IT');
+    return;
+  }
+
   const columns = [
     { key: 'backlog', label: '📥 Backlog' },
     { key: 'todo', label: '🟢 Todo / Ready' },
@@ -2030,10 +2311,10 @@ function renderAll() {
         <div class="col">
           <div class="col-header">
             <span>${col.label}</span>
-            <span class="pill green" title="${totalDone} task completati in totale">${displayed.length} / ${totalDone}</span>
+            <span class="pill green" title="${totalDone} task completati in questa vista">${displayed.length} / ${totalDone}</span>
           </div>
           <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;padding:2px 2px;">
-            <span>${showAllDone ? 'Tutti i ' + totalDone + ' approvati' : 'Ultimi 10 approvati (discendenti)'}</span>
+            <span>${showAllDone ? 'Tutti i ' + totalDone + ' completati' : 'Ultimi ' + displayed.length + ' completati'}</span>
             ${totalDone > 10 ? `<button class="btn btn-sm" onclick="toggleShowAllDone()" style="padding:2px 8px;font-size:10px;background:rgba(255,255,255,0.06);">${showAllDone ? 'Mostra 10' : 'Vedi tutti (' + totalDone + ')'}</button>` : ''}
           </div>
           <div class="col-cards">
@@ -2062,22 +2343,10 @@ function renderAll() {
   document.getElementById('last-sync').textContent = 'Ultimo sync: ' + new Date().toLocaleTimeString('it-IT');
 }
 
-const SPRINT_MAP = {
-  // Sprint 1
-  'FTL-GOV-001': 'S1', 'FTL-CEO-001': 'S1', 'FTL-TECH-001': 'S1', 'FTL-PROD-001': 'S1', 'FTL-REV-001': 'S1', 'FTL-MKT-001': 'S1',
-  // Sprint 2
-  'FTL-GOV-002': 'S2', 'FTL-CEO-002': 'S2', 'FTL-PROD-002': 'S2', 'FTL-TECH-002': 'S2', 'FTL-TECH-003': 'S2', 'FTL-MKT-002': 'S2', 'FTL-REV-002': 'S2',
-  // Sprint 3
-  'FTL-GOV-003': 'S3', 'FTL-CEO-003': 'S3', 'FTL-PROD-003': 'S3', 'FTL-TECH-004': 'S3',
-  // Sprint 4
-  'FTL-CEO-004': 'S4', 'FTL-GOV-004': 'S4', 'FTL-REV-003': 'S4', 'FTL-MKT-003': 'S4', 'FTL-PROD-004': 'S4', 'FTL-TECH-005': 'S4',
-  // Sprint 5
-  'FTL-CEO-005': 'S5', 'FTL-GOV-005': 'S5', 'FTL-PROD-005': 'S5', 'FTL-TECH-006': 'S5', 'FTL-REV-004': 'S5', 'FTL-MKT-004': 'S5',
-};
-
 function getSprintBadge(taskId) {
   const s = SPRINT_MAP[taskId];
-  return s ? `<span style="font-size:10px;color:var(--muted);">[${s}]</span>` : '';
+  const ep = getTaskEpoch(taskId) === 'EPOCH_1' ? 'E1' : 'E2';
+  return s ? `<span style="font-size:10px;color:var(--muted);">[${ep}·${s}]</span>` : `<span style="font-size:10px;color:#38bdf8;">[E2·S8+]</span>`;
 }
 
 function renderCard(t) {
@@ -2106,7 +2375,7 @@ function renderCard(t) {
         <button class="btn btn-sm btn-approve" onclick="openEditTaskModal('${t.task_id}')">✏️ Modifica</button>
         ${t.status === 'review' ? `<button class="btn btn-sm" onclick="updateTaskStatus('${t.task_id}', 'done')" style="background:rgba(34,197,94,0.3);color:#4ade80;">✅ Approva</button>` : ''}
         ${t.status !== 'done' ? `<button class="btn btn-sm" onclick="promptNote('${t.task_id}', '${t.status}')">📝 Nota</button>` : ''}
-        <button class="btn btn-sm" onclick="openDoc('Azienda/tasks/${t.task_id}.json')">🔍 JSON</button>
+        <button class="btn btn-sm" onclick="openDoc('${t._rel_path || ('Azienda/tasks/' + t.task_id + '.json')}')">🔍 JSON</button>
       </div>
     </div>
   `;
@@ -2185,7 +2454,8 @@ function closeEditTaskModal() {
 
 function openDocFromEditModal() {
   if (!currentEditingTaskId) return;
-  const path = `Azienda/tasks/${currentEditingTaskId}.json`;
+  const t = (currentState.tasks || []).find(x => x.task_id === currentEditingTaskId);
+  const path = (t && t._rel_path) ? t._rel_path : `Azienda/tasks/${currentEditingTaskId}.json`;
   closeEditTaskModal();
   openDoc(path);
 }
@@ -2465,7 +2735,22 @@ let hubFilter = {
 };
 
 function renderKnowledgeHub() {
-  const allDocs = currentState.docs || [];
+  const rawDocs = currentState.docs || [];
+  const allDocs = rawDocs.filter(d => {
+    if (activeEpochFilter === 'EPOCH_2') {
+      return d.epoch === 'EPOCH_2';
+    }
+    if (activeEpochFilter === 'EPOCH_1') {
+      return d.epoch === 'EPOCH_1';
+    }
+    if (activeEpochFilter === 'EPOCH_3') {
+      return d.epoch === 'EPOCH_3';
+    }
+    if (activeEpochFilter === 'CORE') {
+      return d.epoch === 'CORE';
+    }
+    return true; // ALL
+  });
   allDocs.sort((a, b) => (b.mtime || '').localeCompare(a.mtime || ''));
 
   const rolesList = [
@@ -2520,23 +2805,59 @@ function renderKnowledgeHub() {
     return true;
   });
 
+  const epochLabels = {
+    EPOCH_2: '🚀 Epoca II (Sprint 8+)',
+    EPOCH_1: '📦 Epoca I (Sprint 1–7)',
+    EPOCH_3: '✨ Nuova Epoca (Default Vuoto)',
+    CORE: '🏛️ Patrimonio Costituzionale',
+    ALL: '🌐 Tutte le Epoche'
+  };
+  const activeEpochLabel = epochLabels[activeEpochFilter] || activeEpochFilter;
+
   const counterEl = document.getElementById('hub-doc-count');
-  if (counterEl) counterEl.textContent = `${filtered.length} di ${allDocs.length} Documenti`;
+  if (counterEl) {
+    if (activeEpochFilter === 'EPOCH_3') {
+      counterEl.textContent = '0 Documenti (Default Vuoto)';
+    } else {
+      counterEl.textContent = `${filtered.length} di ${allDocs.length} Documenti`;
+    }
+  }
 
   const metaEl = document.getElementById('hub-results-meta');
   if (metaEl) {
-    metaEl.textContent = `Mostrando ${filtered.length} file • Filtro: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.founderOnly ? ' • 👑 Solo Direttive Founder' : ''}${hubFilter.query ? ' • Ricerca: "' + hubFilter.query + '"' : ''}`;
+    if (activeEpochFilter === 'EPOCH_3') {
+      metaEl.textContent = 'Epoca: ✨ Nuova Epoca (Epoca III) • Ambiente tabula rasa inizializzato a default vuoto per il Founder';
+    } else {
+      metaEl.textContent = `Mostrando ${filtered.length} file • Epoca: ${activeEpochLabel} • Filtro: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.founderOnly ? ' • 👑 Solo Direttive Founder' : ''}${hubFilter.query ? ' • Ricerca: "' + hubFilter.query + '"' : ''}`;
+    }
   }
 
   const gridEl = document.getElementById('hub-docs-grid');
   if (!gridEl) return;
 
+  if (activeEpochFilter === 'EPOCH_3') {
+    gridEl.innerHTML = `
+      <div class="epoch-empty-default">
+        <div class="icon">✨</div>
+        <h3>Nuova Epoca (Epoca III) — Archivio Documentale a Default Vuoto</h3>
+        <p>Non è presente alcun documento o deliverable per la Nuova Epoca.<br>
+           L'archivio è inizializzato a <strong>default vuoto</strong> (tabula rasa), pronto ad accogliere i nuovi PRD, ADR e specifiche strategiche del Founder e del C-Suite.</p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+          <button class="btn btn-approve" onclick="openCreateTaskModal()">✨ Crea Task Nuova Epoca</button>
+          <button class="btn" onclick="openDoc('Azienda/ARCHIVIO_EPOCHE.md', 'preview')">📖 Consulta Registro Epoche</button>
+          <button class="btn" onclick="setEpochFilter('EPOCH_2')">↩️ Torna a Epoca II (Attiva)</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   if (filtered.length === 0) {
     gridEl.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--muted); background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed var(--border);">
         <div style="font-size: 28px; margin-bottom: 8px;">🔍</div>
-        <div style="font-size: 14px; font-weight: 600; color: #e2e8f0;">Nessun documento trovato</div>
-        <div style="font-size: 12px; margin-top: 4px;">Prova a modificare i filtri C-Level o la parola chiave di ricerca.</div>
+        <div style="font-size: 14px; font-weight: 600; color: #e2e8f0;">Nessun documento trovato per l'epoca selezionata e i filtri attivi</div>
+        <div style="font-size: 12px; margin-top: 4px;">Prova a modificare i filtri C-Level, il selettore Epoca o la parola chiave di ricerca.</div>
       </div>
     `;
     return;
@@ -2555,13 +2876,21 @@ function renderKnowledgeHub() {
 
   gridEl.innerHTML = filtered.map(d => {
     const isHtml = (d.ext === '.html' || d.ext === '.htm');
-    const isMd = (d.ext === '.md');
     const cleanExt = (d.ext || '').replace('.', '');
     const emoji = roleEmoji[d.role] || '📄';
+    const epochBadge = (d.epoch === 'EPOCH_1')
+      ? `<span class="epoch-card-badge e1">📦 Epoca I</span>`
+      : (d.epoch === 'EPOCH_2')
+      ? `<span class="epoch-card-badge e2">🚀 Epoca II</span>`
+      : (d.epoch === 'EPOCH_3')
+      ? `<span class="epoch-card-badge e3">✨ Epoca III</span>`
+      : `<span class="epoch-card-badge core">🏛️ Core</span>`;
+
     return `
       <div class="doc-card">
         <div>
           <div class="doc-card-top">
+            ${epochBadge}
             <span class="doc-role-badge role-${d.role}">${emoji} ${d.role}</span>
             <span class="doc-type-badge type-${cleanExt}">${cleanExt.toUpperCase()}</span>
             ${d.is_founder_directive ? `<span class="doc-role-badge" style="background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.4);font-weight:bold;font-size:10px;">👑 Direttiva Founder</span>` : ''}

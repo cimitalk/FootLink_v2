@@ -219,6 +219,8 @@ export interface BomItem {
   component_type: BomComponentType;
   material_name: string;
   supplier_name: string;
+  vendor_id?: string | null;
+  master_color_id?: string | null;
   origin_country_iso2: string;
   unit_of_measure: string;
   unit_consumption: number;
@@ -248,6 +250,10 @@ export interface PlmProductionVariant {
   collection_id?: string | null;
   variant_code: string;
   colorway_name: string;
+  primary_color_id?: string | null;
+  secondary_color_id?: string | null;
+  hardware_finish_color_id?: string | null;
+  colorway_rule_preset?: string | null;
   size_range: string;
   last_or_pattern_code: string;
   lifecycle_status: PlmLifecycleStatus;
@@ -268,10 +274,39 @@ export interface PlmProductionVariant {
   created_at?: string;
 }
 
+// ============================================================================
+// Sprint 8 / FTL-CEO-021: Product Models Entity (Base Pattern & Last upstream of PIM)
+// ============================================================================
+
+export interface ProductModel {
+  model_id: string;
+  model_code: string;
+  name: string;
+  category: ProductCategory | string;
+  target_gender?: string | null;
+  last_code?: string | null;
+  sole_construction?: string | null;
+  heel_height_mm?: number | null;
+  default_size_range?: string | null;
+  season_id?: string | null;
+  collection_id?: string | null;
+  description?: string | null;
+  cad_drawing_ref?: string | null;
+  is_active: boolean;
+  metadata?: Record<string, any>;
+  created_at?: string;
+  products_count?: number;
+}
+
+export interface ProductModelWithProducts extends ProductModel {
+  products: PimCommercialItem[];
+}
+
 export interface PimCommercialItem {
   pim_item_id: string;
   sku_code: string;
   model_name: string;
+  model_id?: string | null;
   brand_tenant_id: string;
   season: string;
   season_id?: string | null;
@@ -456,6 +491,8 @@ export interface TanneryBatch {
   company_id: string;
   batch_code: string;
   tannery_name: string;
+  vendor_id?: string | null;
+  master_color_id?: string | null;
   district: string;
   leather_type: string;
   tanning_process: TanneryProcess;
@@ -562,4 +599,195 @@ export interface BomRequirementsCalculationResult {
   total_leather_sqft_gross: number;
   total_soles_pairs_gross: number;
   calculated_at: string;
+}
+
+// ============================================================================
+// Sprint 8 (Epoca II - La Verticalizzazione):
+// 1. Color Intelligence Engine, Lab-Dip & Colorway BOM Matrix (FTL-TECH-022)
+// 2. Vendor Hub 360°, Certifications, Scorecard L6 & Where-Used (FTL-TECH-023)
+// ============================================================================
+
+export interface MasterColor {
+  id: string;
+  color_id?: string;
+  color_code: string;
+  technical_name_it: string;
+  technical_name_en: string;
+  commercial_family: string;
+  hex_code: string;
+  pantone_tcx_code: string;
+  ral_code: string;
+  finish_type: string;
+  applicable_domains: string[];
+  season_id?: string | null;
+  season_ids?: string[];
+  recipe_notes?: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface ColorwayBomNodeMapping {
+  id?: string;
+  plm_variant_id: string;
+  bom_item_id: string;
+  level: number;
+  parent_bom_item_id?: string | null;
+  component_type: string;
+  material_name: string;
+  supplier_name: string;
+  vendor_id?: string | null;
+  master_color_id?: string | null;
+  color_code?: string | null;
+  technical_name_it?: string | null;
+  commercial_family?: string | null;
+  hex_code?: string | null;
+  pantone_tcx_code?: string | null;
+  ral_code?: string | null;
+  finish_type?: string | null;
+  part_role: string;
+  galvanics_finish?: string | null;
+  lab_dip_status:
+    | "pending"
+    | "submitted"
+    | "approved"
+    | "conditional_waiver"
+    | "rejected"
+    | "master_standard"
+    | string;
+  delta_e_value?: number | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  notes?: string;
+  tannery_color_consistency?: "coherent" | "mismatch" | "not_linked" | string;
+  linked_batch_code?: string | null;
+}
+
+export interface ColorwayMatrixResponse {
+  plm_variant_id: string;
+  variant_code: string;
+  colorway_name: string;
+  primary_color_id?: string | null;
+  secondary_color_id?: string | null;
+  hardware_finish_color_id?: string | null;
+  colorway_rule_preset: string;
+  total_bom_nodes: number;
+  mapped_nodes_count: number;
+  approved_nodes_count: number;
+  rejected_nodes_count: number;
+  colorway_readiness_pct: number;
+  production_gate_blocked: boolean;
+  mappings: ColorwayBomNodeMapping[];
+}
+
+export interface VendorCertification {
+  cert_id: string;
+  vendor_id: string;
+  cert_type: string;
+  cert_code: string;
+  issuing_body: string;
+  valid_from: string;
+  valid_until: string;
+  sha256_hash: string;
+  days_to_expiry?: number;
+  status: "valid" | "expiring_soon" | "expired" | "revoked" | string;
+}
+
+export interface VendorNegotiatedPriceItem {
+  item_code: string;
+  description: string;
+  uom: string;
+  unit_price_eur: number;
+}
+
+export interface VendorRecord {
+  vendor_id: string;
+  vendor_code: string;
+  company_name: string;
+  vat_number: string;
+  district_company_id?: string | null;
+  district_company?: Company | null;
+  supply_chain_role: string;
+  district_area: string;
+  city_address?: string;
+  country_iso2: string;
+  paas_tier: "enterprise" | "pmi" | "subcontractor_zero_eur" | string;
+  qualification_status: string;
+  quality_score?: number | null;
+  otd_score?: number | null;
+  esg_score?: number | null;
+  overall_rating?: number | null;
+  rating_class?: string | null;
+  standard_lead_time_days: number;
+  moq_description?: string | null;
+  payment_terms_l6?: string | null;
+  hourly_or_unit_rate_eur_l6?: number | null;
+  negotiated_price_list_l6?: VendorNegotiatedPriceItem[] | null;
+  internal_audit_notes_l6?: string | null;
+  contact_email: string;
+  certifications: VendorCertification[];
+  has_expired_critical_certs?: boolean;
+  cert_semaphore_status?: "green" | "yellow" | "red" | string;
+  l6_segregated?: boolean;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface VendorWhereUsedResponse {
+  vendor_id: string;
+  vendor_code: string;
+  company_name: string;
+  supply_chain_role: string;
+  district_area?: string;
+  paas_tier?: string;
+  qualification_status: string;
+  overall_rating?: number | null;
+  has_expired_critical_certs?: boolean;
+  l6_segregated?: boolean;
+  impact_summary: {
+    pim_models_count: number;
+    plm_variants_count: number;
+    bom_nodes_count: number;
+    tannery_batches_count: number;
+    active_production_orders_count: number;
+    supply_chain_criticality: string;
+  };
+  financial_exposure_l6?: {
+    avg_bom_cost_contribution_per_pair_eur: number;
+    tannery_stock_value_eur?: number;
+    estimated_seasonal_exposure_eur: number;
+    hourly_or_unit_rate_eur?: number;
+    payment_terms?: string;
+  } | null;
+  impacted_pim_items: Array<{
+    pim_item_id: string;
+    sku_code: string;
+    model_name: string;
+    season: string;
+  }>;
+  impacted_plm_variants: Array<{
+    plm_variant_id: string;
+    pim_item_id?: string;
+    variant_code: string;
+    colorway_name: string;
+    lifecycle_status: string;
+    bom_nodes_from_vendor: number;
+  }>;
+  impacted_bom_nodes: Array<{
+    bom_item_id: string;
+    plm_variant_id: string;
+    variant_code: string;
+    level: number;
+    component_type: string;
+    material_name: string;
+    unit_of_measure: string;
+    unit_consumption: number;
+    unit_cost_eur_l6?: number | null;
+  }>;
+  impacted_tannery_batches: Array<{
+    batch_id: string;
+    batch_code: string;
+    leather_type: string;
+    lwg_rating: string;
+    available_qty_sqft: number;
+  }>;
 }

@@ -28,3 +28,10 @@ Store stable user preferences and profile facts as directives that guide every s
 <!-- observed: 2026-10-18 | status: active -->
 - Never include the word "Antigravity" in git commit messages or comments.
 
+<!-- observed: 2026-10-26 | status: active -->
+- **Direttiva Principale Epoca II (Da Sprint 8 — "La Verticalizzazione"):** Privilegiare sempre la **profondità funzionale verticale** all'interno dei moduli esistenti (numero e ricchezza di funzionalità reali disponibili per gli utenti di fabbrica, ufficio stile, acquisti e qualità) rispetto all'espansione orizzontale di nuovi moduli superficiali. Mantenere l'archivio storico dell'Epoca I (Sprint 1–7) consolidato, strutturato e separato dal flusso operativo dell'Epoca II.
+
+<!-- observed: 2026-10-28 | status: active -->
+- **Definizione e Prioritizzazione degli Sprint dell'Epoca II:** Lo Sprint 8 ("La Ripartenza") è confermato ed esecutivo (Colori Intelligenti, Colorway BOM Matrix, Albo Fornitori 360°, Where-Used). Per tutti gli sprint successivi (Sprint 9+), il Founder definisce direttamente di volta in volta gli argomenti e il perimetro funzionale; la C-Suite non deve pre-assegnare rigidamente contenuti a sprint futuri non ancora approvati dal Founder.
+
+

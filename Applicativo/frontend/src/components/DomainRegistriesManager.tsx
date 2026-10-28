@@ -1,5 +1,17 @@
 import React, { useState } from "react";
-import { DomainRegistryEntry, RegistryDomain } from "../types";
+import {
+  Company,
+  DomainRegistryEntry,
+  MasterColor,
+  RegistryDomain,
+  Season,
+  VendorCertification,
+  VendorRecord,
+  VendorWhereUsedResponse,
+  ViewerSecurityRole,
+} from "../types";
+import ColorIntelligenceStudio from "./ColorIntelligenceStudio";
+import VendorHub360 from "./VendorHub360";
 
 interface DomainRegistriesManagerProps {
   registries: DomainRegistryEntry[];
@@ -26,6 +38,28 @@ interface DomainRegistriesManagerProps {
     }
   ) => void;
   onDeleteEntry: (domain: string, name: string, code: string) => void;
+  // Sprint 8 Vertical Hubs (Vendor Hub 360° & Color Intelligence Studio)
+  vendors?: VendorRecord[];
+  colors?: MasterColor[];
+  seasons?: Season[];
+  viewerRole?: ViewerSecurityRole;
+  onCreateVendor?: (payload: Omit<VendorRecord, "vendor_id">) => Promise<void> | void;
+  onUpdateVendor?: (vendorId: string, payload: Partial<VendorRecord>) => Promise<void> | void;
+  onDeleteVendor?: (vendorId: string) => Promise<void> | void;
+  onAddVendorCertification?: (
+    vendorId: string,
+    cert: Omit<VendorCertification, "cert_id" | "vendor_id">
+  ) => Promise<void> | void;
+  onDeleteVendorCertification?: (vendorId: string, certId: string) => Promise<void> | void;
+  onFetchVendorWhereUsed?: (vendorId: string) => Promise<VendorWhereUsedResponse | null>;
+  onCreateColor?: (payload: Omit<MasterColor, "id">) => Promise<void> | void;
+  onUpdateColor?: (colorId: string, payload: Partial<MasterColor>) => Promise<void> | void;
+  onDeleteColor?: (colorId: string) => Promise<void> | void;
+  // District PaaS Synergy (FTL-CEO-022)
+  companies?: Company[];
+  onLinkDistrictCompany?: (vendorId: string, companyId: string) => Promise<void> | void;
+  onUnlinkDistrictCompany?: (vendorId: string) => Promise<void> | void;
+  onAutoLinkDistrictCompanies?: () => Promise<{ matched_count: number; total_vendors: number } | void> | void;
 }
 
 const PIM_REGISTRY_CONFIG = [
@@ -66,7 +100,27 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
   onCreateEntry,
   onUpdateEntry,
   onDeleteEntry,
+  vendors = [],
+  colors = [],
+  seasons = [],
+  viewerRole = "brand",
+  onCreateVendor,
+  onUpdateVendor,
+  onDeleteVendor,
+  onAddVendorCertification,
+  onDeleteVendorCertification,
+  onFetchVendorWhereUsed,
+  onCreateColor,
+  onUpdateColor,
+  onDeleteColor,
+  companies = [],
+  onLinkDistrictCompany,
+  onUnlinkDistrictCompany,
+  onAutoLinkDistrictCompanies,
 }) => {
+  const [activeMasterHubTab, setActiveMasterHubTab] = useState<
+    "vendors" | "colors" | "registries"
+  >("vendors");
   const [activeDomain, setActiveDomain] = useState<RegistryDomain>("plm");
   const [selectedRegistryName, setSelectedRegistryName] = useState<string>("production_phases");
   const [searchQuery, setSearchQuery] = useState("");
@@ -537,8 +591,83 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
 
   return (
     <div className="space-y-6">
-      {/* Top Banner & KPI Summary */}
-      <div className="bg-[#111111] text-white p-6 sm:p-8 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm">
+      {/* Sprint 8 Editorial Sub-Navigation Bar (ADR-011 Zero Horizontal Bloat) */}
+      <div className="bg-white border border-[#E5E5E5] rounded-2xl p-2 shadow-xs flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveMasterHubTab("vendors")}
+            className={`px-4 py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition ${
+              activeMasterHubTab === "vendors"
+                ? "bg-[#111111] text-white shadow-sm"
+                : "text-[#555555] hover:bg-[#F5F5F5] hover:text-[#111111]"
+            }`}
+          >
+            🏭 ALBO FORNITORI &amp; TERZISTI 360° ({vendors.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMasterHubTab("colors")}
+            className={`px-4 py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition ${
+              activeMasterHubTab === "colors"
+                ? "bg-[#111111] text-white shadow-sm"
+                : "text-[#555555] hover:bg-[#F5F5F5] hover:text-[#111111]"
+            }`}
+          >
+            🎨 COLOR INTELLIGENCE · CARTELLA COLORI ({colors.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMasterHubTab("registries")}
+            className={`px-4 py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition ${
+              activeMasterHubTab === "registries"
+                ? "bg-[#111111] text-white shadow-sm"
+                : "text-[#555555] hover:bg-[#F5F5F5] hover:text-[#111111]"
+            }`}
+          >
+            📚 TABELLE ANAGRAFICHE DI DOMINIO (PLM &amp; PIM) ({registries.length})
+          </button>
+        </div>
+
+        <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+          ADR-011 · Verticalizzazione Master Data
+        </span>
+      </div>
+
+      {activeMasterHubTab === "vendors" && (
+        <VendorHub360
+          vendors={vendors}
+          viewerRole={viewerRole}
+          onCreateVendor={onCreateVendor || (() => {})}
+          onUpdateVendor={onUpdateVendor || (() => {})}
+          onDeleteVendor={onDeleteVendor || (() => {})}
+          onAddCertification={onAddVendorCertification || (() => {})}
+          onDeleteCertification={onDeleteVendorCertification || (() => {})}
+          onFetchWhereUsed={
+            onFetchVendorWhereUsed || (async () => null)
+          }
+          companies={companies}
+          onLinkDistrictCompany={onLinkDistrictCompany}
+          onUnlinkDistrictCompany={onUnlinkDistrictCompany}
+          onAutoLinkDistrictCompanies={onAutoLinkDistrictCompanies}
+        />
+      )}
+
+      {activeMasterHubTab === "colors" && (
+        <ColorIntelligenceStudio
+          colors={colors}
+          seasons={seasons}
+          viewerRole={viewerRole}
+          onCreateColor={onCreateColor || (() => {})}
+          onUpdateColor={onUpdateColor || (() => {})}
+          onDeleteColor={onDeleteColor || (() => {})}
+        />
+      )}
+
+      {activeMasterHubTab === "registries" && (
+        <>
+          {/* Top Banner & KPI Summary */}
+          <div className="bg-[#111111] text-white p-6 sm:p-8 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9E9E9E]">
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
@@ -2115,6 +2244,8 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
             </form>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

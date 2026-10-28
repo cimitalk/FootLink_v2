@@ -13,15 +13,25 @@ import { SeasonsCollectionsHub } from "./components/SeasonsCollectionsHub";
 import { SubcontractorMobilePortal } from "./components/SubcontractorMobilePortal";
 import { TanneryVaultManager } from "./components/TanneryVaultManager";
 import {
+  ColorwayExplosionPayload,
   INITIAL_COMPANIES,
+  INITIAL_MASTER_COLORS,
   INITIAL_MEMBERSHIPS,
   INITIAL_PIM_ITEMS,
+  INITIAL_PRODUCT_MODELS,
   INITIAL_PRODUCTION_ORDERS,
   INITIAL_REGISTRIES,
   INITIAL_SCHEMA_ATTRIBUTES,
   INITIAL_SEASONS,
   INITIAL_TANNERY_BATCHES,
   INITIAL_USERS,
+  INITIAL_VENDORS,
+  applyVendorL6SegregationClient,
+  computeLocalColorwayMatrix,
+  computeLocalWhereUsed,
+  computeVendorRating,
+  evaluateVendorCertificationsSemaphore,
+  explodeColorwaysClient,
   synthesizeClientDpp,
 } from "./mockSeedData";
 import {
@@ -32,6 +42,7 @@ import {
   BomRequirementsCalculationResult,
   Collection,
   CollectionStatus,
+  ColorwayMatrixResponse,
   Company,
   CompanyBusinessType,
   CompanyMembership,
@@ -39,11 +50,13 @@ import {
   DigitalProductPassport,
   DistrictUserRole,
   DomainRegistryEntry,
+  MasterColor,
   OrderSizeBreakdownItem,
   PimCommercialItem,
   PlmLifecycleStatus,
   PlmProductionVariant,
   ProductCategory,
+  ProductModel,
   ProductionOrder,
   ProductionOrderStatus,
   RegistryDomain,
@@ -56,10 +69,42 @@ import {
   TanneryDocumentVerifyResponse,
   TanneryProcess,
   User,
+  VendorCertification,
+  VendorRecord,
+  VendorWhereUsedResponse,
   ViewerSecurityRole,
 } from "./types";
 
 const API_BASE = "http://127.0.0.1:8000";
+
+function normalizeMasterColorRecord(raw: any): MasterColor {
+  const resolvedId = raw.id || raw.color_id || raw.color_code;
+  return {
+    ...raw,
+    id: resolvedId,
+    color_id: raw.color_id || resolvedId,
+    applicable_domains: Array.isArray(raw.applicable_domains)
+      ? raw.applicable_domains
+      : ["pellame"],
+    is_active: raw.is_active !== false,
+  };
+}
+
+function normalizeVendorApiRecord(raw: any): VendorRecord {
+  const certs = Array.isArray(raw.certifications) ? raw.certifications : [];
+  const sem = evaluateVendorCertificationsSemaphore(certs);
+  return {
+    ...raw,
+    vendor_id: raw.vendor_id || raw.id || raw.vendor_code,
+    certifications: sem.certifications,
+    has_expired_critical_certs:
+      typeof raw.has_expired_critical_certs === "boolean"
+        ? raw.has_expired_critical_certs
+        : sem.has_expired_critical_certs,
+    cert_semaphore_status: raw.cert_semaphore_status || sem.cert_semaphore_status,
+    is_active: raw.is_active !== false,
+  };
+}
 
 export const App: React.FC = () => {
   const [pimItems, setPimItems] = useState<PimCommercialItem[]>(INITIAL_PIM_ITEMS);
@@ -82,6 +127,16 @@ export const App: React.FC = () => {
   const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(
     INITIAL_PRODUCTION_ORDERS
   );
+
+  // Sprint 8 States: Color Intelligence Engine & Vendor Hub 360° (FTL-TECH-022 / FTL-TECH-023)
+  const [masterColors, setMasterColors] = useState<MasterColor[]>(INITIAL_MASTER_COLORS);
+  const [rawVendors, setRawVendors] = useState<VendorRecord[]>(INITIAL_VENDORS);
+  const [vendors, setVendors] = useState<VendorRecord[]>(INITIAL_VENDORS);
+  const [colorwayMatrices, setColorwayMatrices] = useState<
+    Record<string, ColorwayMatrixResponse>
+  >({});
+  // Sprint 8 / FTL-CEO-021: Product Models upstream of PIM
+  const [productModels, setProductModels] = useState<ProductModel[]>(INITIAL_PRODUCT_MODELS);
 
   const [selectedPimId, setSelectedPimId] = useState<string>(
     INITIAL_PIM_ITEMS[0].pim_item_id
@@ -217,7 +272,75 @@ export const App: React.FC = () => {
         }
       })
       .catch(() => {});
+
+    // Sprint 8 Fetch: Master Color Palette
+    fetch(`${API_BASE}/api/v1/colors`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((cData: any) => {
+        const list = Array.isArray(cData)
+          ? cData
+          : Array.isArray(cData?.colors)
+          ? cData.colors
+          : Array.isArray(cData?.items)
+          ? cData.items
+          : null;
+        if (list && list.length > 0) {
+          setMasterColors(list.map(normalizeMasterColorRecord));
+        }
+      })
+      .catch(() => {});
+
+    // Sprint 8 Fetch: Product Models
+    fetch(`${API_BASE}/api/v1/product-models`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((list: ProductModel[]) => {
+        if (Array.isArray(list) && list.length > 0) {
+          setProductModels(list);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  // Sprint 8 Sync: Albo Fornitori & Terzisti 360° with L6 Segregation on viewerRole change
+  useEffect(() => {
+    setVendors(rawVendors.map((v) => applyVendorL6SegregationClient(v, viewerRole)));
+
+    fetch(`${API_BASE}/api/v1/vendors?viewer_role=${viewerRole}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((vData: any) => {
+        const list = Array.isArray(vData)
+          ? vData
+          : Array.isArray(vData?.vendors)
+          ? vData.vendors
+          : Array.isArray(vData?.items)
+          ? vData.items
+          : null;
+        if (list && list.length > 0) {
+          const normalized = list.map(normalizeVendorApiRecord);
+          setVendors(normalized);
+          if (viewerRole === "brand") {
+            setRawVendors(normalized);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [viewerRole]);
+
+  // Sprint 8 Sync: Variant Colorway BOM Matrix when backend is online
+  useEffect(() => {
+    if (!backendConnected || !selectedVariantId) return;
+    fetch(`${API_BASE}/api/v1/plm-variants/${selectedVariantId}/colorway-matrix`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((matrix: ColorwayMatrixResponse | null) => {
+        if (matrix && Array.isArray(matrix.mappings)) {
+          setColorwayMatrices((prev) => ({
+            ...prev,
+            [selectedVariantId]: matrix,
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [backendConnected, selectedVariantId]);
 
   // Filter products by selected season if filter is active
   const filteredPimItems =
@@ -338,6 +461,7 @@ export const App: React.FC = () => {
   const handleCreatePimItem = (payload: {
     sku_code: string;
     model_name: string;
+    model_id?: string;
     season: string;
     season_id?: string;
     collection_id?: string;
@@ -430,12 +554,30 @@ export const App: React.FC = () => {
     setSelectedPimId(newPim.pim_item_id);
     setSelectedVariantId(initialPlm.plm_variant_id);
 
+    if (payload.model_id) {
+      setProductModels((prev) =>
+        prev.map((m) =>
+          m.model_id === payload.model_id
+            ? { ...m, products_count: (m.products_count || 0) + 1 }
+            : m
+        )
+      );
+    }
+
     if (backendConnected) {
       fetch(`${API_BASE}/api/v1/pim-items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newPim),
       }).catch(() => {});
+
+      if (payload.model_id) {
+        fetch(`${API_BASE}/api/v1/product-models/${payload.model_id}/attach-product`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pim_item_id: newPimId }),
+        }).catch(() => {});
+      }
     }
   };
 
@@ -1447,6 +1589,667 @@ export const App: React.FC = () => {
     return true;
   };
 
+  // ==========================================================================
+  // Sprint 8 Handlers: Color Intelligence Engine & Colorway Matrix (FTL-TECH-022)
+  // ==========================================================================
+  const handleCreateColor = async (payload: Omit<MasterColor, "id">) => {
+    const tempId = `MCOL-${Date.now().toString(36).toUpperCase()}`;
+    const newColor: MasterColor = normalizeMasterColorRecord({
+      ...payload,
+      id: tempId,
+      color_id: tempId,
+      created_at: new Date().toISOString(),
+    });
+    setMasterColors((prev) => [newColor, ...prev]);
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/colors`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const persisted = normalizeMasterColorRecord(await res.json());
+          setMasterColors((prev) =>
+            prev.map((c) => (c.id === tempId ? persisted : c))
+          );
+        }
+      } catch {}
+    }
+  };
+
+  const handleUpdateColor = async (
+    colorId: string,
+    payload: Partial<MasterColor>
+  ) => {
+    setMasterColors((prev) =>
+      prev.map((c) =>
+        c.id === colorId || c.color_id === colorId
+          ? normalizeMasterColorRecord({ ...c, ...payload })
+          : c
+      )
+    );
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/colors/${colorId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const persisted = normalizeMasterColorRecord(await res.json());
+          setMasterColors((prev) =>
+            prev.map((c) =>
+              c.id === colorId || c.color_id === colorId ? persisted : c
+            )
+          );
+        }
+      } catch {}
+    }
+  };
+
+  const handleDeleteColor = async (colorId: string) => {
+    setMasterColors((prev) =>
+      prev.filter((c) => c.id !== colorId && c.color_id !== colorId)
+    );
+
+    if (backendConnected) {
+      try {
+        await fetch(`${API_BASE}/api/v1/colors/${colorId}`, {
+          method: "DELETE",
+        });
+      } catch {}
+    }
+  };
+
+  const handleSaveColorwayMatrix = async (
+    variantId: string,
+    updatedMatrix: ColorwayMatrixResponse
+  ) => {
+    setColorwayMatrices((prev) => ({
+      ...prev,
+      [variantId]: updatedMatrix,
+    }));
+
+    const colorByBomId = new Map<string, string | null | undefined>();
+    for (const m of updatedMatrix.mappings || []) {
+      colorByBomId.set(m.bom_item_id, m.master_color_id);
+    }
+
+    setPimItems((prev) =>
+      prev.map((pim) => ({
+        ...pim,
+        plm_variants: pim.plm_variants.map((v) => {
+          if (v.plm_variant_id !== variantId) return v;
+          return {
+            ...v,
+            primary_color_id: updatedMatrix.primary_color_id,
+            secondary_color_id: updatedMatrix.secondary_color_id,
+            hardware_finish_color_id: updatedMatrix.hardware_finish_color_id,
+            colorway_rule_preset: updatedMatrix.colorway_rule_preset,
+            bom_items: (v.bom_items || []).map((b) =>
+              colorByBomId.has(b.bom_item_id)
+                ? { ...b, master_color_id: colorByBomId.get(b.bom_item_id) ?? b.master_color_id }
+                : b
+            ),
+          };
+        }),
+      }))
+    );
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/v1/plm-variants/${variantId}/colorway-matrix`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              primary_color_id: updatedMatrix.primary_color_id,
+              secondary_color_id: updatedMatrix.secondary_color_id,
+              hardware_finish_color_id: updatedMatrix.hardware_finish_color_id,
+              colorway_rule_preset: updatedMatrix.colorway_rule_preset,
+              mappings: updatedMatrix.mappings,
+            }),
+          }
+        );
+        if (res.ok) {
+          const persisted: ColorwayMatrixResponse = await res.json();
+          if (persisted && Array.isArray(persisted.mappings)) {
+            setColorwayMatrices((prev) => ({
+              ...prev,
+              [variantId]: persisted,
+            }));
+          }
+        }
+      } catch {}
+    }
+  };
+
+  const handleExplodeColorways = async (
+    variantId: string,
+    payload: ColorwayExplosionPayload
+  ) => {
+    const parentPim = pimItems.find((p) =>
+      p.plm_variants.some((v) => v.plm_variant_id === variantId)
+    );
+    const baseVariant = parentPim?.plm_variants.find(
+      (v) => v.plm_variant_id === variantId
+    );
+    if (!parentPim || !baseVariant) return;
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/v1/plm-variants/${variantId}/explode-colorways`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data?.created_variants) && data.created_variants.length > 0) {
+            setPimItems((prev) =>
+              prev.map((p) =>
+                p.pim_item_id === parentPim.pim_item_id
+                  ? {
+                      ...p,
+                      plm_variants: [...p.plm_variants, ...data.created_variants],
+                    }
+                  : p
+              )
+            );
+            setSelectedVariantId(data.created_variants[0].plm_variant_id);
+          }
+          refreshPimItems();
+          return;
+        }
+      } catch {}
+    }
+
+    const { createdVariants, createdMatrices } = explodeColorwaysClient(
+      baseVariant,
+      parentPim,
+      payload,
+      masterColors,
+      tanneryBatches
+    );
+    if (createdVariants.length > 0) {
+      setPimItems((prev) =>
+        prev.map((p) =>
+          p.pim_item_id === parentPim.pim_item_id
+            ? {
+                ...p,
+                plm_variants: [...p.plm_variants, ...createdVariants],
+              }
+            : p
+        )
+      );
+      setColorwayMatrices((prev) => ({
+        ...prev,
+        ...createdMatrices,
+      }));
+      setSelectedVariantId(createdVariants[0].plm_variant_id);
+    }
+  };
+
+  // ==========================================================================
+  // Sprint 8 Handlers: Vendor Hub 360°, SHA-256 Certs & Where-Used (FTL-TECH-023)
+  // ==========================================================================
+  const syncVendorsLocalState = (
+    updater: (prev: VendorRecord[]) => VendorRecord[]
+  ) => {
+    setRawVendors((prev) => {
+      const nextRaw = updater(prev);
+      setVendors(nextRaw.map((v) => applyVendorL6SegregationClient(v, viewerRole)));
+      return nextRaw;
+    });
+  };
+
+  const handleCreateVendor = async (payload: Omit<VendorRecord, "vendor_id">) => {
+    const tempId = `VND-${Date.now().toString(36).toUpperCase()}`;
+    const sem = evaluateVendorCertificationsSemaphore(payload.certifications || []);
+    const rating = computeVendorRating(
+      payload.quality_score,
+      payload.otd_score,
+      payload.esg_score
+    );
+    const newVendor: VendorRecord = {
+      ...payload,
+      ...rating,
+      vendor_id: tempId,
+      certifications: sem.certifications,
+      has_expired_critical_certs: sem.has_expired_critical_certs,
+      cert_semaphore_status: sem.cert_semaphore_status,
+      is_active: payload.is_active !== false,
+      created_at: new Date().toISOString(),
+    };
+    syncVendorsLocalState((prev) => [newVendor, ...prev]);
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/vendors`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const persisted = normalizeVendorApiRecord(await res.json());
+          syncVendorsLocalState((prev) =>
+            prev.map((v) => (v.vendor_id === tempId ? persisted : v))
+          );
+        }
+      } catch {}
+    }
+  };
+
+  const handleUpdateVendor = async (
+    vendorId: string,
+    payload: Partial<VendorRecord>
+  ) => {
+    syncVendorsLocalState((prev) =>
+      prev.map((v) => {
+        if (v.vendor_id !== vendorId) return v;
+        const merged = { ...v, ...payload };
+        const sem = evaluateVendorCertificationsSemaphore(merged.certifications || []);
+        const rating = computeVendorRating(
+          merged.quality_score,
+          merged.otd_score,
+          merged.esg_score
+        );
+        return {
+          ...merged,
+          ...rating,
+          certifications: sem.certifications,
+          has_expired_critical_certs: sem.has_expired_critical_certs,
+          cert_semaphore_status: sem.cert_semaphore_status,
+        };
+      })
+    );
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/vendors/${vendorId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const persisted = normalizeVendorApiRecord(await res.json());
+          syncVendorsLocalState((prev) =>
+            prev.map((v) => (v.vendor_id === vendorId ? persisted : v))
+          );
+        }
+      } catch {}
+    }
+  };
+
+  const handleDeleteVendor = async (vendorId: string) => {
+    syncVendorsLocalState((prev) => prev.filter((v) => v.vendor_id !== vendorId));
+
+    if (backendConnected) {
+      try {
+        await fetch(`${API_BASE}/api/v1/vendors/${vendorId}`, {
+          method: "DELETE",
+        });
+      } catch {}
+    }
+  };
+
+  const handleAddVendorCertification = async (
+    vendorId: string,
+    certPayload: Omit<VendorCertification, "cert_id" | "vendor_id">
+  ) => {
+    const tempCertId = `VCERT-${Date.now().toString(36).toUpperCase()}`;
+    const newCert: VendorCertification = {
+      ...certPayload,
+      cert_id: tempCertId,
+      vendor_id: vendorId,
+    };
+
+    syncVendorsLocalState((prev) =>
+      prev.map((v) => {
+        if (v.vendor_id !== vendorId) return v;
+        const sem = evaluateVendorCertificationsSemaphore([
+          ...(v.certifications || []),
+          newCert,
+        ]);
+        return {
+          ...v,
+          certifications: sem.certifications,
+          has_expired_critical_certs: sem.has_expired_critical_certs,
+          cert_semaphore_status: sem.cert_semaphore_status,
+        };
+      })
+    );
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/v1/vendors/${vendorId}/certifications`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(certPayload),
+          }
+        );
+        if (res.ok) {
+          const persistedCert: VendorCertification = await res.json();
+          syncVendorsLocalState((prev) =>
+            prev.map((v) => {
+              if (v.vendor_id !== vendorId) return v;
+              const nextCerts = (v.certifications || []).map((c) =>
+                c.cert_id === tempCertId ? { ...c, ...persistedCert } : c
+              );
+              const sem = evaluateVendorCertificationsSemaphore(nextCerts);
+              return {
+                ...v,
+                certifications: sem.certifications,
+                has_expired_critical_certs: sem.has_expired_critical_certs,
+                cert_semaphore_status: sem.cert_semaphore_status,
+              };
+            })
+          );
+        }
+      } catch {}
+    }
+  };
+
+  const handleDeleteVendorCertification = async (
+    vendorId: string,
+    certId: string
+  ) => {
+    syncVendorsLocalState((prev) =>
+      prev.map((v) => {
+        if (v.vendor_id !== vendorId) return v;
+        const filtered = (v.certifications || []).filter(
+          (c) => c.cert_id !== certId
+        );
+        const sem = evaluateVendorCertificationsSemaphore(filtered);
+        return {
+          ...v,
+          certifications: sem.certifications,
+          has_expired_critical_certs: sem.has_expired_critical_certs,
+          cert_semaphore_status: sem.cert_semaphore_status,
+        };
+      })
+    );
+
+    if (backendConnected) {
+      try {
+        await fetch(
+          `${API_BASE}/api/v1/vendors/${vendorId}/certifications/${certId}`,
+          {
+            method: "DELETE",
+          }
+        );
+      } catch {}
+    }
+  };
+
+  const handleFetchVendorWhereUsed = async (
+    vendorId: string
+  ): Promise<VendorWhereUsedResponse | null> => {
+    if (backendConnected) {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/v1/vendors/${vendorId}/where-used?viewer_role=${viewerRole}`
+        );
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch {}
+    }
+    return computeLocalWhereUsed(
+      vendorId,
+      rawVendors,
+      pimItems,
+      tanneryBatches,
+      productionOrders,
+      viewerRole
+    );
+  };
+
+  // Sprint 8 Handlers: District Company <-> Vendor Synergy (FTL-CEO-022)
+  const handleLinkVendorDistrictCompany = async (vendorId: string, companyId: string) => {
+    const comp = companies.find((c) => c.company_id === companyId);
+    syncVendorsLocalState((prev) =>
+      prev.map((v) =>
+        v.vendor_id === vendorId
+          ? { ...v, district_company_id: companyId, district_company: comp }
+          : v
+      )
+    );
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/v1/vendors/${vendorId}/link-district-company`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ district_company_id: companyId }),
+          }
+        );
+        if (res.ok) {
+          const updated = normalizeVendorApiRecord(await res.json());
+          syncVendorsLocalState((prev) =>
+            prev.map((v) => (v.vendor_id === vendorId ? updated : v))
+          );
+        }
+      } catch (err) {
+        console.warn("Backend link district company failed:", err);
+      }
+    }
+  };
+
+  const handleUnlinkVendorDistrictCompany = async (vendorId: string) => {
+    syncVendorsLocalState((prev) =>
+      prev.map((v) =>
+        v.vendor_id === vendorId
+          ? { ...v, district_company_id: null, district_company: null }
+          : v
+      )
+    );
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/v1/vendors/${vendorId}/link-district-company`,
+          { method: "DELETE" }
+        );
+        if (res.ok) {
+          const updated = normalizeVendorApiRecord(await res.json());
+          syncVendorsLocalState((prev) =>
+            prev.map((v) => (v.vendor_id === vendorId ? updated : v))
+          );
+        }
+      } catch (err) {
+        console.warn("Backend unlink district company failed:", err);
+      }
+    }
+  };
+
+  const handleAutoLinkDistrictCompanies = async () => {
+    if (backendConnected) {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/v1/vendors/auto-link-district-companies`,
+          { method: "POST" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          // Reload vendors
+          const vRes = await fetch(`${API_BASE}/api/v1/vendors?viewer_role=${viewerRole}`);
+          if (vRes.ok) {
+            const list = await vRes.json();
+            const normalized = list.map(normalizeVendorApiRecord);
+            setVendors(normalized);
+            setRawVendors(normalized);
+          }
+          return { matched_count: data.matched_count, total_vendors: data.total_vendors };
+        }
+      } catch (err) {
+        console.warn("Backend auto link failed:", err);
+      }
+    }
+
+    // Client-side auto-link fallback
+    let matches = 0;
+    syncVendorsLocalState((prev) =>
+      prev.map((v) => {
+        if (!v.district_company_id) {
+          const matchedCompany = companies.find(
+            (c) =>
+              (c.vat_number && c.vat_number.trim().toUpperCase() === v.vat_number.trim().toUpperCase()) ||
+              c.legal_name.toLowerCase().includes(v.company_name.toLowerCase()) ||
+              v.company_name.toLowerCase().includes(c.legal_name.toLowerCase())
+          );
+          if (matchedCompany) {
+            matches++;
+            return {
+              ...v,
+              district_company_id: matchedCompany.company_id,
+              district_company: matchedCompany,
+            };
+          }
+        }
+        return v;
+      })
+    );
+    return { matched_count: matches, total_vendors: rawVendors.length };
+  };
+
+  // Sprint 8 Handlers: Product Models (FTL-CEO-021)
+  const handleCreateModel = async (
+    modelPayload: Omit<ProductModel, "model_id" | "products_count" | "created_at">
+  ) => {
+    const newId = `MOD-${Date.now().toString(36).toUpperCase()}`;
+    const newModel: ProductModel = {
+      ...modelPayload,
+      model_id: newId,
+      products_count: 0,
+      created_at: new Date().toISOString(),
+    };
+    setProductModels((prev) => [newModel, ...prev]);
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/product-models`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(modelPayload),
+        });
+        if (res.ok) {
+          const persisted: ProductModel = await res.json();
+          setProductModels((prev) =>
+            prev.map((m) => (m.model_id === newId ? persisted : m))
+          );
+        }
+      } catch (err) {
+        console.warn("Backend create product model failed:", err);
+      }
+    }
+  };
+
+  const handleUpdateModel = async (
+    modelId: string,
+    payload: Partial<ProductModel>
+  ) => {
+    setProductModels((prev) =>
+      prev.map((m) => (m.model_id === modelId ? { ...m, ...payload } : m))
+    );
+
+    if (backendConnected) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/product-models/${modelId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const updated: ProductModel = await res.json();
+          setProductModels((prev) =>
+            prev.map((m) => (m.model_id === modelId ? updated : m))
+          );
+        }
+      } catch (err) {
+        console.warn("Backend update product model failed:", err);
+      }
+    }
+  };
+
+  const handleDeleteModel = async (modelId: string) => {
+    setProductModels((prev) => prev.filter((m) => m.model_id !== modelId));
+    setPimItems((prev) =>
+      prev.map((p) => (p.model_id === modelId ? { ...p, model_id: null } : p))
+    );
+
+    if (backendConnected) {
+      try {
+        await fetch(`${API_BASE}/api/v1/product-models/${modelId}`, {
+          method: "DELETE",
+        });
+      } catch (err) {
+        console.warn("Backend delete product model failed:", err);
+      }
+    }
+  };
+
+  const handleAttachProductToModel = async (modelId: string, pimItemId: string) => {
+    setPimItems((prev) =>
+      prev.map((p) => (p.pim_item_id === pimItemId ? { ...p, model_id: modelId } : p))
+    );
+    setProductModels((prev) =>
+      prev.map((m) =>
+        m.model_id === modelId
+          ? { ...m, products_count: (m.products_count || 0) + 1 }
+          : m
+      )
+    );
+
+    if (backendConnected) {
+      try {
+        await fetch(`${API_BASE}/api/v1/product-models/${modelId}/attach-product`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pim_item_id: pimItemId }),
+        });
+      } catch (err) {
+        console.warn("Backend attach product to model failed:", err);
+      }
+    }
+  };
+
+  const handleDetachProductFromModel = async (modelId: string, pimItemId: string) => {
+    setPimItems((prev) =>
+      prev.map((p) => (p.pim_item_id === pimItemId ? { ...p, model_id: null } : p))
+    );
+    setProductModels((prev) =>
+      prev.map((m) =>
+        m.model_id === modelId
+          ? { ...m, products_count: Math.max(0, (m.products_count || 1) - 1) }
+          : m
+      )
+    );
+
+    if (backendConnected) {
+      try {
+        await fetch(`${API_BASE}/api/v1/product-models/${modelId}/detach-product`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pim_item_id: pimItemId }),
+        });
+      } catch (err) {
+        console.warn("Backend detach product from model failed:", err);
+      }
+    }
+  };
+
   const handleNavigateToProductFromHub = (pimItemId: string) => {
     const target = pimItems.find((p) => p.pim_item_id === pimItemId);
     if (target) {
@@ -1476,6 +2279,8 @@ export const App: React.FC = () => {
           component_type: b.component_type,
           plm_code: v.variant_code,
           colorway: v.colorway_name,
+          master_color_id: b.master_color_id ?? v.primary_color_id ?? null,
+          vendor_id: b.vendor_id ?? null,
         }))
     )
   );
@@ -1712,6 +2517,21 @@ export const App: React.FC = () => {
             viewerRole={viewerRole}
             seasons={seasons}
             registries={registries}
+            colors={masterColors}
+            vendors={vendors}
+            tanneryBatches={tanneryBatches}
+            colorwayMatrices={colorwayMatrices}
+            models={productModels}
+            onCreateModel={handleCreateModel}
+            onUpdateModel={handleUpdateModel}
+            onDeleteModel={handleDeleteModel}
+            onAttachProductToModel={handleAttachProductToModel}
+            onDetachProductFromModel={handleDetachProductFromModel}
+            onSaveColorwayMatrix={handleSaveColorwayMatrix}
+            onExplodeColorways={handleExplodeColorways}
+            onCreateColor={handleCreateColor}
+            onUpdateColor={handleUpdateColor}
+            onDeleteColor={handleDeleteColor}
             onSelectPim={handleSelectPim}
             onSelectVariant={handleSelectVariant}
             onAddVariant={handleAddVariant}
@@ -1733,6 +2553,7 @@ export const App: React.FC = () => {
             pimItems={activePimList}
             seasons={seasons}
             viewerRole={viewerRole}
+            colors={masterColors}
             onSelectPim={handleSelectPim}
             onCreatePimItem={handleCreatePimItem}
             onNavigateToPlm={(pimId) => {
@@ -1751,6 +2572,9 @@ export const App: React.FC = () => {
             batches={tanneryBatches}
             companies={companies}
             availableLeatherBomMaterials={availableLeatherBomMaterials}
+            vendors={vendors}
+            colors={masterColors}
+            pimItems={pimItems}
             onCreateBatch={handleCreateTanneryBatch}
             onUploadDocument={handleUploadTanneryDocument}
             onVerifyDocument={handleVerifyTanneryDocument}
@@ -1802,6 +2626,8 @@ export const App: React.FC = () => {
                   variant={currentVariant}
                   pimItem={currentPim}
                   viewerRole={viewerRole}
+                  vendors={vendors}
+                  colors={masterColors}
                   onAddBomItem={handleAddBomItem}
                   onUpdateBomItem={handleUpdateBomItem}
                   onDeleteBomItem={handleDeleteBomItem}
@@ -1835,6 +2661,23 @@ export const App: React.FC = () => {
             onCreateEntry={handleCreateRegistryEntry}
             onUpdateEntry={handleUpdateRegistryEntry}
             onDeleteEntry={handleDeleteRegistryEntry}
+            vendors={vendors}
+            colors={masterColors}
+            seasons={seasons}
+            viewerRole={viewerRole}
+            onCreateVendor={handleCreateVendor}
+            onUpdateVendor={handleUpdateVendor}
+            onDeleteVendor={handleDeleteVendor}
+            onAddVendorCertification={handleAddVendorCertification}
+            onDeleteVendorCertification={handleDeleteVendorCertification}
+            onFetchVendorWhereUsed={handleFetchVendorWhereUsed}
+            onCreateColor={handleCreateColor}
+            onUpdateColor={handleUpdateColor}
+            onDeleteColor={handleDeleteColor}
+            companies={companies}
+            onLinkDistrictCompany={handleLinkVendorDistrictCompany}
+            onUnlinkDistrictCompany={handleUnlinkVendorDistrictCompany}
+            onAutoLinkDistrictCompanies={handleAutoLinkDistrictCompanies}
           />
         )}
 
@@ -1853,6 +2696,15 @@ export const App: React.FC = () => {
             <div className="lg:col-span-5">
               <SubcontractorMobilePortal
                 variant={currentVariant}
+                colors={masterColors}
+                colorwayMatrix={
+                  colorwayMatrices[currentVariant.plm_variant_id] ||
+                  computeLocalColorwayMatrix(
+                    currentVariant,
+                    masterColors,
+                    tanneryBatches
+                  )
+                }
                 onConfirmStep={handleConfirmSubcontractorStep}
                 onAddSubcontractor={handleAddSubcontractor}
               />
@@ -1862,6 +2714,8 @@ export const App: React.FC = () => {
                 variant={currentVariant}
                 pimItem={currentPim}
                 viewerRole={viewerRole}
+                vendors={vendors}
+                colors={masterColors}
                 onAddBomItem={handleAddBomItem}
                 onUpdateBomItem={handleUpdateBomItem}
                 onDeleteBomItem={handleDeleteBomItem}

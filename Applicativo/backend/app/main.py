@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import hashlib
+import sqlite3
 import urllib.parse
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union
@@ -42,6 +43,8 @@ from app.models import (
     BulkImportValidationResponse,
     Collection,
     CollectionCreate,
+    ColorwayMatrixResponse,
+    ColorwayMatrixUpsertRequest,
     Company,
     CompanyBusinessType,
     CompanyCreate,
@@ -55,16 +58,29 @@ from app.models import (
     DomainRegistryEntry,
     DomainRegistryEntryCreate,
     DomainRegistryEntryUpdate,
+    ExplodeColorwaysRequest,
+    ExplodeColorwaysResponse,
+    MasterColor,
+    MasterColorCreate,
+    MasterColorUpdate,
     OrderSizeBreakdownItem,
+    PimColorwaysEcommerceResponse,
     PimCommercialItem,
     PimCommercialItemCreate,
     PimDataQualityReport,
     PlmLifecycleStatus,
     PlmProductionVariant,
     PlmProductionVariantCreate,
+    ProductCategory,
     ProductCategoryCreate,
     ProductCategoryHierarchyNode,
     ProductCategoryUpdate,
+    ProductModel,
+    ProductModelCreate,
+    ProductModelUpdate,
+    ProductModelWithProducts,
+    AttachProductRequest,
+    DetachProductRequest,
     ProductionOrder,
     ProductionOrderCreate,
     ProductionOrderPhaseItem,
@@ -82,6 +98,7 @@ from app.models import (
     TanneryBatch,
     TanneryBatchCreate,
     TanneryBatchUpdate,
+    TanneryColorConsistencyItem,
     TanneryDocument,
     TanneryDocumentCreate,
     TanneryDocumentType,
@@ -90,6 +107,14 @@ from app.models import (
     User,
     UserCreate,
     VariantDeepCloneRequest,
+    VendorCertification,
+    VendorCertificationCreate,
+    VendorCreate,
+    VendorRecord,
+    VendorUpdate,
+    VendorWhereUsedResponse,
+    VendorDistrictLinkRequest,
+    VendorAutoLinkResult,
 )
 from app.seed import seed_initial_data
 
@@ -2024,6 +2049,16 @@ def list_tannery_batches(
 
 
 @app.get(
+    "/api/v1/tannery-batches/color-consistency",
+    response_model=List[TanneryColorConsistencyItem],
+    tags=["tannery", "colors", "sprint8"],
+)
+def check_tannery_batches_color_consistency() -> List[TanneryColorConsistencyItem]:
+    """Sprint 8 (FTL-TECH-022): Cross-verify chromatic consistency between Tannery Leather Batches and BOM leather nodes."""
+    return db_manager.get_tannery_color_consistency()
+
+
+@app.get(
     "/api/v1/tannery-batches/{batch_id}",
     response_model=TanneryBatch,
     tags=["tannery", "traceability"],
@@ -2282,12 +2317,17 @@ def import_tannery_batches(payload: List[Dict[str, Any]]) -> Dict[str, Any]:
     tags=["pim", "feeds"],
 )
 def get_shopify_catalog_feed() -> Dict[str, Any]:
-    """Live Shopify Product Feed (JSON) for omnichannel e-commerce syndication (FTL-CEO-010)."""
+    """Live Shopify Product Feed (JSON) for omnichannel e-commerce syndication (FTL-CEO-010 & Sprint 8 Color Auto-Mapping)."""
     items = db_manager.list_pim_items()
     shopify_products = []
     for item in items:
+        ecom_colors = db_manager.get_pim_colorways_ecommerce(item.pim_item_id)
+        cmap_by_var = {
+            vc.plm_variant_id: vc for vc in (ecom_colors.variants_color_map if ecom_colors else [])
+        }
         variants = []
         for v in item.plm_variants:
+            vc = cmap_by_var.get(v.plm_variant_id)
             variants.append(
                 {
                     "sku": v.variant_code,
@@ -2298,6 +2338,10 @@ def get_shopify_catalog_feed() -> Dict[str, Any]:
                     "inventory_management": "footlink_os",
                     "requires_shipping": True,
                     "taxable": True,
+                    "color_family": vc.commercial_family if vc else v.colorway_name,
+                    "color_hex": vc.hex_code if vc else "#141414",
+                    "color_finish": vc.finish_type if vc else "pieno_fiore_naturale",
+                    "pantone_reference": vc.pantone_tcx_code if vc else "",
                 }
             )
         shopify_products.append(
@@ -2309,10 +2353,21 @@ def get_shopify_catalog_feed() -> Dict[str, Any]:
                 "product_type": item.category.capitalize(),
                 "tags": f"season:{item.season}, espr:dpp_compliant, lwg:gold",
                 "variants": variants,
-                "options": [{"name": "Colore", "values": [v.colorway_name for v in item.plm_variants]}],
+                "options": [
+                    {"name": "Colore", "values": [v.colorway_name for v in item.plm_variants]},
+                    {
+                        "name": "Famiglia Colore",
+                        "values": ecom_colors.commercial_color_families if ecom_colors else [v.colorway_name for v in item.plm_variants],
+                    },
+                ],
                 "metafields": [
                     {"key": "dpp_uri", "value": f"https://dpp.footlink.it/passport/{item.pim_item_id}", "type": "url"},
                     {"key": "hs_customs_code", "value": item.hs_customs_code, "type": "string"},
+                    {
+                        "key": "color_families",
+                        "value": ", ".join(ecom_colors.commercial_color_families) if ecom_colors else "",
+                        "type": "string",
+                    },
                 ],
             }
         )
@@ -2324,10 +2379,11 @@ def get_shopify_catalog_feed() -> Dict[str, Any]:
     tags=["pim", "feeds"],
 )
 def get_b2b_wholesale_feed() -> Dict[str, Any]:
-    """B2B Wholesale Line Sheet Feed (NuORDER / JOOR format) with L6 cost segregation (FTL-CEO-010)."""
+    """B2B Wholesale Line Sheet Feed (NuORDER / JOOR format) with L6 cost segregation & Sprint 8 Pantone/Hex auto-mapping."""
     items = db_manager.list_pim_items()
     lines = []
     for item in items:
+        ecom_colors = db_manager.get_pim_colorways_ecommerce(item.pim_item_id)
         lines.append(
             {
                 "style_number": item.commercial_sku,
@@ -2338,6 +2394,18 @@ def get_b2b_wholesale_feed() -> Dict[str, Any]:
                 "suggested_retail_eur": item.retail_price_eur,
                 "moq_pairs": 12,
                 "colorways": [v.colorway_name for v in item.plm_variants],
+                "commercial_color_families": ecom_colors.commercial_color_families if ecom_colors else [],
+                "colorways_detail": [
+                    {
+                        "variant_code": vc.variant_code,
+                        "technical_name_it": vc.technical_name_it,
+                        "commercial_family": vc.commercial_family,
+                        "hex_code": vc.hex_code,
+                        "pantone_reference": vc.pantone_tcx_code,
+                        "color_finish": vc.finish_type,
+                    }
+                    for vc in (ecom_colors.variants_color_map if ecom_colors else [])
+                ],
                 "size_run": item.plm_variants[0].size_range if item.plm_variants else "EU 39-44",
                 "made_in": "Italy",
                 "l6_segregated_internal_cost": "[PROTECTED_L6]",
@@ -2614,6 +2682,478 @@ def validate_bulk_import(payload: BulkImportValidateRequest) -> BulkImportValida
 def commit_bulk_import(payload: BulkImportCommitRequest) -> BulkImportCommitResponse:
     """Atomic commit of validated rows into the relational database."""
     return db_manager.commit_bulk_import(payload)
+
+
+# ============================================================================
+# Sprint 8 (Epoca II - La Verticalizzazione):
+#   FTL-TECH-022: Color Intelligence Engine, Lab-Dip & Colorway BOM Matrix
+#   FTL-TECH-023: Vendor Hub 360, SHA-256 Certifications, L6 Segregation & Where-Used
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/colors",
+    response_model=List[MasterColor],
+    tags=["colors", "sprint8"],
+)
+def list_master_colors(
+    season_id: Optional[str] = None,
+    commercial_family: Optional[str] = None,
+    finish_type: Optional[str] = None,
+    domain: Optional[str] = None,
+    active_only: Union[bool, str] = False,
+    search: Optional[str] = None,
+) -> List[MasterColor]:
+    """List Master & Seasonal Color Palette with optional filters."""
+    return db_manager.list_master_colors(
+        season_id=season_id,
+        commercial_family=commercial_family,
+        finish_type=finish_type,
+        domain=domain,
+        active_only=active_only,
+        search=search,
+    )
+
+
+@app.post(
+    "/api/v1/colors",
+    response_model=MasterColor,
+    status_code=status.HTTP_201_CREATED,
+    tags=["colors", "sprint8"],
+)
+def create_master_color(payload: MasterColorCreate) -> MasterColor:
+    """Create a Master or Seasonal Color entry with strict HEX validation."""
+    try:
+        return db_manager.save_master_color(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+    except sqlite3.IntegrityError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Color code '{payload.color_code}' already exists.",
+        ) from exc
+
+
+@app.get(
+    "/api/v1/colors/{color_id}",
+    response_model=MasterColor,
+    tags=["colors", "sprint8"],
+)
+def get_master_color(color_id: str) -> MasterColor:
+    """Get a single Master or Seasonal Color by ID or color_code."""
+    color = db_manager.get_master_color(color_id)
+    if not color:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"MasterColor '{color_id}' not found.")
+    return color
+
+
+@app.put(
+    "/api/v1/colors/{color_id}",
+    response_model=MasterColor,
+    tags=["colors", "sprint8"],
+)
+def update_master_color(color_id: str, payload: MasterColorUpdate) -> MasterColor:
+    """Update an existing Master or Seasonal Color entry."""
+    try:
+        updated = db_manager.update_master_color(color_id, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+    except sqlite3.IntegrityError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"MasterColor '{color_id}' not found.")
+    return updated
+
+
+@app.delete(
+    "/api/v1/colors/{color_id}",
+    tags=["colors", "sprint8"],
+)
+def delete_master_color(color_id: str) -> Dict[str, str]:
+    """Delete a Master Color or soft-deactivate it (`is_active=False`) if referenced in BOM mappings."""
+    res = db_manager.delete_master_color(color_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"MasterColor '{color_id}' not found.")
+    return res
+
+
+@app.get(
+    "/api/v1/plm-variants/{variant_id}/colorway-matrix",
+    response_model=ColorwayMatrixResponse,
+    tags=["plm", "colors", "sprint8"],
+)
+def get_plm_variant_colorway_matrix(variant_id: str) -> ColorwayMatrixResponse:
+    """Get the 3-level BOM Colorway & Lab-Dip approval matrix for a PLM Production Variant."""
+    matrix = db_manager.get_variant_colorway_matrix(variant_id)
+    if not matrix:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"PLM Variant '{variant_id}' not found.")
+    return matrix
+
+
+@app.put(
+    "/api/v1/plm-variants/{variant_id}/colorway-matrix",
+    response_model=ColorwayMatrixResponse,
+    tags=["plm", "colors", "sprint8"],
+)
+def upsert_plm_variant_colorway_matrix(
+    variant_id: str,
+    payload: ColorwayMatrixUpsertRequest,
+) -> ColorwayMatrixResponse:
+    """Atomically upsert BOM node colors, galvanic finishes, Delta-E values, and Lab-Dip statuses."""
+    try:
+        matrix = db_manager.upsert_variant_colorway_matrix(variant_id, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+    if not matrix:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"PLM Variant '{variant_id}' not found.")
+    return matrix
+
+
+@app.post(
+    "/api/v1/plm-variants/{variant_id}/explode-colorways",
+    response_model=ExplodeColorwaysResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["plm", "colors", "sprint8"],
+)
+def explode_plm_variant_colorways(
+    variant_id: str,
+    payload: ExplodeColorwaysRequest,
+) -> ExplodeColorwaysResponse:
+    """1-Click ACID Colorway Explosion: deep-clones L1->L2->L3 BOM across N target colors applying chromatic presets."""
+    if not payload.target_color_ids:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="target_color_ids must contain at least one color ID.",
+        )
+    try:
+        return db_manager.explode_variant_colorways(variant_id, payload)
+    except ValueError as exc:
+        msg = str(exc)
+        code = status.HTTP_404_NOT_FOUND if "not found" in msg.lower() else status.HTTP_422_UNPROCESSABLE_ENTITY
+        raise HTTPException(status_code=code, detail=msg) from exc
+
+
+@app.get(
+    "/api/v1/pim-items/{pim_item_id}/colorways-ecommerce",
+    response_model=PimColorwaysEcommerceResponse,
+    tags=["pim", "colors", "sprint8"],
+)
+def get_pim_item_colorways_ecommerce(pim_item_id: str) -> PimColorwaysEcommerceResponse:
+    """Translate technical PLM variant colors into deduplicated omnichannel commercial families (Shopify/JOOR/NuORDER)."""
+    res = db_manager.get_pim_colorways_ecommerce(pim_item_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"PIM Item '{pim_item_id}' not found.")
+    return res
+
+
+# ============================================================================
+# Sprint 8: Vendor Hub 360, Certifications SHA-256, L6 Segregation & Where-Used
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/vendors",
+    response_model=List[VendorRecord],
+    tags=["vendors", "finops", "sprint8"],
+)
+def list_vendors(
+    viewer_role: str = "brand",
+    supply_chain_role: Optional[str] = None,
+    district_area: Optional[str] = None,
+    qualification_status: Optional[str] = None,
+    paas_tier: Optional[str] = None,
+    search: Optional[str] = None,
+) -> List[VendorRecord]:
+    """List Vendors & 0 EUR Subcontractors with centralized ADR-006/ADR-011 L6 Cost Segregation."""
+    return db_manager.list_vendors(
+        viewer_role=viewer_role,
+        supply_chain_role=supply_chain_role,
+        district_area=district_area,
+        qualification_status=qualification_status,
+        paas_tier=paas_tier,
+        search=search,
+    )
+
+
+@app.post(
+    "/api/v1/vendors",
+    response_model=VendorRecord,
+    status_code=status.HTTP_201_CREATED,
+    tags=["vendors", "finops", "sprint8"],
+)
+def create_vendor(
+    payload: VendorCreate,
+    viewer_role: str = "brand",
+) -> VendorRecord:
+    """Register a Vendor or 0 EUR Subcontractor with deterministic 40/30/30 rating and optional SHA-256 certifications."""
+    try:
+        return db_manager.save_vendor(payload, viewer_role=viewer_role)
+    except sqlite3.IntegrityError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Vendor code or VAT number already registered: {exc}",
+        ) from exc
+
+
+@app.get(
+    "/api/v1/vendors/{vendor_id}/certifications",
+    response_model=List[VendorCertification],
+    tags=["vendors", "compliance", "sprint8"],
+)
+def list_vendor_certifications(vendor_id: str) -> List[VendorCertification]:
+    """List certifications for a Vendor with live days_to_expiry countdown and SHA-256 fingerprint."""
+    certs = db_manager.list_vendor_certifications(vendor_id)
+    if certs is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Vendor '{vendor_id}' not found.")
+    return certs
+
+
+@app.post(
+    "/api/v1/vendors/{vendor_id}/certifications",
+    response_model=VendorCertification,
+    status_code=status.HTTP_201_CREATED,
+    tags=["vendors", "compliance", "sprint8"],
+)
+def add_vendor_certification(
+    vendor_id: str,
+    payload: VendorCertificationCreate,
+) -> VendorCertification:
+    """Attach a new certification (LWG, EUDR, REACH, DURC, ISO, SA8000) to a Vendor with automatic SHA-256 hash."""
+    cert = db_manager.add_vendor_certification(vendor_id, payload)
+    if cert is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Vendor '{vendor_id}' not found.")
+    return cert
+
+
+@app.delete(
+    "/api/v1/vendors/{vendor_id}/certifications/{cert_id}",
+    tags=["vendors", "compliance", "sprint8"],
+)
+def delete_vendor_certification(vendor_id: str, cert_id: str) -> Dict[str, str]:
+    """Remove a certification from a Vendor."""
+    res = db_manager.delete_vendor_certification(vendor_id, cert_id)
+    if res is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Certification '{cert_id}' for Vendor '{vendor_id}' not found.",
+        )
+    return res
+
+
+@app.get(
+    "/api/v1/vendors/{vendor_id}/where-used",
+    response_model=VendorWhereUsedResponse,
+    tags=["vendors", "bom", "finops", "sprint8"],
+)
+def get_vendor_where_used(
+    vendor_id: str,
+    viewer_role: str = "brand",
+) -> VendorWhereUsedResponse:
+    """Relational Where-Used Impact Analysis across BOM L1/L2/L3, PLM Variants, PIM Models & Tannery Batches with L6 guard."""
+    res = db_manager.get_vendor_where_used(vendor_id, viewer_role=viewer_role)
+    if res is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Vendor '{vendor_id}' not found.")
+    return res
+
+
+@app.get(
+    "/api/v1/vendors/{vendor_id}",
+    response_model=VendorRecord,
+    tags=["vendors", "finops", "sprint8"],
+)
+def get_vendor(
+    vendor_id: str,
+    viewer_role: str = "brand",
+) -> VendorRecord:
+    """Retrieve Vendor 360 profile with L6 Cost Segregation enforced when viewer_role != 'brand'."""
+    vendor = db_manager.get_vendor(vendor_id, viewer_role=viewer_role)
+    if not vendor:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Vendor '{vendor_id}' not found.")
+    return vendor
+
+
+@app.put(
+    "/api/v1/vendors/{vendor_id}",
+    response_model=VendorRecord,
+    tags=["vendors", "finops", "sprint8"],
+)
+def update_vendor(
+    vendor_id: str,
+    payload: VendorUpdate,
+    viewer_role: str = "brand",
+) -> VendorRecord:
+    """Update Vendor 360 profile and recompute deterministic 40/30/30 Vendor Rating."""
+    try:
+        updated = db_manager.update_vendor(vendor_id, payload, viewer_role=viewer_role)
+    except sqlite3.IntegrityError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Vendor '{vendor_id}' not found.")
+    return updated
+
+
+@app.delete(
+    "/api/v1/vendors/{vendor_id}",
+    tags=["vendors", "finops", "sprint8"],
+)
+def delete_vendor(vendor_id: str) -> Dict[str, str]:
+    """Delete a Vendor or soft-deactivate (`is_active=False`) if referenced in BOMs or Tannery Batches."""
+    res = db_manager.delete_vendor(vendor_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Vendor '{vendor_id}' not found.")
+    return res
+
+
+# ============================================================================
+# Product Models API (FTL-CEO-021)
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/product-models",
+    response_model=List[ProductModel],
+    tags=["product_models", "plm"],
+)
+def list_product_models(
+    category: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    search: Optional[str] = None,
+) -> List[ProductModel]:
+    """List base Product Models (Style / Last / Construction) with attached product and variant counts."""
+    return db_manager.list_product_models(category=category, is_active=is_active, search=search)
+
+
+@app.post(
+    "/api/v1/product-models",
+    response_model=ProductModel,
+    status_code=status.HTTP_201_CREATED,
+    tags=["product_models", "plm"],
+)
+def create_product_model(model_in: ProductModelCreate) -> ProductModel:
+    """Create a new Product Model base pattern / style."""
+    try:
+        return db_manager.save_product_model(model_in)
+    except sqlite3.IntegrityError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Model code '{model_in.model_code}' already exists: {exc}") from exc
+
+
+@app.get(
+    "/api/v1/product-models/{model_id}",
+    response_model=ProductModelWithProducts,
+    tags=["product_models", "plm"],
+)
+def get_product_model(model_id: str) -> ProductModelWithProducts:
+    """Get full Product Model details including list of attached commercial PIM items and PLM variants."""
+    model = db_manager.get_product_model_with_products(model_id)
+    if not model:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product model '{model_id}' not found.")
+    return model
+
+
+@app.put(
+    "/api/v1/product-models/{model_id}",
+    response_model=ProductModel,
+    tags=["product_models", "plm"],
+)
+def update_product_model(model_id: str, payload: ProductModelUpdate) -> ProductModel:
+    """Update technical specs, last, sole construction or description of a Product Model."""
+    updated = db_manager.update_product_model(model_id, payload)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product model '{model_id}' not found.")
+    return updated
+
+
+@app.delete(
+    "/api/v1/product-models/{model_id}",
+    tags=["product_models", "plm"],
+)
+def delete_product_model(model_id: str) -> Dict[str, str]:
+    """Delete a Product Model and unassign attached PIM items."""
+    res = db_manager.delete_product_model(model_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product model '{model_id}' not found.")
+    return {"status": "DELETED", "model_id": model_id}
+
+
+@app.post(
+    "/api/v1/product-models/{model_id}/attach-product",
+    response_model=ProductModelWithProducts,
+    tags=["product_models", "plm"],
+)
+def attach_product_to_model(model_id: str, req: AttachProductRequest) -> ProductModelWithProducts:
+    """Attach an existing commercial PIM item to this Product Model."""
+    ok = db_manager.attach_product_to_model(model_id, req.pim_item_id)
+    if not ok:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Could not attach product '{req.pim_item_id}' to model '{model_id}'.")
+    res = db_manager.get_product_model_with_products(model_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Model '{model_id}' not found.")
+    return res
+
+
+@app.post(
+    "/api/v1/product-models/{model_id}/detach-product",
+    response_model=ProductModelWithProducts,
+    tags=["product_models", "plm"],
+)
+def detach_product_from_model(model_id: str, req: DetachProductRequest) -> ProductModelWithProducts:
+    """Detach a commercial PIM item from this Product Model."""
+    ok = db_manager.detach_product_from_model(model_id, req.pim_item_id)
+    if not ok:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Product '{req.pim_item_id}' was not attached to model '{model_id}'.")
+    res = db_manager.get_product_model_with_products(model_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Model '{model_id}' not found.")
+    return res
+
+
+# ============================================================================
+# Albo Fornitori <-> Hub Distretto PaaS Linking API (FTL-CEO-022)
+# ============================================================================
+
+
+@app.post(
+    "/api/v1/vendors/{vendor_id}/link-district-company",
+    response_model=VendorRecord,
+    tags=["vendors", "district_paas", "sprint8"],
+)
+def link_vendor_to_district_company(vendor_id: str, req: VendorDistrictLinkRequest) -> VendorRecord:
+    """Link an Albo Vendor to a registered District PaaS Company (Modulo 01)."""
+    res = db_manager.link_vendor_to_district_company(vendor_id, req.company_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unable to link vendor '{vendor_id}' to company '{req.company_id}'. Verify existence.")
+    return res
+
+
+@app.post(
+    "/api/v1/vendors/{vendor_id}/unlink-district-company",
+    response_model=VendorRecord,
+    tags=["vendors", "district_paas", "sprint8"],
+)
+def unlink_vendor_from_district_company(vendor_id: str) -> VendorRecord:
+    """Unlink an Albo Vendor from its associated District PaaS Company."""
+    res = db_manager.unlink_vendor_from_district_company(vendor_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Vendor '{vendor_id}' not found.")
+    return res
+
+
+@app.post(
+    "/api/v1/vendors/auto-link-district",
+    response_model=VendorAutoLinkResult,
+    tags=["vendors", "district_paas", "sprint8"],
+)
+@app.post(
+    "/api/v1/vendors/auto-link-district-companies",
+    response_model=VendorAutoLinkResult,
+    tags=["vendors", "district_paas", "sprint8"],
+)
+def auto_link_vendors_to_district_companies() -> VendorAutoLinkResult:
+    """Bulk auto-match Albo vendors with District PaaS companies by VAT number and legal name."""
+    result_dict = db_manager.auto_link_vendors_to_district_companies()
+    return VendorAutoLinkResult(**result_dict)
+
+
 
 
 

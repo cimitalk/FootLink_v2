@@ -29,6 +29,10 @@ yarn-error.log*
 scratch/
 tmp/
 
+# Epoca 1 Audit Backups (Escluso da Git)
+_backups/
+*.tar.gz
+
 # Python cache
 __pycache__/
 *.py[cod]

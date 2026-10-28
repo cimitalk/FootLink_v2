@@ -1,0 +1,55 @@
+{
+  "task_id": "FTL-TECH-023",
+  "title": "Sviluppo Full-Stack Verticalizzazione 2: Albo Fornitori & Terzisti Centralizzato 360°, Rating & Where-Used BOM",
+  "description": "Implementazione full-stack (Backend FastAPI + SQLite/PostgreSQL + Frontend React 18 TypeScript) dell'Albo Fornitori & Terzisti Centralizzato a 360° (da FTL-CEO-018 e PRD-009): (1) Tabella e API Albo Fornitori/Terzisti (ruolo di filiera, distretto manifatturiero, Tier PaaS con Terzisti a 0 EUR perpetuo, stato qualifica); (2) Scadenziario automatico certificazioni LWG/ICEC/EUDR/REACH/DURC con alert semaforico e Vendor Rating multi-parametrico (Qualità, OTD, ESG); (3) Parametri di fornitura e listini segregati L6 (MOQ, Lead Time, tariffe oscurate ai terzisti); (4) Selettore Fornitore Qualificato nei nodi BOM L1/L2/L3 e nel Vault Conceria + vista interattiva 'Impatto Fornitore (Where-Used)'.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "CEO (footlink-ceo)",
+  "created_at": "2026-10-26T00:42:00+01:00",
+  "updated_at": "2026-10-28T14:51:00+01:00",
+  "due_date": "2026-11-10T23:59:59+01:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": "1 sessione intensiva C-Suite (Full-Stack Vendor Hub 360, Certificazioni SHA-256, Rating 40/30/30, L6 & Where-Used + 36/36 Pytest)",
+  "dependencies": [
+    "FTL-CEO-018",
+    "FTL-PROD-012",
+    "FTL-TECH-021"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/database/schema.sql",
+    "Applicativo/backend/app/models.py",
+    "Applicativo/backend/app/database.py",
+    "Applicativo/backend/app/seed.py",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/tests/test_sprint8_color_and_vendor_hub.py",
+    "Applicativo/frontend/src/types.ts",
+    "Applicativo/frontend/src/mockSeedData.ts",
+    "Applicativo/frontend/src/App.tsx",
+    "Applicativo/frontend/src/components/VendorHub360.tsx",
+    "Applicativo/frontend/src/components/DomainRegistriesManager.tsx",
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/components/BomThreeLevelTree.tsx",
+    "Applicativo/frontend/src/components/TanneryVaultManager.tsx",
+    "Applicativo/frontend/src/components/SubcontractorMobilePortal.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-011",
+  "tags": [
+    "PLM",
+    "product",
+    "infra",
+    "governance"
+  ],
+  "acceptance_criteria": [
+    "Implementazione DDL e API REST (/api/v1/vendors, /api/v1/vendors/{id}/certifications, /api/v1/vendors/{id}/where-used) con DTO segregati L6",
+    "Interfaccia Albo Fornitori & Terzisti 360° con filtri per ruolo, distretto, stato qualifica, semaforo scadenze certificazioni e scorecard Vendor Rating",
+    "Integrazione relazionale viva nei nodi BOM L1/L2/L3 e nei Lotti Conceria con pannello analitico 'Where-Used' (modelli PIM, varianti PLM e lotti impattati)",
+    "Copertura test unitari Pytest al 100% (inclusa verifica segregazione L6) e compilazione TypeScript/Vite con 0 errori"
+  ],
+  "notes": "Task esecutivo primario dello Sprint 8 (Stream 2 Verticalizzazione: Centralized Vendor & Subcontractor Hub). Pronto per l'esecuzione."
+}

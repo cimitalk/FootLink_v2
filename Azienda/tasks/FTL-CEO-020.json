@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-CEO-020",
+  "title": "Semplificazione UX/UI \"02 Prodotti (PLM & BOM)\"",
+  "description": "Analizzare attentamente tutta la pagina della sezione \"02 Prodotti (PLM & BOM)\" che risulta essere troppo lunga e confusionaria. Con il supporto di CPO e CTO rivedere l'intera impostazione senza togliere nessuna funzionalità. IMPORTANTE!: Tutte le funzionalità attualmente presenti devono restare. La pagina deve essere semplificata e resa più semplice da utilizzare.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-28T17:32:08+02:00",
+  "updated_at": "2026-10-28T18:25:00+02:00",
+  "due_date": "2026-11-27T23:59:59+02:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": "2gg",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/App.tsx",
+    "Azienda/adr/ADR-012-plm-ux-simplification-product-models-and-district-vendor-synergy.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L2",
+  "decision_record_id": "ADR-012",
+  "tags": [
+    "governance",
+    "product",
+    "PLM"
+  ],
+  "acceptance_criteria": [
+    "Utilizzo della pagina semplice, le varie sezioni sono riorganizzate e presentano un flusso logico vicino all'operativa degli utilizzatori del sistema.",
+    "Riorganizzazione in Tab Operativi chiari (Catalogo Varianti, Gestione Modelli, Colorway BOM Matrix, Distinta Base L1/L2/L3, Presets).",
+    "Sticky context bar con variante selezionata sempre visibile.",
+    "Nessuna funzionalità eliminata o degradata: 100% delle funzioni preesistenti operative."
+  ],
+  "notes": "Riorganizzazione UX/UI approvata con ADR-012."
+}

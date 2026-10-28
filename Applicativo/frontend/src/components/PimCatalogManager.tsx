@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { findMasterColorById } from "../mockSeedData";
 import {
   PimCommercialItem,
   PlmProductionVariant,
@@ -7,12 +8,15 @@ import {
   Season,
   ViewerSecurityRole,
   DigitalProductPassport,
+  MasterColor,
 } from "../types";
+import { FINISH_TYPE_LABELS } from "./ColorIntelligenceStudio";
 
 interface PimCatalogManagerProps {
   pimItems: PimCommercialItem[];
   seasons: Season[];
   viewerRole: ViewerSecurityRole;
+  colors?: MasterColor[];
   onSelectPim: (item: PimCommercialItem) => void;
   onCreatePimItem: (item: {
     sku_code: string;
@@ -36,6 +40,7 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
   pimItems,
   seasons,
   viewerRole,
+  colors = [],
   onSelectPim,
   onCreatePimItem,
   onNavigateToPlm,
@@ -93,9 +98,43 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
     setTimeout(() => setCopiedFeed(null), 2500);
   };
 
+  const resolveVariantMasterColor = (
+    v: PlmProductionVariant
+  ): MasterColor | undefined => {
+    return (
+      findMasterColorById(colors, v.primary_color_id) ||
+      findMasterColorById(colors, v.bom_items?.[0]?.master_color_id)
+    );
+  };
+
   const handleExportCatalog = (format: "csv" | "json") => {
     if (format === "json") {
-      const jsonStr = JSON.stringify(filteredItems, null, 2);
+      const sanitizedOmnichannelPayload = filteredItems.map((item) => ({
+        pim_item_id: item.pim_item_id,
+        sku_code: item.sku_code,
+        model_name: item.model_name,
+        category: item.category,
+        season: item.season,
+        wholesale_price_eur: item.wholesale_price_eur,
+        retail_price_eur: item.retail_price_eur,
+        hs_customs_code: item.hs_customs_code,
+        gtin_ean: item.gtin_ean,
+        variants_omnichannel: item.plm_variants.map((v) => {
+          const mc = resolveVariantMasterColor(v);
+          return {
+            variant_code: v.variant_code,
+            technical_colorway_it: mc?.technical_name_it || v.colorway_name,
+            color_family: mc?.commercial_family || "N/D",
+            color_hex: mc?.hex_code || "#111111",
+            color_finish:
+              (mc && (FINISH_TYPE_LABELS[mc.finish_type] || mc.finish_type)) ||
+              "Standard",
+            pantone_reference: mc?.pantone_tcx_code || "N/D",
+            size_range: v.size_range,
+          };
+        }),
+      }));
+      const jsonStr = JSON.stringify(sanitizedOmnichannelPayload, null, 2);
       const blob = new Blob([jsonStr], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -117,20 +156,42 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
       "Codice HS Doganale",
       "Barcode EAN",
       "Varianti PLM Collegate",
+      "color_family",
+      "color_hex",
+      "color_finish",
+      "pantone_reference",
     ];
 
-    const rows = filteredItems.map((item) => [
-      `"${item.sku_code || (item as any).commercial_sku || ''}"`,
-      `"${item.model_name}"`,
-      `"${item.category}"`,
-      `"${item.season}"`,
-      `"${item.collection_name || 'Main Collection'}"`,
-      item.wholesale_price_eur || 0,
-      item.retail_price_eur || 0,
-      `"${item.hs_customs_code || '6403.59.95'}"`,
-      `"${item.gtin_ean || (item as any).barcode_ean13 || '8052109841235'}"`,
-      item.plm_variants.length,
-    ]);
+    const rows = filteredItems.map((item) => {
+      const mappedColors = item.plm_variants
+        .map((v) => resolveVariantMasterColor(v))
+        .filter((c): c is MasterColor => Boolean(c));
+      const famStr = Array.from(
+        new Set(mappedColors.map((c) => c.commercial_family))
+      ).join(" | ");
+      const hexStr = mappedColors.map((c) => c.hex_code).join(" | ");
+      const finStr = mappedColors
+        .map((c) => FINISH_TYPE_LABELS[c.finish_type] || c.finish_type)
+        .join(" | ");
+      const panStr = mappedColors.map((c) => c.pantone_tcx_code).join(" | ");
+
+      return [
+        `"${item.sku_code || (item as any).commercial_sku || ""}"`,
+        `"${item.model_name}"`,
+        `"${item.category}"`,
+        `"${item.season}"`,
+        `"${item.collection_name || "Main Collection"}"`,
+        item.wholesale_price_eur || 0,
+        item.retail_price_eur || 0,
+        `"${item.hs_customs_code || "6403.59.95"}"`,
+        `"${item.gtin_ean || (item as any).barcode_ean13 || "8052109841235"}"`,
+        item.plm_variants.length,
+        `"${famStr || "Standard"}"`,
+        `"${hexStr || "#111111"}"`,
+        `"${finStr || "Standard"}"`,
+        `"${panStr || "N/D"}"`,
+      ];
+    });
 
     const csvContent = headers.join(",") + "\n" + rows.map((r) => r.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -211,6 +272,13 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => handleExportCatalog("json")}
+              className="px-4 py-2.5 rounded-full border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
+            >
+              <span>📦 Esporta Feed JSON (Color Metafields)</span>
+            </button>
             <button
               type="button"
               onClick={() => handleExportCatalog("csv")}
@@ -344,20 +412,48 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
                       </p>
                     </div>
 
-                    {/* Associated PLM Variants */}
-                    <div className="bg-[#F5F5F5] rounded-2xl p-3 space-y-1.5 text-xs">
-                      <div className="text-[10px] font-bold text-[#707072] uppercase">
-                        Varianti PLM Industriali Collegate ({item.plm_variants.length})
+                    {/* Associated PLM Variants & Omnichannel Color Auto-Mapping */}
+                    <div className="bg-[#F5F5F5] rounded-2xl p-3 space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-[#707072] uppercase">
+                          Varianti PLM &amp; Auto-Mapping Colore ({item.plm_variants.length})
+                        </span>
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700">
+                          B2C/B2B Sync
+                        </span>
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {item.plm_variants.map((v) => (
-                          <span
-                            key={v.plm_variant_id}
-                            className="bg-white border border-[#D5D5D5] px-2 py-0.5 rounded-md font-mono text-[10px] font-bold text-[#111111]"
-                          >
-                            {v.variant_code} ({v.colorway_name})
-                          </span>
-                        ))}
+                      <div className="space-y-1.5">
+                        {item.plm_variants.map((v) => {
+                          const mc = resolveVariantMasterColor(v);
+                          return (
+                            <div
+                              key={v.plm_variant_id}
+                              className="bg-white border border-[#D5D5D5] px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span
+                                  className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0"
+                                  style={{
+                                    backgroundColor: mc?.hex_code || "#111111",
+                                  }}
+                                />
+                                <div className="min-w-0">
+                                  <div className="font-mono text-[10px] font-bold text-[#111111] truncate">
+                                    {v.variant_code}
+                                  </div>
+                                  <div className="text-[10px] text-[#707072] truncate">
+                                    {mc?.technical_name_it || v.colorway_name}
+                                  </div>
+                                </div>
+                              </div>
+                              {mc && (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-neutral-900 shrink-0">
+                                  → {mc.commercial_family}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -568,7 +664,7 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
               </div>
 
               <div className="flex items-center justify-between pt-2">
-                <span className="text-[10px] text-[#707072]">Include: MOQ, Scala taglie, Valuta EUR/USD</span>
+                <span className="text-[10px] text-[#707072]">Include: MOQ, Scala taglie, Valuta EUR/USD, Pantone TCX</span>
                 <button
                   type="button"
                   onClick={() => handleCopyFeedUrl("b2b", "http://127.0.0.1:8000/api/v1/pim-items/feed/b2b")}
@@ -577,6 +673,85 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
                   {copiedFeed === "b2b" ? "✓ Copiato!" : "Copia URL Feed"}
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Sprint 8: Auto-Mapping Colore Commerciale Omnicanale Preview */}
+          <div className="border border-[#E5E5E5] rounded-2xl p-6 bg-[#FAFAFA] space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full">
+                  COLOR INTELLIGENCE → PIM SYNDICATION
+                </span>
+                <h3 className="text-base font-extrabold text-[#111111] mt-1">
+                  Auto-Mapping Colore Commerciale Omnicanale (Metafields B2C &amp; B2B)
+                </h3>
+                <p className="text-xs text-[#707072]">
+                  Traduzione automatica senza intervento manuale dal lessico di conceria/fabbrica ai filtri standardizzati di ricerca Shopify Plus (`color_family`, `color_hex`, `color_finish`) e line-sheet JOOR/NuORDER (`pantone_reference`).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleExportCatalog("json")}
+                className="px-4 py-2 rounded-full bg-[#111111] text-white text-xs font-bold hover:bg-neutral-800"
+              >
+                📦 Scarica Payload Feed JSON
+              </button>
+            </div>
+
+            <div className="overflow-x-auto bg-white border border-[#E5E5E5] rounded-xl">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                    <th className="py-2.5 px-3">SKU &amp; Variante PLM</th>
+                    <th className="py-2.5 px-3">Tinta Fabbrica (technical_name_it)</th>
+                    <th className="py-2.5 px-3">Filtro E-Commerce (color_family)</th>
+                    <th className="py-2.5 px-3">Swatch &amp; color_hex</th>
+                    <th className="py-2.5 px-3">Finitura (color_finish)</th>
+                    <th className="py-2.5 px-3">Showroom B2B (pantone_reference)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {allPlmVariants.map((v) => {
+                    const mc = resolveVariantMasterColor(v);
+                    return (
+                      <tr key={v.plm_variant_id} className="hover:bg-slate-50/70">
+                        <td className="py-2.5 px-3 font-mono font-bold text-neutral-900">
+                          {v.parentPim.sku_code} · {v.variant_code}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-700 font-medium">
+                          {mc?.technical_name_it || v.colorway_name}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-neutral-900 text-white">
+                            {mc?.commercial_family || "Standard"}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <div className="flex items-center gap-2 font-mono text-[11px]">
+                            <span
+                              className="w-4 h-4 rounded border border-slate-300"
+                              style={{
+                                backgroundColor: mc?.hex_code || "#111111",
+                              }}
+                            />
+                            <span>{mc?.hex_code || "#111111"}</span>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600">
+                          {(mc &&
+                            (FINISH_TYPE_LABELS[mc.finish_type] ||
+                              mc.finish_type)) ||
+                            "Standard"}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono font-semibold text-neutral-900">
+                          {mc?.pantone_tcx_code || "N/D"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

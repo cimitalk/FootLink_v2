@@ -186,16 +186,6 @@ export const FootlinkHomeHub: React.FC<FootlinkHomeHubProps> = ({
               >
                 Apri Workspace Integrato Completo →
               </button>
-              <a
-                href="/dam/index.html"
-                target="_blank"
-                rel="noreferrer"
-                className="px-5 py-3.5 rounded-full bg-[#1A1A1A] text-white border border-[#333333] hover:border-[#00FF87] hover:text-[#00FF87] font-semibold text-sm transition shadow-lg flex items-center gap-2"
-                title="Archivio DAM con tutti gli asset pubblicitari, social, banner e newsletter"
-              >
-                <span>📁</span>
-                <span>Archivio DAM Adv &amp; Social</span>
-              </a>
             </div>
           </div>
 

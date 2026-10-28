@@ -16,15 +16,17 @@ Questo repository è strutturato nei **3 pilastri principali di root** definiti 
 FootLink_v2/
 ├── Azienda/                                   # 🏢 PILASTRO 1: Governance, C-Suite & Documentazione
 │   ├── Manifesto_Fondazione_Footlink.md       # 📜 Costituzione & Governance (Fonte #1 di verità)
+│   ├── PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md # 🎯 Piano Esecutivo Epoca II ("La Verticalizzazione" S8–S12)
 │   ├── IDENTITY.md / SOUL.md / USER.md        # 🧠 Identità agente e direttive attive del Founder
-│   ├── MEMORY.md / DREAMS.md / memory/        # 🗂️ Memoria storica e log di sessione
+│   ├── MEMORY.md / DREAMS.md / memory/        # 🗂️ Memoria storica multi-epoca e log di sessione
 │   ├── adr/                                   # 🏛️ Architecture & Any Decision Records (Fonte #3)
-│   │   ├── README.md                          #    Registro ADR ufficiale (ADR-000 .. ADR-005+)
+│   │   ├── README.md                          #    Registro ADR ufficiale (ADR-000 .. ADR-011)
 │   │   └── ADR-*.md                           #    Decisioni architetturali, di dominio e FinOps
 │   ├── tasks/                                 # 📋 Task Object JSON v1.0 & Dashboard (Fonte #4)
-│   │   ├── README.md                          #    Stato live di Sprint 1 e Sprint 2
+│   │   ├── README.md                          #    Dashboard Multi-Epoca (Epoca II Attiva + Archivio Epoca I)
 │   │   ├── schema/task-object-v1.schema.json
-│   │   └── FTL-*.json                         #    Task operativi della C-Suite
+│   │   ├── FTL-*.json                         #    Task attivi dell'Epoca II (Sprint 8+)
+│   │   └── archive_epoch_1/FTL-*.json         #    Archivio consolidato Epoca I (Sprint 1–7, 67/67 Done 👑👑)
 │   └── docs/                                  # 📚 Documentazione e Deliverable di Dipartimento
 │       ├── roles/                             #    Specifiche ufficiali dei 6 C-Level (Fonte #2)
 │       ├── governance/                        #    Regole di processo CGO
@@ -76,7 +78,10 @@ FootLink_v2/
 python3 Portale_Founder_Control/control_center.py
 ```
 
-Consulta la **[Founder Control Dashboard (`Azienda/tasks/README.md`)](./Azienda/tasks/README.md)** per lo stato aggiornato di **Sprint 1** e **Sprint 2**.
+Consulta:
+- **[🎯 Piano di Prosecuzione Strategico dell'Epoca II (`Azienda/PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md`)](./Azienda/PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md)** per la roadmap di verticalizzazione (`Sprint 8 → Sprint 12`).
+- **[📜 Compendio Storico dell'Epoca I (`Sprint 1–7`)](./Azienda/docs/governance/epoch-1-historical-consolidation-sprints-1-7.md)** per il consolidamento dei primi 7 Sprint (`67/67 Task Done 👑👑`).
+- **[📋 Founder Control Dashboard (`Azienda/tasks/README.md`)](./Azienda/tasks/README.md)** per lo stato aggiornato dei Task Multi-Epoca.
 
 ---
 

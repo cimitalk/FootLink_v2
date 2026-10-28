@@ -40,9 +40,12 @@ jobs:
           Draft202012Validator.check_schema(schema)
           validator = Draft202012Validator(schema)
 
-          task_files = sorted(glob.glob("Azienda/tasks/FTL-*.json"))
+          task_files = sorted(
+              glob.glob("Azienda/tasks/FTL-*.json")
+              + glob.glob("Azienda/tasks/archive_epoch_1/FTL-*.json")
+          )
           if not task_files:
-              print("ERROR: No task files found in Azienda/tasks/FTL-*.json")
+              print("ERROR: No task files found in Azienda/tasks/ or Azienda/tasks/archive_epoch_1/")
               sys.exit(1)
 
           errors = 0
@@ -61,7 +64,7 @@ jobs:
 
           if errors > 0:
               sys.exit(1)
-          print(f"SUCCESS: Validated {len(task_files)} task files across Sprint 1 & Sprint 2 with 0 errors.")
+          print(f"SUCCESS: Validated {len(task_files)} task files across Epoch 1 & Epoch 2 with 0 errors.")
           '
 
   backend-tests:

@@ -12,7 +12,7 @@ from datetime import datetime
 from collections import Counter, defaultdict
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IGNORED_DIRS = {'.git', 'node_modules', 'dist', '__pycache__', '.pytest_cache', '.agents', '.gemini'}
+IGNORED_DIRS = {'.git', 'node_modules', 'dist', '__pycache__', '.pytest_cache', '.agents', '.gemini', '_backups'}
 IGNORED_FILES = {'package-lock.json', '.DS_Store', 'footlink.db-journal'}
 VALID_EXTS = {'.py', '.ts', '.tsx', '.js', '.jsx', '.html', '.css', '.sql', '.md', '.json', '.yaml', '.yml', '.svg'}
 

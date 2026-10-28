@@ -1,0 +1,33 @@
+{
+  "task_id": "FTL-TECH-025",
+  "title": "+ NUOVO PRODOTTO PLM",
+  "description": "Se creo un nuovo prodotto PLM devo scegliere da quale modello partire, scegliendo da uno di quelli a disposizione.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-28T18:52:23+02:00",
+  "updated_at": "2026-10-28T19:05:00+02:00",
+  "due_date": "2026-11-27T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "4h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/App.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": null,
+  "tags": [
+    "product",
+    "PLM"
+  ],
+  "acceptance_criteria": [
+    "Creo un nuovo prodotto PLM, e seleziono il modello."
+  ],
+  "notes": "Iniziativa inserita dal Founder nel Control Center per triage e strutturazione CTO."
+}

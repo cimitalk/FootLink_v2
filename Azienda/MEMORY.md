@@ -1,117 +1,74 @@
-# MEMORY.md - Long-Term Project Memory
+# MEMORY.md - Long-Term Project Memory (Multi-Epoch Architecture)
 
-Questo file conserva i fatti durevoli, le decisioni architetturali e lo stato evolutivo di **Footlink** attraverso le sessioni su **Google Antigravity**.
+Questo file conserva i fatti durevoli, le decisioni architetturali e lo stato evolutivo di **Footlink** attraverso le sessioni su **Google Antigravity**, strutturato per **Epoche Esecutive**.
 
-## Stato Strategico & Governance (Ottobre 2026)
+---
 
-- **Costituzione e C-Suite v1.0 Approvate (17–18 Ottobre 2026):**
-  - Approvati dal Founder il [Manifesto di Fondazione](./Manifesto_Fondazione_Footlink.md) e tutti i 6 ruoli della C-Suite ([CEO](./docs/roles/Role_CEO_Footlink.md), [CGO](./docs/roles/Role_CGO_Footlink.md), [CTO](./docs/roles/Role_CTO_Footlink.md), [CPO](./docs/roles/Role_CPO_Footlink.md), [CRO](./docs/roles/Role_CRO_Footlink.md), [CMO](./docs/roles/Role_CMO_Footlink.md)).
-- **Transizione Piattaforma Agenti → Google Antigravity (18 Ottobre 2026):**
-  - **Decisione del Founder (`ADR-001`):** **OpenClaw** viene posto in stato **`suspended`** (in quanto limitato nella visibilità modelli solo a Gemini Flash e meno efficiente sul consumo di crediti per il coordinamento multi-agente).
-  - L'orchestrazione della C-Suite e lo sviluppo software vengono eseguiti nativamente su **Google Antigravity** (piano Pro 21,99 €/mese + 30 € di crediti) utilizzando sub-agenti specializzati (`invoke_subagent`) e persistenza Git-native nelle cartelle `adr/`, `tasks/` e `docs/`.
-- **Pilastri Invarianti di Prodotto, Tecnologia e Business:**
-  1. **Dominio Core:** `1 Articolo PIM (Vendita) ↔ N Articoli PLM (Produzione)` per calzature, pelletteria e abbigliamento, con supporto nativo al Passaporto Digitale del Prodotto (DPP UE).
-  2. **Stack Tecnologico Core:** `Python (FastAPI)` + `React` + `PostgreSQL` orientato a soluzioni open-source e **free-tier** nella fase di bootstrap.
-  3. **Modello di Business a Rete & FinOps:** Terzisti/Façonisti a **Costo Zero (0 €)** per viralità di filiera; PMI produttive con canone SaaS accessibile; Brand Moda in Enterprise Tier. Vincolo di **Margine Lordo SaaS > 75%** e **Zero Spesa Monetaria Autonoma (> 0 € = Escalation L2 al Founder)**.
-- **Architettura del Repository a 3 Pilastri di Root (Sprint 2 — 18 Ottobre 2026):**
-  - Il monorepo è strutturato in 3 cartelle principali a livello di root (`FTL-GOV-002`):
-    1. `Azienda/`: Governance, Manifesto, specifiche di ruolo C-Suite, ADR, Task Object JSON (`Azienda/tasks/`), OKR e documentazione strategica/operativa.
-    2. `Applicativo/`: Codice sorgente dell'MVP SaaS B2B (Backend FastAPI + SQLite/PostgreSQL, Frontend React UI, generatore QR DPP UE e Landing Page B2B).
-    3. `Portale_Founder_Control/`: Dashboard e strumenti di supervisione e gatekeeping L2–L6 per il Founder.
-- **Direttiva Esecutiva Sprint 2 e Audit Manifesto (`FTL-CEO-002` — Completato):**
-  - Formalizzato in [`Azienda/docs/okr/sprint-2-kickoff-and-governance-audit.md`](./docs/okr/sprint-2-kickoff-and-governance-audit.md) l'allineamento tra gli OKR Q4 2026 – Q1 2027 e i deliverable operativi dello Sprint 2 (`FTL-TECH-002`, `FTL-PROD-002`, `FTL-TECH-003`, `FTL-MKT-002`, `FTL-REV-002`, `FTL-GOV-002`), certificando Cost-to-Serve infrastrutturale a **0 €/mese** (Margine Lordo SaaS prospettico > 82%), gratuità perpetua per i terzisti e risoluzione preventiva delle dipendenze incrociate `CTO ↔ CPO` e `CTO ↔ CMO`.
-- **Sprint 5 — Modello Dati Flessibile, Calendario Stagioni & Collezioni, Tabelle Anagrafiche e Semplificazione UI (19 Ottobre 2026):**
-  - **Decisione Architetturale (`ADR-007`):** Formalizzato il modello dati dinamico su base JSON relazionale (`metadata_json`) con validatore formale (`schema_attribute_definitions`), gerarchia calendario moda 1 Stagione ↔ N Collezioni, centralizzazione anagrafiche di dominio PIM/PLM, e semplificazione della UI a 7 moduli coerenti con il processo reale del settore lusso.
-  - **Sviluppo Full-Stack:** Implementate API REST FastAPI e componenti React (`SeasonsCollectionsHub.tsx`, `DomainRegistriesManager.tsx`, `DataModelSchemaStudio.tsx`, `PimToPlmBridge.tsx`, `App.tsx`), con selettore globale di stagione e filtri omnicanale.
-  - **Test & Validazione:** Test suite backend passante al 100% (`12 passed in 2.39s`), compilazione frontend senza errori, zero costi infrastrutturali aggiuntivi (FinOps L2 rispettato).
-  - **Direttiva Founder `FTL-CEO-007` (Edit Tabelle Anagrafiche):** Introdotto l'editing inline/modale completo nel Modulo 03 con relative rotte `PUT`/`PATCH` su FastAPI e SQLite (`12 passed in 2.62s`).
-- **Sprint 6 — Ridefinizione Priorità Founder & Framework di Governance (19 Ottobre 2026):**
-  - **3 Priorità Esecutive del Founder:**
-    1. *Pellami & Conceria:* Tracciabilità conciaria, caricamento e archiviazione documenti certificativi (LWG Gold/Silver, ICEC TS 410/412, Due Diligence EUDR anti-deforestazione post 2020, report analitici REACH), verifica di autenticità con hash crittografico SHA-256 a costo zero, ed esposizione nel Passaporto Digitale del Prodotto (DPP UE) a doppia vista (B2C consumatore vs B2B/Dogane L6).
-    2. *Matrice Taglie & Fabbisogni BOM con Sfrido:* Work Orders Hub con Size Breakdown Grid per famiglie di calzata (Donna 35-42, Uomo 38-46 con mezzi numeri) e abbigliamento (IT 44-56), fattore di scala taglia e calcolo deterministico del fabbisogno materiali netto e lordo con percentuale di sfrido differenziata (15-25% per pellami).
-    3. *Gestione Utenti & Aziende (PaaS Distrettuale 3 Tier):* Architettura multi-company distrettuale su 3 livelli di membership (Tier 1 Enterprise per Maison di lusso, Tier 2 PMI per calzaturifici strutturati, Tier 3 Piccoli Laboratori Façonisti a Costo Zero 0,00 EUR con onboarding istantaneo via Magic Link e fruizione in 3 Clic < 90s).
-  - **ADR-008 Integrata & Aggiornata:** Copre la Governance PaaS Distrettuale, l'isolamento orizzontale tra Brand competitor che condividono terzisti, la segregazione verticale dei dati economici L6 via DTO Pydantic dedicati, la gestione documentale dei lotti pelle con hash SHA-256 e l'invarianza FinOps L2 (0,00 €/mese).
-  - **Matrice dei Rischi & Presidio Gatekeeping L1-L6:** Formalizzato il protocollo in `Azienda/docs/governance/governance-risk-matrix-and-gatekeeping-sprint-6.md` con 7 scenari di rischio (inclusi leak competitor e violazioni FinOps) e criteri espliciti Go/No-Go.
-  - **Ristrutturazione Task Object Sprint 6:** Tutti i 6 task canonici (`FTL-CEO-008`, `FTL-GOV-006`, `FTL-PROD-006`, `FTL-TECH-007`, `FTL-REV-005`, `FTL-MKT-005`) riscritti, sincronizzati e validati al 100% contro `task-object-v1.schema.json`.
-- **Sprint 6 — Completamento Full-Stack & Validazione Esecutiva (19 Ottobre 2026):**
-  - **Backend FastAPI & Database (`Applicativo/backend/`, `Applicativo/database/`):**
-    - Tabelle DDL implementate: `companies`, `users`, `company_memberships`, `tannery_batches`, `tannery_documents`, `production_orders`, `order_size_breakdown`, `production_order_phases`.
-    - API REST implementate: onboarding e gestione aziende/membri 3 tier, caricamento certificazioni conceria con hash SHA-256 e verifica tamper-proof a costo zero (FinOps L2), creazione commesse, calcolo fabbisogni BOM con sfrido e grading di calzata, avanzamento fasi terzista 0 € via Magic Token.
-    - Test Suite: **18/18 test passati (100% pass rate in 8.57s via pytest runner)**.
-  - **Frontend React 18 & Design System (`Applicativo/frontend/`):**
-    - `DistrictPaasManager.tsx`: portale distrettuale multi-company con gestione 3 Tier (Enterprise, PMI, Laboratori 0 €) e company switcher.
-    - `TanneryVaultManager.tsx`: vault tracciabilità lotti pelle, audit EUDR/ESPR, conformità REACH/Chrome VI, upload certificati LWG/ICEC e verifica live SHA-256 con badge verde crittografico.
-    - `ProductionOrdersManager.tsx`: gestione commesse, matrice taglie (Donna, Uomo, Abbigliamento) con calcolo fabbisogni BOM netti e lordi con sfrido (18% pelle, 2% fondo, +2.8%/taglia), e modal avanzamento fase mobile.
-    - `LiveDppPassportGenerator.tsx`: integrata la scheda dossier doganale/conceria riservata L6 e storytelling consumatore.
-    - Compilazione TypeScript / Vite: **43 moduli trasformati con 0 errori (`npm run build` successo)**.
-  - **Governance & FinOps:** Tutti i 6 Task Object dello Sprint 6 impostati a `done`. Zero spesa monetaria autonoma (`0,00 €`), Cost-to-Serve terzisti azzerato.
-- **Sprint 6 — Direttive Esecutive del Founder FTL-CEO-009 .. 012 & ADR-009 (19 Ottobre 2026):**
-  - **ADR-009 Deliberata:** Formalizzata la sospensione temporanea (stand-by) del Modulo 02 (Work Orders Hub & Size Matrix da ADR-008) per focalizzare le risorse di sviluppo sul perfezionamento dell'area tecnica PLM e dell'hub commerciale PIM.
-  - **4 Direttive Founder Strutturate, Sviluppate e Validate al 100% (Task Object Schema v1.0):**
-    1. `FTL-CEO-009`: Nuova Area Prodotti PLM (`PlmProductsManager.tsx`) scorporata con griglia avanzata, filtri stagione/categoria/stato, quick edit, soft-disable, export Excel/CSV e albero Distinta Base (BOM a 3 livelli) integrato nativamente.
-    2. `FTL-CEO-010`: Revisione Modulo 04 in "PIM Hub" (`PimCatalogManager.tsx`) con default 1:1, aggregatore 1:N per look/bundle commerciali, associazione dinamica a Stagioni e Collezioni, ed esportazione feed multicanale live (Shopify Plus JSON, NuORDER/JOOR B2B Wholesale) con segregazione industriale L6.
-    3. `FTL-CEO-011`: Stand-by visuale del Modulo 02 Work Orders Hub (preservato nel DB e nel backend, ma occultato da router UI e navigazione principale tramite banner informativo ADR-009).
-    4. `FTL-CEO-012`: Revisione Modulo 03 Vault Conceria (`TanneryVaultManager.tsx`) con label professionale ("Passaporto Pellami & Tracciabilità Conceria ESPR & EUDR"), dropdown obbligatorio di associazione a materiali pelle da distinta base BOM, upload reale di file PDF/immagini con hash SHA-256 calcolato via Web Crypto API a 0 €, e importazione massiva di lotti con template CSV scaricabile.
-  - **Backend FastAPI & Test Suite:** Aggiunti gli endpoint `/api/v1/tannery-batches/template/download`, `/api/v1/tannery-batches/import`, `/api/v1/pim-items/feed/shopify`, `/api/v1/pim-items/feed/b2b` e `/api/v1/plm-variants/export`. Test suite backend passata al 100% (**18/18 test passati**).
-  - **Frontend React 18 & Design System:** Compilazione Vite completata con 0 errori (`tsc && vite build` successo).
-  - **Sprint 6 — Perfezionamento UX PLM/BOM, Scale Taglie Certificate, Genere Target e Quick Edit Completo (19 Ottobre 2026):**
-    - Risolti, sviluppati e validati con esito 100% positivo tutti i 6 task critici inseriti dal Founder nel Control Center (`FTL-PROD-008`, `FTL-PROD-009`, `FTL-TECH-008`, `FTL-TECH-009`, `FTL-TECH-010`, `FTL-TECH-011`):
-      1. `FTL-PROD-008` (CPO): **Scale Taglie Certificate** nelle Anagrafiche di Dominio con **Visual Scale Builder** zero-JSON per creazione e modifica (preset Donna EU 35-42, Uomo EU 38-46, Abbigliamento IT 44-56, Pelletteria TU, Bambino EU 24-34, taglie dinamiche, chip colorati in tabella e persistenza a DB).
-      2. `FTL-PROD-009` (CPO): Form **+ Nodo BOM (L1/L2/L3)** riprogettata con etichette chiare, unità di misura, consumo netto, sfrido industriale %, contenuto riciclato ESPR %, costo unitario con badge di segregazione L6 e chip di selezione certificazioni (+ LWG Gold, + ICEC TS 410, + REACH, + EUDR, + GRS).
-      3. `FTL-TECH-008` (CTO): **Quick Edit Completo** su tutti gli attributi del modello PIM e della variante tecnica PLM con form bi-livello e salvataggio atomico tramite nuovo endpoint backend `PATCH /api/v1/pim-items/{pim_item_id}/plm-variants/{plm_variant_id}`.
-      4. `FTL-TECH-009` (CTO): Associazione a prodotti PLM delle **Scale Taglie Certificate** definite nelle anagrafiche di dominio (`registries`) tramite selettore dropdown sia in creazione che in Quick Edit.
-      5. `FTL-TECH-010` (CTO): Creazione nuovo modello da PIM (`+ NUOVO MODELLO PIM`) con assegnazione automatica alla variante PLM generata dello stato ciclo vita `new_from_pim` ("🏷️ Nuovo da PIM"), integrato nell'enum backend/frontend, nella tabella e nei filtri.
-      6. `FTL-TECH-011` (CTO): **Genere Target** (`target_gender`: Donna ♀, Uomo ♂, Unisex ⚥, Bambino 🧒) pienamente gestito in creazione/modifica PLM e PIM, con colonna dedicata con badge visivi e filtro dropdown nella toolbar della tabella PLM.
-    - **Validazione & FinOps:** Compilazione Vite completata con 0 errori (`npm run build`), test suite backend 100% passante (`18/18 passed in pytest`), tutti i 6 Task Object marcati `done` a zero spesa autonoma (FinOps L2 rispettato, 0,00 €).
-- **Sprint 7 — Avvio, Sviluppo Full-Stack e Rilascio Completo Approvato dal Founder (20 Ottobre 2026):**
-  - **Decisione Architetturale (`ADR-010`):** Formalizzata l'architettura per la tassonomia merceologica multi-livello (`product_categories_hierarchy` con CTE ricorsive), la matrice dei classificatori commerciali e di merchandising (`carryover_status`, `brand_line`, `target_occasion`, `price_tier`), il motore transazionale di Deep Copy della variante con clonazione integrale della distinta base (BOM a 3 livelli) e sostituzione rapida materiali, e il motore di Bulk Onboarding (Import/Export massivo Excel/CSV) con validatore preventivo *Dry-Run* e segregazione server-side dei costi industriali L6.
-  - **Allineamento C-Suite & Direttiva Esecutiva (`sprint-7-c-suite-strategic-alignment.md`):** Coinvolti tutti i 6 C-Level con approvazione esplicita del Founder e produzione dei deliverable:
-    - PRD-008 (`PRD-008-product-hierarchies-and-fast-onboarding.md` - CPO)
-    - Analisi FinOps & Unit Economics TTV < 2h (`sprint-7-fast-onboarding-economic-impact.md` - CRO)
-    - Glossario Tassonomia & Guide Onboarding B2B (`sprint-7-merchandising-taxonomy-and-fast-onboarding-guide.md` - CMO)
-  - **Sviluppo Full-Stack Backend & Database (100%):**
-    - DDL relazionale `product_categories_hierarchy` (albero a 4 livelli con parent_id e slug_path) e `bom_templates`.
-    - Endpoint REST: categorie gerarchiche (`/api/v1/categories`, `/tree`), libreria template BOM (`/api/v1/bom-templates`), clonazione ricorsiva variante e distinta base (`/api/v1/plm-variants/{id}/deep-clone`), motore di validazione Dry-Run e commit transazionale (`/api/v1/bulk-import/validate`, `/commit`).
-    - Test Suite Pytest: **22/22 test passati con successo (100%)** via `python3 Applicativo/backend/test_runner.py`.
-  - **Sviluppo Frontend React 18 & TypeScript (100%):**
-    - `PlmProductsManager.tsx` esteso con pulsante toolbar `📥 Import Massivo CSV`, dropdown filtro Piramide di Collezione, colonne arricchite con badge per tipologia di lavorazione/costruzione e piramide commerciale (Carryover, Seasonal, Trend, Capsule).
-    - Azioni di riga con pulsante `📋 Duplica` (Deep Clone con clonazione ricorsiva BOM e rimappatura materiali L1) e `✨ Preset BOM` (applicazione istantanea template da libreria certificata).
-    - Wizard di importazione massiva a 3 tab: download template ufficiali, validatore preventivo Dry-Run con reporting analitico degli errori e commit atomico a database.
-    - Compilazione frontend: `npm run build` completato con **0 errori TypeScript/Vite** (`✓ built in 602ms`).
-  - **Governance & Task Object:** Tutti i 6 task di Sprint 7 (`FTL-CEO-013`, `FTL-GOV-007`, `FTL-PROD-010`, `FTL-TECH-012`, `FTL-REV-006`, `FTL-MKT-006`) marcati a `done` nel registro e nel Founder Control Center.
-  - **FinOps & Vincoli Manifesto:** Zero spesa monetaria autonoma (`0,00 €`), nessun costo computazionale extra, totale segregazione L6 dei costi industriali (0 € terzisti).
-  - **Sprint 7 Extension — Attuazione Direttive Founder Control Center (20 Ottobre 2026):**
-    - Completati, integrati full-stack e validati al 100% i 5 task inseriti dal Founder (`FTL-TECH-013`, `FTL-PROD-011`, `FTL-CEO-015`, `FTL-CEO-014`, `FTL-TECH-014`):
-      1. `FTL-TECH-013` (CTO): Aggiornato Founder Control Center con link corretto `http://localhost:5173`, box diretto per Documentazione API FastAPI (`http://127.0.0.1:8000/docs`), archivio deliverable ordinato decrescente per data ultima modifica (`mtime DESC`) e filtro per deliverable con badge `👑 Direttiva Founder`.
-      2. `FTL-PROD-011` (CPO): Piramide di Collezione (`collection_pyramids`) e Tipi di Costruzione (`construction_types`) resi editabili in `06 Anagrafiche di Dominio`, con associazione gerarchica obbligatoria alla Categoria Merceologica (Calzature, Pelletteria, Abbigliamento) e descrizione tecnica. Integrazione bidirezionale con il selettore PLM in creazione e Quick Edit.
-      3. `FTL-CEO-015` (CTO): Scale Taglie legate gerarchicamente a Categoria e Genere Target sia nell'editor delle Anagrafiche di Dominio sia nel configuratore PLM, con raggruppamento `<optgroup>` per Scale Consigliate vs Altre Scale.
-      4. `FTL-CEO-014` (CTO): Gestione completa Preset BOM (`BomTemplate`) con visualizzazione interattiva dei componenti a 3 livelli, creazione ed estrazione atomica di nuovi preset dalla variante tecnica corrente (`POST /api/v1/bom-templates/create-from-variant/{variant_id}`), modifica metadati/specifiche (`PUT /api/v1/bom-templates/{template_id}`) ed eliminazione con conferma (`DELETE /api/v1/bom-templates/{template_id}`).
-      5. `FTL-TECH-014` (CTO): Gestione interattiva dell'Albero Distinta Base a 3 livelli (`BomThreeLevelTree.tsx`): pulsanti dedicati per ogni nodo per la modifica parametri/costi L6, lo spostamento e riallocazione gerarchica tra livelli L1/L2/L3 con selezione guidata del nodo padre, e l'eliminazione con rimozione ricorsiva a cascata dei sotto-componenti.
-      6. `FTL-TECH-015` (CTO): Banner principale Home Launchpad arricchito con sfondo generativo animato in computer grafica (`FractalWaveBackground.tsx`) a moto perpetuo con onde sinusoidali frattali, nodi traccianti mobili con HUD orbitante ed etichette telemetriche rotanti con coordinate reali `[X, Y]` e angolo `θ` in tempo reale.
-      7. `FTL-TECH-016` (CTO): Configuratore visuale Zero-JSON per Piramidi di Collezione in `DomainRegistriesManager.tsx` con 4 preset rapidi, dipendenze gerarchiche tra piramidi e chip interattivi per regole e vincoli operativi.
-      8. `FTL-MKT-007` (CMO + CTO): Archivio DAM completo in `Azienda/dam/` (e mirror web `Applicativo/frontend/public/dam/`) con 6 cartelle per brand identity vettoriale, campagne social B2B (LinkedIn 1200x630, Instagram 1080x1080, Story 1080x1920 con animazione 60fps coordinata al banner), newsletter responsive DEM, display suite IAB e tool di esportazione 4K.
-      9. `FTL-TECH-017` (CTO): Dashboard analitica su codebase (`Portale_Founder_Control/codebase_analytics.py`) con estrazione dati reali da git log e scansione SLOC, 4 KPI essenziali (Dimensioni SLOC, Cadenza Commit, Hotspot Core, Qualità & FinOps), grafico SVG di andamento commit e integrazione near-real-time su `http://127.0.0.1:8080/codebase-dashboard`.
-    - **Validazione & FinOps:** Test suite backend passata al 100% (**25/25 test passati** con successo), compilazione frontend TypeScript/Vite completata senza errori (`npm run build` in 541ms), tutti i 63 task del repository FootLink_v2 validati formalmente e impostati a stato `done`. Spesa autonoma 0,00 € (FinOps L2 rispettato).
-  - **👑👑 Chiusura Definitiva Sprint 7 con Doppio Riconoscimento del Founder (20 Ottobre 2026):**
-    - Il Founder ha decretato lo **Sprint 7 "uno dei migliori in assoluto"**, conferendo il prestigioso **Doppio Riconoscimento Esecutivo (👑👑)** per l'eccellenza nell'esecuzione tecnica, UX di livello lusso e rigore di governance.
-    - **Deliverable Finali Integrati:**
-      1. `FTL-TECH-018` (CTO): **BOM Tree Compact Layout & Drag & Drop Nativo** (`BomThreeLevelTree.tsx`): riduzione ingombro -58% (da 160px a 66px), HTML5 Drag & Drop tra nodi, dropzone per promozione a L1 Root, algoritmo `isDescendant` per prevenzione cicli e vincolo max 3 livelli.
-      2. `FTL-TECH-019` (CTO): **Duplicazione Ricorsiva Voci e Sotto-alberi BOM** (`POST /api/v1/pim-items/{pim_id}/plm-variants/{variant_id}/bom-items/{bom_id}/duplicate`): duplicazione atomica con mappatura automatica dei nuovi ID genitore-figlio per prevenire nodi orfani, aggiornamento ottimistico dello stato React e test unitari dedicati.
-      3. `FTL-TECH-020` (CTO): **Codebase Analytics MB Footprint & Impronta Globale su Disco**:
-         - Peso in MB calcolato in tempo reale per pilastro: `Applicativo/` (1.76 MB, 55.0%), `Azienda/` (1.19 MB, 37.3%), `Portale/` (0.20 MB, 6.4%), `Root` (0.04 MB, 1.3%) su un totale di **3.19 MB** di codice proprietario autoriale.
-         - Banner top in evidenza sul codice autoriale versionato.
-         - Grafico/Widget "Impronta Globale su Disco: Codice Proprietario vs Vendor Dependencies vs Bundle Distribuito": Codice Proprietario (3.19 MB, 3.7%) vs Vendor Dependencies `node_modules` (80.84 MB, 93.5%) vs Bundle Produzione `dist/` (0.65 MB, 0.8%) vs Metadati Git (1.78 MB, 2.0%) su un totale di 86.46 MB su disco.
-         - Colonna "Peso (MB)" integrata nelle classifiche Top 10 file più grandi e Git Churn Hotspots.
-    - **Metriche di Rilascio Sprint 7:**
-      - Test Suite Backend Pytest: **26/26 test passati con successo (100% pass rate)**.
-      - Frontend Vite Production Build: **0 errori TypeScript/Vite** (`✓ built in 544ms`).
-      - Task Governance: **69/69 task JSON formalmente validati** contro `task-object-v1.schema.json`.
-      - FinOps L2: **0,00 € spesa monetaria autonoma**, margine lordo prospettico > 85%, terzisti a 0 € garantiti.
-    - **Backlog Sprint 8 Acquisito nel Control Center:**
-      - `FTL-CEO-017`: "Gestione Colori Intelligente" (Priorità high, assignee CEO).
-      - `FTL-CEO-018`: "Gestione dei fornitori ed albo centralizzata" (Priorità high, assignee CEO).
+## 🏛️ Pilastri Invarianti del Manifesto di Fondazione (Tutte le Epoche)
 
+1. **Dominio Core:** `1 Articolo PIM (Vendita) ↔ N Varianti PLM (Produzione)` per calzature, pelletteria e abbigliamento, con supporto nativo al Passaporto Digitale del Prodotto (DPP UE / ESPR Reg. 2024/1781 & EUDR Reg. 2023/1115).
+2. **Stack Tecnologico Core (`ADR-002`):** `Python (FastAPI)` + `React 18 (TypeScript/Vite)` + `SQLite/PostgreSQL` orientato a soluzioni open-source e **free-tier**.
+3. **Modello di Business a Rete & FinOps (`ADR-004`):** Terzisti/Façonisti a **Costo Zero (0,00 € perpetuo)** per viralità di filiera; PMI produttive con canone SaaS accessibile; Brand Moda in Enterprise Tier. Vincolo inderogabile di **Margine Lordo SaaS > 75%** e **Zero Spesa Monetaria Autonoma (> 0 € = Escalation L2 al Founder)**.
+4. **Architettura del Repository a 3 Pilastri di Root (`ADR-005`):**
+   - `Azienda/`: Governance, Manifesto, specifiche di ruolo C-Suite, ADR, Task Object JSON (`Azienda/tasks/`), OKR e documentazione strategica/operativa.
+   - `Applicativo/`: Codice sorgente della piattaforma PLM+PIM (`backend/`, `frontend/`, `database/`).
+   - `Portale_Founder_Control/`: Cabina di regia del Founder (`control_center.py` e `codebase_analytics.py` su `http://127.0.0.1:8080`).
+5. **Orchestrazione C-Suite (`ADR-001`):** I 6 ruoli esecutivi (`CEO`, `CGO`, `CTO`, `CPO`, `CRO`, `CMO`) operano nativamente su **Google Antigravity** (`OpenClaw` in stato `suspended`).
 
+---
 
+## 🚀 EPOCA II — "LA VERTICALIZZAZIONE" (Da Sprint 8 in poi — Avviata il 26 Ottobre 2026)
 
+### Direttiva Fondativa dell'Epoca II (Founder Directive)
+- **La Regola della Verticalizzazione (`ADR-011` — *Zero Horizontal Bloat / Deep Vertical Capabilities*):**
+  - Mentre gli Sprint da 1 a 7 (Epoca I) hanno costruito il perimetro orizzontale della piattaforma (9 moduli attivi + 1 in stand-by), lo **Sprint 8 ("La Ripartenza")** inaugura l'**Epoca II ("La Verticalizzazione")**.
+  - **Direttiva del Founder:** *"La piattaforma Footlink è abbastanza ampia orizzontalmente a livello di numero di moduli, ma abbastanza limitata in termini di profondità funzionale all'interno di ogni modulo (inteso come numero di funzionalità disponibili per gli utenti)."*
+  - È vietato introdurre nuovi moduli orizzontali superflui; ogni Sprint dell'Epoca II triplica la profondità funzionale, le automazioni di dominio, i controlli incrociati e gli strumenti operativi reali per gli utenti all'interno dei moduli esistenti.
 
+### Sprint 8 — "La Ripartenza" (Elaborazione Strategica C-Suite, Ottimizzazione Multi-Epoca & Definizione Sprint 8)
+- **Archiviazione Epoca I & Ottimizzazione Multi-Epoca Completate (`FTL-GOV-008`, `FTL-TECH-021`):**
+  - Consolidato l'intero storico degli Sprint 1–7 in [`Azienda/docs/governance/epoch-1-historical-consolidation-sprints-1-7.md`](./docs/governance/epoch-1-historical-consolidation-sprints-1-7.md) e in [`Azienda/memory/archive/EPOCH-1-2026-10-18_to_2026-10-20-summary.md`](./memory/archive/EPOCH-1-2026-10-18_to_2026-10-20-summary.md).
+  - Approvata [`ADR-011`](./adr/ADR-011-epoch-2-verticalization-governance-and-modular-depth.md) (Governance della Verticalizzazione e Segregazione L6 per Colori e Albo Fornitori).
+  - Evoluto il **Founder Control Center v2.0** (`Portale_Founder_Control/control_center.py`) con **Selettore Epoca Interattivo** (`🚀 Epoca II: La Verticalizzazione` di default vs `📦 Archivio Epoca I: Sprint 1–7` vs `🌐 Vista Globale`), mappatura completa `S1..S8` e sincronizzazione strutturata di `Azienda/tasks/README.md`.
+- **Master Plan Epoca II & Plenaria C-Suite (`FTL-CEO-019`, `FTL-PROD-012`, `FTL-REV-007`, `FTL-MKT-008`):**
+  - Formalizzato il Piano Strategico in [`Azienda/PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md`](./PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md) e [`Azienda/docs/okr/epoch-2-masterplan-and-sprint-8-kickoff.md`](./docs/okr/epoch-2-masterplan-and-sprint-8-kickoff.md).
+  - **Direttiva Founder (28 Ottobre 2026):** Lo Sprint 8 ("La Ripartenza") è confermato ed esecutivo; la pianificazione degli sprint successivi (Sprint 9+) non è predeterminata ma verrà definita di volta in volta dal Founder.
+  - Creato l'archivio di backup consolidato dell'Epoca I in `_backups/epoca_1_audit_backup.tar.gz` (127 file, SHA-256 manifest, escluso da git per audit/ripristino).
+  - Completato il triage esecutivo delle 2 Direttive Founder [`FTL-CEO-017`](./tasks/FTL-CEO-017.json) e [`FTL-CEO-018`](./tasks/FTL-CEO-018.json), trasformate nei **2 Motori Verticali dello Sprint 8** (specificati in [`PRD-009`](./docs/prd/PRD-009-sprint-8-verticalization-intelligent-color-and-vendor-hub.md) e nel blueprint tecnico [`epoch-2-technical-optimization-and-sprint-8-blueprint.md`](./docs/technical/epoch-2-technical-optimization-and-sprint-8-blueprint.md)):
+    1. **Verticalizzazione 1 (`FTL-CEO-017` → `FTL-TECH-022`): Motore di Gestione Colori Intelligente & Colorway BOM Matrix:**
+       - Cartelle Colori Master e Stagionali (`master_colors`: codice, nome tecnico PLM vs famiglia colore commerciale PIM, swatch HEX/RGB, riferimenti **Pantone TCX / RAL**, finitura superficiale *Opaco, Vernice, Metallizzato, Scamosciato, Goffrato, Tamponato*).
+       - **Colorway BOM Matrix** su Distinta Base a 3 Livelli (`variant_colorway_bom_mappings`): abbinamento colore puntuale per ogni nodo L1/L2/L3 (Tomaia, Fodera, Suola, Tacco, Minuterie Galvaniche, Filato, Packaging) con workflow di approvazione **Tirella / Lab-Dip** (`In Attesa Tirella`, `Approvato Master`, `Rigettato Delta-E`, `In Deroga`).
+       - **Acceleratori Intelligenti:** *1-Click Colorway Explosion* (generazione automatica di N varianti PLM da cartella colori), verifica coerenza colore con Lotti Conceria (`04 Vault`) e auto-mapping per feed e-commerce (`03 PIM`).
+    2. **Verticalizzazione 2 (`FTL-CEO-018` → `FTL-TECH-023`): Albo Fornitori & Terzisti Centralizzato a 360° (Vendor Hub):**
+       - Anagrafica qualificata (`vendors_registry`) per ruolo di filiera (*Conceria, Suolificio, Tacchificio, Minuterie, Tomaificio, Orlatura, Montaggio*) e distretto manifatturiero (*Marche, Toscana, Veneto, Campania, Puglia, Lombardia, Estero*), con **Terzisti a Costo Zero (0,00 € perpetuo)**.
+       - **Qualifica ESG, Scadenziario Certificazioni & Vendor Rating (0–100):** controllo automatico scadenze LWG, ICEC, EUDR, REACH, ISO e DURC con semaforo visivo e blocco/alert su certificati scaduti; rating ponderato su Qualità (40%), Puntualità OTD (30%) ed ESG (30%).
+       - **Parametri L6 & Vista "Impatto Fornitore (Where-Used)":** MOQ, Lead Time e listini rigorosamente segregati L6 (oscurati ai terzisti), selezione relazionale del fornitore nei nodi BOM e nel Vault Conceria, e query *Where-Used* istantanea (`< 1s`) per vedere tutti i modelli PIM, varianti PLM e lotti impattati da un fornitore.
+- **Unit Economics & Posizionamento Epoca II:**
+  - Analisi FinOps CRO ([`epoch-2-verticalization-unit-economics-and-sprint-8-finops.md`](./docs/finops/epoch-2-verticalization-unit-economics-and-sprint-8-finops.md)): Margine Lordo SaaS certificato a **87,06% (> 75%)**, ROI cliente **> 5,1x**, spesa autonoma **0,00 € (L2)**, Terzisti a **0,00 €**.
+  - Posizionamento e Glossario UX CMO ([`epoch-2-vertical-positioning-and-sprint-8-narrative.md`](./docs/marketing/epoch-2-vertical-positioning-and-sprint-8-narrative.md)).
+- **Completamento Integrale Sprint 8 (Sviluppo Full-Stack & Collaudo L6):**
+  - [`FTL-TECH-022`](./tasks/FTL-TECH-022.json) (`done` — CTO): Sviluppo Full-Stack Verticalizzazione 1 (Color Intelligence Engine, Lab-Dip Delta-E, Colorway BOM Matrix, 1-Click Explosion, Conceria Color Consistency Guard, Auto-Mapping PIM).
+  - [`FTL-TECH-023`](./tasks/FTL-TECH-023.json) (`done` — CTO): Sviluppo Full-Stack Verticalizzazione 2 (Albo Fornitori & Terzisti 360°, Scadenziario Certificazioni SHA-256, Rating 40/30/30, Segregazione L6 & Where-Used BOM).
+  - [`FTL-PROD-013`](./tasks/FTL-PROD-013.json) (`done` — CPO): Collaudo UX/UI Verticale Sprint 8, Audit Segregazione L6 Fornitori e Certificazione Zero-Training ([`sprint-8-vertical-qa-and-l6-audit-report.md`](./docs/prd/sprint-8-vertical-qa-and-l6-audit-report.md)).
+  - **Metriche di Rilascio Sprint 8:** **11/11 Task Done (100%)**, **36/36 Test Pytest Passanti (100%)**, **0 Errori TypeScript/Vite**, **0,00 € Spesa Autonoma (L2)**, Terzisti a **0,00 € Perpetuo (Tier 3)**.
+
+---
+
+## 📦 ARCHIVIO CONSOLIDATO EPOCA I — "FONDAZIONE & ESPANSIONE ORIZZONTALE" (Sprint 1–7: 17–20 Ottobre 2026)
+
+> **Riferimento Storico Completo (Frozen Baseline):** Per il dettaglio analitico di tutti i 67 task completati, delle 10 ADR e di tutti i deliverable dell'Epoca I, consultare il compendio ufficiale: [`Azienda/docs/governance/epoch-1-historical-consolidation-sprints-1-7.md`](./docs/governance/epoch-1-historical-consolidation-sprints-1-7.md).
+
+- **Sprint 1 (17–18 Ott 2026) — Bootstrap C-Suite & Fondamenta Governance (`ADR-001`..`ADR-004`):**
+  - Approvazione Manifesto v1.1 e 6 ruoli C-Suite; transizione a Google Antigravity (`OpenClaw` *suspended*); setup stack Python/React/PostgreSQL free-tier; modello dati `1 PIM ↔ N PLM`; Network Pricing con Terzisti a 0 € e Margine Lordo > 75%. (`6/6 task done`).
+- **Sprint 2 (18 Ott 2026) — Riorganizzazione a 3 Pilastri & Core Applicativo (`ADR-005`):**
+  - Struttura monorepo in `Azienda/`, `Applicativo/`, `Portale_Founder_Control/`; implementazione DB persistente, BOM a 3 livelli, Portale Mobile Terzisti "3 Clic a 0 €", Generatore Live DPP UE con QR SVG e Landing Page B2B. (`7/7 task done`).
+- **Sprint 3 (18–19 Ott 2026) — Design System v2.0 & Segregazione L6 (`ADR-006`):**
+  - Unificazione UX *Luxury Editorial Minimalism*, Home Hub modulare, PIM Data Quality Score (0–100%), schede tecniche verticali multi-settore e segregazione costi L6 Brand vs Terzista e Consumatore vs Dogane. (`4/4 task done`).
+- **Sprint 4 (19 Ott 2026) — Lancio Pilota Distretti, Validazione Zero-Training & Deploy Free-Tier:**
+  - Audit GDPR e DPA multi-tenant L6, attivazione pipeline 15 prospect pilota (Marche, Toscana, Veneto), protocollo SUS Zero-Training (`≤ 3 clic, < 90s`), endpoint Magic Link e configurazione deploy 0 €/mese. (`6/6 task done`).
+- **Sprint 5 (19 Ott 2026) — Modello Dati Flessibile, Stagioni/Collezioni & Anagrafiche (`ADR-007`):**
+  - Motore attributi dinamici (`DataModelSchemaStudio`), gerarchia `1 Stagione ↔ N Collezioni`, centralizzazione Anagrafiche di Dominio con inline/modal edit (`FTL-CEO-007`). (`8/8 task done`).
+- **Sprint 6 (19 Ott 2026) — PaaS Distrettuale 3 Tier, Vault Conceria SHA-256 & Scorporo PLM/PIM (`ADR-008`, `ADR-009`):**
+  - Architettura PaaS a 3 livelli (Enterprise, PMI, Laboratori 0 €), Vault Tracciabilità Pellami EUDR/LWG con verifica crittografica SHA-256 a 0 € e import CSV, scorporo Area Prodotti PLM (`FTL-CEO-009`), PIM Hub con feed Shopify/B2B (`FTL-CEO-010`), stand-by strategico Work Orders Hub (`ADR-009` / `FTL-CEO-011`), Scale Taglie Certificate Zero-JSON, Genere Target e Quick Edit atomico. (`17/17 task done`).
+- **Sprint 7 (20 Ott 2026) — Tassonomia 3+1 Livelli, Bulk Onboarding, BOM Drag&Drop/Duplicazione, DAM & Codebase Analytics (`ADR-010`) — 👑👑 Doppio Riconoscimento Founder:**
+  - Albero categorie `product_categories_hierarchy` con CTE ricorsive, classificatori di merchandising e configuratore visuale Piramidi di Collezione Zero-JSON, Deep Clone variante/BOM e Preset BOM, Bulk Import CSV con Dry-Run, Albero BOM Compact (-58% ingombro) con Drag & Drop HTML5 nativo e duplicazione ricorsiva sotto-alberi, Hero Frattale 60fps con telemetria, Suite DAM a 6 cartelle e Codebase Analytics con impronta MB su disco. (`19/19 task done` — **Totale Epoca I: 67/67 Task Done, 26/26 Test Pytest, 0 Errori Vite, 0,00 € Spesa Autonoma**).

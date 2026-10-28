@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-MKT-008",
+  "title": "Posizionamento Strategico Epoca II ('Vertical Fashion-Tech Depth'), Storytelling B2B & Microcopy Sprint 8",
+  "description": "Definizione del posizionamento comunicativo di Footlink nell'Epoca II ('Dalla visione orizzontale alla maestria verticale di fabbrica'), storytelling B2B per i distretti manifatturieri su Color Intelligence (Pantone TCX, Lab-Dip, Colorway BOM Matrix) e Albo Fornitori Qualificato (Vendor Rating, Scadenziario EUDR/LWG, Where-Used), glossario UX in-app e Sales Enablement sotto presidio Gate L5.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CMO",
+  "assignee_agent": "footlink-cmo",
+  "created_by": "CEO (footlink-ceo)",
+  "created_at": "2026-10-26T00:36:03+01:00",
+  "updated_at": "2026-10-26T00:42:00+01:00",
+  "due_date": "2026-11-05T23:59:59+01:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "4h (Posizionamento Epoca II, Glossario UX e Sales Enablement completati)",
+  "dependencies": [
+    "FTL-CEO-019",
+    "FTL-PROD-012"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/marketing/epoch-2-vertical-positioning-and-sprint-8-narrative.md",
+    "Azienda/docs/marketing/README.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-011",
+  "tags": [
+    "marketing",
+    "sales",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Formalizzazione del narrativa B2B per l'Epoca II focalizzata sulla profondità verticale dei processi calzaturieri e pellettieri",
+    "Definizione del Glossario UX e del microcopy in-app per Cartelle Colori, Lab-Dip, Albo Fornitori, Semafori Certificazioni e Where-Used",
+    "Rispetto rigoroso dei vincoli L2 (0 EUR paid ads) e L5 (nessuna pubblicazione esterna senza approvazione del Founder)"
+  ],
+  "notes": "Allineamento comunicativo e terminologico per lo Sprint 8 completato."
+}

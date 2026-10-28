@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import List
 
 from app.database import FootlinkSQLitePersistence, db_manager
@@ -26,12 +26,14 @@ from app.models import (
     CompanyTier,
     DistrictUserRole,
     DomainRegistryEntryCreate,
+    MasterColorCreate,
     OrderSizeBreakdownItem,
     PimCommercialItem,
     PlmLifecycleStatus,
     PlmProductionVariant,
     ProductCategory,
     ProductCategoryCreate,
+    ProductModelCreate,
     ProductionOrderCreate,
     ProductionOrderStatus,
     ProductionPhase,
@@ -45,6 +47,8 @@ from app.models import (
     TanneryDocumentType,
     TanneryProcess,
     UserCreate,
+    VendorCertificationCreate,
+    VendorCreate,
 )
 
 
@@ -58,6 +62,7 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
     # =========================================================================
     pim_duca = PimCommercialItem(
         pim_item_id="PIM-DUCA-001",
+        model_id="MOD-LOAFER-01",
         sku_code="FTL-FW26-LOAFER-01",
         model_name="Mocassino Artigianale Duca",
         brand_tenant_id="TENANT-CALZATURIFICIO-ROSSI",
@@ -441,6 +446,7 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
     # =========================================================================
     pim_vela = PimCommercialItem(
         pim_item_id="PIM-VELA-002",
+        model_id="MOD-TOTE-01",
         sku_code="FTL-FW26-TOTE-02",
         model_name="Borsa Shopping Vela",
         brand_tenant_id="TENANT-MAISON-FIRENZE",
@@ -656,6 +662,74 @@ def build_initial_seed_items() -> List[PimCommercialItem]:
     )
 
     return [pim_duca, pim_vela]
+
+
+def seed_product_models(db: FootlinkSQLitePersistence) -> None:
+    """FTL-CEO-021: Seed canonical base Product Models (Style / Last / Construction)."""
+    models = [
+        ProductModelCreate(
+            model_code="MOD-LOAFER-01",
+            name="Mocassino College Duca Penny Loafer",
+            category=ProductCategory.FOOTWEAR,
+            target_gender="men",
+            last_code="Forma 402 - Classica Rotonda",
+            sole_construction="Blake",
+            heel_height_mm=25.0,
+            default_size_range="39-46",
+            season_id="SEASON-PE26",
+            description="Mocassino iconico stile college penny loafer con vaschetta cucita a mano e montaggio Blake flessibile.",
+            cad_drawing_ref="CAD-DUCA-LOAFER-REV4.dxf",
+            is_active=True,
+            metadata={"pattern_pieces": 6, "target_market": "Global Luxury Men"},
+        ),
+        ProductModelCreate(
+            model_code="MOD-SNEAKER-01",
+            name="Sneaker Heritage Marche 1980 Cupsole",
+            category=ProductCategory.FOOTWEAR,
+            target_gender="unisex",
+            last_code="Forma Running 900",
+            sole_construction="Strobel",
+            heel_height_mm=32.0,
+            default_size_range="36-46",
+            season_id="SEASON-PE26",
+            description="Sneaker rétro running con fondo cassetta bicolore TR, montaggio Strobel per massima flessibilità urbana.",
+            cad_drawing_ref="CAD-SNEAKER-1980-V2.dxf",
+            is_active=True,
+            metadata={"pattern_pieces": 11, "target_market": "Contemporary Unisex"},
+        ),
+        ProductModelCreate(
+            model_code="MOD-TOTE-01",
+            name="Borsa Shopping Vela Tote",
+            category=ProductCategory.LEATHER_GOODS,
+            target_gender="women",
+            last_code="Sagoma Modelleria Tote 12",
+            sole_construction="Cemented",
+            heel_height_mm=0.0,
+            default_size_range="Unica",
+            season_id="SEASON-PE26",
+            description="Borsa tote capiente a doppio manico piatto, coste tinte a mano e fondo rinforzato con piedini galvanici protettivi.",
+            cad_drawing_ref="CAD-TOTE-RIVIERA-V1.dxf",
+            is_active=True,
+            metadata={"pattern_pieces": 8, "target_market": "Luxury Leather Goods"},
+        ),
+        ProductModelCreate(
+            model_code="MOD-BOOT-01",
+            name="Stivale Cavallerizza Elegance",
+            category=ProductCategory.FOOTWEAR,
+            target_gender="women",
+            last_code="Forma Sfilata 204",
+            sole_construction="Goodyear",
+            heel_height_mm=30.0,
+            default_size_range="35-41",
+            season_id="SEASON-PE26",
+            description="Stivale alto cavallerizza in vitello pieno fiore con guardolo Goodyear e cerniera posteriore sagomata.",
+            cad_drawing_ref="CAD-BOOT-CAV-2026.dxf",
+            is_active=True,
+            metadata={"pattern_pieces": 9, "target_market": "High Luxury Women"},
+        ),
+    ]
+    for m in models:
+        db.save_product_model(m, model_id=m.model_code)
 
 
 def seed_seasons_and_collections(db: FootlinkSQLitePersistence) -> None:
@@ -1593,6 +1667,572 @@ def seed_bom_templates(db: FootlinkSQLitePersistence) -> None:
         db.save_bom_template(tpl)
 
 
+def seed_sprint8_master_colors(db: FootlinkSQLitePersistence) -> None:
+    """Sprint 8 (FTL-TECH-022): Seed 10 Master & Seasonal Colors across Made-in-Italy finishes."""
+    colors = [
+        MasterColorCreate(
+            id="MCOL-BLK-001",
+            color_code="COL-BLK-001",
+            technical_name_it="Nero Spazzolato Profondo",
+            technical_name_en="Deep Brushed Black",
+            commercial_family="Nero / Black",
+            hex_code="#141414",
+            pantone_tcx_code="PANTONE 19-4004 TCX",
+            ral_code="RAL 9005",
+            finish_type="pieno_fiore_naturale",
+            applicable_domains=["pellame", "fodera", "suola", "filati", "packaging"],
+            season_id=None,
+            recipe_notes="Concia mista senza metalli pesanti, spazzolatura a cera di carnauba.",
+            is_active=True,
+        ),
+        MasterColorCreate(
+            id="MCOL-TAN-002",
+            color_code="COL-TAN-002",
+            technical_name_it="Cuoio Toscano Tamponato",
+            technical_name_en="Hand-Burnished Tuscan Tan",
+            commercial_family="Cuoio & Marrone",
+            hex_code="#C68B59",
+            pantone_tcx_code="PANTONE 18-1142 TCX",
+            ral_code="RAL 8023",
+            finish_type="pieno_fiore_naturale",
+            applicable_domains=["pellame", "fodera", "suola", "filati"],
+            season_id=None,
+            recipe_notes="Concia lenta al vegetale con tannini di castagno e tamponatura manuale.",
+            is_active=True,
+        ),
+        MasterColorCreate(
+            id="MCOL-BRN-003",
+            color_code="COL-BRN-003",
+            technical_name_it="Testa di Moro Camoscio",
+            technical_name_en="Dark Espresso Suede",
+            commercial_family="Cuoio & Marrone",
+            hex_code="#4A2E1B",
+            pantone_tcx_code="PANTONE 19-1016 TCX",
+            ral_code="RAL 8017",
+            finish_type="scamosciato_suede",
+            applicable_domains=["pellame", "suola", "filati"],
+            season_id=None,
+            recipe_notes="Crosta fiore smerigliata baby-calf con trattamento idrorepellente PFAS-free.",
+            is_active=True,
+        ),
+        MasterColorCreate(
+            id="MCOL-WHT-004",
+            color_code="COL-WHT-004",
+            technical_name_it="Bianco Ottico Pieno Fiore",
+            technical_name_en="Optical White Full Grain",
+            commercial_family="Bianco & Neutri",
+            hex_code="#F8F8F6",
+            pantone_tcx_code="PANTONE 11-0601 TCX",
+            ral_code="RAL 9016",
+            finish_type="pieno_fiore_naturale",
+            applicable_domains=["pellame", "fodera", "suola", "filati"],
+            season_id=None,
+            recipe_notes="Rifinizione poliuretanica ad acqua anti-ingiallimento UV.",
+            is_active=True,
+        ),
+        MasterColorCreate(
+            id="MCOL-ECR-005",
+            color_code="COL-ECR-005",
+            technical_name_it="Avorio Istituzionale Packaging",
+            technical_name_en="Institutional Ivory Packaging",
+            commercial_family="Bianco & Neutri",
+            hex_code="#F5F2EB",
+            pantone_tcx_code="PANTONE 11-0105 TCX",
+            ral_code="RAL 9001",
+            finish_type="tessuto_tinto_filo",
+            applicable_domains=["packaging", "fodera", "filati"],
+            season_id=None,
+            recipe_notes="Cotone organico GOTS non sbiancato e cartotecnica FSC Mix.",
+            is_active=True,
+        ),
+        MasterColorCreate(
+            id="MCOL-BLU-006",
+            color_code="COL-BLU-006",
+            technical_name_it="Blu Notte Oceano",
+            technical_name_en="Midnight Ocean Blue",
+            commercial_family="Blu / Blue",
+            hex_code="#1B2A4A",
+            pantone_tcx_code="PANTONE 19-4028 TCX",
+            ral_code="RAL 5011",
+            finish_type="pieno_fiore_naturale",
+            applicable_domains=["pellame", "fodera", "suola", "filati"],
+            season_id="SEASON-PE26",
+            recipe_notes="Tintura passante in bottale P/E 2026, tolleranza spettrofotometrica Delta-E <= 0.8.",
+            is_active=True,
+        ),
+        MasterColorCreate(
+            id="MCOL-RED-007",
+            color_code="COL-RED-007",
+            technical_name_it="Bordeaux Imperiale",
+            technical_name_en="Imperial Burgundy",
+            commercial_family="Rosso & Bordeaux",
+            hex_code="#5E1914",
+            pantone_tcx_code="PANTONE 19-1725 TCX",
+            ral_code="RAL 3005",
+            finish_type="spazzolato_anticato",
+            applicable_domains=["pellame", "suola", "filati"],
+            season_id="SEASON-PE26",
+            recipe_notes="Crust anticato a mano in forma con velatura bordeaux profondo.",
+            is_active=True,
+        ),
+        MasterColorCreate(
+            id="MCOL-GRN-008",
+            color_code="COL-GRN-008",
+            technical_name_it="Verde Bosco Oliva",
+            technical_name_en="Olive Forest Green",
+            commercial_family="Verde / Green",
+            hex_code="#2D4028",
+            pantone_tcx_code="PANTONE 19-0419 TCX",
+            ral_code="RAL 6020",
+            finish_type="grana_dollaro",
+            applicable_domains=["pellame", "filati"],
+            season_id="SEASON-PE26",
+            recipe_notes="Vitello bottalato grana dollaro morbida, concia metal-free LWG Gold.",
+            is_active=True,
+        ),
+        MasterColorCreate(
+            id="MCOL-GLD-010",
+            color_code="COL-GLD-010",
+            technical_name_it="Oro Chiaro 24K Galvanico",
+            technical_name_en="24K Light Gold Galvanic",
+            commercial_family="Metallizzati & Galvaniche",
+            hex_code="#D4AF37",
+            pantone_tcx_code="PANTONE 16-0836 TCX",
+            ral_code="RAL 1036",
+            finish_type="galvanica_metallica",
+            applicable_domains=["minuterie", "packaging"],
+            season_id=None,
+            recipe_notes="Bagno galvanico spessore 0.5 micron oro chiaro 24K nichel-free senza cianuri.",
+            is_active=True,
+        ),
+        MasterColorCreate(
+            id="MCOL-SLV-011",
+            color_code="COL-SLV-011",
+            technical_name_it="Palladio Lucido Nichel-Free",
+            technical_name_en="Polished Nickel-Free Palladium",
+            commercial_family="Metallizzati & Galvaniche",
+            hex_code="#C0C5CE",
+            pantone_tcx_code="PANTONE 14-4102 TCX",
+            ral_code="RAL 9006",
+            finish_type="galvanica_metallica",
+            applicable_domains=["minuterie"],
+            season_id=None,
+            recipe_notes="Finitura galvanica palladio lucido ipoallergenica conforme REACH Allegato XVII.",
+            is_active=True,
+        ),
+    ]
+    for col in colors:
+        db.save_master_color(col)
+
+
+def seed_sprint8_vendors_and_certifications(db: FootlinkSQLitePersistence) -> None:
+    """Sprint 8 (FTL-TECH-023): Seed 7 District Vendors & 0 EUR Subcontractors with dynamic certifications."""
+    today = date.today()
+    d_from = (today - timedelta(days=120)).isoformat()
+
+    def _d(offset_days: int) -> str:
+        return (today + timedelta(days=offset_days)).isoformat()
+
+    vendors = [
+        VendorCreate(
+            vendor_id="VND-CONC-001",
+            vendor_code="FOR-CONC-001",
+            company_name="Conceria del Chienti S.p.A.",
+            vat_number="IT01889910432",
+            supply_chain_role="tannery",
+            district_area="Marche - Fermo/Macerata",
+            city_address="Zona Industriale Tolentino (MC)",
+            country_iso2="IT",
+            paas_tier="pmi",
+            qualification_status="preferred_strategic",
+            quality_score=95.0,
+            otd_score=93.0,
+            esg_score=96.0,
+            standard_lead_time_days=14,
+            moq_description="Minimo 300 sqft per colore / 100 sqft campionatura",
+            payment_terms_l6="RIBA 60gg DFFM",
+            hourly_or_unit_rate_eur_l6=7.85,
+            negotiated_price_list_l6=[
+                {"article": "Vitello Pieno Fiore Spazzolato 1.4mm", "uom": "sqft", "unit_price_eur": 7.80},
+                {"article": "Crust Anticato Mano Cera", "uom": "sqft", "unit_price_eur": 8.10},
+            ],
+            internal_audit_notes_l6="Partner strategico primario per vitelli spazzolati e crust. Zero non conformità Cromo VI.",
+            contact_email="qualita@conceriadelchienti.it",
+            is_active=True,
+            initial_certifications=[
+                VendorCertificationCreate(
+                    cert_id="VCERT-CONC001-LWG",
+                    cert_type="LWG Gold",
+                    cert_code="LWG-IT-CHIENTI-9921",
+                    issuing_body="Leather Working Group",
+                    valid_from=d_from,
+                    valid_until=_d(280),
+                ),
+                VendorCertificationCreate(
+                    cert_id="VCERT-CONC001-EUDR",
+                    cert_type="EUDR Deforestation-Free",
+                    cert_code="EUDR-DDS-2026-MC01",
+                    issuing_body="ICEC / EU TRACES NT",
+                    valid_from=d_from,
+                    valid_until=_d(310),
+                ),
+            ],
+        ),
+        VendorCreate(
+            vendor_id="VND-CONC-002",
+            vendor_code="FOR-CONC-002",
+            company_name="Conceria Sciarada S.r.l.",
+            vat_number="IT02114450501",
+            supply_chain_role="tannery",
+            district_area="Toscana - Santa Croce/Scandicci",
+            city_address="Via del Bosco 42, Santa Croce sull'Arno (PI)",
+            country_iso2="IT",
+            paas_tier="pmi",
+            qualification_status="preferred_strategic",
+            quality_score=94.0,
+            otd_score=91.0,
+            esg_score=95.0,
+            standard_lead_time_days=16,
+            moq_description="Minimo 250 sqft per bagno tintura",
+            payment_terms_l6="RIBA 60gg DFFM",
+            hourly_or_unit_rate_eur_l6=8.20,
+            negotiated_price_list_l6=[
+                {"article": "Vacchetta Toscana Concia Vegetale", "uom": "sqft", "unit_price_eur": 8.40},
+                {"article": "Camoscio Idrorepellente PFAS-Free", "uom": "sqft", "unit_price_eur": 7.20},
+            ],
+            internal_audit_notes_l6="Eccellenza su scamosciati idrorepellenti e vacchetta vegetale Consorzio.",
+            contact_email="labdip@sciarada-tannery.it",
+            is_active=True,
+            initial_certifications=[
+                VendorCertificationCreate(
+                    cert_id="VCERT-CONC002-LWG",
+                    cert_type="LWG Gold",
+                    cert_code="LWG-IT-SCIARADA-4410",
+                    issuing_body="Leather Working Group",
+                    valid_from=d_from,
+                    valid_until=_d(210),
+                ),
+                VendorCertificationCreate(
+                    cert_id="VCERT-CONC002-ICEC",
+                    cert_type="ICEC TS 410",
+                    cert_code="ICEC-TS410-SC-882",
+                    issuing_body="Istituto Certificazione Qualità Pelle",
+                    valid_from=d_from,
+                    valid_until=_d(180),
+                ),
+            ],
+        ),
+        VendorCreate(
+            vendor_id="VND-SUOL-003",
+            vendor_code="FOR-SUOL-003",
+            company_name="Suolificio Marche S.r.l.",
+            vat_number="IT01993320445",
+            supply_chain_role="sole_maker",
+            district_area="Marche - Fermo/Macerata",
+            city_address="Via dell'Industria 18, Sant'Elpidio a Mare (FM)",
+            country_iso2="IT",
+            paas_tier="pmi",
+            qualification_status="qualified",
+            district_company_id="comp-pmi-rossi",
+            quality_score=88.0,
+            otd_score=86.0,
+            esg_score=84.0,
+            standard_lead_time_days=12,
+            moq_description="Minimo 80 paia per scala taglie",
+            payment_terms_l6="Bonifico 60gg DFFM",
+            hourly_or_unit_rate_eur_l6=12.40,
+            negotiated_price_list_l6=[
+                {"article": "Suola Cuoio Toscano Blake + Tacco", "uom": "pair", "unit_price_eur": 14.50},
+                {"article": "Fondo Cassetta Gomma TR Riciclata", "uom": "pair", "unit_price_eur": 9.50},
+            ],
+            internal_audit_notes_l6="Rinnovo certificato ambientale ISO 14001 già calendarizzato con ente accreditato.",
+            contact_email="tecnico@suolificiomarche.it",
+            is_active=True,
+            initial_certifications=[
+                VendorCertificationCreate(
+                    cert_id="VCERT-SUOL003-ISO9001",
+                    cert_type="ISO 9001",
+                    cert_code="ISO9001-IT-FM-3391",
+                    issuing_body="DNV Business Assurance",
+                    valid_from=d_from,
+                    valid_until=_d(190),
+                ),
+                VendorCertificationCreate(
+                    cert_id="VCERT-SUOL003-ISO14001",
+                    cert_type="ISO 14001",
+                    cert_code="ISO14001-IT-FM-1182",
+                    issuing_body="DNV Business Assurance",
+                    valid_from=d_from,
+                    valid_until=_d(32),
+                ),
+            ],
+        ),
+        VendorCreate(
+            vendor_id="VND-GALV-004",
+            vendor_code="FOR-GALV-004",
+            company_name="Galvanica Bruni Accessori Moda S.r.l.",
+            vat_number="IT04551180487",
+            supply_chain_role="hardware_galvanics",
+            district_area="Toscana - Santa Croce/Scandicci",
+            city_address="Via Pisana 115, Scandicci (FI)",
+            country_iso2="IT",
+            paas_tier="pmi",
+            qualification_status="qualified",
+            quality_score=91.0,
+            otd_score=89.0,
+            esg_score=90.0,
+            standard_lead_time_days=18,
+            moq_description="Minimo 100 pezzi per finitura galvanica",
+            payment_terms_l6="RIBA 60gg DFFM",
+            hourly_or_unit_rate_eur_l6=6.50,
+            negotiated_price_list_l6=[
+                {"article": "Morsetto Ottone Galvanica Oro 24K", "uom": "pair", "unit_price_eur": 6.50},
+                {"article": "Zip Metallica Palladio Lucido", "uom": "pcs", "unit_price_eur": 9.20},
+            ],
+            internal_audit_notes_l6="Impianto galvanico a ciclo chiuso zero scarichi liquidi, test cessione nichel superato.",
+            contact_email="qualita@galvanicabruni.it",
+            is_active=True,
+            initial_certifications=[
+                VendorCertificationCreate(
+                    cert_id="VCERT-GALV004-REACH",
+                    cert_type="REACH SVHC Free",
+                    cert_code="REACH-LAB-FI-2026-774",
+                    issuing_body="Centro Qualità Tessile & Pelletteria",
+                    valid_from=d_from,
+                    valid_until=_d(240),
+                ),
+            ],
+        ),
+        VendorCreate(
+            vendor_id="VND-TER-005",
+            vendor_code="TER-ORL-005",
+            company_name="Tomaificio & Orlatura F.lli Rossi",
+            vat_number="IT03456789012",
+            supply_chain_role="stitching_uppers_lab",
+            district_area="Marche - Fermo/Macerata",
+            city_address="Via Veregra 29, Montegranaro (FM)",
+            country_iso2="IT",
+            paas_tier="subcontractor_zero_eur",
+            qualification_status="preferred_strategic",
+            district_company_id="comp-lab-tomaificio",
+            quality_score=93.0,
+            otd_score=92.0,
+            esg_score=90.0,
+            standard_lead_time_days=7,
+            moq_description="Lotti minimi 24 paia (Terzista a 0,00 EUR su Footlink)",
+            payment_terms_l6="Bonifico 30gg DFFM Artigiani",
+            hourly_or_unit_rate_eur_l6=14.50,
+            negotiated_price_list_l6=[
+                {"article": "Giunteria & Orlatura Mocassino Blake", "uom": "pair", "unit_price_eur": 14.50},
+            ],
+            internal_audit_notes_l6="Laboratorio storico 12 addetti, portale mobile 3-Clic attivo a 0 EUR.",
+            contact_email="orlatura.rossi@artigianimarche.it",
+            is_active=True,
+            initial_certifications=[
+                VendorCertificationCreate(
+                    cert_id="VCERT-TER005-DURC",
+                    cert_type="DURC Regolarità Contributiva",
+                    cert_code="INPS-INAIL-FM-8839201",
+                    issuing_body="INPS / INAIL",
+                    valid_from=d_from,
+                    valid_until=_d(95),
+                ),
+                VendorCertificationCreate(
+                    cert_id="VCERT-TER005-SA8000",
+                    cert_type="SA8000 Etica Lavoro",
+                    cert_code="SA8000-IT-MARCHE-209",
+                    issuing_body="Bureau Veritas",
+                    valid_from=d_from,
+                    valid_until=_d(140),
+                ),
+            ],
+        ),
+        VendorCreate(
+            vendor_id="VND-TER-006",
+            vendor_code="TER-MONT-006",
+            company_name="Manovia Calzaturiera Riviera S.n.c.",
+            vat_number="IT04567890123",
+            supply_chain_role="lasting_assembly_lab",
+            district_area="Veneto - Riviera del Brenta/Arzignano",
+            city_address="Via Nazionale 84, Stra (VE)",
+            country_iso2="IT",
+            paas_tier="subcontractor_zero_eur",
+            qualification_status="qualified",
+            district_company_id="comp-lab-giunteria",
+            quality_score=87.0,
+            otd_score=85.0,
+            esg_score=86.0,
+            standard_lead_time_days=9,
+            moq_description="Lotti minimi 30 paia (Terzista a 0,00 EUR su Footlink)",
+            payment_terms_l6="Bonifico 30gg DFFM Artigiani",
+            hourly_or_unit_rate_eur_l6=16.00,
+            negotiated_price_list_l6=[
+                {"article": " Premontaggio, Montaggio & Finissaggio", "uom": "pair", "unit_price_eur": 16.00},
+            ],
+            internal_audit_notes_l6="DURC in rinnovo automatico trimestrale entro 25 giorni.",
+            contact_email="manovia.riviera@brentashoes.it",
+            is_active=True,
+            initial_certifications=[
+                VendorCertificationCreate(
+                    cert_id="VCERT-TER006-DURC",
+                    cert_type="DURC Regolarità Contributiva",
+                    cert_code="INPS-INAIL-VE-7710294",
+                    issuing_body="INPS / INAIL",
+                    valid_from=d_from,
+                    valid_until=_d(25),
+                ),
+            ],
+        ),
+        VendorCreate(
+            vendor_id="VND-CONC-009",
+            vendor_code="FOR-CONC-009",
+            company_name="Pellami Sud Import S.r.l.",
+            vat_number="IT07774410638",
+            supply_chain_role="tannery",
+            district_area="Campania - Caserta/Napoli/Solofra",
+            city_address="Zona Industriale Solofra (AV)",
+            country_iso2="IT",
+            paas_tier="pmi",
+            qualification_status="blocked_expired_certs",
+            quality_score=60.0,
+            otd_score=55.0,
+            esg_score=45.0,
+            standard_lead_time_days=24,
+            moq_description="Minimo 500 sqft",
+            payment_terms_l6=" Pagamento anticipato / Bloccato",
+            hourly_or_unit_rate_eur_l6=5.90,
+            negotiated_price_list_l6=[],
+            internal_audit_notes_l6="FORNITORE SOSPESO: Certificazioni LWG ed EUDR scadute. Vietato assegnare nuovi ordini.",
+            contact_email="amministrazione@pellamisudimport.it",
+            is_active=True,
+            initial_certifications=[
+                VendorCertificationCreate(
+                    cert_id="VCERT-CONC009-LWG-EXP",
+                    cert_type="LWG Bronze",
+                    cert_code="LWG-IT-SUD-1029-EXP",
+                    issuing_body="Leather Working Group",
+                    valid_from=(today - timedelta(days=380)).isoformat(),
+                    valid_until=_d(-14),
+                ),
+                VendorCertificationCreate(
+                    cert_id="VCERT-CONC009-EUDR-EXP",
+                    cert_type="EUDR Deforestation-Free",
+                    cert_code="EUDR-DDS-2025-AV09-EXP",
+                    issuing_body="EU TRACES NT",
+                    valid_from=(today - timedelta(days=370)).isoformat(),
+                    valid_until=_d(-5),
+                ),
+            ],
+        ),
+    ]
+    for v in vendors:
+        db.save_vendor(v)
+
+
+def link_sprint8_seed_relations(db: FootlinkSQLitePersistence) -> None:
+    """Idempotently link seeded PLM variants, BOM items, and Tannery Batches to Sprint 8 Master Colors
+    and Vendors WITHOUT altering any existing fields checked by Epoca I tests.
+    """
+    conn = db.get_connection()
+    try:
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        variant_color_links = [
+            ("PLM-DUCA-NERO", "MCOL-BLK-001", "MCOL-TAN-002", None, "tone_on_tone"),
+            ("PLM-DUCA-CUOIO", "MCOL-TAN-002", "MCOL-TAN-002", "MCOL-SLV-011", "tone_on_tone"),
+            ("PLM-DUCA-BORDEAUX", "MCOL-RED-007", "MCOL-TAN-002", "MCOL-GLD-010", "luxury_gold_hardware"),
+            ("PLM-VELA-COGNAC", "MCOL-TAN-002", "MCOL-ECR-005", None, "tone_on_tone"),
+            ("PLM-VELA-OLIVA", "MCOL-GRN-008", "MCOL-GRN-008", "MCOL-SLV-011", "luxury_palladium_hardware"),
+        ]
+        for vid, pcol, scol, hwcol, preset in variant_color_links:
+            conn.execute(
+                """
+                UPDATE plm_production_variants
+                SET primary_color_id = COALESCE(primary_color_id, ?),
+                    secondary_color_id = COALESCE(secondary_color_id, ?),
+                    hardware_finish_color_id = COALESCE(hardware_finish_color_id, ?),
+                    colorway_rule_preset = COALESCE(colorway_rule_preset, ?)
+                WHERE plm_variant_id = ?
+                """,
+                (pcol, scol, hwcol, preset, vid),
+            )
+
+        # (plm_variant_id, bom_item_id, vendor_id, master_color_id, part_role, galvanics_finish, lab_dip_status, delta_e)
+        bom_links = [
+            ("PLM-DUCA-NERO", "BOM-DUCA-L1-UPPER", "VND-CONC-001", "MCOL-BLK-001", "tomaia_principale", None, "approved", 0.38),
+            ("PLM-DUCA-NERO", "BOM-DUCA-L2-LINING", "VND-CONC-002", "MCOL-TAN-002", "fodera_interna", None, "approved", 0.52),
+            ("PLM-DUCA-NERO", "BOM-DUCA-L3-THREAD", "VND-TER-005", "MCOL-BLK-001", "cuciture_filato", None, "master_standard", 0.20),
+            ("PLM-DUCA-NERO", "BOM-DUCA-L1-SOLE", "VND-SUOL-003", "MCOL-TAN-002", "suola_fondo", None, "approved", 0.65),
+            ("PLM-DUCA-NERO", "BOM-DUCA-L2-HEEL", "VND-SUOL-003", "MCOL-BLK-001", "tacco", None, "approved", 0.44),
+            ("PLM-DUCA-NERO", "BOM-DUCA-L3-COMPOUND", "VND-SUOL-003", "MCOL-BLK-001", "sotto_assieme_tecnico", None, "master_standard", 0.30),
+            ("PLM-DUCA-CUOIO", "BOM-DUCA2-L1-UPPER", "VND-CONC-002", "MCOL-TAN-002", "tomaia_principale", None, "approved", 0.45),
+            ("PLM-DUCA-CUOIO", "BOM-DUCA2-L2-INSOLE", "VND-TER-006", "MCOL-TAN-002", "sottopiede", None, "approved", 0.60),
+            ("PLM-DUCA-CUOIO", "BOM-DUCA2-L3-SHANK", "VND-GALV-004", "MCOL-SLV-011", "minuteria_accessori", "palladio_lucido", "master_standard", 0.15),
+            ("PLM-DUCA-BORDEAUX", "BOM-DUCA3-L1-UPPER", "VND-CONC-001", "MCOL-RED-007", "tomaia_principale", None, "submitted", 0.92),
+            ("PLM-DUCA-BORDEAUX", "BOM-DUCA3-L2-CLAMP", "VND-GALV-004", "MCOL-GLD-010", "minuteria_accessori", "oro_chiaro_24k", "master_standard", 0.18),
+            ("PLM-DUCA-BORDEAUX", "BOM-DUCA3-L3-GALV", "VND-GALV-004", "MCOL-GLD-010", "sotto_assieme_tecnico", "oro_chiaro_24k", "master_standard", 0.12),
+            ("PLM-VELA-COGNAC", "BOM-VELA-L1-BODY", "VND-CONC-002", "MCOL-TAN-002", "tomaia_principale", None, "approved", 0.41),
+            ("PLM-VELA-COGNAC", "BOM-VELA-L2-HANDLE", "VND-TER-005", "MCOL-TAN-002", "riporto_secondario", None, "approved", 0.55),
+            ("PLM-VELA-COGNAC", "BOM-VELA-L3-ROPE", "VND-TER-005", "MCOL-ECR-005", "sotto_assieme_tecnico", None, "master_standard", 0.25),
+            ("PLM-VELA-OLIVA", "BOM-VELA2-L1-BODY", "VND-CONC-001", "MCOL-GRN-008", "tomaia_principale", None, "approved", 0.49),
+            ("PLM-VELA-OLIVA", "BOM-VELA2-L2-ZIP", "VND-GALV-004", "MCOL-SLV-011", "minuteria_accessori", "palladio_lucido", "master_standard", 0.19),
+            ("PLM-VELA-OLIVA", "BOM-VELA2-L3-TAPE", "VND-TER-006", "MCOL-GRN-008", "riporto_secondario", None, "approved", 0.62),
+        ]
+
+        for p_var_id, b_item_id, vend_id, mcol_id, p_role, galv, ld_status, de_val in bom_links:
+            b_exists = conn.execute(
+                "SELECT 1 FROM bom_items WHERE plm_variant_id = ? AND bom_item_id = ?",
+                (p_var_id, b_item_id),
+            ).fetchone()
+            if not b_exists:
+                continue
+            conn.execute(
+                """
+                UPDATE bom_items
+                SET vendor_id = COALESCE(vendor_id, ?),
+                    master_color_id = COALESCE(master_color_id, ?)
+                WHERE plm_variant_id = ? AND bom_item_id = ?
+                """,
+                (vend_id, mcol_id, p_var_id, b_item_id),
+            )
+            app_by = "Controllo Qualità Colore Distretto" if ld_status in ("approved", "master_standard") else None
+            app_at = now_iso if ld_status in ("approved", "master_standard") else None
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO variant_colorway_bom_mappings (
+                    id, plm_variant_id, bom_item_id, master_color_id,
+                    part_role, galvanics_finish, lab_dip_status, delta_e_value,
+                    approved_by, approved_at, notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    f"CMAP-{b_item_id}",
+                    p_var_id,
+                    b_item_id,
+                    mcol_id,
+                    p_role,
+                    galv,
+                    ld_status,
+                    de_val,
+                    app_by,
+                    app_at,
+                    "Mappatura cromatica iniziale certificata Lab-Dip",
+                ),
+            )
+
+        conn.execute(
+            """
+            UPDATE tannery_batches
+            SET vendor_id = COALESCE(vendor_id, 'VND-CONC-001'),
+                master_color_id = COALESCE(master_color_id, 'MCOL-BLK-001')
+            WHERE batch_id = 'batch-montebello-lwg-gold'
+            """
+        )
+        conn.commit()
+    finally:
+        db._close_if_file(conn)
+
+
 def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = False) -> List[PimCommercialItem]:
     """Populate the SQLite/PostgreSQL database with initial Made-in-Italy seed data if empty (or when force=True)."""
     if force:
@@ -1601,6 +2241,8 @@ def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = 
     # Always seed seasons, domain registries and dynamic schema attributes if empty
     if len(db.list_seasons()) == 0:
         seed_seasons_and_collections(db)
+    if len(db.list_product_models()) == 0:
+        seed_product_models(db)
     if len(db.list_registry_entries()) == 0:
         seed_domain_registries(db)
     if len(db.list_attribute_definitions()) == 0:
@@ -1611,6 +2253,12 @@ def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = 
         seed_product_categories_hierarchy(db)
     if len(db.list_bom_templates()) == 0:
         seed_bom_templates(db)
+
+    # Sprint 8 Seeds: Master & Seasonal Color Palette + District Vendor Hub 360
+    if len(db.list_master_colors()) == 0:
+        seed_sprint8_master_colors(db)
+    if len(db.list_vendors()) == 0:
+        seed_sprint8_vendors_and_certifications(db)
 
     # Sprint 6 Seeds: District Companies, Users, Tannery Batches, Documents & Production Orders
     if len(db.list_companies()) == 0:
@@ -1624,6 +2272,12 @@ def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = 
 
     if len(db.list_production_orders()) == 0:
         seed_production_orders(db)
+
+    # Ensure Sprint 8 relational links on seeded BOMs, Variants & Tannery Batches are active
+    link_sprint8_seed_relations(db)
+
+    # FTL-CEO-022: Auto-link Albo vendors with District PaaS companies by VAT / name
+    db.auto_link_vendors_to_district_companies()
 
     return db.list_pim_items()
 

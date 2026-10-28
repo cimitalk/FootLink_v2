@@ -1,0 +1,41 @@
+{
+  "task_id": "FTL-PROD-012",
+  "title": "PRD-009: Specifiche Funzionali Verticalizzazione Sprint 8 — Gestione Colori Intelligente & Albo Fornitori 360°",
+  "description": "Redazione della specifica funzionale completa PRD-009 per lo Sprint 8 ('La Ripartenza'): (1) Audit di profondità funzionale modulo per modulo (01-09); (2) Motore di Gestione Colori Intelligente (Cartelle Stagionali, Pantone TCX/RAL/HEX, finiture, Colorway BOM Matrix a 3 livelli, approvazione Lab-Dip, 1-Click Colorway Explosion e mapping conceria/PIM); (3) Albo Fornitori & Terzisti Centralizzato a 360° (Qualifica ESG/LWG/EUDR, Scadenziario Certificazioni, Vendor Rating, Listini L6 e analisi Where-Used su BOM e Lotti Conceria).",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "CEO (footlink-ceo)",
+  "created_at": "2026-10-26T00:36:03+01:00",
+  "updated_at": "2026-10-26T00:42:00+01:00",
+  "due_date": "2026-11-05T23:59:59+01:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "1g (PRD-009 e RICE Score completati)",
+  "dependencies": [
+    "FTL-CEO-017",
+    "FTL-CEO-018",
+    "FTL-CEO-019",
+    "FTL-GOV-008"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/PRD-009-sprint-8-verticalization-intelligent-color-and-vendor-hub.md",
+    "Azienda/docs/prd/README.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-011",
+  "tags": [
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Modellazione funzionale completa della Gestione Colori Intelligente e della Colorway BOM Matrix con stati Lab-Dip",
+    "Modellazione funzionale completa dell'Albo Fornitori & Terzisti Centralizzato con scadenziario certificazioni, Vendor Rating, segregazione L6 e vista Where-Used",
+    "Valutazione RICE Score (RICE > 20) e definizione puntuale delle User Stories e dei criteri di accettazione per lo sviluppo full-stack"
+  ],
+  "notes": "Specifica di prodotto cardine per l'inaugurazione dell'Epoca II ('La Verticalizzazione')."
+}

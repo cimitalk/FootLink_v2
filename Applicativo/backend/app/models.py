@@ -288,7 +288,9 @@ class BomItem(BaseModel):
     parent_bom_item_id: Optional[str] = Field(default=None, description="Parent BOM item ID required when level > 1")
     component_type: BomComponentType
     material_name: str = Field(..., min_length=2)
-    supplier_name: str = Field(..., min_length=2)
+    supplier_name: str = Field(default="")
+    vendor_id: Optional[str] = Field(default=None, description="Optional FK to vendors_registry (Sprint 8)")
+    master_color_id: Optional[str] = Field(default=None, description="Optional FK to master_colors (Sprint 8)")
     origin_country_iso2: str = Field(..., min_length=2, max_length=2, pattern="^[A-Z]{2}$")
     unit_of_measure: str = Field(..., description="e.g., sqft, m2, pair, pcs, kg")
     unit_consumption: float = Field(..., gt=0, description="Net material consumption per unit/pair")
@@ -308,7 +310,9 @@ class BomTreeNode(BaseModel):
     parent_bom_item_id: Optional[str] = Field(default=None)
     component_type: BomComponentType
     material_name: str
-    supplier_name: str
+    supplier_name: str = Field(default="")
+    vendor_id: Optional[str] = Field(default=None)
+    master_color_id: Optional[str] = Field(default=None)
     origin_country_iso2: str
     unit_of_measure: str
     unit_consumption: float
@@ -478,6 +482,10 @@ class PlmProductionVariantCreate(BaseModel):
     sub_category_id: Optional[str] = Field(default=None, description="FK to sub-category hierarchy node")
     construction_type: Optional[str] = Field(default="cassetta_cucita", description="Manufacturing construction method")
     carryover_status: Optional[str] = Field(default="seasonal_core", description="Merchandising status: carryover, seasonal_core, seasonal_trend, capsule_drop")
+    primary_color_id: Optional[str] = Field(default=None, description="Sprint 8 primary master_color_id")
+    secondary_color_id: Optional[str] = Field(default=None, description="Sprint 8 secondary master_color_id")
+    hardware_finish_color_id: Optional[str] = Field(default=None, description="Sprint 8 hardware galvanic master_color_id")
+    colorway_rule_preset: Optional[str] = Field(default="tone_on_tone", description="Sprint 8 colorway rule preset")
     category_specific_specs: Dict[str, Any] = Field(
         default_factory=dict,
         description="Sector-specific technical attributes (Footwear: last/construction/sole; Leather Goods: CAD/galvanic/edge; Apparel: fit/gsm/POM)",
@@ -488,6 +496,69 @@ class PlmProductionVariantCreate(BaseModel):
     )
     bom_items: List[BomItem] = Field(default_factory=list)
     subcontractor_assignments: List[SubcontractorAssignment] = Field(default_factory=list)
+
+
+# ============================================================================
+# Product Models Hierarchy (FTL-CEO-021)
+# ============================================================================
+
+
+class ProductModelCreate(BaseModel):
+    """Payload to define a base Product Model (Style / Last / Construction) prior to material+color SKU decline."""
+
+    model_code: str = Field(..., min_length=2, description="Unique model code, e.g. MOD-OXFORD-01")
+    name: str = Field(..., min_length=2, description="Model style name, e.g. Oxford Classic Cap-Toe")
+    category: ProductCategory = Field(default=ProductCategory.FOOTWEAR)
+    target_gender: str = Field(default="unisex", description="Target gender: men, women, unisex, kids")
+    last_code: str = Field(default="Forma Standard", description="Last / Forma code")
+    sole_construction: str = Field(default="Blake", description="Construction type: Goodyear, Blake, Strobel, Tubolare, etc.")
+    heel_height_mm: float = Field(default=25.0, ge=0.0, description="Heel / bottom height in mm")
+    default_size_range: str = Field(default="39-46", description="Standard size scale")
+    season_id: Optional[str] = Field(default=None, description="FK to Season")
+    collection_id: Optional[str] = Field(default=None, description="FK to Collection")
+    description: str = Field(default="", description="Technical and styling model notes")
+    cad_drawing_ref: str = Field(default="", description="CAD / pattern reference, e.g. DXF drawing code")
+    is_active: bool = Field(default=True)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ProductModelUpdate(BaseModel):
+    """Payload to update an existing Product Model."""
+
+    name: Optional[str] = None
+    category: Optional[ProductCategory] = None
+    target_gender: Optional[str] = None
+    last_code: Optional[str] = None
+    sole_construction: Optional[str] = None
+    heel_height_mm: Optional[float] = None
+    default_size_range: Optional[str] = None
+    season_id: Optional[str] = None
+    collection_id: Optional[str] = None
+    description: Optional[str] = None
+    cad_drawing_ref: Optional[str] = None
+    is_active: Optional[bool] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class ProductModel(ProductModelCreate):
+    """Persisted Product Model aggregating 1:N PIM Commercial Items / SKUs."""
+
+    model_id: str
+    attached_products_count: int = Field(default=0, description="Count of linked commercial PIM products")
+    attached_variants_count: int = Field(default=0, description="Count of linked PLM production variants")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class AttachProductRequest(BaseModel):
+    """Request to link an existing PIM SKU to a Product Model."""
+
+    pim_item_id: str = Field(..., description="Target PIM Commercial Item ID")
+
+
+class DetachProductRequest(BaseModel):
+    """Request to unlink a PIM SKU from a Product Model."""
+
+    pim_item_id: str = Field(..., description="Target PIM Commercial Item ID")
 
 
 class PlmProductionVariant(PlmProductionVariantCreate):
@@ -501,6 +572,7 @@ class PlmProductionVariant(PlmProductionVariantCreate):
 class PimCommercialItemCreate(BaseModel):
     """Payload to create a commercial catalog item (the '1' side of the 1 PIM <-> N PLM relationship)."""
 
+    model_id: Optional[str] = Field(default=None, description="FK to ProductModel (FTL-CEO-021)")
     sku_code: str = Field(..., min_length=3, description="Master commercial SKU")
     model_name: str = Field(..., min_length=2)
     brand_tenant_id: str = Field(..., description="Multi-tenant identifier for the Brand or SME")
@@ -544,6 +616,7 @@ class PimCommercialItem(BaseModel):
     """Persisted 1 PIM Commercial Item aggregating N PLM Production Variants."""
 
     pim_item_id: str
+    model_id: Optional[str] = Field(default=None, description="FK to ProductModel (FTL-CEO-021)")
     sku_code: str
     model_name: str
     brand_tenant_id: str
@@ -576,6 +649,13 @@ class PimCommercialItem(BaseModel):
     custom_attributes: Dict[str, Any] = Field(default_factory=dict)
     plm_variants: List[PlmProductionVariant] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ProductModelWithProducts(ProductModel):
+    """Product Model with nested list of attached PIM items & PLM variants."""
+
+    attached_pim_items: List[PimCommercialItem] = Field(default_factory=list)
+
 
 
 
@@ -773,7 +853,9 @@ class TanneryDocumentVerifyResponse(BaseModel):
 class TanneryBatchCreate(BaseModel):
     company_id: str
     batch_code: str = Field(..., min_length=2)
-    tannery_name: str = Field(..., min_length=2)
+    tannery_name: str = Field(default="")
+    vendor_id: Optional[str] = Field(default=None, description="Optional FK to vendors_registry (Sprint 8)")
+    master_color_id: Optional[str] = Field(default=None, description="Optional FK to master_colors (Sprint 8)")
     district: str = Field(default="Arzignano / Valle del Chiampo")
     leather_type: str = Field(default="Vitello Pieno Fiore")
     tanning_process: TanneryProcess = Field(default=TanneryProcess.METAL_FREE)
@@ -794,6 +876,8 @@ class TanneryBatchCreate(BaseModel):
 class TanneryBatchUpdate(BaseModel):
     batch_code: Optional[str] = None
     tannery_name: Optional[str] = None
+    vendor_id: Optional[str] = None
+    master_color_id: Optional[str] = None
     district: Optional[str] = None
     leather_type: Optional[str] = None
     tanning_process: Optional[TanneryProcess] = None
@@ -942,4 +1026,437 @@ class BomRequirementsCalculationResult(BaseModel):
     total_leather_sqft_gross: float = Field(default=0.0)
     total_soles_pairs_gross: int = Field(default=0)
     calculated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ============================================================================
+# Sprint 8 (Epoca II - La Verticalizzazione):
+#   FTL-TECH-022: Color Intelligence Engine, Lab-Dip & Colorway BOM Matrix
+#   FTL-TECH-023: Vendor Hub 360, SHA-256 Certifications, L6 Segregation & Where-Used
+# ============================================================================
+
+
+class MasterColorCreate(BaseModel):
+    """Payload to create a Master or Seasonal Color entry."""
+
+    id: Optional[str] = None
+    color_id: Optional[str] = None
+    color_code: str = Field(..., min_length=2, description="Unique industrial color code, e.g., COL-BLK-001")
+    technical_name_it: str = Field(..., min_length=2, description="Italian technical name")
+    technical_name_en: str = Field(default="", description="English technical name")
+    commercial_family: str = Field(default="Nero / Black", description="Omnichannel commercial color family")
+    hex_code: str = Field(default="#141414", pattern="^#[0-9A-Fa-f]{6}$", description="Validated 7-char RGB HEX")
+    pantone_tcx_code: str = Field(default="", description="Pantone TCX/TPG reference")
+    ral_code: str = Field(default="", description="RAL reference for hardware/soles")
+    finish_type: str = Field(default="pieno_fiore_naturale", description="Surface/material finish type")
+    applicable_domains: List[str] = Field(
+        default_factory=lambda: ["pellame", "fodera", "suola", "minuterie", "filati", "packaging"]
+    )
+    season_id: Optional[str] = Field(default=None, description="Optional FK to Season (None/ALL_CARRYOVER = master)")
+    season_ids: Optional[List[str]] = Field(default=None)
+    recipe_notes: str = Field(default="", description="Tannery recipe or galvanic bath technical notes")
+    is_active: bool = Field(default=True)
+
+
+class MasterColorUpdate(BaseModel):
+    """Payload to update an existing Master or Seasonal Color entry."""
+
+    color_code: Optional[str] = None
+    technical_name_it: Optional[str] = None
+    technical_name_en: Optional[str] = None
+    commercial_family: Optional[str] = None
+    hex_code: Optional[str] = Field(default=None, pattern="^#[0-9A-Fa-f]{6}$")
+    pantone_tcx_code: Optional[str] = None
+    ral_code: Optional[str] = None
+    finish_type: Optional[str] = None
+    applicable_domains: Optional[List[str]] = None
+    season_id: Optional[str] = None
+    season_ids: Optional[List[str]] = None
+    recipe_notes: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class MasterColor(BaseModel):
+    """Persisted Master or Seasonal Color entity."""
+
+    id: str
+    color_id: str
+    color_code: str
+    technical_name_it: str
+    technical_name_en: str = Field(default="")
+    commercial_family: str = Field(default="Nero / Black")
+    hex_code: str = Field(default="#141414", pattern="^#[0-9A-Fa-f]{6}$")
+    pantone_tcx_code: str = Field(default="")
+    ral_code: str = Field(default="")
+    finish_type: str = Field(default="pieno_fiore_naturale")
+    applicable_domains: List[str] = Field(default_factory=list)
+    season_id: Optional[str] = Field(default=None)
+    season_ids: List[str] = Field(default_factory=lambda: ["ALL_CARRYOVER"])
+    recipe_notes: str = Field(default="")
+    is_active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ColorwayBomMappingUpsertItem(BaseModel):
+    """Single BOM node color & Lab-Dip assignment inside a variant's Colorway Matrix."""
+
+    bom_item_id: str
+    master_color_id: Optional[str] = None
+    part_role: str = Field(default="tomaia_principale")
+    galvanics_finish: Optional[str] = None
+    lab_dip_status: str = Field(default="pending")
+    delta_e_value: Optional[float] = None
+    approved_by: Optional[str] = None
+    approved_at: Optional[datetime] = None
+    notes: str = Field(default="")
+
+
+class ColorwayMatrixUpsertRequest(BaseModel):
+    """Payload for PUT /api/v1/plm-variants/{variant_id}/colorway-matrix."""
+
+    primary_color_id: Optional[str] = None
+    secondary_color_id: Optional[str] = None
+    hardware_finish_color_id: Optional[str] = None
+    colorway_rule_preset: Optional[str] = Field(default="tone_on_tone")
+    mappings: List[ColorwayBomMappingUpsertItem] = Field(default_factory=list)
+
+
+class ColorwayBomMappingRow(BaseModel):
+    """Hydrated BOM node row inside ColorwayMatrixResponse."""
+
+    id: Optional[str] = None
+    plm_variant_id: str
+    bom_item_id: str
+    level: int = Field(default=1)
+    parent_bom_item_id: Optional[str] = None
+    component_type: str
+    material_name: str
+    supplier_name: str = Field(default="")
+    vendor_id: Optional[str] = None
+    master_color_id: Optional[str] = None
+    color_code: Optional[str] = None
+    technical_name_it: Optional[str] = None
+    commercial_family: Optional[str] = None
+    hex_code: Optional[str] = None
+    pantone_tcx_code: Optional[str] = None
+    ral_code: Optional[str] = None
+    finish_type: Optional[str] = None
+    part_role: str = Field(default="tomaia_principale")
+    galvanics_finish: Optional[str] = None
+    lab_dip_status: str = Field(default="pending")
+    delta_e_value: Optional[float] = None
+    approved_by: Optional[str] = None
+    approved_at: Optional[datetime] = None
+    notes: str = Field(default="")
+    tannery_color_consistency: str = Field(default="not_linked")
+    linked_batch_code: Optional[str] = None
+
+
+class ColorwayMatrixResponse(BaseModel):
+    """Complete Colorway BOM Matrix & Lab-Dip readiness state for a PLM Production Variant."""
+
+    plm_variant_id: str
+    variant_code: str
+    colorway_name: str
+    primary_color_id: Optional[str] = None
+    secondary_color_id: Optional[str] = None
+    hardware_finish_color_id: Optional[str] = None
+    colorway_rule_preset: str = Field(default="tone_on_tone")
+    total_bom_nodes: int = Field(default=0)
+    mapped_nodes_count: int = Field(default=0)
+    approved_nodes_count: int = Field(default=0)
+    rejected_nodes_count: int = Field(default=0)
+    colorway_readiness_pct: float = Field(default=0.0)
+    production_gate_blocked: bool = Field(default=False)
+    mappings: List[ColorwayBomMappingRow] = Field(default_factory=list)
+
+
+class ExplodeColorwaysRequest(BaseModel):
+    """Payload for 1-Click Colorway Explosion across N target Master Colors."""
+
+    target_color_ids: List[str]
+    rule_preset: str = Field(default="tone_on_tone")
+    lining_color_id: Optional[str] = None
+    sole_color_id: Optional[str] = None
+    hardware_color_id: Optional[str] = None
+    auto_link_pim: bool = Field(default=True)
+
+
+class ExplodeColorwaysResponse(BaseModel):
+    """Result of 1-Click Colorway Explosion with hydrated PLM variants & 3-level BOMs."""
+
+    source_variant_id: str
+    pim_item_id: str
+    rule_preset: str
+    created_count: int
+    created_variants: List[PlmProductionVariant] = Field(default_factory=list)
+
+
+class TanneryColorConsistencyItem(BaseModel):
+    """Cross-check record between Tannery Leather Batch color and BOM leather node color."""
+
+    batch_id: str
+    batch_code: str
+    tannery_name: str
+    vendor_id: Optional[str] = None
+    batch_master_color_id: Optional[str] = None
+    batch_color_code: Optional[str] = None
+    batch_color_name_it: Optional[str] = None
+    batch_hex_code: Optional[str] = None
+    plm_variant_id: Optional[str] = None
+    variant_code: Optional[str] = None
+    bom_item_id: Optional[str] = None
+    bom_material_name: Optional[str] = None
+    bom_master_color_id: Optional[str] = None
+    bom_color_code: Optional[str] = None
+    bom_color_name_it: Optional[str] = None
+    bom_hex_code: Optional[str] = None
+    status: str = Field(default="unmapped", description="coherent | mismatch | unmapped")
+    message: str = Field(default="")
+
+
+class PimVariantColorEcommerceItem(BaseModel):
+    """Omnichannel commercial color translation for a single PLM Variant."""
+
+    plm_variant_id: str
+    variant_code: str
+    colorway_name: str
+    master_color_id: Optional[str] = None
+    color_code: Optional[str] = None
+    technical_name_it: str
+    technical_name_en: str = Field(default="")
+    commercial_family: str
+    hex_code: str
+    pantone_tcx_code: str = Field(default="")
+    finish_type: str = Field(default="")
+
+
+class PimColorwaysEcommerceResponse(BaseModel):
+    """Omnichannel e-commerce & B2B colorway translation for 1 PIM Commercial Item."""
+
+    pim_item_id: str
+    sku_code: str
+    model_name: str
+    commercial_color_families: List[str] = Field(default_factory=list)
+    variants_color_map: List[PimVariantColorEcommerceItem] = Field(default_factory=list)
+
+
+# ============================================================================
+# Sprint 8: Vendor Hub 360, SHA-256 Certifications, L6 Segregation & Where-Used
+# ============================================================================
+
+
+class VendorCertificationCreate(BaseModel):
+    """Payload to register a certification on a Vendor or Subcontractor."""
+
+    cert_id: Optional[str] = None
+    cert_type: str = Field(..., min_length=2)
+    cert_code: str = Field(..., min_length=2)
+    issuing_body: str = Field(..., min_length=2)
+    valid_from: str
+    valid_until: str
+    sha256_hash: Optional[str] = None
+    status: Optional[str] = None
+
+
+class VendorCertification(BaseModel):
+    """Persisted Vendor Certification with SHA-256 fingerprint and live expiry countdown."""
+
+    cert_id: str
+    vendor_id: str
+    cert_type: str
+    cert_code: str
+    issuing_body: str
+    valid_from: str
+    valid_until: str
+    days_to_expiry: int = Field(default=0)
+    sha256_hash: str
+    status: str = Field(default="valid")
+
+
+class VendorCreate(BaseModel):
+    """Payload to create a Vendor or 0 EUR Subcontractor in Vendor Hub 360."""
+
+    vendor_id: Optional[str] = None
+    vendor_code: str = Field(default="", description="Unique vendor code, auto-generated if empty")
+    company_name: str = Field(..., min_length=2)
+    vat_number: str = Field(..., min_length=5)
+    supply_chain_role: str = Field(default="tannery")
+    district_area: str = Field(default="Marche - Fermo/Macerata")
+    city_address: str = Field(default="")
+    country_iso2: str = Field(default="IT", min_length=2, max_length=2)
+    paas_tier: str = Field(default="subcontractor_zero_eur")
+    qualification_status: str = Field(default="qualified")
+    quality_score: float = Field(default=92.0, ge=0.0, le=100.0)
+    otd_score: float = Field(default=90.0, ge=0.0, le=100.0)
+    esg_score: float = Field(default=94.0, ge=0.0, le=100.0)
+    standard_lead_time_days: int = Field(default=14, ge=0)
+    moq_description: str = Field(default="Minimo 50 paia / 300 sqft")
+    payment_terms_l6: str = Field(default="RIBA 60gg DFFM")
+    hourly_or_unit_rate_eur_l6: float = Field(default=18.50, ge=0.0)
+    negotiated_price_list_l6: List[Dict[str, Any]] = Field(default_factory=list)
+    internal_audit_notes_l6: str = Field(default="")
+    contact_email: str = Field(default="qualita@fornitore-distretto.it")
+    district_company_id: Optional[str] = Field(default=None, description="FK to District PaaS Company")
+    is_active: bool = Field(default=True)
+    initial_certifications: List[VendorCertificationCreate] = Field(default_factory=list)
+
+
+class VendorUpdate(BaseModel):
+    """Payload to update an existing Vendor or Subcontractor."""
+
+    vendor_code: Optional[str] = None
+    company_name: Optional[str] = None
+    vat_number: Optional[str] = None
+    supply_chain_role: Optional[str] = None
+    district_area: Optional[str] = None
+    city_address: Optional[str] = None
+    country_iso2: Optional[str] = None
+    paas_tier: Optional[str] = None
+    qualification_status: Optional[str] = None
+    quality_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    otd_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    esg_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    standard_lead_time_days: Optional[int] = Field(default=None, ge=0)
+    moq_description: Optional[str] = None
+    payment_terms_l6: Optional[str] = None
+    hourly_or_unit_rate_eur_l6: Optional[float] = Field(default=None, ge=0.0)
+    negotiated_price_list_l6: Optional[List[Dict[str, Any]]] = None
+    internal_audit_notes_l6: Optional[str] = None
+    contact_email: Optional[str] = None
+    district_company_id: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class VendorRecord(BaseModel):
+    """Serialized Vendor / Subcontractor record with centralized L6 Cost Segregation support."""
+
+    vendor_id: str
+    vendor_code: str
+    company_name: str
+    vat_number: str
+    supply_chain_role: str
+    district_area: str
+    city_address: str = Field(default="")
+    country_iso2: str = Field(default="IT")
+    paas_tier: str = Field(default="subcontractor_zero_eur")
+    qualification_status: str = Field(default="qualified")
+    quality_score: Optional[float] = None
+    otd_score: Optional[float] = None
+    esg_score: Optional[float] = None
+    overall_rating: Optional[float] = None
+    rating_class: Optional[str] = None
+    standard_lead_time_days: int = Field(default=14)
+    moq_description: Optional[str] = None
+    payment_terms_l6: Optional[str] = None
+    hourly_or_unit_rate_eur_l6: Optional[float] = None
+    negotiated_price_list_l6: Optional[List[Dict[str, Any]]] = None
+    internal_audit_notes_l6: Optional[str] = None
+    contact_email: str = Field(default="")
+    is_active: bool = Field(default=True)
+    certifications: List[VendorCertification] = Field(default_factory=list)
+    has_expired_critical_certs: bool = Field(default=False)
+    cert_semaphore_status: str = Field(default="green")
+    l6_segregated: bool = Field(default=False)
+    district_company_id: Optional[str] = None
+    district_company: Optional[Dict[str, Any]] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class VendorDistrictLinkRequest(BaseModel):
+    """Payload to link an Albo Vendor to a District PaaS Company (FTL-CEO-022)."""
+
+    company_id: str = Field(..., description="Target Company ID in District PaaS (Modulo 01)")
+
+
+class VendorAutoLinkResult(BaseModel):
+    """Result of bulk auto-linking Albo vendors to District PaaS companies by VAT / legal name."""
+
+    matched_count: int
+    linked_vendors: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+
+class VendorImpactSummary(BaseModel):
+    """Supply chain blast-radius metrics for a Vendor Where-Used query."""
+
+    pim_models_count: int = Field(default=0)
+    plm_variants_count: int = Field(default=0)
+    bom_nodes_count: int = Field(default=0)
+    tannery_batches_count: int = Field(default=0)
+    active_production_orders_count: int = Field(default=0)
+    supply_chain_criticality: str = Field(default="LOW")
+
+
+class VendorFinancialExposureL6(BaseModel):
+    """L6 Brand-only financial exposure metrics for a Vendor Where-Used query."""
+
+    avg_bom_cost_contribution_per_pair_eur: float = Field(default=0.0)
+    tannery_stock_value_eur: float = Field(default=0.0)
+    estimated_seasonal_exposure_eur: float = Field(default=0.0)
+    hourly_or_unit_rate_eur: float = Field(default=0.0)
+    payment_terms: str = Field(default="")
+
+
+class VendorImpactedPimModel(BaseModel):
+    pim_item_id: str
+    sku_code: str
+    model_name: str
+    season: str
+    category: str
+
+
+class VendorImpactedPlmVariant(BaseModel):
+    plm_variant_id: str
+    pim_item_id: str
+    variant_code: str
+    colorway_name: str
+    lifecycle_status: str
+    bom_nodes_from_vendor: int = Field(default=0)
+
+
+class VendorImpactedBomNode(BaseModel):
+    bom_item_id: str
+    plm_variant_id: str
+    variant_code: str
+    level: int
+    component_type: str
+    material_name: str
+    unit_of_measure: str
+    unit_consumption: float
+    waste_percentage: float
+    master_color_id: Optional[str] = None
+    unit_cost_eur_l6: Optional[float] = None
+
+
+class VendorImpactedTanneryBatch(BaseModel):
+    batch_id: str
+    batch_code: str
+    leather_type: str
+    lwg_rating: str
+    available_qty_sqft: float
+    master_color_id: Optional[str] = None
+
+
+class VendorWhereUsedResponse(BaseModel):
+    """Relational Where-Used analysis across BOM, PLM Variants, PIM Models, Tannery Batches & Orders."""
+
+    vendor_id: str
+    vendor_code: str
+    company_name: str
+    supply_chain_role: str
+    district_area: str
+    qualification_status: str
+    paas_tier: str
+    overall_rating: Optional[float] = None
+    has_expired_critical_certs: bool = Field(default=False)
+    viewer_role: str = Field(default="brand")
+    l6_segregated: bool = Field(default=False)
+    impact_summary: VendorImpactSummary
+    financial_exposure_l6: Optional[VendorFinancialExposureL6] = None
+    impacted_pim_models: List[VendorImpactedPimModel] = Field(default_factory=list)
+    impacted_pim_items: List[VendorImpactedPimModel] = Field(default_factory=list)
+    impacted_plm_variants: List[VendorImpactedPlmVariant] = Field(default_factory=list)
+    impacted_bom_nodes: List[VendorImpactedBomNode] = Field(default_factory=list)
+    impacted_tannery_batches: List[VendorImpactedTanneryBatch] = Field(default_factory=list)
+
 

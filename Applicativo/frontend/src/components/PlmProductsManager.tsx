@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {
+  ColorwayExplosionPayload,
+  computeLocalColorwayMatrix,
+  findMasterColorById,
+} from "../mockSeedData";
+import {
   PimCommercialItem,
   PlmProductionVariant,
   PlmLifecycleStatus,
@@ -13,14 +18,58 @@ import {
   ProductCategoryHierarchyNode,
   BomTemplate,
   BulkImportValidationResponse,
+  ColorwayMatrixResponse,
+  MasterColor,
+  ProductModel,
+  TanneryBatch,
+  VendorRecord,
 } from "../types";
 import { BomThreeLevelTree } from "./BomThreeLevelTree";
+import ColorIntelligenceStudio from "./ColorIntelligenceStudio";
+import ColorwayBomMatrixPanel from "./ColorwayBomMatrixPanel";
+import { ProductModelsManager } from "./ProductModelsManager";
 
 interface PlmProductsManagerProps {
   pimItems: PimCommercialItem[];
   viewerRole: ViewerSecurityRole;
   seasons: Season[];
   registries?: DomainRegistryEntry[];
+  colors?: MasterColor[];
+  vendors?: VendorRecord[];
+  tanneryBatches?: TanneryBatch[];
+  colorwayMatrices?: Record<string, ColorwayMatrixResponse>;
+  // Sprint 8 / FTL-CEO-021: Product Models upstream of PIM
+  models?: ProductModel[];
+  onCreateModel?: (
+    model: Omit<ProductModel, "model_id" | "products_count" | "created_at">
+  ) => Promise<void> | void;
+  onUpdateModel?: (
+    modelId: string,
+    model: Partial<ProductModel>
+  ) => Promise<void> | void;
+  onDeleteModel?: (modelId: string) => Promise<void> | void;
+  onAttachProductToModel?: (
+    modelId: string,
+    pimItemId: string
+  ) => Promise<void> | void;
+  onDetachProductFromModel?: (
+    modelId: string,
+    pimItemId: string
+  ) => Promise<void> | void;
+  onSaveColorwayMatrix?: (
+    variantId: string,
+    matrix: ColorwayMatrixResponse
+  ) => Promise<void> | void;
+  onExplodeColorways?: (
+    variantId: string,
+    payload: ColorwayExplosionPayload
+  ) => Promise<void> | void;
+  onCreateColor?: (payload: Omit<MasterColor, "id">) => Promise<void> | void;
+  onUpdateColor?: (
+    colorId: string,
+    payload: Partial<MasterColor>
+  ) => Promise<void> | void;
+  onDeleteColor?: (colorId: string) => Promise<void> | void;
   onSelectPim: (item: PimCommercialItem) => void;
   onSelectVariant: (variant: PlmProductionVariant) => void;
   onAddVariant: (payload: {
@@ -37,6 +86,7 @@ interface PlmProductsManagerProps {
   onCreatePimItem: (item: {
     sku_code: string;
     model_name: string;
+    model_id?: string;
     category: ProductCategory;
     target_gender?: string;
     season: string;
@@ -86,6 +136,21 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   viewerRole,
   seasons,
   registries = [],
+  colors = [],
+  vendors = [],
+  tanneryBatches = [],
+  colorwayMatrices = {},
+  models = [],
+  onCreateModel,
+  onUpdateModel,
+  onDeleteModel,
+  onAttachProductToModel,
+  onDetachProductFromModel,
+  onSaveColorwayMatrix,
+  onExplodeColorways,
+  onCreateColor,
+  onUpdateColor,
+  onDeleteColor,
   onSelectPim,
   onSelectVariant,
   onAddVariant,
@@ -103,6 +168,35 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
     pimItems[0]?.plm_variants[0]?.plm_variant_id || ""
   );
+  // Sprint 8 / FTL-TECH-026: Operational Tabs Navigation (4 main tabs + sub-tab inside Distinta Base)
+  const [activeOperationalTab, setActiveOperationalTab] = useState<
+    "catalogo" | "modelli" | "bom_tree" | "colorway" | "presets"
+  >("catalogo");
+  const [bomSubTab, setBomSubTab] = useState<"tree" | "templates">("tree");
+
+  const [showColorMatrixPanel, setShowColorMatrixPanel] = useState<boolean>(true);
+  const [showColorStudioModal, setShowColorStudioModal] = useState<boolean>(false);
+  const [triggerExplosionCounter, setTriggerExplosionCounter] = useState<number>(0);
+  const [lifecycleGateError, setLifecycleGateError] = useState<string | null>(null);
+
+  const handleSafeLifecycleChange = (
+    variantItem: PlmProductionVariant,
+    nextStatus: PlmLifecycleStatus
+  ) => {
+    if (nextStatus === "in_production") {
+      const mat =
+        colorwayMatrices[variantItem.plm_variant_id] ||
+        computeLocalColorwayMatrix(variantItem, colors, tanneryBatches);
+      if (mat.production_gate_blocked) {
+        setLifecycleGateError(
+          `🔴 GATE PRODUZIONE BLOCCATO (${variantItem.variant_code}): impossibile avviare la produzione in manovia finché sono presenti tirelle Lab-Dip rigettate o fuori tolleranza spettrofotometro (ΔE > 2.5). Approva o richiedi deroga nella Colorway BOM Matrix.`
+        );
+        return;
+      }
+    }
+    setLifecycleGateError(null);
+    onUpdateVariantLifecycle(variantItem.plm_variant_id, nextStatus);
+  };
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [genderFilter, setGenderFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -186,7 +280,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   const [editConstructionType, setEditConstructionType] = useState<string>("cassetta_cucita");
   const [editCarryoverStatus, setEditCarryoverStatus] = useState<string>("seasonal_core");
 
-  // New Product Form State
+  // New Product Form State (FTL-TECH-025: Base Model Mandatory)
+  const [newSelectedModelId, setNewSelectedModelId] = useState<string>("");
   const [newModelName, setNewModelName] = useState("");
   const [newCategory, setNewCategory] = useState<ProductCategory>("footwear");
   const [newTargetGender, setNewTargetGender] = useState("unisex");
@@ -197,6 +292,26 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   const [newSeasonId, setNewSeasonId] = useState(seasons[0]?.season_id || "");
   const [newConstructionType, setNewConstructionType] = useState<string>("cassetta_cucita");
   const [newCarryoverStatus, setNewCarryoverStatus] = useState<string>("seasonal_core");
+
+  const handleSelectModelForNewProduct = (modelId: string) => {
+    setNewSelectedModelId(modelId);
+    const found = (models || []).find((m) => m.model_id === modelId);
+    if (found) {
+      setNewCategory(found.category as ProductCategory);
+      setNewTargetGender(found.target_gender?.toLowerCase() || "unisex");
+      setNewLastCode(found.last_code || "FORMA-FM-108");
+      setNewConstructionType(found.sole_construction || "cassetta_cucita");
+      setNewSizeRange(found.default_size_range || "38-46");
+      if (found.season_id) setNewSeasonId(found.season_id);
+      if (!newModelName.trim() || models?.some((m) => m.name === newModelName)) {
+        setNewModelName(found.name);
+      }
+      if (!newVariantCode.trim() || newVariantCode.startsWith("PLM-") || newVariantCode.startsWith("FTL-")) {
+        const cleanCode = found.model_code.replace("MDL-", "");
+        setNewVariantCode(`PLM-${cleanCode}-${Math.floor(10 + Math.random() * 90)}`);
+      }
+    }
+  };
 
 
   // Flatten all variants with parent PIM context
@@ -558,10 +673,11 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
     const targetSeason = seasons.find((s) => s.season_id === newSeasonId) || seasons[0];
     const generatedSku = `SKU-${newVariantCode.trim().toUpperCase()}`;
 
-    // Create Commercial PIM Parent
+    // Create Commercial PIM Parent with Model association (FTL-TECH-025)
     onCreatePimItem({
       sku_code: generatedSku,
       model_name: newModelName.trim(),
+      model_id: newSelectedModelId || undefined,
       category: newCategory,
       target_gender: newTargetGender,
       season: targetSeason?.code || "PE26",
@@ -590,6 +706,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
     });
 
     // Reset Form
+    setNewSelectedModelId("");
     setNewModelName("");
     setNewVariantCode("");
     setShowCreateModal(false);
@@ -641,6 +758,19 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
     setShowQuickEditModal(false);
   };
 
+  const handleCreateProductFromModel = (model: ProductModel) => {
+    setNewSelectedModelId(model.model_id);
+    setNewModelName(model.name);
+    setNewCategory(model.category as ProductCategory);
+    setNewTargetGender(model.target_gender?.toLowerCase() || "unisex");
+    setNewLastCode(model.last_code || "FORMA-FM-108");
+    setNewConstructionType(model.sole_construction || "cassetta_cucita");
+    setNewSizeRange(model.default_size_range || "38-46");
+    if (model.season_id) setNewSeasonId(model.season_id);
+    setNewVariantCode(`FTL-${model.model_code.replace("MDL-", "")}-01`);
+    setShowCreateModal(true);
+  };
+
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Header Banner: Area Prodotti PLM (FTL-CEO-009) */}
@@ -665,6 +795,23 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowColorStudioModal(true)}
+              className="px-4 py-2.5 rounded-full border border-amber-400/50 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
+            >
+              <span>🎨 Cartella Colori Master</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowColorMatrixPanel(true);
+                setTriggerExplosionCounter((c) => c + 1);
+              }}
+              className="px-4 py-2.5 rounded-full border border-sky-400/50 bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
+            >
+              <span>⚡ 1-Click Colorway Explosion</span>
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -723,7 +870,226 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
         </div>
       </div>
 
-      {/* Main Workspace: Filters & Advanced Table */}
+      {lifecycleGateError && (
+        <div className="bg-rose-50 border-2 border-rose-500 text-rose-950 rounded-2xl p-4 shadow-md flex items-center justify-between gap-4 text-xs font-bold">
+          <span>{lifecycleGateError}</span>
+          <button
+            type="button"
+            onClick={() => setLifecycleGateError(null)}
+            className="px-3 py-1 rounded-lg bg-rose-200 hover:bg-rose-300 text-rose-950 shrink-0"
+          >
+            ✕ Chiudi Alert
+          </button>
+        </div>
+      )}
+
+      {/* Sprint 8 / FTL-TECH-026: Operational Navigation Tabs Reorganized & Renamed */}
+      <div className="flex items-center gap-2 border-b border-neutral-200 pb-2 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setActiveOperationalTab("catalogo")}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+            activeOperationalTab === "catalogo"
+              ? "bg-[#111111] text-white shadow-sm"
+              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+          }`}
+        >
+          <span>📦</span>
+          <span>Prodotti</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-neutral-800 text-neutral-300">
+            {filteredVariants.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveOperationalTab("modelli")}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+            activeOperationalTab === "modelli"
+              ? "bg-[#111111] text-white shadow-sm"
+              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+          }`}
+        >
+          <span>📐</span>
+          <span>Modelli</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-200 text-amber-950 font-extrabold">
+            {models?.length || 0}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveOperationalTab("bom_tree");
+            setBomSubTab("tree");
+          }}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+            activeOperationalTab === "bom_tree"
+              ? "bg-[#111111] text-white shadow-sm"
+              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+          }`}
+        >
+          <span>🌿</span>
+          <span>Distinta Base</span>
+          {currentVariant && (
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900">
+              {currentVariant.variant_code}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveOperationalTab("colorway")}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+            activeOperationalTab === "colorway"
+              ? "bg-[#111111] text-white shadow-sm"
+              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+          }`}
+        >
+          <span>🎨</span>
+          <span>Colori</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-sky-200 text-sky-950 font-bold">
+            ΔE ≤ 2.5
+          </span>
+        </button>
+      </div>
+
+      {/* Sticky Active Variant Context Bar (FTL-CEO-020) */}
+      {currentVariant && (
+        <div className="sticky top-2 z-20 bg-neutral-900/95 backdrop-blur-md text-white rounded-2xl p-3.5 shadow-xl border border-neutral-700 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-inner">
+              {(() => {
+                const pc = findMasterColorById(colors, currentVariant.primary_color_id);
+                return pc ? (
+                  <span
+                    className="w-5 h-5 rounded-full border border-white/40 shadow-xs"
+                    style={{ backgroundColor: pc.hex_code }}
+                    title={`${pc.color_code} - ${pc.technical_name_it}`}
+                  />
+                ) : (
+                  "👟"
+                );
+              })()}
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-xs font-bold text-emerald-300">
+                  {currentVariant.variant_code}
+                </span>
+                <span className="text-xs font-semibold text-neutral-200 truncate">
+                  {currentVariant.colorway_name}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-300 border border-neutral-700">
+                  {currentPim?.model_name} ({currentPim?.sku_code})
+                </span>
+                {currentPim?.model_id && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    📐 Modello: {currentPim.model_id}
+                  </span>
+                )}
+              </div>
+              <div className="text-[11px] text-neutral-400 flex items-center gap-2 mt-0.5 flex-wrap">
+                <span>Forma: <strong className="text-neutral-200 font-mono">{currentVariant.last_or_pattern_code}</strong></span>
+                <span>·</span>
+                <span>Scala: <strong className="text-neutral-200 font-mono">{currentVariant.size_range}</strong></span>
+                <span>·</span>
+                <span>{currentVariant.bom_items.length} componenti BOM</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {/* Quick Tab Jumpers */}
+            <div className="flex items-center gap-1 bg-neutral-800 p-1 rounded-xl border border-neutral-700">
+              <button
+                type="button"
+                onClick={() => setActiveOperationalTab("bom_tree")}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                  activeOperationalTab === "bom_tree"
+                    ? "bg-emerald-500 text-neutral-950 font-black shadow-xs"
+                    : "text-neutral-300 hover:text-white"
+                }`}
+              >
+                🌿 Distinta
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveOperationalTab("colorway")}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                  activeOperationalTab === "colorway"
+                    ? "bg-sky-400 text-neutral-950 font-black shadow-xs"
+                    : "text-neutral-300 hover:text-white"
+                }`}
+              >
+                🎨 Colorway
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveOperationalTab("catalogo")}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                  activeOperationalTab === "catalogo"
+                    ? "bg-neutral-700 text-white shadow-xs"
+                    : "text-neutral-300 hover:text-white"
+                }`}
+              >
+                📦 Catalogo
+              </button>
+            </div>
+
+            {/* Quick Variant Switcher Dropdown */}
+            <select
+              value={currentVariant.plm_variant_id}
+              onChange={(e) => {
+                const found = allVariantsWithParent.find(
+                  (item) => item.plm_variant_id === e.target.value
+                );
+                if (found) {
+                  setSelectedPimId(found.parentPim.pim_item_id);
+                  setSelectedVariantId(found.plm_variant_id);
+                  onSelectPim(found.parentPim);
+                  onSelectVariant(found);
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-neutral-800 text-white border border-neutral-700 hover:border-neutral-500 focus:outline-hidden focus:ring-1 focus:ring-emerald-400"
+            >
+              {pimItems.map((pim) => (
+                <optgroup key={pim.pim_item_id} label={`${pim.sku_code} - ${pim.model_name}`}>
+                  {pim.plm_variants.map((v) => (
+                    <option key={v.plm_variant_id} value={v.plm_variant_id}>
+                      {v.variant_code} ({v.colorway_name}) [{v.lifecycle_status}]
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+
+            {/* Quick Lifecycle Status Dropdown */}
+            <select
+              value={currentVariant.lifecycle_status}
+              onChange={(e) =>
+                handleSafeLifecycleChange(
+                  currentVariant,
+                  e.target.value as PlmLifecycleStatus
+                )
+              }
+              className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-neutral-800 text-amber-300 border border-neutral-700"
+            >
+              <option value="new_from_pim">🏷️ Nuovo da PIM</option>
+              <option value="prototype">Prototipo</option>
+              <option value="sample">Campione</option>
+              <option value="industrialized">Industrializzato</option>
+              <option value="in_production">In Produzione</option>
+              <option value="archived">Archiviato</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 1: Catalogo Varianti & Prodotti PLM */}
+      {activeOperationalTab === "catalogo" && (
       <div className="bg-white border border-[#E5E5E5] rounded-3xl p-6 shadow-sm space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -917,8 +1283,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                         value={item.lifecycle_status}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) =>
-                          onUpdateVariantLifecycle(
-                            item.plm_variant_id,
+                          handleSafeLifecycleChange(
+                            item,
                             e.target.value as PlmLifecycleStatus
                           )
                         }
@@ -952,6 +1318,36 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          title="Apri Distinta Base a 3 Livelli"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPimId(item.parentPim.pim_item_id);
+                            setSelectedVariantId(item.plm_variant_id);
+                            onSelectPim(item.parentPim);
+                            onSelectVariant(item);
+                            setActiveOperationalTab("bom_tree");
+                          }}
+                          className="px-2.5 py-1 rounded-full border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 font-bold text-[10px] text-emerald-800 hover:border-emerald-500 transition flex items-center gap-1"
+                        >
+                          <span>🌿 BOM</span>
+                        </button>
+                        <button
+                          type="button"
+                          title="Apri Matrice Colorway & Lab-Dip"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPimId(item.parentPim.pim_item_id);
+                            setSelectedVariantId(item.plm_variant_id);
+                            onSelectPim(item.parentPim);
+                            onSelectVariant(item);
+                            setActiveOperationalTab("colorway");
+                          }}
+                          className="px-2.5 py-1 rounded-full border border-sky-300 bg-sky-50 hover:bg-sky-100 font-bold text-[10px] text-sky-800 hover:border-sky-500 transition flex items-center gap-1"
+                        >
+                          <span>🎨 Colorway</span>
+                        </button>
                         <button
                           type="button"
                           title="Modifica Rapida Parametri"
@@ -994,40 +1390,259 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           </table>
         </div>
       </div>
+      )}
 
-      {/* Integrated BOM Tree for Selected Variant */}
-      {currentVariant && (
-        <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-3xl p-6 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#707072]">
-                DISTINTA BASE INTEGRATA A 3 LIVELLI
-              </span>
-              <h3 className="text-xl font-extrabold text-[#111111]">
-                Struttura BOM: {currentVariant.variant_code} ({currentPim?.model_name})
-              </h3>
-            </div>
+      {/* TAB 2: Modelli di Base (Forme & Cartamodelli) - FTL-CEO-021 */}
+      {activeOperationalTab === "modelli" && (
+        <ProductModelsManager
+          models={models}
+          pimItems={pimItems}
+          seasons={seasons}
+          viewerRole={viewerRole}
+          onCreateModel={onCreateModel || (() => {})}
+          onUpdateModel={onUpdateModel || (() => {})}
+          onDeleteModel={onDeleteModel || (() => {})}
+          onAttachProduct={onAttachProductToModel || (() => {})}
+          onDetachProduct={onDetachProductFromModel || (() => {})}
+          onCreateProductFromModel={handleCreateProductFromModel}
+          onSelectPimItem={(pim) => {
+            setSelectedPimId(pim.pim_item_id);
+            if (pim.plm_variants && pim.plm_variants.length > 0) {
+              setSelectedVariantId(pim.plm_variants[0].plm_variant_id);
+              onSelectVariant(pim.plm_variants[0]);
+            }
+            onSelectPim(pim);
+            setActiveOperationalTab("catalogo");
+          }}
+        />
+      )}
+
+      {/* TAB 3: Distinta Base Ingegnerizzata & Template BOM (FTL-TECH-026) */}
+      {(activeOperationalTab === "bom_tree" || activeOperationalTab === "presets") && (
+        <div className="space-y-4">
+          {/* Sub-bar inside Distinta Base (FTL-TECH-026) */}
+          <div className="flex items-center justify-between bg-white border border-neutral-200 rounded-2xl p-2.5 shadow-xs flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-white border border-[#E5E5E5] text-[#111111]">
-                Scala: {currentVariant.size_range}
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-white border border-[#E5E5E5] text-emerald-600">
-                Grading Step: +{currentVariant.size_grading_step_pct}%
-              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setBomSubTab("tree");
+                  if (activeOperationalTab === "presets") setActiveOperationalTab("bom_tree");
+                }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                  bomSubTab === "tree" && activeOperationalTab !== "presets"
+                    ? "bg-[#111111] text-white shadow-xs"
+                    : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+                }`}
+              >
+                <span>🌿 Struttura Distinta Base</span>
+                {currentVariant && (
+                  <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-emerald-300">
+                    {currentVariant.variant_code}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBomSubTab("templates")}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                  bomSubTab === "templates" || activeOperationalTab === "presets"
+                    ? "bg-purple-700 text-white shadow-xs"
+                    : "bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100"
+                }`}
+              >
+                <span>⚙️ Template BOM</span>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    bomSubTab === "templates" || activeOperationalTab === "presets"
+                      ? "bg-purple-900 text-white"
+                      : "bg-purple-200 text-purple-900"
+                  }`}
+                >
+                  {availableTemplates.length}
+                </span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveOperationalTab("colorway")}
+                className="px-3 py-1.5 rounded-xl border border-sky-300 bg-sky-50 text-xs font-bold text-sky-800 hover:bg-sky-100 transition"
+              >
+                🎨 Apri Colori →
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveOperationalTab("catalogo")}
+                className="px-3 py-1.5 rounded-xl border border-neutral-300 bg-white text-xs font-bold text-neutral-800 hover:bg-neutral-100 transition"
+              >
+                ← Torna a Prodotti
+              </button>
             </div>
           </div>
 
-          <BomThreeLevelTree
-            variant={currentVariant}
-            pimItem={currentPim}
-            viewerRole={viewerRole}
-            onAddBomItem={onAddBomItem || (() => {})}
-            onUpdateBomItem={onUpdateBomItem}
-            onDeleteBomItem={onDeleteBomItem}
-            onMoveBomItem={onMoveBomItem}
-            onDuplicateBomItem={onDuplicateBomItem}
-          />
+          {bomSubTab === "tree" && activeOperationalTab !== "presets" ? (
+            currentVariant ? (
+              <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-3xl p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#707072]">
+                      INGEGNERIA DI PRODUZIONE &amp; DISTINTA BASE A 3 LIVELLI
+                    </span>
+                    <h3 className="text-xl font-extrabold text-[#111111]">
+                      BOM Ingegnerizzata: {currentVariant.variant_code} ({currentPim?.model_name})
+                    </h3>
+                  </div>
+                </div>
+
+                <BomThreeLevelTree
+                  variant={currentVariant}
+                  pimItem={currentPim}
+                  viewerRole={viewerRole}
+                  vendors={vendors}
+                  colors={colors}
+                  onAddBomItem={onAddBomItem || (() => {})}
+                  onUpdateBomItem={onUpdateBomItem}
+                  onDeleteBomItem={onDeleteBomItem}
+                  onMoveBomItem={onMoveBomItem}
+                  onDuplicateBomItem={onDuplicateBomItem}
+                />
+              </div>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 text-xs">
+                Seleziona una variante dal catalogo per visualizzarne la Distinta Base.
+              </div>
+            )
+          ) : (
+            /* Sub-view: Template BOM (FTL-TECH-026) */
+            <div className="bg-white border border-neutral-200 rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
+                <div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300">
+                    ⚙️ Template BOM (Incluso in Distinta Base)
+                  </span>
+                  <h3 className="text-xl font-extrabold text-[#111111] mt-1">
+                    Preset Distinte Base Industriali ({availableTemplates.length})
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    Architetture di distinta base certificate da applicare rapidamente alle varianti di produzione.
+                  </p>
+                </div>
+                {currentVariant && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTemplateTargetItem({ ...currentVariant, parentPim: currentPim });
+                      setTemplateModalTab("create_from_variant");
+                      setShowTemplateModal(true);
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-neutral-900 text-white hover:bg-neutral-800 transition shrink-0"
+                  >
+                    ➕ Salva Variante Attuale come Preset
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {availableTemplates.map((tpl) => (
+                  <div
+                    key={tpl.template_id}
+                    className="border border-neutral-200 rounded-2xl p-4 bg-neutral-50 hover:bg-white hover:border-neutral-400 transition space-y-3 shadow-xs"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                          {tpl.template_id}
+                        </span>
+                        <h4 className="font-bold text-sm text-[#111111] mt-1">{tpl.name}</h4>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                        {tpl.items?.length || 0} nodi
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-neutral-600 line-clamp-2">{tpl.description || "Nessuna descrizione"}</p>
+
+                    <div className="pt-2 border-t border-neutral-200 flex items-center justify-between text-xs">
+                      <span className="text-[11px] text-neutral-500 font-mono">{tpl.construction_type}</span>
+                      {currentVariant && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTemplateTargetItem({ ...currentVariant, parentPim: currentPim });
+                            setSelectedTemplateId(tpl.template_id);
+                            setTemplateModalTab("apply");
+                            setShowTemplateModal(true);
+                          }}
+                          className="px-3 py-1 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white transition"
+                        >
+                          Applica a Variante Attiva →
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* TAB 4: Colori (Colorway BOM Matrix & Lab-Dip Engine) */}
+      {activeOperationalTab === "colorway" && (
+        currentVariant ? (
+          <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-3xl p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#707072]">
+                  LAB-DIP &amp; COLORWAY INTELLIGENCE ENGINE
+                </span>
+                <h3 className="text-xl font-extrabold text-[#111111]">
+                  Matrice Colorway: {currentVariant.variant_code} ({currentVariant.colorway_name})
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveOperationalTab("bom_tree");
+                    setBomSubTab("tree");
+                  }}
+                  className="px-3.5 py-1.5 rounded-full border border-emerald-300 bg-emerald-50 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition"
+                >
+                  🌿 Apri Distinta Base →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveOperationalTab("catalogo")}
+                  className="px-3.5 py-1.5 rounded-full border border-neutral-300 bg-white text-xs font-bold text-neutral-800 hover:bg-neutral-100 transition"
+                >
+                  ← Torna a Prodotti
+                </button>
+              </div>
+            </div>
+
+            <ColorwayBomMatrixPanel
+              variant={currentVariant}
+              parentPimItem={currentPim}
+              colors={colors}
+              vendors={vendors}
+              tanneryBatches={tanneryBatches}
+              matrix={colorwayMatrices[currentVariant.plm_variant_id]}
+              viewerRole={viewerRole}
+              onSaveMatrix={onSaveColorwayMatrix || (() => {})}
+              onExplodeColorways={onExplodeColorways || (() => {})}
+              onOpenColorStudioModal={() => setShowColorStudioModal(true)}
+              externalTriggerExplosionCounter={triggerExplosionCounter}
+            />
+          </div>
+        ) : (
+          <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 text-xs">
+            Seleziona una variante dal catalogo per visualizzarne la Matrice Colorway.
+          </div>
+        )
       )}
 
       {/* Modal: Nuovo Prodotto PLM */}
@@ -1049,6 +1664,43 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
             </div>
 
             <form onSubmit={handleCreateProductSubmit} className="space-y-4 text-xs">
+              {/* FTL-TECH-025: Obbligatorio selezionare il modello di base di partenza */}
+              <div className="p-3.5 bg-slate-900 text-white rounded-2xl space-y-2 border border-slate-800 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
+                    Modello di Base di Riferimento (Forma &amp; Costruzione) *
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-semibold">
+                    Regola FTL-TECH-025: Obbligatorio
+                  </span>
+                </div>
+
+                <select
+                  value={newSelectedModelId}
+                  onChange={(e) => handleSelectModelForNewProduct(e.target.value)}
+                  required
+                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold text-xs focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="">-- Seleziona il Modello di Base Obbligatorio ({models?.length || 0} disponibili) --</option>
+                  {models?.map((m) => (
+                    <option key={m.model_id} value={m.model_id}>
+                      [{m.model_code}] {m.name} · {m.last_code || "Forma N/D"} ({m.sole_construction || "Costruzione N/D"})
+                    </option>
+                  ))}
+                </select>
+
+                {newSelectedModelId ? (
+                  <div className="text-[11px] text-emerald-300 bg-emerald-950/60 border border-emerald-800/60 rounded-lg px-2.5 py-1.5 flex items-center gap-2">
+                    <span>✅</span>
+                    <span>Parametri ereditati dal modello: Forma <strong>{newLastCode}</strong>, Costruzione <strong>{newConstructionType}</strong>, Scala <strong>{newSizeRange}</strong>.</span>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-amber-300 bg-amber-950/40 border border-amber-800/40 rounded-lg px-2.5 py-1">
+                    ⚠️ Scegli un modello per ereditare automaticamente geometria forma, tipologia di costruzione e scala taglie.
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Categoria *</label>
@@ -1286,20 +1938,31 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#EAEAEA]">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-full border border-neutral-300 text-neutral-700 font-bold hover:bg-neutral-50"
-                >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 rounded-full bg-[#111111] text-white font-bold hover:bg-neutral-800"
-                >
-                  Salva e Ingegnerizza BOM
-                </button>
+              <div className="flex items-center justify-between gap-3 pt-4 border-t border-[#EAEAEA]">
+                <div className="text-[11px]">
+                  {!newSelectedModelId && (
+                    <span className="text-amber-600 font-semibold flex items-center gap-1">
+                      <span>⚠️</span>
+                      <span>Seleziona un modello di base obbligatorio</span>
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="px-4 py-2 rounded-full border border-neutral-300 text-neutral-700 font-bold hover:bg-neutral-50"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!newSelectedModelId || !newModelName.trim() || !newVariantCode.trim()}
+                    className="px-6 py-2 rounded-full bg-[#111111] text-white font-bold hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
+                  >
+                    Salva e Ingegnerizza BOM
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -2437,6 +3100,35 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Cartella Colori Master (Color Intelligence Studio) */}
+      {showColorStudioModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-50 border border-slate-200 rounded-3xl max-w-6xl w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-neutral-900">
+                🎨 Accesso Diretto PLM → Cartella Colori Master
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowColorStudioModal(false)}
+                className="px-3.5 py-1.5 rounded-full bg-neutral-900 text-white text-xs font-bold hover:bg-neutral-800"
+              >
+                ✕ Chiudi Cartella Colori
+              </button>
+            </div>
+            <ColorIntelligenceStudio
+              colors={colors}
+              seasons={seasons}
+              viewerRole={viewerRole}
+              onCreateColor={onCreateColor || (() => {})}
+              onUpdateColor={onUpdateColor || (() => {})}
+              onDeleteColor={onDeleteColor || (() => {})}
+              compactEmbedded={true}
+            />
           </div>
         </div>
       )}

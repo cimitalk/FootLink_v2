@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-10-28T15:24:37.528Z",
+  "totalDuration": 14175,
+  "metrics": [
+    {
+      "step": "App Initialization & Launchpad",
+      "durationMs": 1221,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 1: Nav to Modulo 06 Anagrafiche",
+      "durationMs": 818,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 1: Open Cartella Colori Tab",
+      "durationMs": 787,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 1: Open New Color Modal & Check Swatch",
+      "durationMs": 879,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 2: Open Albo Fornitori 360 Tab",
+      "durationMs": 719,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 2: Open Where-Used Impact Drawer",
+      "durationMs": 1097,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 3: Nav to Modulo 02 Prodotti PLM",
+      "durationMs": 918,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 3: Inspect Colorway BOM Matrix",
+      "durationMs": 730,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 3: Open 1-Click Colorway Explosion Wizard",
+      "durationMs": 1019,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 3: Verify Expired Vendor Compliance Guard & Production Gate",
+      "durationMs": 505,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 4: Nav to Modulo 04 Vault Conceria",
+      "durationMs": 765,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 5: Nav to Modulo 03 PIM Hub Feeds",
+      "durationMs": 1184,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 6: Switch Role to Terzista (0 €) & Mobile Viewport",
+      "durationMs": 1536,
+      "status": "SUCCESS"
+    },
+    {
+      "step": "Persona 6: L6 Segregation Check in Albo Fornitori (Terzista View)",
+      "durationMs": 1997,
+      "status": "SUCCESS"
+    }
+  ]
+}

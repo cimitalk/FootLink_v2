@@ -1,0 +1,42 @@
+{
+  "task_id": "FTL-CEO-019",
+  "title": "Direttiva Esecutiva Epoca II ('La Verticalizzazione') & Master Plan Sprint 8 ('La Ripartenza')",
+  "description": "Convocazione plenaria della C-Suite per sancire la chiusura dell'Epoca I (Espansione Orizzontale, Sprint 1-7) e l'apertura dell'Epoca II ('La Verticalizzazione', da Sprint 8). Elaborazione dell'Audit di Profondità Funzionale sui 9 moduli della piattaforma, della Roadmap Multi-Sprint (Sprint 8-12) e della definizione esecutiva dello Sprint 8 ('La Ripartenza').",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder",
+  "created_at": "2026-10-26T00:36:03+01:00",
+  "updated_at": "2026-10-26T00:42:00+01:00",
+  "due_date": "2026-11-05T23:59:59+01:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "1g (Plenaria C-Suite e Master Plan Epoca II completati)",
+  "dependencies": [
+    "FTL-CEO-017",
+    "FTL-CEO-018"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md",
+    "Azienda/docs/okr/epoch-2-masterplan-and-sprint-8-kickoff.md",
+    "Azienda/docs/okr/README.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-011",
+  "tags": [
+    "governance",
+    "product",
+    "PLM",
+    "PIM",
+    "finops"
+  ],
+  "acceptance_criteria": [
+    "Audit puntuale della profondità funzionale attuale (Orizzontale vs Verticale) su ciascuno dei 9 moduli di Footlink",
+    "Formalizzazione del Master Plan dell'Epoca II (Sprint 8-12) orientato alla verticalizzazione senza aggiunta di moduli superflui",
+    "Allineamento collegiale dei 6 C-Level (CEO, CGO, CTO, CPO, CRO, CMO) e definizione completa del backlog operativo dello Sprint 8"
+  ],
+  "notes": "Direttiva inaugurale dell'Epoca II ('La Verticalizzazione') impartita dal Founder con lo Sprint 8 - La Ripartenza."
+}

@@ -37,9 +37,35 @@ CREATE TABLE IF NOT EXISTS collections (
     UNIQUE (season_id, code)
 );
 
+-- 0. Product Models (Base Pattern, Last & Construction Hierarchy - FTL-CEO-021)
+CREATE TABLE IF NOT EXISTS product_models (
+    model_id VARCHAR(64) PRIMARY KEY,
+    model_code VARCHAR(128) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(32) NOT NULL DEFAULT 'footwear'
+        CHECK (category IN ('footwear', 'leather_goods', 'apparel')),
+    target_gender VARCHAR(32) NOT NULL DEFAULT 'unisex'
+        CHECK (target_gender IN ('men', 'women', 'unisex', 'kids')),
+    last_code VARCHAR(128) NOT NULL DEFAULT 'Forma Standard',
+    sole_construction VARCHAR(64) NOT NULL DEFAULT 'Blake'
+        CHECK (sole_construction IN ('Goodyear', 'Blake', 'Strobel', 'Tubolare', 'Incollato a Scatola', 'San Crispino', 'Cemented')),
+    heel_height_mm REAL NOT NULL DEFAULT 25.0,
+    default_size_range VARCHAR(64) NOT NULL DEFAULT '39-46',
+    season_id VARCHAR(64) NULL,
+    collection_id VARCHAR(64) NULL,
+    description TEXT NOT NULL DEFAULT '',
+    cad_drawing_ref VARCHAR(255) NOT NULL DEFAULT '',
+    is_active BOOLEAN NOT NULL DEFAULT 1,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (season_id) REFERENCES seasons(season_id) ON DELETE SET NULL,
+    FOREIGN KEY (collection_id) REFERENCES collections(collection_id) ON DELETE SET NULL
+);
+
 -- 1. PIM Commercial Items (The "1" side: Master Sales & Omnichannel Catalog)
 CREATE TABLE IF NOT EXISTS pim_commercial_items (
     pim_item_id VARCHAR(64) PRIMARY KEY,
+    model_id VARCHAR(64) NULL,
     sku_code VARCHAR(128) NOT NULL,
     model_name VARCHAR(255) NOT NULL,
     brand_tenant_id VARCHAR(128) NOT NULL,
@@ -53,6 +79,7 @@ CREATE TABLE IF NOT EXISTS pim_commercial_items (
     metadata_json TEXT NOT NULL DEFAULT '{}',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (brand_tenant_id, sku_code),
+    FOREIGN KEY (model_id) REFERENCES product_models(model_id) ON DELETE SET NULL,
     FOREIGN KEY (season_id) REFERENCES seasons(season_id) ON DELETE SET NULL,
     FOREIGN KEY (collection_id) REFERENCES collections(collection_id) ON DELETE SET NULL
 );
@@ -64,6 +91,10 @@ CREATE TABLE IF NOT EXISTS plm_production_variants (
     collection_id VARCHAR(64) NULL,
     variant_code VARCHAR(128) NOT NULL,
     colorway_name VARCHAR(128) NOT NULL,
+    primary_color_id VARCHAR(64) NULL,
+    secondary_color_id VARCHAR(64) NULL,
+    hardware_finish_color_id VARCHAR(64) NULL,
+    colorway_rule_preset VARCHAR(64) NOT NULL DEFAULT 'tone_on_tone',
     size_range VARCHAR(64) NOT NULL DEFAULT '35-42',
     last_or_pattern_code VARCHAR(128) NOT NULL,
     lifecycle_status VARCHAR(32) NOT NULL DEFAULT 'prototype'
@@ -86,6 +117,8 @@ CREATE TABLE IF NOT EXISTS bom_items (
         CHECK (component_type IN ('upper', 'lining', 'insole', 'outsole', 'heel', 'hardware', 'fabric', 'packaging', 'sub_assembly')),
     material_name VARCHAR(255) NOT NULL,
     supplier_name VARCHAR(255) NOT NULL,
+    vendor_id VARCHAR(64) NULL,
+    master_color_id VARCHAR(64) NULL,
     origin_country_iso2 CHAR(2) NOT NULL,
     unit_of_measure VARCHAR(32) NOT NULL,
     unit_consumption REAL NOT NULL CHECK (unit_consumption > 0),
@@ -201,6 +234,8 @@ CREATE TABLE IF NOT EXISTS tannery_batches (
     company_id VARCHAR(64) NOT NULL,
     batch_code VARCHAR(128) NOT NULL UNIQUE,
     tannery_name VARCHAR(255) NOT NULL,
+    vendor_id VARCHAR(64) NULL,
+    master_color_id VARCHAR(64) NULL,
     district VARCHAR(128) NOT NULL,
     leather_type VARCHAR(128) NOT NULL,
     tanning_process VARCHAR(64) NOT NULL DEFAULT 'metal_free'
@@ -367,4 +402,106 @@ CREATE INDEX IF NOT EXISTS idx_cat_hier_parent ON product_categories_hierarchy(p
 CREATE INDEX IF NOT EXISTS idx_cat_hier_slug ON product_categories_hierarchy(slug_path);
 CREATE INDEX IF NOT EXISTS idx_cat_hier_level ON product_categories_hierarchy(level, is_active);
 CREATE INDEX IF NOT EXISTS idx_bom_templates_cat ON bom_templates(category_id);
+
+-- ============================================================================
+-- Sprint 8 (Epoca II - La Verticalizzazione):
+--   FTL-TECH-022: Color Intelligence Engine, Lab-Dip & Colorway BOM Matrix
+--   FTL-TECH-023: Vendor Hub 360, SHA-256 Certifications, L6 Segregation & Where-Used
+-- Architecture Reference: ADR-006, ADR-011
+-- ============================================================================
+
+-- 17. Master & Seasonal Color Palette
+CREATE TABLE IF NOT EXISTS master_colors (
+    id VARCHAR(64) PRIMARY KEY,
+    color_code VARCHAR(64) NOT NULL UNIQUE,
+    technical_name_it VARCHAR(128) NOT NULL,
+    technical_name_en VARCHAR(128) NOT NULL DEFAULT '',
+    commercial_family VARCHAR(64) NOT NULL DEFAULT 'Nero / Black',
+    hex_code CHAR(7) NOT NULL DEFAULT '#141414',
+    pantone_tcx_code VARCHAR(64) NOT NULL DEFAULT '',
+    ral_code VARCHAR(32) NOT NULL DEFAULT '',
+    finish_type VARCHAR(64) NOT NULL DEFAULT 'pieno_fiore_naturale',
+    applicable_domains_json TEXT NOT NULL DEFAULT '["pellame", "fodera", "suola", "minuterie", "filati", "packaging"]',
+    season_id VARCHAR(64) NULL REFERENCES seasons(season_id) ON DELETE SET NULL,
+    recipe_notes TEXT NOT NULL DEFAULT '',
+    is_active BOOLEAN NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 18. Variant Colorway BOM Mappings & Lab-Dip Approval Matrix
+CREATE TABLE IF NOT EXISTS variant_colorway_bom_mappings (
+    id VARCHAR(64) PRIMARY KEY,
+    plm_variant_id VARCHAR(64) NOT NULL REFERENCES plm_production_variants(plm_variant_id) ON DELETE CASCADE,
+    bom_item_id VARCHAR(64) NOT NULL,
+    master_color_id VARCHAR(64) NOT NULL REFERENCES master_colors(id) ON DELETE RESTRICT,
+    part_role VARCHAR(64) NOT NULL DEFAULT 'tomaia_principale',
+    galvanics_finish VARCHAR(64) NULL,
+    lab_dip_status VARCHAR(32) NOT NULL DEFAULT 'pending',
+    delta_e_value REAL NULL,
+    approved_by VARCHAR(128) NULL,
+    approved_at TIMESTAMP NULL,
+    notes TEXT NOT NULL DEFAULT '',
+    UNIQUE (plm_variant_id, bom_item_id)
+);
+
+-- 19. Centralized Vendors & Subcontractors Registry (Vendor Hub 360)
+CREATE TABLE IF NOT EXISTS vendors_registry (
+    vendor_id VARCHAR(64) PRIMARY KEY,
+    vendor_code VARCHAR(64) NOT NULL UNIQUE,
+    company_name VARCHAR(255) NOT NULL,
+    vat_number VARCHAR(64) NOT NULL UNIQUE,
+    supply_chain_role VARCHAR(64) NOT NULL DEFAULT 'tannery',
+    district_area VARCHAR(128) NOT NULL DEFAULT 'Marche - Fermo/Macerata',
+    city_address VARCHAR(255) NOT NULL DEFAULT '',
+    country_iso2 CHAR(2) NOT NULL DEFAULT 'IT',
+    paas_tier VARCHAR(32) NOT NULL DEFAULT 'subcontractor_zero_eur',
+    qualification_status VARCHAR(32) NOT NULL DEFAULT 'qualified',
+    quality_score REAL NOT NULL DEFAULT 92.0,
+    otd_score REAL NOT NULL DEFAULT 90.0,
+    esg_score REAL NOT NULL DEFAULT 94.0,
+    overall_rating REAL NOT NULL DEFAULT 92.2,
+    standard_lead_time_days INTEGER NOT NULL DEFAULT 14,
+    moq_description VARCHAR(255) NOT NULL DEFAULT 'Minimo 50 paia / 300 sqft',
+    payment_terms_l6 VARCHAR(128) NOT NULL DEFAULT 'RIBA 60gg DFFM',
+    hourly_or_unit_rate_eur_l6 REAL NOT NULL DEFAULT 18.50,
+    negotiated_price_list_json_l6 TEXT NOT NULL DEFAULT '[]',
+    internal_audit_notes_l6 TEXT NOT NULL DEFAULT '',
+    contact_email VARCHAR(255) NOT NULL DEFAULT 'qualita@fornitore-distretto.it',
+    district_company_id VARCHAR(64) NULL REFERENCES companies(company_id) ON DELETE SET NULL,
+    is_active BOOLEAN NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 20. Vendor Certifications & SHA-256 Expiry Vault
+CREATE TABLE IF NOT EXISTS vendor_certifications (
+    cert_id VARCHAR(64) PRIMARY KEY,
+    vendor_id VARCHAR(64) NOT NULL REFERENCES vendors_registry(vendor_id) ON DELETE CASCADE,
+    cert_type VARCHAR(64) NOT NULL,
+    cert_code VARCHAR(128) NOT NULL,
+    issuing_body VARCHAR(128) NOT NULL,
+    valid_from VARCHAR(32) NOT NULL,
+    valid_until VARCHAR(32) NOT NULL,
+    sha256_hash CHAR(64) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'valid'
+);
+
+-- Sprint 8 Indexes
+CREATE INDEX IF NOT EXISTS idx_master_colors_season ON master_colors(season_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_master_colors_family ON master_colors(commercial_family, finish_type);
+CREATE INDEX IF NOT EXISTS idx_colorway_matrix_variant ON variant_colorway_bom_mappings(plm_variant_id);
+CREATE INDEX IF NOT EXISTS idx_colorway_matrix_color ON variant_colorway_bom_mappings(master_color_id);
+CREATE INDEX IF NOT EXISTS idx_colorway_matrix_labdip ON variant_colorway_bom_mappings(lab_dip_status);
+CREATE INDEX IF NOT EXISTS idx_vendors_role_district ON vendors_registry(supply_chain_role, district_area, is_active);
+CREATE INDEX IF NOT EXISTS idx_vendors_qualification ON vendors_registry(qualification_status, overall_rating);
+CREATE INDEX IF NOT EXISTS idx_vendors_tier ON vendors_registry(paas_tier, is_active);
+CREATE INDEX IF NOT EXISTS idx_vendor_certs_vendor ON vendor_certifications(vendor_id, status);
+CREATE INDEX IF NOT EXISTS idx_bom_items_vendor_id ON bom_items(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_bom_items_master_color_id ON bom_items(master_color_id);
+CREATE INDEX IF NOT EXISTS idx_tannery_batches_vendor_id ON tannery_batches(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_tannery_batches_master_color_id ON tannery_batches(master_color_id);
+CREATE INDEX IF NOT EXISTS idx_product_models_category ON product_models(category, is_active);
+CREATE INDEX IF NOT EXISTS idx_pim_model_id ON pim_commercial_items(model_id);
+CREATE INDEX IF NOT EXISTS idx_vendors_district_company ON vendors_registry(district_company_id);
+
+
 

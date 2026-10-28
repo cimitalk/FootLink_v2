@@ -1,0 +1,42 @@
+{
+  "task_id": "FTL-TECH-021",
+  "title": "Ottimizzazione Progetto Multi-Epoca (Control Center v2.0 con Selettore Epoca) & Blueprint Tecnico Sprint 8",
+  "description": "Ottimizzazione tecnica del repository e del Founder Control Center (control_center.py) con supporto nativo Multi-Epoca (Selettore Epoca II: La Verticalizzazione vs Archivio Epoca I: Sprint 1-7 vs Vista Globale, mappatura completa S1..S8 e generazione registro strutturato). Redazione del Blueprint Ingegneristico (DDL SQLite/PostgreSQL, contratti API REST FastAPI, DTO di segregazione L6 e architettura sub-componenti React) per i 2 pilastri verticali dello Sprint 8.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "CEO (footlink-ceo)",
+  "created_at": "2026-10-26T00:36:03+01:00",
+  "updated_at": "2026-10-26T00:42:00+01:00",
+  "due_date": "2026-11-05T23:59:59+01:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "1g (Control Center v2.0 Multi-Epoca e Blueprint Tecnico Sprint 8 completati)",
+  "dependencies": [
+    "FTL-GOV-008",
+    "FTL-CEO-019"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/technical/epoch-2-technical-optimization-and-sprint-8-blueprint.md",
+    "Portale_Founder_Control/control_center.py",
+    "Portale_Founder_Control/codebase_analytics.py"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-011",
+  "tags": [
+    "infra",
+    "product",
+    "PLM",
+    "PIM",
+    "governance"
+  ],
+  "acceptance_criteria": [
+    "Aggiornamento di Portale_Founder_Control/control_center.py con Selettore Epoca interattivo (Epoca II attiva di default, Archivio Epoca I consultabile in 1 clic, Vista Globale)",
+    "Sincronizzazione automatica di Azienda/tasks/README.md con partizione strutturata tra Epoca II (Sprint 8+) ed Epoca I (Archivio Sprint 1-7)",
+    "Definizione in Azienda/docs/technical/epoch-2-technical-optimization-and-sprint-8-blueprint.md dello schema DDL, delle rotte REST e dei DTO L6 per Color Intelligence e Albo Fornitori"
+  ],
+  "notes": "Ottimizzazione strutturale del progetto per la nuova epoca senza debito tecnico e a 0,00 EUR di costo infrastrutturale."
+}

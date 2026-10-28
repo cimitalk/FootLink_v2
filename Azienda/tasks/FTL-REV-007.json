@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-REV-007",
+  "title": "Analisi Commerciale & Unit Economics Epoca II (La Verticalizzazione): Impatto ARPA, Churn e Terzisti 0 €",
+  "description": "Analisi dell'impatto commerciale e FinOps della strategia di Verticalizzazione (Epoca II) e dello Sprint 8: incremento del tasso di conversione Pilota -> Contratto Annuale grazie alla profondità operativa per Ufficio Stile/Modelleria (Gestione Colori & Lab-Dip) e Ufficio Acquisti/ESG (Albo Fornitori & Where-Used), tutela rigorosa della gratuità perpetua (0,00 EUR) per i terzisti nell'Albo e certificazione del Margine Lordo SaaS > 85%.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CRO",
+  "assignee_agent": "footlink-cro",
+  "created_by": "CEO (footlink-ceo)",
+  "created_at": "2026-10-26T00:36:03+01:00",
+  "updated_at": "2026-10-26T00:42:00+01:00",
+  "due_date": "2026-11-05T23:59:59+01:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "4h (Analisi Unit Economics Epoca II e FinOps Sprint 8 completata)",
+  "dependencies": [
+    "FTL-CEO-019",
+    "FTL-PROD-012"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/finops/epoch-2-verticalization-unit-economics-and-sprint-8-finops.md",
+    "Azienda/docs/finops/README.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-011",
+  "tags": [
+    "finops",
+    "sales"
+  ],
+  "acceptance_criteria": [
+    "Quantificazione del ROI operativo per PMI e Brand su Gestione Colori Intelligente (-70% tempo esplosione varianti) e Albo Fornitori (-80% tempo audit compliance)",
+    "Certificazione d'invarianza FinOps L2 (0,00 EUR spesa autonoma, Cost-to-Serve marginale nullo, Margine Lordo SaaS > 85%)",
+    "Garanzia esplicita di Costo Zero (0,00 EUR perpetuo) per tutti i laboratori façonisti qualificati nell'Albo Fornitori/Terzisti"
+  ],
+  "notes": "Validazione FinOps e GTM dell'Epoca II completata nel pieno rispetto di ADR-004 e del Manifesto."
+}

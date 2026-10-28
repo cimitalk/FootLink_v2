@@ -19,7 +19,7 @@ Apri il browser su: **`http://127.0.0.1:8080`** (oppure imposta la variabile d'a
 ## 🛠️ Funzionalità Principali
 
 1. **Vista Architetturale a 3 Pilastri:** Monitoraggio unificato di `🏢 Azienda/`, `💻 Applicativo/` e `🎛️ Portale_Founder_Control/`.
-2. **Kanban Board Multi-Sprint (`Azienda/tasks/FTL-*.json`):** Visualizza e sincronizza in tempo reale i task dello **Sprint 1** (`FTL-*-001`) e dello **Sprint 2** (`FTL-*-002`, `FTL-TECH-003`), sbloccando automaticamente le dipendenze quando un task passa in stato `done` e rigenerando [`Azienda/tasks/README.md`](../Azienda/tasks/README.md).
+2. **Kanban Board & Knowledge Hub Multi-Epoca ([`ADR-011`](../Azienda/adr/ADR-011-epoch-2-verticalization-governance-and-modular-depth.md)):** Visualizza e sincronizza in tempo reale sia i task attivi dell'**Epoca II ("La Verticalizzazione", Sprint 8+)** in `Azienda/tasks/*.json`, sia l'archivio storico consolidato dell'**Epoca I (Sprint 1–7, 67/67 Done 👑👑)** in `Azienda/tasks/archive_epoch_1/*.json`, rigenerando automaticamente [`Azienda/tasks/README.md`](../Azienda/tasks/README.md).
 3. **Coda Approvazioni Founder (Gatekeeper L1–L6):** Consente al Founder di approvare i task in stato `review` o di inserire direttive e richieste di modifica direttamente nei file JSON.
 4. **AI Quota Circuit Breaker (`paused_ai_quota`):** Pulsante rapido per mettere in pausa ordinata i task attivi o ripristinarli.
 5. **Document & Prototype Viewer:** Renderizza in modale interattiva i file Markdown (`ADR`, `PRD`, `OKR`, `FinOps`), i prototipi HTML (con switch responsive Desktop 100% / Mobile 375px) e il codice sorgente di `Applicativo/`.

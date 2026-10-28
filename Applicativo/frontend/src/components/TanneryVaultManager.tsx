@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { findMasterColorById } from "../mockSeedData";
 import {
   TanneryBatch,
   TanneryDocument,
@@ -6,6 +7,9 @@ import {
   TanneryDocumentType,
   TanneryDocumentVerifyResponse,
   Company,
+  MasterColor,
+  PimCommercialItem,
+  VendorRecord,
 } from "../types";
 
 export interface LeatherBomOption {
@@ -14,16 +18,23 @@ export interface LeatherBomOption {
   component_type: string;
   plm_code?: string;
   colorway?: string;
+  master_color_id?: string | null;
+  vendor_id?: string | null;
 }
 
 interface TanneryVaultManagerProps {
   batches: TanneryBatch[];
   companies: Company[];
   availableLeatherBomMaterials?: LeatherBomOption[];
+  vendors?: VendorRecord[];
+  colors?: MasterColor[];
+  pimItems?: PimCommercialItem[];
   onCreateBatch: (batch: {
     company_id: string;
     batch_code: string;
     tannery_name: string;
+    vendor_id?: string | null;
+    master_color_id?: string | null;
     district: string;
     leather_type: string;
     tanning_process: TanneryProcess;
@@ -57,6 +68,9 @@ export const TanneryVaultManager: React.FC<TanneryVaultManagerProps> = ({
   batches,
   companies,
   availableLeatherBomMaterials,
+  vendors = [],
+  colors = [],
+  pimItems = [],
   onCreateBatch,
   onUploadDocument,
   onVerifyDocument,
@@ -108,6 +122,12 @@ export const TanneryVaultManager: React.FC<TanneryVaultManagerProps> = ({
     bomLeatherList[0]?.bom_item_id || ""
   );
   const [batchCode, setBatchCode] = useState("");
+  const [selectedVendorId, setSelectedVendorId] = useState<string>(
+    vendors.find((v) => v.supply_chain_role === "conceria")?.vendor_id || ""
+  );
+  const [selectedMasterColorId, setSelectedMasterColorId] = useState<string>(
+    bomLeatherList[0]?.master_color_id || colors[0]?.id || ""
+  );
   const [tanneryName, setTanneryName] = useState("Conceria Montebello SpA");
   const [district, setDistrict] = useState("Arzignano / Valle del Chiampo");
   const [leatherType, setLeatherType] = useState(bomLeatherList[0]?.material_name || "Vitello Pieno Fiore");
@@ -142,12 +162,93 @@ export const TanneryVaultManager: React.FC<TanneryVaultManagerProps> = ({
       ? batches
       : batches.filter((b) => b.tanning_process === processFilter);
 
+  const findBomNodeColorInfo = (bomId?: string) => {
+    if (!bomId) return null;
+    for (const pim of pimItems) {
+      for (const variant of pim.plm_variants || []) {
+        const bom = (variant.bom_items || []).find((b) => b.bom_item_id === bomId);
+        if (bom) {
+          return {
+            bom_item_id: bom.bom_item_id,
+            material_name: bom.material_name,
+            variant_code: variant.variant_code,
+            master_color_id: bom.master_color_id || variant.primary_color_id || null,
+          };
+        }
+      }
+    }
+    const fallback = bomLeatherList.find((b) => b.bom_item_id === bomId);
+    if (fallback) {
+      return {
+        bom_item_id: fallback.bom_item_id,
+        material_name: fallback.material_name,
+        variant_code: fallback.plm_code || "",
+        master_color_id: fallback.master_color_id || null,
+      };
+    }
+    return null;
+  };
+
+  const evaluateBatchBomColorConsistency = (batch: TanneryBatch) => {
+    const linkedBomId =
+      batch.metadata?.bom_material_id || batch.meta?.bom_material_id;
+    const bomInfo = findBomNodeColorInfo(linkedBomId);
+    const batchColor = findMasterColorById(colors, batch.master_color_id);
+    const bomColor = findMasterColorById(colors, bomInfo?.master_color_id);
+
+    if (!bomInfo || !batchColor || !bomColor) {
+      return {
+        status: "not_linked" as const,
+        batchColor,
+        bomColor,
+        bomInfo,
+      };
+    }
+    return {
+      status:
+        batchColor.id === bomColor.id
+          ? ("coherent" as const)
+          : ("mismatch" as const),
+      batchColor,
+      bomColor,
+      bomInfo,
+    };
+  };
+
+  const handleSelectTanneryVendor = (vId: string) => {
+    setSelectedVendorId(vId);
+    const v = vendors.find((item) => item.vendor_id === vId);
+    if (v) {
+      setTanneryName(v.company_name);
+      setDistrict(v.district_area);
+      setRawHideCountry(v.country_iso2 || "IT");
+      if (v.has_expired_critical_certs) {
+        setEudrCompliant(false);
+        setLwgRating("Silver");
+      } else {
+        setEudrCompliant(true);
+        setLwgRating("Gold");
+      }
+    }
+  };
+
   // Handlers
   const handleBomMaterialChange = (bomId: string) => {
     setSelectedBomMaterialId(bomId);
     const target = bomLeatherList.find((b) => b.bom_item_id === bomId);
     if (target) {
       setLeatherType(target.material_name);
+      if (target.master_color_id) {
+        setSelectedMasterColorId(target.master_color_id);
+      }
+      if (target.vendor_id) {
+        handleSelectTanneryVendor(target.vendor_id);
+      }
+    } else {
+      const bomNode = findBomNodeColorInfo(bomId);
+      if (bomNode?.master_color_id) {
+        setSelectedMasterColorId(bomNode.master_color_id);
+      }
     }
   };
 
@@ -159,6 +260,8 @@ export const TanneryVaultManager: React.FC<TanneryVaultManagerProps> = ({
       company_id: companyId || companies[0]?.company_id || "comp-pmi-montebello",
       batch_code: batchCode.trim().toUpperCase(),
       tannery_name: tanneryName.trim(),
+      vendor_id: selectedVendorId || null,
+      master_color_id: selectedMasterColorId || null,
       district,
       leather_type: leatherType.trim(),
       tanning_process: tanningProcess,
@@ -475,6 +578,12 @@ export const TanneryVaultManager: React.FC<TanneryVaultManagerProps> = ({
           <div className="space-y-3">
             {filteredBatches.map((b) => {
               const isSelected = b.batch_id === selectedBatchId;
+              const colorCheck = evaluateBatchBomColorConsistency(b);
+              const matchedVendor = vendors.find(
+                (v) =>
+                  v.vendor_id === b.vendor_id ||
+                  v.company_name.toLowerCase() === b.tannery_name.toLowerCase()
+              );
               return (
                 <div
                   key={b.batch_id}
@@ -485,23 +594,45 @@ export const TanneryVaultManager: React.FC<TanneryVaultManagerProps> = ({
                       : "border-[#E5E5E5] bg-white hover:border-neutral-300"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-2 flex-wrap gap-1.5">
                     <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-white border border-[#D5D5D5] text-[#111111]">
                       {b.batch_code}
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                      🏅 LWG {b.lwg_rating} ({b.lwg_score_pct}%)
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {matchedVendor?.has_expired_critical_certs && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300">
+                          🔴 LWG/EUDR Scaduto
+                        </span>
+                      )}
+                      {colorCheck.status === "mismatch" && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300">
+                          🔴 Mismatch Colore BOM
+                        </span>
+                      )}
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                        🏅 LWG {b.lwg_rating} ({b.lwg_score_pct}%)
+                      </span>
+                    </div>
                   </div>
 
                   <div className="font-bold text-sm text-[#111111]">{b.leather_type}</div>
                   <div className="text-xs text-[#707072] mt-0.5">{b.tannery_name} · {b.district}</div>
+                  {colorCheck.batchColor && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-semibold text-neutral-800">
+                      <span
+                        className="w-3 h-3 rounded-full border border-slate-300"
+                        style={{ backgroundColor: colorCheck.batchColor.hex_code }}
+                      />
+                      <span className="font-mono">{colorCheck.batchColor.color_code}</span>
+                      <span>· {colorCheck.batchColor.technical_name_it}</span>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-[#EAEAEA] text-[11px]">
                     <div>
                       <span className="text-[#707072] block text-[10px]">Origine Grezzo:</span>
                       <strong className="text-[#111111]">
-                        {b.raw_hide_origin_country} · {b.eudr_deforestation_free ? "🌲 EUDR OK" : "In verifica"}
+                        {b.raw_hide_origin_country} · {b.eudr_deforestation_free ? "🌲 EUDR OK" : "🔴 EUDR Non Conforme"}
                       </strong>
                     </div>
                     <div className="text-right">
@@ -524,13 +655,19 @@ export const TanneryVaultManager: React.FC<TanneryVaultManagerProps> = ({
               {/* Batch Detail Header */}
               <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#EAEAEA]">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-base font-extrabold text-[#111111]">
                       {currentBatch.batch_code}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                      Conforme EU ESPR
-                    </span>
+                    {currentBatch.eudr_deforestation_free ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                        Conforme EU ESPR &amp; EUDR
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-300">
+                        🔴 BLOCCO COMPLIANCE EUDR / LWG SCADUTO
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs text-[#707072] mt-0.5">
                     {currentBatch.tannery_name} — Spessore: {currentBatch.thickness_mm} · Disponibilità: {currentBatch.available_qty_sqft} sqft
@@ -545,6 +682,98 @@ export const TanneryVaultManager: React.FC<TanneryVaultManagerProps> = ({
                   <span>+ Carica Certificato nel Vault</span>
                 </button>
               </div>
+
+              {/* Sprint 8: Controllo Automatico Coerenza Colore Lotto ↔ BOM */}
+              {(() => {
+                const check = evaluateBatchBomColorConsistency(currentBatch);
+                const detailVendor = vendors.find(
+                  (v) =>
+                    v.vendor_id === currentBatch.vendor_id ||
+                    v.company_name.toLowerCase() ===
+                      currentBatch.tannery_name.toLowerCase()
+                );
+
+                return (
+                  <div
+                    className={`rounded-2xl p-4 border text-xs space-y-2 ${
+                      check.status === "mismatch" ||
+                      detailVendor?.has_expired_critical_certs
+                        ? "bg-rose-50 border-rose-300 text-rose-950"
+                        : check.status === "coherent"
+                        ? "bg-emerald-50/70 border-emerald-200 text-emerald-950"
+                        : "bg-slate-50 border-slate-200 text-slate-800"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-extrabold uppercase tracking-wider text-[11px]">
+                        Controllo Automatico Coerenza Colore Lotto ↔ Nodo BOM
+                      </span>
+                      {check.status === "coherent" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-200/80 text-emerald-950">
+                          🟢 Colore Lotto Coerente con BOM
+                        </span>
+                      ) : check.status === "mismatch" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-200 text-rose-950">
+                          🔴 Disallineamento Colore Lotto ↔ Nodo BOM
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-200 text-slate-700">
+                          ○ Verifica Cromatica Non Vincolata
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div className="bg-white/90 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2.5">
+                        <span
+                          className="w-7 h-7 rounded-lg border border-slate-300 shrink-0"
+                          style={{
+                            backgroundColor:
+                              check.batchColor?.hex_code || "#E2E8F0",
+                          }}
+                        />
+                        <div>
+                          <div className="text-[10px] font-bold uppercase text-slate-500">
+                            Bagno Tintoria Lotto Conceria
+                          </div>
+                          <div className="font-bold text-neutral-900">
+                            {check.batchColor
+                              ? `${check.batchColor.color_code} · ${check.batchColor.technical_name_it}`
+                              : "Tinta non specificata"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-white/90 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2.5">
+                        <span
+                          className="w-7 h-7 rounded-lg border border-slate-300 shrink-0"
+                          style={{
+                            backgroundColor:
+                              check.bomColor?.hex_code || "#E2E8F0",
+                          }}
+                        />
+                        <div>
+                          <div className="text-[10px] font-bold uppercase text-slate-500">
+                            Tinta Attesa dal Nodo BOM ({check.bomInfo?.bom_item_id || "N/D"})
+                          </div>
+                          <div className="font-bold text-neutral-900">
+                            {check.bomColor
+                              ? `${check.bomColor.color_code} · ${check.bomColor.technical_name_it}`
+                              : "Nessun nodo BOM collegato"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {detailVendor?.has_expired_critical_certs && (
+                      <div className="pt-1 font-bold text-rose-900">
+                        ⚠ ALERT ALBO FORNITORI 360° ({detailVendor.vendor_code}): la conceria{" "}
+                        {detailVendor.company_name} ha certificati LWG / EUDR scaduti da 14 giorni. Lotto bloccato per passaporto DPP.
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Technical Attributes Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-[#F9F9F9] p-4 rounded-2xl">
@@ -697,6 +926,66 @@ export const TanneryVaultManager: React.FC<TanneryVaultManagerProps> = ({
                   Ogni lotto deve essere agganciato a un materiale pellame codificato nelle BOM per garantire tracciabilità ESPR/EUDR.
                 </span>
               </div>
+
+              {/* Sprint 8: Selettore Guidato Conceria Albo 360° & Tinta Master */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Conceria Qualificata da Albo 360°
+                  </label>
+                  <select
+                    value={selectedVendorId}
+                    onChange={(e) => handleSelectTanneryVendor(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  >
+                    <option value="">— Seleziona Conceria da Albo —</option>
+                    {vendors
+                      .filter(
+                        (v) =>
+                          v.supply_chain_role === "conceria" ||
+                          v.company_name.toLowerCase().includes("conceria") ||
+                          v.company_name.toLowerCase().includes("pellami")
+                      )
+                      .map((v) => (
+                        <option key={v.vendor_id} value={v.vendor_id}>
+                          {v.vendor_code} · {v.company_name}{" "}
+                          {v.has_expired_critical_certs ? "🔴 [LWG/EUDR SCADUTO]" : ""}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Tinta / Bagno Tintoria Master
+                  </label>
+                  <select
+                    value={selectedMasterColorId}
+                    onChange={(e) => setSelectedMasterColorId(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  >
+                    <option value="">— Seleziona Tinta da Cartella Colori —</option>
+                    {colors.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.color_code} · {c.technical_name_it} ({c.hex_code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {(() => {
+                const chosenTannery = vendors.find(
+                  (v) => v.vendor_id === selectedVendorId
+                );
+                if (!chosenTannery || !chosenTannery.has_expired_critical_certs)
+                  return null;
+                return (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-950 font-bold">
+                    🔴 ALERT COMPLIANCE CONCERIA ({chosenTannery.vendor_code}): {chosenTannery.company_name} presenta certificati LWG / EUDR scaduti da 14 giorni nell&apos;Albo Fornitori 360°!
+                  </div>
+                );
+              })()}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>

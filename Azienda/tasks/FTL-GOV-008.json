@@ -1,0 +1,40 @@
+{
+  "task_id": "FTL-GOV-008",
+  "title": "Archiviazione & Consolidamento Storico Epoca I (Sprint 1-7), ADR-011 e Governance Multi-Epoca",
+  "description": "Consolidamento strutturato e puntuale di tutti gli eventi, le 10 ADR, i 67 task completati e i deliverable dell'Epoca I (Sprint 1-7: Fondazione & Espansione Orizzontale). Formalizzazione dell'ADR-011 per l'avvio dell'Epoca II ('La Verticalizzazione' - Regola Zero Horizontal Bloat / Deep Vertical Capabilities) e ristrutturazione multi-epoca dei registri aziendali e della memoria storica.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CGO",
+  "assignee_agent": "footlink-cgo",
+  "created_by": "Founder",
+  "created_at": "2026-10-26T00:36:03+01:00",
+  "updated_at": "2026-10-26T00:42:00+01:00",
+  "due_date": "2026-11-05T23:59:59+01:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "1g (Compendio Epoca I, ADR-011 e Registri Multi-Epoca consolidati)",
+  "dependencies": [
+    "FTL-GOV-007"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/PIANO_PROSECUZIONE_STRATEGICO_EPOCA_2.md",
+    "Azienda/docs/governance/epoch-1-historical-consolidation-sprints-1-7.md",
+    "Azienda/adr/ADR-011-epoch-2-verticalization-governance-and-modular-depth.md",
+    "Azienda/adr/README.md",
+    "Azienda/tasks/README.md",
+    "Azienda/MEMORY.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-011",
+  "tags": [
+    "governance"
+  ],
+  "acceptance_criteria": [
+    "Redazione del Compendio Storico dell'Epoca I (Sprint 1-7) con mappatura completa di 10 ADR, 67 Task done e inventario deliverable",
+    "Formalizzazione di ADR-011 con principio 'Zero Horizontal Bloat / Deep Vertical Capabilities' e presidi L6 per Colori e Fornitori",
+    "Ristrutturazione di MEMORY.md, adr/README.md e tasks/README.md con separazione netta tra Epoca II (attiva) ed Epoca I (archivio consolidato)"
+  ],
+  "notes": "Archiviazione immutabile dell'Epoca I e ottimizzazione di governance per l'Epoca II."
+}

@@ -10,13 +10,24 @@ import {
   BomItem,
   BomTreeNode,
   Collection,
+  ColorwayBomNodeMapping,
+  ColorwayMatrixResponse,
   DigitalProductPassport,
   DomainRegistryEntry,
+  MasterColor,
   PimCommercialItem,
   PimDataQualityReport,
+  PlmProductionVariant,
+  ProductModel,
+  ProductionOrder,
   SchemaAttributeDefinition,
   Season,
   SupplyChainStep,
+  TanneryBatch,
+  VendorCertification,
+  VendorRecord,
+  VendorWhereUsedResponse,
+  ViewerSecurityRole,
 } from "./types";
 
 export const INITIAL_SEASONS: Season[] = [
@@ -471,6 +482,77 @@ export const INITIAL_SCHEMA_ATTRIBUTES: SchemaAttributeDefinition[] = [
   },
 ];
 
+export const INITIAL_PRODUCT_MODELS: ProductModel[] = [
+  {
+    model_id: "MOD-LOAFER-01",
+    model_code: "MDL-FW-LOAFER",
+    name: "Forma Mocassino Classico Duca",
+    category: "footwear",
+    target_gender: "Uomo",
+    last_code: "FORMA-FM-108",
+    sole_construction: "blake",
+    heel_height_mm: 25.0,
+    default_size_range: "38-46",
+    season_id: "SEASON-PE26",
+    collection_id: "COLL-SEASON-PE26-MAIN26",
+    description: "Modello base mocassino con mascherina sagomata a mano e battistrada cucito Blake.",
+    cad_drawing_ref: "CAD-2026-MC-01.dxf",
+    is_active: true,
+    products_count: 1,
+  },
+  {
+    model_id: "MOD-SNEAKER-01",
+    model_code: "MDL-FW-SNEAKER",
+    name: "Forma Sneaker Cassetta Urban",
+    category: "footwear",
+    target_gender: "Unisex",
+    last_code: "FORMA-SNK-202",
+    sole_construction: "cassetta_cucita",
+    heel_height_mm: 35.0,
+    default_size_range: "36-46",
+    season_id: "SEASON-PE26",
+    collection_id: "COLL-SEASON-PE26-MAIN26",
+    description: "Silhouette sneaker a cassetta con fondo gomma naturale e soletto estraibile.",
+    cad_drawing_ref: "CAD-2026-SNK-02.dxf",
+    is_active: true,
+    products_count: 0,
+  },
+  {
+    model_id: "MOD-TOTE-01",
+    model_code: "MDL-LG-TOTE",
+    name: "Cartamodello Shopping Tote Vela",
+    category: "leather_goods",
+    target_gender: "Donna",
+    last_code: "PAT-TOTE-V1",
+    sole_construction: "tubolare_sacchetto",
+    heel_height_mm: 0.0,
+    default_size_range: "TU",
+    season_id: "SEASON-PE26",
+    collection_id: "COLL-SEASON-PE26-MAIN26",
+    description: "Cartamodello 3D tote bag sfoderata con costola tinta a mano e doppi manici rinforzati.",
+    cad_drawing_ref: "CAD-2026-TOTE-01.cad",
+    is_active: true,
+    products_count: 1,
+  },
+  {
+    model_id: "MOD-BOOT-01",
+    model_code: "MDL-FW-CHELSEA",
+    name: "Forma Stivaletto Chelsea Boot",
+    category: "footwear",
+    target_gender: "Uomo",
+    last_code: "FORMA-BST-305",
+    sole_construction: "goodyear",
+    heel_height_mm: 30.0,
+    default_size_range: "39-45",
+    season_id: "SEASON-AI26",
+    collection_id: "COLL-SEASON-AI26-CAPSULE",
+    description: "Forma stivaletto chelsea inglese fondo roccia guardolo goodyear guardolo tempestato.",
+    cad_drawing_ref: "CAD-2026-CHEL-03.dxf",
+    is_active: true,
+    products_count: 0,
+  },
+];
+
 export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
   // =========================================================================
   // 1. CALZATURE (FOOTWEAR) — 1 PIM <-> 3 PLM Variants
@@ -479,6 +561,7 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
     pim_item_id: "PIM-DUCA-001",
     sku_code: "FTL-FW26-LOAFER-01",
     model_name: "Mocassino Artigianale Duca",
+    model_id: "MOD-LOAFER-01",
     brand_tenant_id: "TENANT-CALZATURIFICIO-ROSSI",
     season: "P/E 2026",
     season_id: "SEASON-PE26",
@@ -510,6 +593,10 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
         pim_item_id: "PIM-DUCA-001",
         variant_code: "FTL-LOAFER-01-VIT-NERO",
         colorway_name: "Vitello Nero Spazzolato",
+        primary_color_id: "MCOL-BLK-001",
+        secondary_color_id: "MCOL-TAN-002",
+        hardware_finish_color_id: "MCOL-SLV-011",
+        colorway_rule_preset: "tone_on_tone",
         size_range: "38-46",
         last_or_pattern_code: "FORMA-FM-108",
         lifecycle_status: "in_production",
@@ -536,6 +623,8 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             component_type: "upper",
             material_name: "Tomaia Accoppiata Vitello Pieno Fiore Nero",
             supplier_name: "Conceria Santa Croce SpA",
+            vendor_id: "VND-CONC-SC-01",
+            master_color_id: "MCOL-BLK-001",
             origin_country_iso2: "IT",
             unit_of_measure: "sqft",
             unit_consumption: 3.15,
@@ -551,7 +640,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-DUCA-L1-UPPER",
             component_type: "lining",
             material_name: "Fodera Capra Concia Vegetale",
-            supplier_name: "Conceria Valdarno Srl",
+            supplier_name: "Conceria Montebello S.p.A.",
+            vendor_id: "VND-CONC-ARZ-02",
+            master_color_id: "MCOL-TAN-002",
             origin_country_iso2: "IT",
             unit_of_measure: "sqft",
             unit_consumption: 2.4,
@@ -568,6 +659,8 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             component_type: "sub_assembly",
             material_name: "Filato Cucitura Rinforzato rPET Titolo 20",
             supplier_name: "Filature Lombarde Srl",
+            vendor_id: "VND-TEX-LOM-07",
+            master_color_id: "MCOL-BLK-001",
             origin_country_iso2: "IT",
             unit_of_measure: "m",
             unit_consumption: 18.5,
@@ -584,6 +677,8 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             component_type: "outsole",
             material_name: "Suola Cuoio Toscano Cucita Blake",
             supplier_name: "Suolificio Adriatico Srl",
+            vendor_id: "VND-SUOL-FM-03",
+            master_color_id: "MCOL-BLK-001",
             origin_country_iso2: "IT",
             unit_of_measure: "pair",
             unit_consumption: 1.0,
@@ -599,7 +694,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-DUCA-L1-SOLE",
             component_type: "heel",
             material_name: "Tacco Stratificato Cuoio e Gomma Naturale",
-            supplier_name: "Tacchificio Marche Srl",
+            supplier_name: "Suolificio Adriatico Srl",
+            vendor_id: "VND-SUOL-FM-03",
+            master_color_id: "MCOL-BLK-001",
             origin_country_iso2: "IT",
             unit_of_measure: "pair",
             unit_consumption: 1.0,
@@ -615,7 +712,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-DUCA-L2-HEEL",
             component_type: "sub_assembly",
             material_name: "Mescola Battistrada Gomma Vergine & Riciclata",
-            supplier_name: "GommaTech Civitanova Srl",
+            supplier_name: "Suolificio Adriatico Srl",
+            vendor_id: "VND-SUOL-FM-03",
+            master_color_id: "MCOL-BLK-001",
             origin_country_iso2: "IT",
             unit_of_measure: "kg",
             unit_consumption: 0.18,
@@ -661,6 +760,10 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
         pim_item_id: "PIM-DUCA-001",
         variant_code: "FTL-LOAFER-01-CAM-CUOIO",
         colorway_name: "Camoscio Cuoio Idrorepellente",
+        primary_color_id: "MCOL-TAN-002",
+        secondary_color_id: "MCOL-ECR-005",
+        hardware_finish_color_id: "MCOL-SLV-011",
+        colorway_rule_preset: "tone_on_tone",
         size_range: "38-46",
         last_or_pattern_code: "FORMA-FM-108",
         lifecycle_status: "industrialized",
@@ -686,7 +789,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: null,
             component_type: "upper",
             material_name: "Tomaia Camoscio Idrorepellente Cuoio Toscano",
-            supplier_name: "Conceria Veneto Pelle Srl",
+            supplier_name: "Conceria Santa Croce SpA",
+            vendor_id: "VND-CONC-SC-01",
+            master_color_id: "MCOL-TAN-002",
             origin_country_iso2: "IT",
             unit_of_measure: "sqft",
             unit_consumption: 3.25,
@@ -702,7 +807,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-DUCA2-L1-UPPER",
             component_type: "insole",
             material_name: "Sottopiede Anatomico Lattice e Cuoio Rigenerato",
-            supplier_name: "Suolificio Brenta Srl",
+            supplier_name: "Suolificio Adriatico Srl",
+            vendor_id: "VND-SUOL-FM-03",
+            master_color_id: "MCOL-ECR-005",
             origin_country_iso2: "IT",
             unit_of_measure: "pair",
             unit_consumption: 1.0,
@@ -718,7 +825,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-DUCA2-L2-INSOLE",
             component_type: "hardware",
             material_name: "Cambrione Acciaio Temperato 85% Riciclato",
-            supplier_name: "Minuterie Metalliche Padova",
+            supplier_name: "Galvanica EcoMarche Srl",
+            vendor_id: "VND-GALV-FM-04",
+            master_color_id: "MCOL-SLV-011",
             origin_country_iso2: "IT",
             unit_of_measure: "pair",
             unit_consumption: 1.0,
@@ -755,6 +864,10 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
         pim_item_id: "PIM-DUCA-001",
         variant_code: "FTL-LOAFER-01-CRUST-BORD",
         colorway_name: "Crust Bordeaux Anticato Mano Cera",
+        primary_color_id: "MCOL-RED-007",
+        secondary_color_id: "MCOL-TAN-002",
+        hardware_finish_color_id: "MCOL-GLD-010",
+        colorway_rule_preset: "luxury_gold_hardware",
         size_range: "36-41",
         last_or_pattern_code: "FORMA-FM-108W",
         lifecycle_status: "sample",
@@ -780,13 +893,15 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: null,
             component_type: "upper",
             material_name: "Tomaia Crust Anticato Bordeaux",
-            supplier_name: "Conceria Chienti Srl",
+            supplier_name: "Pellami Sud Import S.r.l.",
+            vendor_id: "VND-CONC-SUD-09",
+            master_color_id: "MCOL-RED-007",
             origin_country_iso2: "IT",
             unit_of_measure: "sqft",
             unit_consumption: 2.95,
             waste_percentage: 7.0,
             recycled_content_pct: 20.0,
-            certifications: ["LWG Gold", "REACH"],
+            certifications: ["LWG Silver", "REACH"],
             unit_cost_eur: 8.1,
             lot_certificate_id: "CERT-LWG-CCH-3318",
           },
@@ -796,7 +911,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-DUCA3-L1-UPPER",
             component_type: "hardware",
             material_name: "Morsetto Frontale Ottone Nickel-Free",
-            supplier_name: "Accessori Moda Civitanova",
+            supplier_name: "Galvanica EcoMarche Srl",
+            vendor_id: "VND-GALV-FM-04",
+            master_color_id: "MCOL-GLD-010",
             origin_country_iso2: "IT",
             unit_of_measure: "pair",
             unit_consumption: 1.0,
@@ -813,6 +930,8 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             component_type: "sub_assembly",
             material_name: "Bagno Galvanico Eco-Gold Senza Cianuro",
             supplier_name: "Galvanica EcoMarche Srl",
+            vendor_id: "VND-GALV-FM-04",
+            master_color_id: "MCOL-GLD-010",
             origin_country_iso2: "IT",
             unit_of_measure: "pcs",
             unit_consumption: 2.0,
@@ -845,6 +964,7 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
     pim_item_id: "PIM-VELA-002",
     sku_code: "FTL-FW26-TOTE-02",
     model_name: "Borsa Shopping Vela",
+    model_id: "MOD-TOTE-01",
     brand_tenant_id: "TENANT-MAISON-FIRENZE",
     season: "FW26",
     category: "leather_goods",
@@ -868,6 +988,10 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
         pim_item_id: "PIM-VELA-002",
         variant_code: "FTL-TOTE-02-VAC-COGNAC",
         colorway_name: "Vacchetta Cognac Naturale",
+        primary_color_id: "MCOL-TAN-002",
+        secondary_color_id: "MCOL-ECR-005",
+        hardware_finish_color_id: "MCOL-GLD-010",
+        colorway_rule_preset: "luxury_gold_hardware",
         size_range: "OS",
         last_or_pattern_code: "MOD-SCANDICCI-44",
         lifecycle_status: "in_production",
@@ -893,7 +1017,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: null,
             component_type: "upper",
             material_name: "Quadranti Vacchetta Conciata al Vegetale",
-            supplier_name: "Consorzio Vera Pelle Santa Croce",
+            supplier_name: "Conceria Santa Croce SpA",
+            vendor_id: "VND-CONC-SC-01",
+            master_color_id: "MCOL-TAN-002",
             origin_country_iso2: "IT",
             unit_of_measure: "sqft",
             unit_consumption: 6.8,
@@ -909,7 +1035,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-VELA-L1-BODY",
             component_type: "sub_assembly",
             material_name: "Manici Tubolari Cuciti a Mano",
-            supplier_name: "Pelletteria Artigiana Scandicci",
+            supplier_name: "Tomaificio Fratelli Bianchi",
+            vendor_id: "VND-LAB-ORL-05",
+            master_color_id: "MCOL-TAN-002",
             origin_country_iso2: "IT",
             unit_of_measure: "pair",
             unit_consumption: 1.0,
@@ -925,7 +1053,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-VELA-L2-HANDLE",
             component_type: "fabric",
             material_name: "Anima Interna Corda Canapa Rigenerata",
-            supplier_name: "Tessitura Pratese Circolare Srl",
+            supplier_name: "Filature Lombarde Srl",
+            vendor_id: "VND-TEX-LOM-07",
+            master_color_id: "MCOL-ECR-005",
             origin_country_iso2: "IT",
             unit_of_measure: "m",
             unit_consumption: 1.4,
@@ -962,6 +1092,10 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
         pim_item_id: "PIM-VELA-002",
         variant_code: "FTL-TOTE-02-GRANA-OLIVA",
         colorway_name: "Vitello Grana Dollaro Verde Oliva",
+        primary_color_id: "MCOL-GRN-008",
+        secondary_color_id: "MCOL-ECR-005",
+        hardware_finish_color_id: "MCOL-SLV-011",
+        colorway_rule_preset: "luxury_palladium_hardware",
         size_range: "OS",
         last_or_pattern_code: "MOD-SCANDICCI-44",
         lifecycle_status: "industrialized",
@@ -987,7 +1121,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: null,
             component_type: "upper",
             material_name: "Quadranti Vitello Grana Dollaro Oliva",
-            supplier_name: "Conceria Tolentino SpA",
+            supplier_name: "Conceria Montebello S.p.A.",
+            vendor_id: "VND-CONC-ARZ-02",
+            master_color_id: "MCOL-GRN-008",
             origin_country_iso2: "IT",
             unit_of_measure: "sqft",
             unit_consumption: 6.6,
@@ -1002,8 +1138,10 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             level: 2,
             parent_bom_item_id: "BOM-VELA2-L1-BODY",
             component_type: "hardware",
-            material_name: "Chiusura Zip Metallica Ottone Spazzolato",
-            supplier_name: "Minuterie Metalliche Firenze",
+            material_name: "Chiusura Zip Metallica Palladio Spazzolato",
+            supplier_name: "Galvanica EcoMarche Srl",
+            vendor_id: "VND-GALV-FM-04",
+            master_color_id: "MCOL-SLV-011",
             origin_country_iso2: "IT",
             unit_of_measure: "pcs",
             unit_consumption: 1.0,
@@ -1019,7 +1157,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-VELA2-L2-ZIP",
             component_type: "fabric",
             material_name: "Nastro Supporto Zip 100% Poliestere Riciclato",
-            supplier_name: "Nastri Eco Bergamo Srl",
+            supplier_name: "Filature Lombarde Srl",
+            vendor_id: "VND-TEX-LOM-07",
+            master_color_id: "MCOL-GRN-008",
             origin_country_iso2: "IT",
             unit_of_measure: "m",
             unit_consumption: 0.55,
@@ -1075,6 +1215,10 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
         pim_item_id: "PIM-BRERA-003",
         variant_code: "FTL-COAT-03-DRAP-NAVY",
         colorway_name: "Blu Navy Notte Biella",
+        primary_color_id: "MCOL-BLU-006",
+        secondary_color_id: "MCOL-BLU-006",
+        hardware_finish_color_id: "MCOL-SLV-011",
+        colorway_rule_preset: "tone_on_tone",
         size_range: "IT 46-56",
         last_or_pattern_code: "CAD-COAT-BRERA-50",
         lifecycle_status: "in_production",
@@ -1100,7 +1244,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: null,
             component_type: "fabric",
             material_name: "Drappo Lana RWS & Cashmere Rigenerato 540g",
-            supplier_name: "Lanificio Storico Biella SpA",
+            supplier_name: "Filature Lombarde Srl",
+            vendor_id: "VND-TEX-LOM-07",
+            master_color_id: "MCOL-BLU-006",
             origin_country_iso2: "IT",
             unit_of_measure: "m",
             unit_consumption: 2.35,
@@ -1116,7 +1262,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-BRERA-L1-FABRIC",
             component_type: "lining",
             material_name: "Fodera Bemberg Cupro Circolare",
-            supplier_name: "Tessitura Como Sostenibile Srl",
+            supplier_name: "Filature Lombarde Srl",
+            vendor_id: "VND-TEX-LOM-07",
+            master_color_id: "MCOL-BLU-006",
             origin_country_iso2: "IT",
             unit_of_measure: "m",
             unit_consumption: 1.9,
@@ -1132,7 +1280,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-BRERA-L2-LINING",
             component_type: "sub_assembly",
             material_name: "Fiocco Cashmere Rigenerato Cardato Prato",
-            supplier_name: "Filatura Circolare Prato Srl",
+            supplier_name: "Filature Lombarde Srl",
+            vendor_id: "VND-TEX-LOM-07",
+            master_color_id: "MCOL-BLU-006",
             origin_country_iso2: "IT",
             unit_of_measure: "kg",
             unit_consumption: 0.42,
@@ -1169,6 +1319,10 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
         pim_item_id: "PIM-BRERA-003",
         variant_code: "FTL-COAT-03-DRAP-CAMEL",
         colorway_name: "Cammello Naturale Prato",
+        primary_color_id: "MCOL-TAN-002",
+        secondary_color_id: "MCOL-ECR-005",
+        hardware_finish_color_id: "MCOL-BRN-003",
+        colorway_rule_preset: "tone_on_tone",
         size_range: "IT 46-56",
         last_or_pattern_code: "CAD-COAT-BRERA-50",
         lifecycle_status: "sample",
@@ -1194,7 +1348,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: null,
             component_type: "fabric",
             material_name: "Drappo Cammello & Lana Rigenerata Prato",
-            supplier_name: "Lanificio Circolare Prato SpA",
+            supplier_name: "Filature Lombarde Srl",
+            vendor_id: "VND-TEX-LOM-07",
+            master_color_id: "MCOL-TAN-002",
             origin_country_iso2: "IT",
             unit_of_measure: "m",
             unit_consumption: 2.4,
@@ -1210,7 +1366,9 @@ export const INITIAL_PIM_ITEMS: PimCommercialItem[] = [
             parent_bom_item_id: "BOM-BRERA2-L1-FABRIC",
             component_type: "hardware",
             material_name: "Bottoni Corozo Naturale Incisi Laser (Set 10 pz)",
-            supplier_name: "Bottonificio Bergamasco Srl",
+            supplier_name: "Galvanica EcoMarche Srl",
+            vendor_id: "VND-GALV-FM-04",
+            master_color_id: "MCOL-BRN-003",
             origin_country_iso2: "IT",
             unit_of_measure: "pcs",
             unit_consumption: 10.0,
@@ -1634,14 +1792,16 @@ export const INITIAL_MEMBERSHIPS = [
   },
 ];
 
-export const INITIAL_TANNERY_BATCHES = [
+export const INITIAL_TANNERY_BATCHES: TanneryBatch[] = [
   {
     batch_id: "batch-montebello-lwg-gold",
     company_id: "comp-pmi-montebello",
     batch_code: "LOT-MONTEBELLO-2026-X9",
     tannery_name: "Conceria Montebello S.p.A.",
+    vendor_id: "VND-CONC-ARZ-02",
+    master_color_id: "MCOL-TAN-002",
     district: "Arzignano / Valle del Chiampo",
-    leather_type: "Vitello Pieno Fiore Anilina",
+    leather_type: "Fodera Capra Concia Vegetale",
     tanning_process: "metal_free" as const,
     raw_hide_origin_country: "IT",
     slaughterhouse_traceability_id: "EU-SLAUGHTER-8841-VR",
@@ -1651,8 +1811,12 @@ export const INITIAL_TANNERY_BATCHES = [
     icec_certificate_id: "ICEC-TS410-0982",
     reach_svhc_compliant: true,
     chrome_vi_content_ppm: 0.0,
-    thickness_mm: "1.2 - 1.4 mm",
+    thickness_mm: "1.0 - 1.2 mm",
     available_qty_sqft: 4500.0,
+    metadata: {
+      bom_material_id: "BOM-DUCA-L2-LINING",
+      bom_material_name: "Fodera Capra Concia Vegetale",
+    },
     is_active: true,
     documents: [
       {
@@ -1678,6 +1842,72 @@ export const INITIAL_TANNERY_BATCHES = [
         is_verified: true,
       },
     ],
+  },
+  {
+    batch_id: "batch-santacroce-nero-01",
+    company_id: "comp-pmi-rossi",
+    batch_code: "LOT-CSC-2026-104A",
+    tannery_name: "Conceria Santa Croce SpA",
+    vendor_id: "VND-CONC-SC-01",
+    master_color_id: "MCOL-BLK-001",
+    district: "Toscana · Santa Croce sull'Arno",
+    leather_type: "Tomaia Accoppiata Vitello Pieno Fiore Nero",
+    tanning_process: "vegetable" as const,
+    raw_hide_origin_country: "IT",
+    slaughterhouse_traceability_id: "EU-SLAUGHTER-4102-PI",
+    eudr_deforestation_free: true,
+    lwg_rating: "Gold",
+    lwg_score_pct: 97.4,
+    icec_certificate_id: "ICEC-TS410-1104",
+    reach_svhc_compliant: true,
+    chrome_vi_content_ppm: 0.0,
+    thickness_mm: "1.3 - 1.5 mm",
+    available_qty_sqft: 6200.0,
+    metadata: {
+      bom_material_id: "BOM-DUCA-L1-UPPER",
+      bom_material_name: "Tomaia Accoppiata Vitello Pieno Fiore Nero",
+    },
+    is_active: true,
+    documents: [
+      {
+        document_id: "doc-csc-lwg",
+        batch_id: "batch-santacroce-nero-01",
+        doc_type: "lwg_certificate" as const,
+        file_name: "Certificato_LWG_Gold_SantaCroce_2026.pdf",
+        mime_type: "application/pdf",
+        file_size_bytes: 31200,
+        sha256_hash: "9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b",
+        valid_until: "2027-09-30",
+        is_verified: true,
+      },
+    ],
+  },
+  {
+    batch_id: "batch-sud-import-mismatch",
+    company_id: "comp-pmi-rossi",
+    batch_code: "LOT-SOLOFRA-2026-ERR14",
+    tannery_name: "Pellami Sud Import S.r.l.",
+    vendor_id: "VND-CONC-SUD-09",
+    master_color_id: "MCOL-BRN-003",
+    district: "Campania · Solofra",
+    leather_type: "Tomaia Crust Anticato (Bagno Difforme Moro vs Bordeaux)",
+    tanning_process: "chrome" as const,
+    raw_hide_origin_country: "IT",
+    slaughterhouse_traceability_id: "EU-SLAUGHTER-7719-AV",
+    eudr_deforestation_free: false,
+    lwg_rating: "Silver",
+    lwg_score_pct: 74.0,
+    icec_certificate_id: "ICEC-EXPIRED-041",
+    reach_svhc_compliant: true,
+    chrome_vi_content_ppm: 1.1,
+    thickness_mm: "1.2 - 1.4 mm",
+    available_qty_sqft: 1850.0,
+    metadata: {
+      bom_material_id: "BOM-DUCA3-L1-UPPER",
+      bom_material_name: "Tomaia Crust Anticato Bordeaux",
+    },
+    is_active: true,
+    documents: [],
   },
 ];
 
@@ -1785,4 +2015,1390 @@ export const INITIAL_PRODUCTION_ORDERS = [
     ],
   },
 ];
+
+// ============================================================================
+// Sprint 8 (Epoca II - La Verticalizzazione):
+// 1. Color Intelligence Engine, Lab-Dip & Colorway BOM Matrix (FTL-TECH-022)
+// 2. Vendor Hub 360°, Certifications, Scorecard L6 & Where-Used (FTL-TECH-023)
+// ============================================================================
+
+function offsetIsoDateFromToday(daysOffset: number): string {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() + daysOffset);
+  return d.toISOString().slice(0, 10);
+}
+
+export const INITIAL_MASTER_COLORS: MasterColor[] = [
+  {
+    id: "MCOL-BLK-001",
+    color_id: "MCOL-BLK-001",
+    color_code: "COL-BLK-001",
+    technical_name_it: "Nero Vitello Anilina",
+    technical_name_en: "Aniline Calf Black",
+    commercial_family: "Nero",
+    hex_code: "#141414",
+    pantone_tcx_code: "19-4005 TCX",
+    ral_code: "RAL 9005",
+    finish_type: "pieno_fiore_anilina",
+    applicable_domains: ["pellame", "fodera", "suola", "filati"],
+    season_id: null,
+    season_ids: ["CARRYOVER"],
+    recipe_notes: "Tintura passante in bottale a base acqua, rifinizione anilina pura senza pigmenti coprenti (ΔE target ≤ 0.8).",
+    is_active: true,
+    created_at: "2026-01-10T09:00:00Z",
+  },
+  {
+    id: "MCOL-TAN-002",
+    color_id: "MCOL-TAN-002",
+    color_code: "COL-TAN-002",
+    technical_name_it: "Cuoio Naturale Toscano",
+    technical_name_en: "Tuscan Natural Tan",
+    commercial_family: "Marrone / Cuoio",
+    hex_code: "#C68B59",
+    pantone_tcx_code: "17-1230 TCX",
+    ral_code: "RAL 8023",
+    finish_type: "concia_vegetale_naturale",
+    applicable_domains: ["pellame", "fodera", "suola", "filati"],
+    season_id: null,
+    season_ids: ["CARRYOVER"],
+    recipe_notes: "Tannini naturali di castagno e quebracho Santa Croce sull'Arno, ingrassaggio leggero a sego vegetale.",
+    is_active: true,
+    created_at: "2026-01-10T09:05:00Z",
+  },
+  {
+    id: "MCOL-BRN-003",
+    color_id: "MCOL-BRN-003",
+    color_code: "COL-BRN-003",
+    technical_name_it: "Testa di Moro Scamosciato",
+    technical_name_en: "Dark Espresso Suede",
+    commercial_family: "Marrone / Cuoio",
+    hex_code: "#4A2E1B",
+    pantone_tcx_code: "19-1217 TCX",
+    ral_code: "RAL 8017",
+    finish_type: "scamosciato_velour",
+    applicable_domains: ["pellame", "minuterie", "filati"],
+    season_id: "SEASON-AI26",
+    season_ids: ["SEASON-AI26"],
+    recipe_notes: "Smerigliatura fine 400 grit, idrorepellenza fluorocarbon-free PFAS-0 verificata REACH.",
+    is_active: true,
+    created_at: "2026-01-15T10:00:00Z",
+  },
+  {
+    id: "MCOL-WHT-004",
+    color_id: "MCOL-WHT-004",
+    color_code: "COL-WHT-004",
+    technical_name_it: "Bianco Ottico Nappa",
+    technical_name_en: "Optic White Nappa",
+    commercial_family: "Bianco / Panna",
+    hex_code: "#F8F8F6",
+    pantone_tcx_code: "11-0601 TCX",
+    ral_code: "RAL 9016",
+    finish_type: "nappa_opaca",
+    applicable_domains: ["pellame", "fodera", "suola", "filati"],
+    season_id: "SEASON-PE26",
+    season_ids: ["SEASON-PE26"],
+    recipe_notes: "Concia wet-white esente da cromo, test anti-ingiallimento UV superato 72h ISO 105-B02.",
+    is_active: true,
+    created_at: "2026-01-18T11:00:00Z",
+  },
+  {
+    id: "MCOL-ECR-005",
+    color_id: "MCOL-ECR-005",
+    color_code: "COL-ECR-005",
+    technical_name_it: "Panna / Avorio Fodera",
+    technical_name_en: "Natural Ivory Lining",
+    commercial_family: "Bianco / Panna",
+    hex_code: "#F5F2EB",
+    pantone_tcx_code: "11-0105 TCX",
+    ral_code: "RAL 9001",
+    finish_type: "pieno_fiore_anilina",
+    applicable_domains: ["fodera", "filati", "packaging"],
+    season_id: null,
+    season_ids: ["CARRYOVER"],
+    recipe_notes: "Standard fodera capra/vitello metal-free ipoallergenica con solidità allo sfregamento a umido ≥ 4/5.",
+    is_active: true,
+    created_at: "2026-01-20T09:30:00Z",
+  },
+  {
+    id: "MCOL-BLU-006",
+    color_id: "MCOL-BLU-006",
+    color_code: "COL-BLU-006",
+    technical_name_it: "Blu Notte Riviera",
+    technical_name_en: "Riviera Midnight Blue",
+    commercial_family: "Blu",
+    hex_code: "#1B2A4A",
+    pantone_tcx_code: "19-4024 TCX",
+    ral_code: "RAL 5011",
+    finish_type: "pieno_fiore_anilina",
+    applicable_domains: ["pellame", "fodera", "filati"],
+    season_id: "SEASON-AI26",
+    season_ids: ["SEASON-PE26", "SEASON-AI26"],
+    recipe_notes: "Punto blu profondo sotto illuminante D65 e TL84 senza metamerismo verso il viola.",
+    is_active: true,
+    created_at: "2026-02-02T14:15:00Z",
+  },
+  {
+    id: "MCOL-RED-007",
+    color_id: "MCOL-RED-007",
+    color_code: "COL-RED-007",
+    technical_name_it: "Bordeaux Spazzolato",
+    technical_name_en: "Brushed Cordovan Burgundy",
+    commercial_family: "Bordeaux / Rosso",
+    hex_code: "#5E1914",
+    pantone_tcx_code: "19-1627 TCX",
+    ral_code: "RAL 3005",
+    finish_type: "spazzolato_abrasivato",
+    applicable_domains: ["pellame", "suola", "filati"],
+    season_id: "SEASON-AI26",
+    season_ids: ["SEASON-AI26"],
+    recipe_notes: "Fondo crust bordeaux con velatura cera carnauba spazzolata in manovia a 900 rpm.",
+    is_active: true,
+    created_at: "2026-02-05T15:20:00Z",
+  },
+  {
+    id: "MCOL-GRN-008",
+    color_id: "MCOL-GRN-008",
+    color_code: "COL-GRN-008",
+    technical_name_it: "Verde Bosco Montegranaro",
+    technical_name_en: "Montegranaro Forest Green",
+    commercial_family: "Verde",
+    hex_code: "#2D4028",
+    pantone_tcx_code: "19-6026 TCX",
+    ral_code: "RAL 6005",
+    finish_type: "stampa_dollaro_cervo",
+    applicable_domains: ["pellame", "filati"],
+    season_id: "SEASON-AI26",
+    season_ids: ["SEASON-AI26"],
+    recipe_notes: " Bottalatura morbida 8 ore grana dollaro naturale, mano burrosa per pelletteria e mocassino destrutturato.",
+    is_active: true,
+    created_at: "2026-02-10T10:40:00Z",
+  },
+  {
+    id: "MCOL-GLD-010",
+    color_id: "MCOL-GLD-010",
+    color_code: "COL-GLD-010",
+    technical_name_it: "Oro Chiaro 24K Nickel-Free",
+    technical_name_en: "24K Light Gold Nickel-Free",
+    commercial_family: "Oro / Metallizzato",
+    hex_code: "#D4AF37",
+    pantone_tcx_code: "16-0836 TCX",
+    ral_code: "RAL 1036",
+    finish_type: "galvanica_oro_24k",
+    applicable_domains: ["minuterie", "packaging"],
+    season_id: null,
+    season_ids: ["CARRYOVER"],
+    recipe_notes: "Spessore deposito galvanico 0.5 micron Au 24K esente cianuro e nichel (EN 1811 conforme), nebbia salina 96h.",
+    is_active: true,
+    created_at: "2026-01-12T08:00:00Z",
+  },
+  {
+    id: "MCOL-SLV-011",
+    color_id: "MCOL-SLV-011",
+    color_code: "COL-SLV-011",
+    technical_name_it: "Palladio Spazzolato",
+    technical_name_en: "Brushed Palladium",
+    commercial_family: "Argento / Palladio",
+    hex_code: "#C0C5CE",
+    pantone_tcx_code: "14-4102 TCX",
+    ral_code: "RAL 9006",
+    finish_type: "galvanica_palladio",
+    applicable_domains: ["minuterie"],
+    season_id: null,
+    season_ids: ["CARRYOVER"],
+    recipe_notes: "Finitura palladio satinato anti-impronta PVD/galvanica ipoallergenica REACH Allegato XVII.",
+    is_active: true,
+    created_at: "2026-01-12T08:15:00Z",
+  },
+];
+
+export function computeDaysToExpiry(validUntilIso: string): number {
+  if (!validUntilIso) return 999;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(validUntilIso);
+  target.setHours(0, 0, 0, 0);
+  const diffMs = target.getTime() - today.getTime();
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
+}
+
+export function computeVendorRating(
+  qualityScore?: number | null,
+  otdScore?: number | null,
+  esgScore?: number | null
+): { overall_rating: number; rating_class: string } {
+  const q = typeof qualityScore === "number" ? qualityScore : 80;
+  const o = typeof otdScore === "number" ? otdScore : 80;
+  const e = typeof esgScore === "number" ? esgScore : 80;
+  const overall = Math.round((0.4 * q + 0.3 * o + 0.3 * e) * 10) / 10;
+  let ratingClass = "C";
+  if (overall >= 92) ratingClass = "A+";
+  else if (overall >= 82) ratingClass = "A";
+  else if (overall >= 70) ratingClass = "B";
+  return { overall_rating: overall, rating_class: ratingClass };
+}
+
+export function evaluateVendorCertificationsSemaphore(
+  certs: VendorCertification[]
+): {
+  certifications: VendorCertification[];
+  has_expired_critical_certs: boolean;
+  cert_semaphore_status: "green" | "yellow" | "red";
+} {
+  let hasExpired = false;
+  let hasExpiringSoon = false;
+
+  const enriched = (certs || []).map((cert) => {
+    const days = computeDaysToExpiry(cert.valid_until);
+    let status: VendorCertification["status"] = cert.status;
+    if (status !== "revoked") {
+      if (days < 0) {
+        status = "expired";
+      } else if (days <= 60) {
+        status = "expiring_soon";
+      } else {
+        status = "valid";
+      }
+    }
+    if (status === "expired" || status === "revoked") {
+      hasExpired = true;
+    } else if (status === "expiring_soon") {
+      hasExpiringSoon = true;
+    }
+    return {
+      ...cert,
+      days_to_expiry: days,
+      status,
+    };
+  });
+
+  const semaphore: "green" | "yellow" | "red" = hasExpired
+    ? "red"
+    : hasExpiringSoon
+    ? "yellow"
+    : "green";
+
+  return {
+    certifications: enriched,
+    has_expired_critical_certs: hasExpired,
+    cert_semaphore_status: semaphore,
+  };
+}
+
+const RAW_INITIAL_VENDORS: VendorRecord[] = [
+  {
+    vendor_id: "VND-CONC-SC-01",
+    vendor_code: "FOR-CONC-001",
+    company_name: "Conceria Santa Croce S.p.A.",
+    vat_number: "IT01482910504",
+    supply_chain_role: "conceria",
+    district_area: "Toscana - Santa Croce sull'Arno",
+    city_address: "Via del Bosco 42, 56029 Santa Croce sull'Arno (PI)",
+    country_iso2: "IT",
+    paas_tier: "enterprise",
+    qualification_status: "qualified",
+    quality_score: 97,
+    otd_score: 94,
+    esg_score: 98,
+    overall_rating: 96.4,
+    rating_class: "A+",
+    standard_lead_time_days: 18,
+    moq_description: "300 sqft per colore continuativo · 600 sqft tinta a campione",
+    payment_terms_l6: "Ri.Ba. 60 gg F.M.",
+    hourly_or_unit_rate_eur_l6: 9.2,
+    negotiated_price_list_l6: [
+      {
+        item_code: "PEL-VIT-ANI-14",
+        description: "Vitello Pieno Fiore Anilina 1.3-1.5mm LWG Gold",
+        uom: "sqft",
+        unit_price_eur: 9.2,
+      },
+      {
+        item_code: "PEL-VAC-VEG-16",
+        description: "Vacchetta Conciata al Vegetale Toscana 1.6mm",
+        uom: "sqft",
+        unit_price_eur: 8.4,
+      },
+    ],
+    internal_audit_notes_l6: "Partner strategico Tier-1 per tomaie vitello e vacchetta vegetale. Sconto volume 3.5% oltre 18.000 sqft/stagione.",
+    contact_email: "qualita@concertsantacroce.it",
+    certifications: [
+      {
+        cert_id: "VCERT-SC-01",
+        vendor_id: "VND-CONC-SC-01",
+        cert_type: "LWG_GOLD",
+        cert_code: "LWG-IT-SC-9841-GOLD",
+        issuing_body: "Leather Working Group (BLC Audit)",
+        valid_from: "2025-09-01",
+        valid_until: offsetIsoDateFromToday(340),
+        sha256_hash: "9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b",
+        status: "valid",
+      },
+      {
+        cert_id: "VCERT-SC-02",
+        vendor_id: "VND-CONC-SC-01",
+        cert_type: "EUDR_DUE_DILIGENCE",
+        cert_code: "EUDR-DDS-2026-IT-4401",
+        issuing_body: "EU TRACES Deforestation-Free Registry",
+        valid_from: "2026-01-01",
+        valid_until: offsetIsoDateFromToday(260),
+        sha256_hash: "4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c",
+        status: "valid",
+      },
+      {
+        cert_id: "VCERT-SC-03",
+        vendor_id: "VND-CONC-SC-01",
+        cert_type: "ICEC_TS410",
+        cert_code: "ICEC-TS410-1104",
+        issuing_body: "ICEC Istituto Certificazione Area Pelle",
+        valid_from: "2025-06-15",
+        valid_until: offsetIsoDateFromToday(295),
+        sha256_hash: "7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f",
+        status: "valid",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-01-05T08:30:00Z",
+  },
+  {
+    vendor_id: "VND-CONC-ARZ-02",
+    vendor_code: "FOR-CONC-002",
+    company_name: "Conceria Montebello S.p.A.",
+    vat_number: "IT02894120247",
+    supply_chain_role: "conceria",
+    district_area: "Veneto - Arzignano",
+    city_address: "Via dell'Industria Conciaria 18, 36071 Arzignano (VI)",
+    country_iso2: "IT",
+    paas_tier: "enterprise",
+    qualification_status: "qualified",
+    quality_score: 96,
+    otd_score: 95,
+    esg_score: 96,
+    overall_rating: 95.7,
+    rating_class: "A+",
+    standard_lead_time_days: 15,
+    moq_description: "250 sqft fodera/scamosciato · 500 sqft grana dollaro",
+    payment_terms_l6: "Bonifico 60 gg D.F.",
+    hourly_or_unit_rate_eur_l6: 6.8,
+    negotiated_price_list_l6: [
+      {
+        item_code: "PEL-CAP-VEG-10",
+        description: "Fodera Capra Concia Vegetale Metal-Free",
+        uom: "sqft",
+        unit_price_eur: 4.1,
+      },
+      {
+        item_code: "PEL-CAM-IDR-14",
+        description: "Camoscio Vitello Idrorepellente PFAS-Free",
+        uom: "sqft",
+        unit_price_eur: 7.6,
+      },
+      {
+        item_code: "PEL-DOL-OLI-14",
+        description: "Vitello Grana Dollaro Chrome-Free",
+        uom: "sqft",
+        unit_price_eur: 7.9,
+      },
+    ],
+    internal_audit_notes_l6: "Impianto depurazione acque circolari certificato LWG Gold 96.5%. Zero non conformità cromo VI negli ultimi 24 mesi.",
+    contact_email: "compliance@conceriamontebello.it",
+    certifications: [
+      {
+        cert_id: "VCERT-ARZ-01",
+        vendor_id: "VND-CONC-ARZ-02",
+        cert_type: "LWG_GOLD",
+        cert_code: "LWG-IT-VI-7712-GOLD",
+        issuing_body: "Leather Working Group",
+        valid_from: "2025-11-01",
+        valid_until: offsetIsoDateFromToday(410),
+        sha256_hash: "3b29c9bb8c9e4a3b8e4e7e6f8a9d1c2b3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+        status: "valid",
+      },
+      {
+        cert_id: "VCERT-ARZ-02",
+        vendor_id: "VND-CONC-ARZ-02",
+        cert_type: "EUDR_DUE_DILIGENCE",
+        cert_code: "EUDR-DDS-2026-IT-8890",
+        issuing_body: "EU TRACES Deforestation-Free Registry",
+        valid_from: "2026-01-15",
+        valid_until: offsetIsoDateFromToday(310),
+        sha256_hash: "5f4dcc3b5aa765d61d8327deb882cf992b9699aaf4e4b7c6c4e1f7c227f54921",
+        status: "valid",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-01-06T09:00:00Z",
+  },
+  {
+    vendor_id: "VND-SUOL-FM-03",
+    vendor_code: "FOR-SUOL-003",
+    company_name: "Suolificio Adriatico Bio S.r.l.",
+    vat_number: "IT01984310442",
+    district_company_id: "comp-pmi-rossi",
+    supply_chain_role: "suolificio",
+    district_area: "Marche - Fermo / Macerata",
+    city_address: "Zona Industriale Brancadoro, 63811 Sant'Elpidio a Mare (FM)",
+    country_iso2: "IT",
+    paas_tier: "pmi",
+    qualification_status: "qualified",
+    quality_score: 91,
+    otd_score: 89,
+    esg_score: 90,
+    overall_rating: 90.1,
+    rating_class: "A",
+    standard_lead_time_days: 14,
+    moq_description: "120 paia per stampo / sviluppo scala 39-45",
+    payment_terms_l6: "Ri.Ba. 60/90 gg F.M.",
+    hourly_or_unit_rate_eur_l6: 6.4,
+    negotiated_price_list_l6: [
+      {
+        item_code: "SUO-BIO-TPU-01",
+        description: "Suola Monoblocco Bio-TPU 60% Riciclato",
+        uom: "pair",
+        unit_price_eur: 6.4,
+      },
+      {
+        item_code: "SUO-GOM-NAT-02",
+        description: "Suola Gomma Para Naturale & Sughero 50% GRS",
+        uom: "pair",
+        unit_price_eur: 6.8,
+      },
+    ],
+    internal_audit_notes_l6: "Stampi esclusivi custoditi in comodato gratuito con clausola NDA firmata.",
+    contact_email: "tecnico@suolificioadriatico.it",
+    certifications: [
+      {
+        cert_id: "VCERT-SUO-01",
+        vendor_id: "VND-SUOL-FM-03",
+        cert_type: "ISO_14001",
+        cert_code: "ISO14001-DNV-2025-881",
+        issuing_body: "DNV Business Assurance Italy",
+        valid_from: "2025-05-01",
+        valid_until: offsetIsoDateFromToday(220),
+        sha256_hash: "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+        status: "valid",
+      },
+      {
+        cert_id: "VCERT-SUO-02",
+        vendor_id: "VND-SUOL-FM-03",
+        cert_type: "DURC_REGOLARITA",
+        cert_code: "INPS-INAIL-44291088",
+        issuing_body: "INPS / INAIL Sportello Unico",
+        valid_from: "2026-01-10",
+        valid_until: offsetIsoDateFromToday(95),
+        sha256_hash: "2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c",
+        status: "valid",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-01-08T10:00:00Z",
+  },
+  {
+    vendor_id: "VND-GALV-FM-04",
+    vendor_code: "FOR-GALV-004",
+    company_name: "Galvanica EcoMarche S.r.l.",
+    vat_number: "IT02114090438",
+    supply_chain_role: "minuterie_galvanica",
+    district_area: "Marche - Fermo / Macerata",
+    city_address: "Via Einaudi 74, 62012 Civitanova Marche (MC)",
+    country_iso2: "IT",
+    paas_tier: "pmi",
+    qualification_status: "qualified",
+    quality_score: 95,
+    otd_score: 92,
+    esg_score: 94,
+    overall_rating: 93.8,
+    rating_class: "A+",
+    standard_lead_time_days: 12,
+    moq_description: "200 pezzi per bagno galvanico Oro 24K / Palladio",
+    payment_terms_l6: "Ri.Ba. 60 gg F.M.",
+    hourly_or_unit_rate_eur_l6: 6.5,
+    negotiated_price_list_l6: [
+      {
+        item_code: "MIN-MOR-AU24",
+        description: "Morsetto Ottone Fresato Bagno Oro Chiaro 24K Nickel-Free",
+        uom: "pair",
+        unit_price_eur: 6.5,
+      },
+      {
+        item_code: "MIN-ZIP-PAL",
+        description: "Zip Metallica Lusso Palladio Spazzolato",
+        uom: "pcs",
+        unit_price_eur: 9.2,
+      },
+      {
+        item_code: "MIN-CAM-ACC",
+        description: "Cambrione Acciaio Temperato 85% Riciclato",
+        uom: "pair",
+        unit_price_eur: 1.9,
+      },
+    ],
+    internal_audit_notes_l6: "Bagni galvanici a ciclo chiuso senza cianuro. Test rilascio nichel EN 1811 allegato ad ogni DDT.",
+    contact_email: "lab@galvanicaecomarche.it",
+    certifications: [
+      {
+        cert_id: "VCERT-GAL-01",
+        vendor_id: "VND-GALV-FM-04",
+        cert_type: "REACH_SVHC_NICKEL_FREE",
+        cert_code: "REACH-EN1811-2026-094",
+        issuing_body: " Eurofins Textile & Footwear Testing",
+        valid_from: "2026-01-12",
+        valid_until: offsetIsoDateFromToday(280),
+        sha256_hash: "8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e",
+        status: "valid",
+      },
+      {
+        cert_id: "VCERT-GAL-02",
+        vendor_id: "VND-GALV-FM-04",
+        cert_type: "ISO_14001",
+        cert_code: "ISO14001-TUV-1180",
+        issuing_body: "TÜV Italia S.r.l.",
+        valid_from: "2025-07-01",
+        valid_until: offsetIsoDateFromToday(240),
+        sha256_hash: "6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c",
+        status: "valid",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-01-09T11:20:00Z",
+  },
+  {
+    vendor_id: "VND-LAB-ORL-05",
+    vendor_code: "TER-ORL-005",
+    company_name: "Tomaificio Artigiano Fratelli Bianchi",
+    vat_number: "IT01667200449",
+    district_company_id: "comp-lab-tomaificio",
+    supply_chain_role: "tomaificio_orlatura",
+    district_area: "Marche - Fermo / Macerata",
+    city_address: "Via Fermana Nord 112, 63812 Montegranaro (FM)",
+    country_iso2: "IT",
+    paas_tier: "subcontractor_zero_eur",
+    qualification_status: "qualified",
+    quality_score: 94,
+    otd_score: 91,
+    esg_score: 88,
+    overall_rating: 91.3,
+    rating_class: "A",
+    standard_lead_time_days: 10,
+    moq_description: "50 paia / borse per lancio manovia façon",
+    payment_terms_l6: "Bonifico 30 gg F.M. Tutela Artigiana",
+    hourly_or_unit_rate_eur_l6: 14.5,
+    negotiated_price_list_l6: [
+      {
+        item_code: "LAV-ORL-MOC",
+        description: "Orlatura Completa Tomaia + Vaschetta Cucita a Mano",
+        uom: "pair",
+        unit_price_eur: 14.5,
+      },
+      {
+        item_code: "LAV-MAN-TUB",
+        description: "Giunteria Manici Tubolari Pelletteria Cuciti a Mano",
+        uom: "pair",
+        unit_price_eur: 16.5,
+      },
+    ],
+    internal_audit_notes_l6: "Laboratorio façon storico (18 addetti). Accesso Portale Mobile QR Magic-Link a 0,00 € perpetuo (Manifesto Pilastro 3).",
+    contact_email: "produzione@tomaificiobianchi.it",
+    certifications: [
+      {
+        cert_id: "VCERT-ORL-01",
+        vendor_id: "VND-LAB-ORL-05",
+        cert_type: "DURC_REGOLARITA",
+        cert_code: "INPS-INAIL-88412019",
+        issuing_body: "INPS / INAIL Marche",
+        valid_from: "2026-01-15",
+        valid_until: offsetIsoDateFromToday(104),
+        sha256_hash: "0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
+        status: "valid",
+      },
+      {
+        cert_id: "VCERT-ORL-02",
+        vendor_id: "VND-LAB-ORL-05",
+        cert_type: "SA8000_SOCIAL",
+        cert_code: "SA8000-ETHIC-FM-204",
+        issuing_body: "Bureau Veritas Social Audit Filiera",
+        valid_from: "2025-10-01",
+        valid_until: offsetIsoDateFromToday(290),
+        sha256_hash: "c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2",
+        status: "valid",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-01-11T08:45:00Z",
+  },
+  {
+    vendor_id: "VND-LAB-MON-06",
+    vendor_code: "TER-MON-006",
+    company_name: "Manovia Montaggio Riviera S.n.c.",
+    vat_number: "IT03319080271",
+    district_company_id: "comp-lab-giunteria",
+    supply_chain_role: "manovia_montaggio",
+    district_area: "Veneto - Riviera del Brenta",
+    city_address: "Via Nazionale 89, 30039 Stra (VE)",
+    country_iso2: "IT",
+    paas_tier: "subcontractor_zero_eur",
+    qualification_status: "qualified",
+    quality_score: 93,
+    otd_score: 90,
+    esg_score: 89,
+    overall_rating: 90.9,
+    rating_class: "A",
+    standard_lead_time_days: 9,
+    moq_description: "40 paia montaggio Blake Rapid / Goodyear",
+    payment_terms_l6: "Bonifico 30 gg D.F.",
+    hourly_or_unit_rate_eur_l6: 18.0,
+    negotiated_price_list_l6: [
+      {
+        item_code: "LAV-MON-BLK",
+        description: "Premontaggio, Montaggio e Cucitura Blake Rapid + Finissaggio",
+        uom: "pair",
+        unit_price_eur: 18.0,
+      },
+    ],
+    internal_audit_notes_l6: "Terzista Tier 3 a 0,00 € perpetuo. Eccellente tenuta su calzature eleganti uomo/donna.",
+    contact_email: "manovia@montaggioriviera.it",
+    certifications: [
+      {
+        cert_id: "VCERT-MON-01",
+        vendor_id: "VND-LAB-MON-06",
+        cert_type: "DURC_REGOLARITA",
+        cert_code: "INPS-INAIL-91204411",
+        issuing_body: "INPS / INAIL Veneto",
+        valid_from: "2026-01-20",
+        valid_until: offsetIsoDateFromToday(110),
+        sha256_hash: "e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4",
+        status: "valid",
+      },
+      {
+        cert_id: "VCERT-MON-02",
+        vendor_id: "VND-LAB-MON-06",
+        cert_type: "ISO_9001",
+        cert_code: "ISO9001-CSQ-7710",
+        issuing_body: "IMQ / CSQ Certificazione Qualità",
+        valid_from: "2025-09-10",
+        valid_until: offsetIsoDateFromToday(275),
+        sha256_hash: "f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5",
+        status: "valid",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-01-12T14:00:00Z",
+  },
+  {
+    vendor_id: "VND-TEX-LOM-07",
+    vendor_code: "FOR-TEX-007",
+    company_name: "Filature & Fodere Lombarde S.r.l.",
+    vat_number: "IT08841290963",
+    supply_chain_role: "tessuti_filati",
+    district_area: "Lombardia - Vigevano / Milano",
+    city_address: "Corso Novara 156, 27029 Vigevano (PV)",
+    country_iso2: "IT",
+    paas_tier: "pmi",
+    qualification_status: "qualified_with_reserve",
+    quality_score: 88,
+    otd_score: 86,
+    esg_score: 89,
+    overall_rating: 87.7,
+    rating_class: "A",
+    standard_lead_time_days: 14,
+    moq_description: "50 metri tessuto/fodera · 20 coni filato cerato rPET",
+    payment_terms_l6: "Ri.Ba. 60 gg F.M.",
+    hourly_or_unit_rate_eur_l6: 8.5,
+    negotiated_price_list_l6: [
+      {
+        item_code: "FIL-RPET-20",
+        description: "Filato Cerato Alta Tenacità 100% rPET Tit. 20",
+        uom: "m",
+        unit_price_eur: 0.35,
+      },
+      {
+        item_code: "TEX-DRP-RWS",
+        description: "Drappo Lana RWS & Cashmere Rigenerato 540g",
+        uom: "m",
+        unit_price_eur: 34.0,
+      },
+      {
+        item_code: "TEX-FOD-CUP",
+        description: "Fodera Bemberg Cupro Circolare",
+        uom: "m",
+        unit_price_eur: 8.5,
+      },
+    ],
+    internal_audit_notes_l6: "Rinnovo annuale certificato OEKO-TEX Standard 100 richiesto entro 38 giorni per mantenere classe A.",
+    contact_email: "certificazioni@filaturelombarde.it",
+    certifications: [
+      {
+        cert_id: "VCERT-TEX-01",
+        vendor_id: "VND-TEX-LOM-07",
+        cert_type: "GRS_RECYCLED",
+        cert_code: "GRS-ICEA-2025-4410",
+        issuing_body: "ICEA Istituto Certificazione Etica Ambientale",
+        valid_from: "2025-08-01",
+        valid_until: offsetIsoDateFromToday(215),
+        sha256_hash: "a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6",
+        status: "valid",
+      },
+      {
+        cert_id: "VCERT-TEX-02",
+        vendor_id: "VND-TEX-LOM-07",
+        cert_type: "OEKO_TEX_100",
+        cert_code: "OEKO-CENTROCO-26-091",
+        issuing_body: "Centrocot Busto Arsizio",
+        valid_from: "2025-05-15",
+        valid_until: offsetIsoDateFromToday(38),
+        sha256_hash: "b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7",
+        status: "expiring_soon",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-01-14T16:10:00Z",
+  },
+  {
+    vendor_id: "VND-CONC-SUD-09",
+    vendor_code: "FOR-CONC-009",
+    company_name: "Pellami Sud Import S.r.l.",
+    vat_number: "IT04128900641",
+    supply_chain_role: "conceria",
+    district_area: "Campania - Solofra",
+    city_address: "Via Melito 24, 83029 Solofra (AV)",
+    country_iso2: "IT",
+    paas_tier: "pmi",
+    qualification_status: "suspended",
+    quality_score: 64,
+    otd_score: 68,
+    esg_score: 52,
+    overall_rating: 61.6,
+    rating_class: "C",
+    standard_lead_time_days: 24,
+    moq_description: "400 sqft crust bordeaux / moro",
+    payment_terms_l6: "Bonifico Anticipato / Bloccato Audit ESG",
+    hourly_or_unit_rate_eur_l6: 8.1,
+    negotiated_price_list_l6: [
+      {
+        item_code: "PEL-CRU-BOR-13",
+        description: "Crust Ovino/Vitello Anticato Spazzolabile",
+        uom: "sqft",
+        unit_price_eur: 8.1,
+      },
+    ],
+    internal_audit_notes_l6: "ALERT CRITICO: Certificati LWG Silver ed EUDR Due Diligence scaduti da 14 giorni + difformità bagno tintoria Lotto LOT-SOLOFRA-2026-ERR14 (ΔE 2.8). Blocco nuovi ordini.",
+    contact_email: "amministrazione@pellamisudimport.it",
+    certifications: [
+      {
+        cert_id: "VCERT-SUD-01",
+        vendor_id: "VND-CONC-SUD-09",
+        cert_type: "LWG_SILVER",
+        cert_code: "LWG-IT-AV-3318-EXP",
+        issuing_body: "Leather Working Group",
+        valid_from: "2024-04-01",
+        valid_until: offsetIsoDateFromToday(-14),
+        sha256_hash: "d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9",
+        status: "expired",
+      },
+      {
+        cert_id: "VCERT-SUD-02",
+        vendor_id: "VND-CONC-SUD-09",
+        cert_type: "EUDR_DUE_DILIGENCE",
+        cert_code: "EUDR-DDS-EXP-0091",
+        issuing_body: "EU TRACES Deforestation-Free Registry",
+        valid_from: "2025-04-01",
+        valid_until: offsetIsoDateFromToday(-14),
+        sha256_hash: "e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0",
+        status: "expired",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-01-16T12:00:00Z",
+  },
+];
+
+export const INITIAL_VENDORS: VendorRecord[] = RAW_INITIAL_VENDORS.map((vendor) => {
+  const sem = evaluateVendorCertificationsSemaphore(vendor.certifications);
+  const rating = computeVendorRating(vendor.quality_score, vendor.otd_score, vendor.esg_score);
+  const districtComp = vendor.district_company_id
+    ? (INITIAL_COMPANIES.find((c) => c.company_id === vendor.district_company_id) as any)
+    : undefined;
+  return {
+    ...vendor,
+    ...rating,
+    district_company: districtComp,
+    certifications: sem.certifications,
+    has_expired_critical_certs: sem.has_expired_critical_certs,
+    cert_semaphore_status: sem.cert_semaphore_status,
+    l6_segregated: false,
+  };
+});
+
+export function findMasterColorById(
+  colors: MasterColor[],
+  colorId?: string | null
+): MasterColor | undefined {
+  if (!colorId) return undefined;
+  return colors.find(
+    (c) => c.id === colorId || c.color_id === colorId || c.color_code === colorId
+  );
+}
+
+export function applyVendorL6SegregationClient(
+  vendor: VendorRecord,
+  viewerRole: ViewerSecurityRole
+): VendorRecord {
+  const sem = evaluateVendorCertificationsSemaphore(vendor.certifications || []);
+  if (viewerRole === "brand") {
+    const rating =
+      typeof vendor.overall_rating === "number" && vendor.rating_class
+        ? { overall_rating: vendor.overall_rating, rating_class: vendor.rating_class }
+        : computeVendorRating(vendor.quality_score, vendor.otd_score, vendor.esg_score);
+    return {
+      ...vendor,
+      ...rating,
+      certifications: sem.certifications,
+      has_expired_critical_certs: sem.has_expired_critical_certs,
+      cert_semaphore_status: sem.cert_semaphore_status,
+      l6_segregated: false,
+    };
+  }
+  return {
+    ...vendor,
+    certifications: sem.certifications,
+    has_expired_critical_certs: sem.has_expired_critical_certs,
+    cert_semaphore_status: sem.cert_semaphore_status,
+    quality_score: null,
+    otd_score: null,
+    esg_score: null,
+    overall_rating: null,
+    rating_class: null,
+    moq_description: null,
+    payment_terms_l6: null,
+    hourly_or_unit_rate_eur_l6: null,
+    negotiated_price_list_l6: null,
+    internal_audit_notes_l6: null,
+    l6_segregated: true,
+  };
+}
+
+export function computeLocalWhereUsed(
+  vendorId: string,
+  vendors: VendorRecord[],
+  pimItems: PimCommercialItem[],
+  tanneryBatches: TanneryBatch[],
+  productionOrders: ProductionOrder[],
+  viewerRole: ViewerSecurityRole
+): VendorWhereUsedResponse | null {
+  const rawVendor = vendors.find((v) => v.vendor_id === vendorId);
+  if (!rawVendor) return null;
+  const vendor = applyVendorL6SegregationClient(rawVendor, viewerRole);
+
+  const impactedPimMap = new Map<
+    string,
+    { pim_item_id: string; sku_code: string; model_name: string; season: string }
+  >();
+  const impactedVariants: VendorWhereUsedResponse["impacted_plm_variants"] = [];
+  const impactedBomNodes: VendorWhereUsedResponse["impacted_bom_nodes"] = [];
+
+  let totalBomCostContribution = 0;
+  let variantMatchesCount = 0;
+
+  for (const pim of pimItems) {
+    for (const variant of pim.plm_variants || []) {
+      const matchingNodes = (variant.bom_items || []).filter(
+        (b) =>
+          b.vendor_id === vendorId ||
+          b.supplier_name.toLowerCase().trim() === rawVendor.company_name.toLowerCase().trim()
+      );
+      if (matchingNodes.length > 0) {
+        impactedPimMap.set(pim.pim_item_id, {
+          pim_item_id: pim.pim_item_id,
+          sku_code: pim.sku_code,
+          model_name: pim.model_name,
+          season: pim.season,
+        });
+        impactedVariants.push({
+          plm_variant_id: variant.plm_variant_id,
+          pim_item_id: pim.pim_item_id,
+          variant_code: variant.variant_code,
+          colorway_name: variant.colorway_name,
+          lifecycle_status: variant.lifecycle_status,
+          bom_nodes_from_vendor: matchingNodes.length,
+        });
+        variantMatchesCount += 1;
+
+        for (const node of matchingNodes) {
+          const unitCost = typeof node.unit_cost_eur === "number" ? node.unit_cost_eur : 0;
+          const grossConsumption = node.unit_consumption * (1 + (node.waste_percentage || 0) / 100);
+          totalBomCostContribution += unitCost * grossConsumption;
+
+          impactedBomNodes.push({
+            bom_item_id: node.bom_item_id,
+            plm_variant_id: variant.plm_variant_id,
+            variant_code: variant.variant_code,
+            level: node.level,
+            component_type: node.component_type,
+            material_name: node.material_name,
+            unit_of_measure: node.unit_of_measure,
+            unit_consumption: node.unit_consumption,
+            unit_cost_eur_l6: viewerRole === "brand" ? unitCost : null,
+          });
+        }
+      }
+    }
+  }
+
+  const impactedBatches = (tanneryBatches || [])
+    .filter(
+      (b) =>
+        b.vendor_id === vendorId ||
+        b.tannery_name.toLowerCase().trim() === rawVendor.company_name.toLowerCase().trim()
+    )
+    .map((b) => ({
+      batch_id: b.batch_id,
+      batch_code: b.batch_code,
+      leather_type: b.leather_type,
+      lwg_rating: b.lwg_rating,
+      available_qty_sqft: b.available_qty_sqft,
+    }));
+
+  const impactedVariantIds = new Set(impactedVariants.map((v) => v.plm_variant_id));
+  const activeOrders = (productionOrders || []).filter((o) =>
+    impactedVariantIds.has(o.plm_variant_id)
+  );
+
+  const avgBomContribution =
+    variantMatchesCount > 0
+      ? Math.round((totalBomCostContribution / variantMatchesCount) * 100) / 100
+      : 0;
+
+  const unitRate = rawVendor.hourly_or_unit_rate_eur_l6 || 7.5;
+  const tanneryStockVal = Math.round(
+    impactedBatches.reduce((acc, b) => acc + b.available_qty_sqft * unitRate, 0)
+  );
+  const seasonalPairsBaseline =
+    activeOrders.reduce((acc, o) => acc + (o.total_planned_pairs || 0), 0) ||
+    Math.max(impactedVariants.length * 350, 350);
+  const estimatedSeasonalExposure = Math.round(
+    avgBomContribution * seasonalPairsBaseline + tanneryStockVal * 0.35
+  );
+
+  let criticality = "ORDINARIA";
+  if (vendor.has_expired_critical_certs && impactedBomNodes.length > 0) {
+    criticality = "CRITICA · BLOCCO COMPLIANCE CERTIFICATI";
+  } else if (impactedVariants.length >= 3 || activeOrders.length > 0) {
+    criticality = "ALTA · PARTNER STRATEGICO DI MANOVIA";
+  } else if (impactedVariants.length >= 1) {
+    criticality = "MEDIA · FORNITURA ATTIVA";
+  }
+
+  return {
+    vendor_id: vendor.vendor_id,
+    vendor_code: vendor.vendor_code,
+    company_name: vendor.company_name,
+    supply_chain_role: vendor.supply_chain_role,
+    district_area: vendor.district_area,
+    paas_tier: vendor.paas_tier,
+    qualification_status: vendor.qualification_status,
+    overall_rating: viewerRole === "brand" ? rawVendor.overall_rating ?? null : null,
+    has_expired_critical_certs: vendor.has_expired_critical_certs,
+    l6_segregated: viewerRole !== "brand",
+    impact_summary: {
+      pim_models_count: impactedPimMap.size,
+      plm_variants_count: impactedVariants.length,
+      bom_nodes_count: impactedBomNodes.length,
+      tannery_batches_count: impactedBatches.length,
+      active_production_orders_count: activeOrders.length,
+      supply_chain_criticality: criticality,
+    },
+    financial_exposure_l6:
+      viewerRole === "brand"
+        ? {
+            avg_bom_cost_contribution_per_pair_eur: avgBomContribution,
+            tannery_stock_value_eur: tanneryStockVal,
+            estimated_seasonal_exposure_eur: estimatedSeasonalExposure,
+            hourly_or_unit_rate_eur: rawVendor.hourly_or_unit_rate_eur_l6 ?? undefined,
+            payment_terms: rawVendor.payment_terms_l6 ?? undefined,
+          }
+        : null,
+    impacted_pim_items: Array.from(impactedPimMap.values()),
+    impacted_plm_variants: impactedVariants,
+    impacted_bom_nodes: impactedBomNodes,
+    impacted_tannery_batches: impactedBatches,
+  };
+}
+
+export function inferPartRoleFromBomItem(item: BomItem): string {
+  switch (item.component_type) {
+    case "upper":
+    case "fabric":
+      return "tomaia_principale";
+    case "lining":
+    case "insole":
+      return "fodera_interna";
+    case "outsole":
+    case "heel":
+      return "fondo_suola";
+    case "hardware":
+      return "minuteria_galvanica";
+    case "packaging":
+      return "packaging_scatola";
+    default:
+      return item.level === 3 ? "filato_cucitura" : "sotto_assieme";
+  }
+}
+
+export function computeLocalColorwayMatrix(
+  variant: PlmProductionVariant,
+  colors: MasterColor[],
+  tanneryBatches: TanneryBatch[],
+  existingMappings?: ColorwayBomNodeMapping[]
+): ColorwayMatrixResponse {
+  const existingByBomId = new Map<string, ColorwayBomNodeMapping>();
+  for (const m of existingMappings || []) {
+    existingByBomId.set(m.bom_item_id, m);
+  }
+
+  const primaryColor = findMasterColorById(colors, variant.primary_color_id);
+  const secondaryColor = findMasterColorById(colors, variant.secondary_color_id);
+  const hardwareColor = findMasterColorById(colors, variant.hardware_finish_color_id);
+
+  const mappings: ColorwayBomNodeMapping[] = (variant.bom_items || []).map((bom, idx) => {
+    const prev = existingByBomId.get(bom.bom_item_id);
+    const defaultRole = inferPartRoleFromBomItem(bom);
+    const chosenColorId =
+      prev?.master_color_id ??
+      bom.master_color_id ??
+      (bom.component_type === "hardware"
+        ? hardwareColor?.id
+        : bom.component_type === "lining"
+        ? secondaryColor?.id
+        : primaryColor?.id) ??
+      null;
+    const colorObj = findMasterColorById(colors, chosenColorId);
+
+    // Check linked tannery batch consistency
+    const linkedBatch = (tanneryBatches || []).find(
+      (tb) => tb.metadata?.bom_material_id === bom.bom_item_id
+    );
+    let consistency: "coherent" | "mismatch" | "not_linked" = "not_linked";
+    if (linkedBatch && linkedBatch.master_color_id && colorObj) {
+      const batchColor = findMasterColorById(colors, linkedBatch.master_color_id);
+      consistency =
+        batchColor && batchColor.id === colorObj.id ? "coherent" : "mismatch";
+    }
+
+    // Realistic default lab-dip status & spectrophotometer ΔE
+    let defaultStatus: ColorwayBomNodeMapping["lab_dip_status"] =
+      variant.lifecycle_status === "in_production" ||
+      variant.lifecycle_status === "industrialized"
+        ? "master_standard"
+        : "approved";
+    let defaultDeltaE = Number((0.45 + (idx % 4) * 0.22).toFixed(2));
+
+    if (bom.bom_item_id === "BOM-DUCA3-L1-UPPER" && !prev) {
+      defaultStatus = "rejected";
+      defaultDeltaE = 2.84;
+    } else if (variant.lifecycle_status === "sample" && idx > 0 && !prev) {
+      defaultStatus = "submitted";
+      defaultDeltaE = 1.35;
+    }
+
+    const labStatus = prev?.lab_dip_status ?? defaultStatus;
+    const deltaE = prev?.delta_e_value !== undefined ? prev.delta_e_value : defaultDeltaE;
+
+    return {
+      id: prev?.id || `CWM-${variant.plm_variant_id}-${bom.bom_item_id}`,
+      plm_variant_id: variant.plm_variant_id,
+      bom_item_id: bom.bom_item_id,
+      level: bom.level,
+      parent_bom_item_id: bom.parent_bom_item_id,
+      component_type: bom.component_type,
+      material_name: bom.material_name,
+      supplier_name: bom.supplier_name,
+      vendor_id: bom.vendor_id ?? null,
+      master_color_id: colorObj?.id ?? chosenColorId,
+      color_code: colorObj?.color_code ?? null,
+      technical_name_it: colorObj?.technical_name_it ?? null,
+      commercial_family: colorObj?.commercial_family ?? null,
+      hex_code: colorObj?.hex_code ?? null,
+      pantone_tcx_code: colorObj?.pantone_tcx_code ?? null,
+      ral_code: colorObj?.ral_code ?? null,
+      finish_type: colorObj?.finish_type ?? null,
+      part_role: prev?.part_role ?? defaultRole,
+      galvanics_finish:
+        prev?.galvanics_finish ??
+        (bom.component_type === "hardware"
+          ? colorObj?.finish_type || "galvanica_oro_24k"
+          : null),
+      lab_dip_status: labStatus,
+      delta_e_value: deltaE,
+      approved_by:
+        prev?.approved_by ??
+        (labStatus === "approved" || labStatus === "master_standard"
+          ? "Direzione Qualità & Stile"
+          : null),
+      approved_at:
+        prev?.approved_at ??
+        (labStatus === "approved" || labStatus === "master_standard"
+          ? "2026-03-10T10:00:00Z"
+          : null),
+      notes:
+        prev?.notes ??
+        (bom.bom_item_id === "BOM-DUCA3-L1-UPPER"
+          ? "Tirella Solofra fuori tolleranza ΔE 2.84 (viraggio moro su fondo bordeaux)."
+          : ""),
+      tannery_color_consistency: consistency,
+      linked_batch_code: linkedBatch?.batch_code ?? null,
+    };
+  });
+
+  const totalNodes = mappings.length;
+  const mappedCount = mappings.filter((m) => Boolean(m.master_color_id)).length;
+  const approvedCount = mappings.filter((m) =>
+    ["approved", "master_standard", "conditional_waiver"].includes(m.lab_dip_status)
+  ).length;
+  const rejectedCount = mappings.filter(
+    (m) =>
+      m.lab_dip_status === "rejected" ||
+      (typeof m.delta_e_value === "number" && m.delta_e_value > 2.5)
+  ).length;
+
+  const readinessPct =
+    totalNodes > 0 ? Math.round((approvedCount / totalNodes) * 100) : 100;
+
+  return {
+    plm_variant_id: variant.plm_variant_id,
+    variant_code: variant.variant_code,
+    colorway_name: variant.colorway_name,
+    primary_color_id: variant.primary_color_id ?? primaryColor?.id ?? null,
+    secondary_color_id: variant.secondary_color_id ?? secondaryColor?.id ?? null,
+    hardware_finish_color_id:
+      variant.hardware_finish_color_id ?? hardwareColor?.id ?? null,
+    colorway_rule_preset: variant.colorway_rule_preset || "tone_on_tone",
+    total_bom_nodes: totalNodes,
+    mapped_nodes_count: mappedCount,
+    approved_nodes_count: approvedCount,
+    rejected_nodes_count: rejectedCount,
+    colorway_readiness_pct: readinessPct,
+    production_gate_blocked: rejectedCount > 0,
+    mappings,
+  };
+}
+
+export function applyColorwayRuleToMappings(
+  mappings: ColorwayBomNodeMapping[],
+  rulePreset: string,
+  primaryColorId: string | null | undefined,
+  secondaryColorId: string | null | undefined,
+  hardwareColorId: string | null | undefined,
+  colors: MasterColor[]
+): {
+  mappings: ColorwayBomNodeMapping[];
+  resolvedSecondaryId: string | null;
+  resolvedHardwareId: string | null;
+} {
+  const primary = findMasterColorById(colors, primaryColorId) || colors[0];
+  const whiteOptic =
+    findMasterColorById(colors, "MCOL-WHT-004") ||
+    colors.find((c) => c.commercial_family.toLowerCase().includes("bianco")) ||
+    primary;
+  const ivoryLining =
+    findMasterColorById(colors, "MCOL-ECR-005") ||
+    findMasterColorById(colors, secondaryColorId) ||
+    primary;
+  const gold24k =
+    findMasterColorById(colors, "MCOL-GLD-010") ||
+    findMasterColorById(colors, hardwareColorId) ||
+    primary;
+  const palladium =
+    findMasterColorById(colors, "MCOL-SLV-011") ||
+    findMasterColorById(colors, hardwareColorId) ||
+    primary;
+
+  let effectiveSecondary = findMasterColorById(colors, secondaryColorId) || ivoryLining;
+  let effectiveHardware = findMasterColorById(colors, hardwareColorId) || palladium;
+
+  if (rulePreset === "tone_on_tone") {
+    effectiveSecondary = findMasterColorById(colors, secondaryColorId) || primary;
+    effectiveHardware = findMasterColorById(colors, hardwareColorId) || palladium;
+  } else if (rulePreset === "contrast_white_sole") {
+    effectiveSecondary = ivoryLining;
+    effectiveHardware = palladium;
+  } else if (rulePreset === "luxury_gold_hardware") {
+    effectiveSecondary = findMasterColorById(colors, secondaryColorId) || ivoryLining;
+    effectiveHardware = gold24k;
+  } else if (rulePreset === "luxury_palladium_hardware") {
+    effectiveSecondary = findMasterColorById(colors, secondaryColorId) || ivoryLining;
+    effectiveHardware = palladium;
+  }
+
+  const nextMappings = mappings.map((m) => {
+    let targetColor: MasterColor | undefined = primary;
+    if (m.component_type === "hardware") {
+      targetColor = effectiveHardware;
+    } else if (m.component_type === "lining" || m.component_type === "insole") {
+      targetColor = effectiveSecondary;
+    } else if (
+      m.component_type === "outsole" ||
+      m.component_type === "heel" ||
+      m.component_type === "sole"
+    ) {
+      targetColor = rulePreset === "contrast_white_sole" ? whiteOptic : primary;
+    } else {
+      targetColor = primary;
+    }
+
+    return {
+      ...m,
+      master_color_id: targetColor?.id ?? m.master_color_id,
+      color_code: targetColor?.color_code ?? m.color_code,
+      technical_name_it: targetColor?.technical_name_it ?? m.technical_name_it,
+      commercial_family: targetColor?.commercial_family ?? m.commercial_family,
+      hex_code: targetColor?.hex_code ?? m.hex_code,
+      pantone_tcx_code: targetColor?.pantone_tcx_code ?? m.pantone_tcx_code,
+      ral_code: targetColor?.ral_code ?? m.ral_code,
+      finish_type: targetColor?.finish_type ?? m.finish_type,
+      galvanics_finish:
+        m.component_type === "hardware"
+          ? targetColor?.finish_type || m.galvanics_finish
+          : m.galvanics_finish,
+    };
+  });
+
+  return {
+    mappings: nextMappings,
+    resolvedSecondaryId: effectiveSecondary?.id ?? null,
+    resolvedHardwareId: effectiveHardware?.id ?? null,
+  };
+}
+
+export interface ColorwayExplosionPayload {
+  target_color_ids: string[];
+  rule_preset: string;
+  lining_color_id?: string | null;
+  sole_color_id?: string | null;
+  hardware_color_id?: string | null;
+  auto_link_pim?: boolean;
+}
+
+export function explodeColorwaysClient(
+  baseVariant: PlmProductionVariant,
+  pimItem: PimCommercialItem,
+  payload: ColorwayExplosionPayload,
+  colors: MasterColor[],
+  tanneryBatches: TanneryBatch[]
+): {
+  createdVariants: PlmProductionVariant[];
+  createdMatrices: Record<string, ColorwayMatrixResponse>;
+} {
+  const createdVariants: PlmProductionVariant[] = [];
+  const createdMatrices: Record<string, ColorwayMatrixResponse> = {};
+  const existingCodes = new Set(
+    (pimItem.plm_variants || []).map((v) => v.variant_code.toUpperCase())
+  );
+
+  for (const colorId of payload.target_color_ids) {
+    const targetColor = findMasterColorById(colors, colorId);
+    if (!targetColor) continue;
+
+    const shortSlug = targetColor.color_code
+      .replace(/^COL-/i, "")
+      .replace(/[^A-Z0-9]/gi, "")
+      .slice(0, 6)
+      .toUpperCase();
+    const basePrefix = baseVariant.variant_code.split("-").slice(0, 3).join("-");
+    let candidateCode = `${basePrefix}-${shortSlug}`;
+    let suffix = 2;
+    while (existingCodes.has(candidateCode.toUpperCase())) {
+      candidateCode = `${basePrefix}-${shortSlug}${suffix}`;
+      suffix += 1;
+    }
+    existingCodes.add(candidateCode.toUpperCase());
+
+    const newVariantId = `PLM-EXP-${shortSlug}-${Date.now().toString(36).toUpperCase()}-${Math.floor(
+      Math.random() * 90 + 10
+    )}`;
+
+    const baseMatrix = computeLocalColorwayMatrix(baseVariant, colors, tanneryBatches);
+    const propagated = applyColorwayRuleToMappings(
+      baseMatrix.mappings,
+      payload.rule_preset,
+      targetColor.id,
+      payload.lining_color_id,
+      payload.hardware_color_id,
+      colors
+    );
+
+    const soleOverride = findMasterColorById(colors, payload.sole_color_id);
+
+    const clonedBomItems: BomItem[] = (baseVariant.bom_items || []).map((bom, idx) => {
+      const mappedNode = propagated.mappings.find((m) => m.bom_item_id === bom.bom_item_id);
+      const effectiveNodeColor =
+        (bom.component_type === "outsole" || bom.component_type === "heel") &&
+        soleOverride
+          ? soleOverride
+          : findMasterColorById(colors, mappedNode?.master_color_id) || targetColor;
+
+      const newBomId = `${bom.bom_item_id}-${shortSlug}-${idx + 1}`;
+      return {
+        ...bom,
+        bom_item_id: newBomId,
+        master_color_id: effectiveNodeColor.id,
+        material_name:
+          bom.component_type === "upper" || bom.component_type === "fabric"
+            ? `${bom.material_name.split(" ").slice(0, 3).join(" ")} — ${targetColor.technical_name_it}`
+            : bom.material_name,
+      };
+    });
+
+    // Remap parent_bom_item_id references inside the cloned 3-level tree
+    const oldToNewId = new Map<string, string>();
+    (baseVariant.bom_items || []).forEach((oldBom, idx) => {
+      oldToNewId.set(oldBom.bom_item_id, clonedBomItems[idx].bom_item_id);
+    });
+    const normalizedBomItems = clonedBomItems.map((b, idx) => {
+      const origParent = baseVariant.bom_items[idx]?.parent_bom_item_id;
+      return {
+        ...b,
+        parent_bom_item_id: origParent ? oldToNewId.get(origParent) || origParent : null,
+      };
+    });
+
+    const newVariant: PlmProductionVariant = {
+      ...baseVariant,
+      plm_variant_id: newVariantId,
+      pim_item_id: pimItem.pim_item_id,
+      variant_code: candidateCode,
+      colorway_name: `${targetColor.technical_name_it} (${targetColor.pantone_tcx_code})`,
+      primary_color_id: targetColor.id,
+      secondary_color_id: propagated.resolvedSecondaryId,
+      hardware_finish_color_id: propagated.resolvedHardwareId,
+      colorway_rule_preset: payload.rule_preset,
+      lifecycle_status: "sample",
+      bom_version: "v1.0 (Colorway Explosion)",
+      bom_snapshot_locked: false,
+      bom_items: normalizedBomItems,
+    };
+
+    const initialMatrix = computeLocalColorwayMatrix(newVariant, colors, tanneryBatches);
+    const pendingMatrix: ColorwayMatrixResponse = {
+      ...initialMatrix,
+      colorway_readiness_pct: 0,
+      approved_nodes_count: 0,
+      rejected_nodes_count: 0,
+      production_gate_blocked: false,
+      mappings: initialMatrix.mappings.map((m) => ({
+        ...m,
+        lab_dip_status: "pending",
+        delta_e_value: null,
+        approved_by: null,
+        approved_at: null,
+        notes: "Generato via 1-Click Colorway Explosion — In attesa invio tirella Lab-Dip.",
+      })),
+    };
+
+    createdVariants.push(newVariant);
+    createdMatrices[newVariantId] = pendingMatrix;
+  }
+
+  return { createdVariants, createdMatrices };
+}
+
 

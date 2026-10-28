@@ -12,10 +12,11 @@ import hashlib
 import io
 import json
 import os
+import re
 import sqlite3
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 from uuid import uuid4
 
 from app.models import (
@@ -37,6 +38,10 @@ from app.models import (
     Collection,
     CollectionCreate,
     CollectionStatus,
+    ColorwayBomMappingRow,
+    ColorwayBomMappingUpsertItem,
+    ColorwayMatrixResponse,
+    ColorwayMatrixUpsertRequest,
     Company,
     CompanyBusinessType,
     CompanyCreate,
@@ -48,8 +53,15 @@ from app.models import (
     DistrictUserRole,
     DomainRegistryEntry,
     DomainRegistryEntryCreate,
+    ExplodeColorwaysRequest,
+    ExplodeColorwaysResponse,
+    MasterColor,
+    MasterColorCreate,
+    MasterColorUpdate,
     OrderSizeBreakdownItem,
+    PimColorwaysEcommerceResponse,
     PimCommercialItem,
+    PimVariantColorEcommerceItem,
     PlmLifecycleStatus,
     PlmProductionVariant,
     PriceTier,
@@ -57,6 +69,10 @@ from app.models import (
     ProductCategoryCreate,
     ProductCategoryHierarchyNode,
     ProductCategoryUpdate,
+    ProductModel,
+    ProductModelCreate,
+    ProductModelUpdate,
+    ProductModelWithProducts,
     ProductionOrder,
     ProductionOrderCreate,
     ProductionOrderPhaseItem,
@@ -74,6 +90,7 @@ from app.models import (
     TanneryBatch,
     TanneryBatchCreate,
     TanneryBatchUpdate,
+    TanneryColorConsistencyItem,
     TanneryDocument,
     TanneryDocumentCreate,
     TanneryDocumentType,
@@ -83,6 +100,18 @@ from app.models import (
     User,
     UserCreate,
     VariantDeepCloneRequest,
+    VendorCertification,
+    VendorCertificationCreate,
+    VendorCreate,
+    VendorFinancialExposureL6,
+    VendorImpactedBomNode,
+    VendorImpactedPimModel,
+    VendorImpactedPlmVariant,
+    VendorImpactedTanneryBatch,
+    VendorImpactSummary,
+    VendorRecord,
+    VendorUpdate,
+    VendorWhereUsedResponse,
 )
 from app.orm_models import HAS_SQLALCHEMY, Base
 
@@ -173,6 +202,14 @@ class FootlinkSQLitePersistence:
                 "ALTER TABLE plm_production_variants ADD COLUMN sub_category_id VARCHAR(64) NULL",
                 "ALTER TABLE plm_production_variants ADD COLUMN construction_type VARCHAR(64) NOT NULL DEFAULT 'cassetta_cucita'",
                 "ALTER TABLE plm_production_variants ADD COLUMN carryover_status VARCHAR(32) NOT NULL DEFAULT 'seasonal_core'",
+                "ALTER TABLE plm_production_variants ADD COLUMN primary_color_id VARCHAR(64) NULL",
+                "ALTER TABLE plm_production_variants ADD COLUMN secondary_color_id VARCHAR(64) NULL",
+                "ALTER TABLE plm_production_variants ADD COLUMN hardware_finish_color_id VARCHAR(64) NULL",
+                "ALTER TABLE plm_production_variants ADD COLUMN colorway_rule_preset VARCHAR(64) NOT NULL DEFAULT 'tone_on_tone'",
+                "ALTER TABLE bom_items ADD COLUMN vendor_id VARCHAR(64) NULL",
+                "ALTER TABLE bom_items ADD COLUMN master_color_id VARCHAR(64) NULL",
+                "ALTER TABLE tannery_batches ADD COLUMN vendor_id VARCHAR(64) NULL",
+                "ALTER TABLE tannery_batches ADD COLUMN master_color_id VARCHAR(64) NULL",
             ):
                 try:
                     conn.execute(col_sql)
@@ -188,6 +225,38 @@ class FootlinkSQLitePersistence:
         finally:
             self._close_if_file(conn)
 
+    def _resolve_vendor_link(
+        self,
+        conn: sqlite3.Connection,
+        vendor_id: Optional[str],
+        name_str: Optional[str],
+    ) -> Tuple[Optional[str], str]:
+        """Bidirectional auto-link between supplier_name/tannery_name and vendors_registry."""
+        clean_vid = (vendor_id or "").strip() or None
+        clean_name = (name_str or "").strip()
+        try:
+            if clean_vid:
+                row = conn.execute(
+                    "SELECT vendor_id, company_name FROM vendors_registry WHERE vendor_id = ? OR vendor_code = ?",
+                    (clean_vid, clean_vid),
+                ).fetchone()
+                if row:
+                    clean_vid = row["vendor_id"]
+                    if not clean_name:
+                        clean_name = row["company_name"]
+            elif clean_name:
+                row = conn.execute(
+                    "SELECT vendor_id, company_name FROM vendors_registry WHERE LOWER(company_name) = LOWER(?)",
+                    (clean_name,),
+                ).fetchone()
+                if row:
+                    clean_vid = row["vendor_id"]
+        except sqlite3.OperationalError:
+            pass
+        if not clean_name:
+            clean_name = "Fornitore Distrettuale"
+        return clean_vid, clean_name
+
     def count_pim_items(self) -> int:
         conn = self.get_connection()
         try:
@@ -199,6 +268,10 @@ class FootlinkSQLitePersistence:
     def clear_all(self, clear_master_data: bool = False) -> None:
         conn = self.get_connection()
         try:
+            try:
+                conn.execute("DELETE FROM variant_colorway_bom_mappings")
+            except sqlite3.OperationalError:
+                pass
             conn.execute("DELETE FROM production_order_phases")
             conn.execute("DELETE FROM order_size_breakdown")
             conn.execute("DELETE FROM production_orders")
@@ -209,6 +282,11 @@ class FootlinkSQLitePersistence:
             conn.execute("DELETE FROM plm_production_variants")
             conn.execute("DELETE FROM pim_commercial_items")
             if clear_master_data:
+                for tbl in ("vendor_certifications", "vendors_registry", "master_colors"):
+                    try:
+                        conn.execute(f"DELETE FROM {tbl}")
+                    except sqlite3.OperationalError:
+                        pass
                 conn.execute("DELETE FROM company_memberships")
                 conn.execute("DELETE FROM users")
                 conn.execute("DELETE FROM companies")
@@ -741,14 +819,16 @@ class FootlinkSQLitePersistence:
                 "price_tier": getattr(item, "price_tier", "core_luxury"),
                 "custom_attributes": item.custom_attributes,
             }
+            m_id = getattr(item, "model_id", None)
             conn.execute(
                 """
                 INSERT INTO pim_commercial_items (
-                    pim_item_id, sku_code, model_name, brand_tenant_id,
+                    pim_item_id, model_id, sku_code, model_name, brand_tenant_id,
                     season, season_id, collection_id, category, commercial_description_it, commercial_description_en,
                     retail_channels_json, metadata_json, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(pim_item_id) DO UPDATE SET
+                    model_id = COALESCE(excluded.model_id, pim_commercial_items.model_id),
                     sku_code = excluded.sku_code,
                     model_name = excluded.model_name,
                     brand_tenant_id = excluded.brand_tenant_id,
@@ -763,6 +843,7 @@ class FootlinkSQLitePersistence:
                 """,
                 (
                     item.pim_item_id,
+                    m_id,
                     item.sku_code,
                     item.model_name,
                     item.brand_tenant_id,
@@ -819,12 +900,19 @@ class FootlinkSQLitePersistence:
             "category_specific_specs": variant.category_specific_specs,
             "custom_attributes": variant.custom_attributes,
         }
+        primary_col = getattr(variant, "primary_color_id", None)
+        secondary_col = getattr(variant, "secondary_color_id", None)
+        hw_col = getattr(variant, "hardware_finish_color_id", None)
+        rule_preset = getattr(variant, "colorway_rule_preset", None) or "tone_on_tone"
+
         conn.execute(
             """
             INSERT INTO plm_production_variants (
                 plm_variant_id, pim_item_id, collection_id, variant_code, colorway_name,
-                size_range, last_or_pattern_code, lifecycle_status, metadata_json, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                size_range, last_or_pattern_code, lifecycle_status,
+                primary_color_id, secondary_color_id, hardware_finish_color_id, colorway_rule_preset,
+                metadata_json, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(plm_variant_id) DO UPDATE SET
                 pim_item_id = excluded.pim_item_id,
                 collection_id = excluded.collection_id,
@@ -833,6 +921,10 @@ class FootlinkSQLitePersistence:
                 size_range = excluded.size_range,
                 last_or_pattern_code = excluded.last_or_pattern_code,
                 lifecycle_status = excluded.lifecycle_status,
+                primary_color_id = COALESCE(excluded.primary_color_id, plm_production_variants.primary_color_id),
+                secondary_color_id = COALESCE(excluded.secondary_color_id, plm_production_variants.secondary_color_id),
+                hardware_finish_color_id = COALESCE(excluded.hardware_finish_color_id, plm_production_variants.hardware_finish_color_id),
+                colorway_rule_preset = COALESCE(excluded.colorway_rule_preset, plm_production_variants.colorway_rule_preset),
                 metadata_json = excluded.metadata_json
             """,
             (
@@ -844,10 +936,26 @@ class FootlinkSQLitePersistence:
                 variant.size_range,
                 variant.last_or_pattern_code,
                 status_val,
+                primary_col,
+                secondary_col,
+                hw_col,
+                rule_preset,
                 json.dumps(var_meta),
                 v_created,
             ),
         )
+
+        # Preserve existing colorway mappings on bom_items if bom.master_color_id was not explicitly set
+        existing_bom_colors: Dict[str, str] = {}
+        try:
+            for mr in conn.execute(
+                "SELECT bom_item_id, master_color_id FROM variant_colorway_bom_mappings WHERE plm_variant_id = ?",
+                (variant.plm_variant_id,),
+            ).fetchall():
+                if mr["master_color_id"]:
+                    existing_bom_colors[mr["bom_item_id"]] = mr["master_color_id"]
+        except sqlite3.OperationalError:
+            pass
 
         conn.execute("DELETE FROM bom_items WHERE plm_variant_id = ?", (variant.plm_variant_id,))
         conn.execute("DELETE FROM subcontractor_assignments WHERE plm_variant_id = ?", (variant.plm_variant_id,))
@@ -856,6 +964,13 @@ class FootlinkSQLitePersistence:
             comp_val = (
                 bom.component_type.value if isinstance(bom.component_type, BomComponentType) else str(bom.component_type)
             )
+            resolved_vid, resolved_sname = self._resolve_vendor_link(
+                conn, getattr(bom, "vendor_id", None), bom.supplier_name
+            )
+            bom.vendor_id = resolved_vid
+            bom.supplier_name = resolved_sname
+            resolved_mcol = getattr(bom, "master_color_id", None) or existing_bom_colors.get(bom.bom_item_id)
+            bom.master_color_id = resolved_mcol
             bom_meta = {
                 "unit_cost_eur": bom.unit_cost_eur,
                 "lot_certificate_id": bom.lot_certificate_id,
@@ -865,10 +980,10 @@ class FootlinkSQLitePersistence:
                 """
                 INSERT INTO bom_items (
                     bom_item_id, plm_variant_id, level, parent_bom_item_id,
-                    component_type, material_name, supplier_name, origin_country_iso2,
-                    unit_of_measure, unit_consumption, waste_percentage, recycled_content_pct,
-                    certifications_json, metadata_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    component_type, material_name, supplier_name, vendor_id, master_color_id,
+                    origin_country_iso2, unit_of_measure, unit_consumption, waste_percentage,
+                    recycled_content_pct, certifications_json, metadata_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     bom.bom_item_id,
@@ -877,7 +992,9 @@ class FootlinkSQLitePersistence:
                     bom.parent_bom_item_id,
                     comp_val,
                     bom.material_name,
-                    bom.supplier_name,
+                    resolved_sname,
+                    resolved_vid,
+                    resolved_mcol,
                     bom.origin_country_iso2,
                     bom.unit_of_measure,
                     bom.unit_consumption,
@@ -967,6 +1084,7 @@ class FootlinkSQLitePersistence:
             bom_items: List[BomItem] = []
             for br in bom_rows:
                 b_meta = json.loads(br["metadata_json"] or "{}")
+                b_keys = br.keys()
                 bom_items.append(
                     BomItem(
                         bom_item_id=br["bom_item_id"],
@@ -975,6 +1093,8 @@ class FootlinkSQLitePersistence:
                         component_type=BomComponentType(br["component_type"]),
                         material_name=br["material_name"],
                         supplier_name=br["supplier_name"],
+                        vendor_id=br["vendor_id"] if "vendor_id" in b_keys else None,
+                        master_color_id=br["master_color_id"] if "master_color_id" in b_keys else None,
                         origin_country_iso2=br["origin_country_iso2"],
                         unit_of_measure=br["unit_of_measure"],
                         unit_consumption=float(br["unit_consumption"]),
@@ -1005,8 +1125,13 @@ class FootlinkSQLitePersistence:
                     )
                 )
 
-            # Collection ID on variant
-            col_id = vr["collection_id"] if "collection_id" in vr.keys() else None
+            # Collection ID & Sprint 8 Colorway columns on variant
+            v_keys = vr.keys()
+            col_id = vr["collection_id"] if "collection_id" in v_keys else None
+            p_col = vr["primary_color_id"] if "primary_color_id" in v_keys else None
+            s_col = vr["secondary_color_id"] if "secondary_color_id" in v_keys else None
+            hw_col = vr["hardware_finish_color_id"] if "hardware_finish_color_id" in v_keys else None
+            r_preset = (vr["colorway_rule_preset"] if "colorway_rule_preset" in v_keys else None) or "tone_on_tone"
 
             variants.append(
                 PlmProductionVariant(
@@ -1028,6 +1153,10 @@ class FootlinkSQLitePersistence:
                     sub_category_id=var_meta.get("sub_category_id"),
                     construction_type=var_meta.get("construction_type", "cassetta_cucita"),
                     carryover_status=var_meta.get("carryover_status", "seasonal_core"),
+                    primary_color_id=p_col,
+                    secondary_color_id=s_col,
+                    hardware_finish_color_id=hw_col,
+                    colorway_rule_preset=r_preset,
                     category_specific_specs=var_meta.get("category_specific_specs", {}),
                     custom_attributes=var_meta.get("custom_attributes", {}),
                     bom_items=bom_items,
@@ -1039,10 +1168,12 @@ class FootlinkSQLitePersistence:
         pim_meta = json.loads(row["metadata_json"] or "{}")
         season_id_val = row["season_id"] if "season_id" in row.keys() else None
         collection_id_val = row["collection_id"] if "collection_id" in row.keys() else None
+        model_id_val = row["model_id"] if "model_id" in row.keys() else None
         col_name = pim_meta.get("collection_name")
 
         return PimCommercialItem(
             pim_item_id=pim_id,
+            model_id=model_id_val,
             sku_code=row["sku_code"],
             model_name=row["model_name"],
             brand_tenant_id=row["brand_tenant_id"],
@@ -1337,12 +1468,15 @@ class FootlinkSQLitePersistence:
             batches: List[TanneryBatch] = []
             for row in rows:
                 docs = self.list_tannery_documents(row["batch_id"])
+                r_keys = row.keys()
                 batches.append(
                     TanneryBatch(
                         batch_id=row["batch_id"],
                         company_id=row["company_id"],
                         batch_code=row["batch_code"],
                         tannery_name=row["tannery_name"],
+                        vendor_id=row["vendor_id"] if "vendor_id" in r_keys else None,
+                        master_color_id=row["master_color_id"] if "master_color_id" in r_keys else None,
                         district=row["district"],
                         leather_type=row["leather_type"],
                         tanning_process=TanneryProcess(row["tanning_process"]),
@@ -1373,11 +1507,14 @@ class FootlinkSQLitePersistence:
             if not row:
                 return None
             docs = self.list_tannery_documents(row["batch_id"])
+            r_keys = row.keys()
             return TanneryBatch(
                 batch_id=row["batch_id"],
                 company_id=row["company_id"],
                 batch_code=row["batch_code"],
                 tannery_name=row["tannery_name"],
+                vendor_id=row["vendor_id"] if "vendor_id" in r_keys else None,
+                master_color_id=row["master_color_id"] if "master_color_id" in r_keys else None,
                 district=row["district"],
                 leather_type=row["leather_type"],
                 tanning_process=TanneryProcess(row["tanning_process"]),
@@ -1404,19 +1541,27 @@ class FootlinkSQLitePersistence:
         bid = batch_id or f"batch-{uuid4().hex[:12]}"
         now_iso = datetime.now(timezone.utc).isoformat()
         try:
+            resolved_vid, resolved_tname = self._resolve_vendor_link(
+                conn, getattr(b_in, "vendor_id", None), b_in.tannery_name
+            )
+            b_in.vendor_id = resolved_vid
+            b_in.tannery_name = resolved_tname
+            mcol_id = (getattr(b_in, "master_color_id", None) or "").strip() or None
             conn.execute(
                 """
                 INSERT INTO tannery_batches (
-                    batch_id, company_id, batch_code, tannery_name, district, leather_type,
-                    tanning_process, raw_hide_origin_country, slaughterhouse_traceability_id,
-                    eudr_deforestation_free, lwg_rating, lwg_score_pct, icec_certificate_id,
-                    reach_svhc_compliant, chrome_vi_content_ppm, thickness_mm, available_qty_sqft,
-                    metadata_json, is_active, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    batch_id, company_id, batch_code, tannery_name, vendor_id, master_color_id,
+                    district, leather_type, tanning_process, raw_hide_origin_country,
+                    slaughterhouse_traceability_id, eudr_deforestation_free, lwg_rating, lwg_score_pct,
+                    icec_certificate_id, reach_svhc_compliant, chrome_vi_content_ppm, thickness_mm,
+                    available_qty_sqft, metadata_json, is_active, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(batch_id) DO UPDATE SET
                     company_id=excluded.company_id,
                     batch_code=excluded.batch_code,
                     tannery_name=excluded.tannery_name,
+                    vendor_id=COALESCE(excluded.vendor_id, tannery_batches.vendor_id),
+                    master_color_id=COALESCE(excluded.master_color_id, tannery_batches.master_color_id),
                     district=excluded.district,
                     leather_type=excluded.leather_type,
                     tanning_process=excluded.tanning_process,
@@ -1437,7 +1582,9 @@ class FootlinkSQLitePersistence:
                     bid,
                     b_in.company_id,
                     b_in.batch_code,
-                    b_in.tannery_name,
+                    resolved_tname,
+                    resolved_vid,
+                    mcol_id,
                     b_in.district,
                     b_in.leather_type,
                     b_in.tanning_process.value if hasattr(b_in.tanning_process, "value") else str(b_in.tanning_process),
@@ -1460,6 +1607,9 @@ class FootlinkSQLitePersistence:
             return self.get_tannery_batch(bid)  # type: ignore
         finally:
             self._close_if_file(conn)
+
+    def create_tannery_batch(self, b_in: TanneryBatchCreate, batch_id: Optional[str] = None) -> TanneryBatch:
+        return self.save_tannery_batch(b_in, batch_id=batch_id)
 
     def list_tannery_documents(self, batch_id: str) -> List[TanneryDocument]:
         conn = self.get_connection()
@@ -2173,6 +2323,9 @@ class FootlinkSQLitePersistence:
                 comp_val = (
                     bom.component_type.value if isinstance(bom.component_type, BomComponentType) else str(bom.component_type)
                 )
+                resolved_vid, resolved_sname = self._resolve_vendor_link(conn, bom.vendor_id, bom.supplier_name)
+                bom.vendor_id = resolved_vid
+                bom.supplier_name = resolved_sname
                 bom_meta = {
                     "unit_cost_eur": bom.unit_cost_eur,
                     "lot_certificate_id": bom.lot_certificate_id,
@@ -2182,10 +2335,10 @@ class FootlinkSQLitePersistence:
                     """
                     INSERT INTO bom_items (
                         bom_item_id, plm_variant_id, level, parent_bom_item_id,
-                        component_type, material_name, supplier_name, origin_country_iso2,
-                        unit_of_measure, unit_consumption, waste_percentage, recycled_content_pct,
-                        certifications_json, metadata_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        component_type, material_name, supplier_name, vendor_id, master_color_id,
+                        origin_country_iso2, unit_of_measure, unit_consumption, waste_percentage,
+                        recycled_content_pct, certifications_json, metadata_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         bom.bom_item_id,
@@ -2194,7 +2347,9 @@ class FootlinkSQLitePersistence:
                         bom.parent_bom_item_id,
                         comp_val,
                         bom.material_name,
-                        bom.supplier_name,
+                        resolved_sname,
+                        resolved_vid,
+                        bom.master_color_id,
                         bom.origin_country_iso2,
                         bom.unit_of_measure,
                         bom.unit_consumption,
@@ -2225,6 +2380,16 @@ class FootlinkSQLitePersistence:
                 if isinstance(updated_item.component_type, BomComponentType)
                 else str(updated_item.component_type)
             )
+            resolved_vid, resolved_sname = self._resolve_vendor_link(
+                conn, updated_item.vendor_id, updated_item.supplier_name
+            )
+            updated_item.vendor_id = resolved_vid
+            updated_item.supplier_name = resolved_sname
+            cur_keys = cur.keys()
+            resolved_mcol = updated_item.master_color_id or (
+                cur["master_color_id"] if "master_color_id" in cur_keys else None
+            )
+            updated_item.master_color_id = resolved_mcol
             bom_meta = {
                 "unit_cost_eur": updated_item.unit_cost_eur,
                 "lot_certificate_id": updated_item.lot_certificate_id,
@@ -2234,9 +2399,9 @@ class FootlinkSQLitePersistence:
                 """
                 UPDATE bom_items
                 SET level = ?, parent_bom_item_id = ?, component_type = ?,
-                    material_name = ?, supplier_name = ?, origin_country_iso2 = ?,
-                    unit_of_measure = ?, unit_consumption = ?, waste_percentage = ?,
-                    recycled_content_pct = ?, certifications_json = ?, metadata_json = ?
+                    material_name = ?, supplier_name = ?, vendor_id = ?, master_color_id = ?,
+                    origin_country_iso2 = ?, unit_of_measure = ?, unit_consumption = ?,
+                    waste_percentage = ?, recycled_content_pct = ?, certifications_json = ?, metadata_json = ?
                 WHERE plm_variant_id = ? AND bom_item_id = ?
                 """,
                 (
@@ -2244,7 +2409,9 @@ class FootlinkSQLitePersistence:
                     updated_item.parent_bom_item_id,
                     comp_val,
                     updated_item.material_name,
-                    updated_item.supplier_name,
+                    resolved_sname,
+                    resolved_vid,
+                    resolved_mcol,
                     updated_item.origin_country_iso2,
                     updated_item.unit_of_measure,
                     updated_item.unit_consumption,
@@ -2282,6 +2449,13 @@ class FootlinkSQLitePersistence:
                         added = True
 
             placeholders = ",".join("?" for _ in ids_to_delete)
+            try:
+                conn.execute(
+                    f"DELETE FROM variant_colorway_bom_mappings WHERE plm_variant_id = ? AND bom_item_id IN ({placeholders})",
+                    [plm_variant_id] + list(ids_to_delete),
+                )
+            except sqlite3.OperationalError:
+                pass
             conn.execute(
                 f"DELETE FROM bom_items WHERE plm_variant_id = ? AND bom_item_id IN ({placeholders})",
                 [plm_variant_id] + list(ids_to_delete),
@@ -2329,6 +2503,7 @@ class FootlinkSQLitePersistence:
                 (plm_variant_id, bom_item_id),
             ).fetchone()
             meta = json.loads(updated_row["metadata_json"] or "{}")
+            u_keys = updated_row.keys()
             return BomItem(
                 bom_item_id=updated_row["bom_item_id"],
                 level=updated_row["level"],
@@ -2336,6 +2511,8 @@ class FootlinkSQLitePersistence:
                 component_type=BomComponentType(updated_row["component_type"]),
                 material_name=updated_row["material_name"],
                 supplier_name=updated_row["supplier_name"],
+                vendor_id=updated_row["vendor_id"] if "vendor_id" in u_keys else None,
+                master_color_id=updated_row["master_color_id"] if "master_color_id" in u_keys else None,
                 origin_country_iso2=updated_row["origin_country_iso2"],
                 unit_of_measure=updated_row["unit_of_measure"],
                 unit_consumption=float(updated_row["unit_consumption"]),
@@ -2457,6 +2634,7 @@ class FootlinkSQLitePersistence:
                                 break
 
                     b_meta = json.loads(b["metadata_json"] or "{}")
+                    b_keys = b.keys()
                     cloned_bom_items.append(
                         BomItem(
                             bom_item_id=new_b_id,
@@ -2465,6 +2643,8 @@ class FootlinkSQLitePersistence:
                             component_type=BomComponentType(b["component_type"]),
                             material_name=mat_name,
                             supplier_name=b["supplier_name"],
+                            vendor_id=b["vendor_id"] if "vendor_id" in b_keys else None,
+                            master_color_id=b["master_color_id"] if "master_color_id" in b_keys else None,
                             origin_country_iso2=b["origin_country_iso2"],
                             unit_of_measure=b["unit_of_measure"],
                             unit_consumption=float(b["unit_consumption"]),
@@ -2743,6 +2923,2228 @@ class FootlinkSQLitePersistence:
                 imported_bom_count=imported_bom,
                 message=f"Importazione completata con successo: {imported_items} modelli PIM, {imported_variants} varianti PLM, {imported_bom} nodi BOM.",
             )
+        finally:
+            self._close_if_file(conn)
+
+    # ========================================================================
+    # Sprint 8 (FTL-TECH-022): Color Intelligence Engine & Colorway BOM Matrix
+    # ========================================================================
+
+    def _normalize_color_season_id(
+        self,
+        conn: sqlite3.Connection,
+        season_id: Optional[str],
+        season_ids: Optional[List[str]] = None,
+    ) -> Optional[str]:
+        candidate = season_id
+        if (candidate is None or candidate == "") and season_ids:
+            for s in season_ids:
+                if s and s.strip() and s.strip().upper() != "ALL_CARRYOVER":
+                    candidate = s.strip()
+                    break
+        if not candidate:
+            return None
+        cand_clean = candidate.strip()
+        if not cand_clean or cand_clean.upper() == "ALL_CARRYOVER":
+            return None
+        row = conn.execute(
+            "SELECT season_id FROM seasons WHERE season_id = ? OR code = ?",
+            (cand_clean, cand_clean),
+        ).fetchone()
+        return row["season_id"] if row else None
+
+    def _row_to_master_color(self, row: sqlite3.Row) -> MasterColor:
+        cid = row["id"]
+        sid = row["season_id"]
+        sids = ["ALL_CARRYOVER"] if not sid else [sid]
+        try:
+            domains = json.loads(row["applicable_domains_json"] or "[]")
+        except Exception:
+            domains = ["pellame", "fodera", "suola", "minuterie"]
+        return MasterColor(
+            id=cid,
+            color_id=cid,
+            color_code=row["color_code"],
+            technical_name_it=row["technical_name_it"],
+            technical_name_en=row["technical_name_en"] or "",
+            commercial_family=row["commercial_family"],
+            hex_code=row["hex_code"],
+            pantone_tcx_code=row["pantone_tcx_code"] or "",
+            ral_code=row["ral_code"] or "",
+            finish_type=row["finish_type"],
+            applicable_domains=domains,
+            season_id=sid,
+            season_ids=sids,
+            recipe_notes=row["recipe_notes"] or "",
+            is_active=bool(row["is_active"]),
+            created_at=self._parse_dt(row["created_at"]) or datetime.now(timezone.utc),
+        )
+
+    def list_master_colors(
+        self,
+        season_id: Optional[str] = None,
+        commercial_family: Optional[str] = None,
+        finish_type: Optional[str] = None,
+        domain: Optional[str] = None,
+        active_only: Any = False,
+        search: Optional[str] = None,
+    ) -> List[MasterColor]:
+        conn = self.get_connection()
+        try:
+            sql = "SELECT * FROM master_colors WHERE 1=1"
+            params: List[Any] = []
+            if season_id:
+                s_clean = season_id.strip()
+                if s_clean.upper() in ("ALL_CARRYOVER", "CARRYOVER"):
+                    sql += " AND season_id IS NULL"
+                else:
+                    sql += " AND season_id = ?"
+                    params.append(s_clean)
+            if commercial_family:
+                sql += " AND LOWER(commercial_family) = LOWER(?)"
+                params.append(commercial_family.strip())
+            if finish_type:
+                sql += " AND LOWER(finish_type) = LOWER(?)"
+                params.append(finish_type.strip())
+            is_active_only = (
+                active_only is True
+                or (isinstance(active_only, str) and active_only.strip().lower() in ("true", "1", "yes"))
+            )
+            if is_active_only:
+                sql += " AND is_active = 1"
+            if search and search.strip():
+                like_q = f"%{search.strip().lower()}%"
+                sql += (
+                    " AND (LOWER(color_code) LIKE ? OR LOWER(technical_name_it) LIKE ? "
+                    "OR LOWER(technical_name_en) LIKE ? OR LOWER(pantone_tcx_code) LIKE ? OR LOWER(ral_code) LIKE ?)"
+                )
+                params.extend([like_q, like_q, like_q, like_q, like_q])
+            sql += " ORDER BY color_code ASC"
+            rows = conn.execute(sql, params).fetchall()
+            colors = [self._row_to_master_color(r) for r in rows]
+            if domain and domain.strip():
+                dom_low = domain.strip().lower()
+                colors = [
+                    c for c in colors if dom_low in [str(d).lower() for d in c.applicable_domains]
+                ]
+            return colors
+        finally:
+            self._close_if_file(conn)
+
+    def get_master_color(self, color_id: str) -> Optional[MasterColor]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT * FROM master_colors WHERE id = ? OR color_code = ?",
+                (color_id, color_id),
+            ).fetchone()
+            return self._row_to_master_color(row) if row else None
+        finally:
+            self._close_if_file(conn)
+
+    def save_master_color(self, c_in: MasterColorCreate) -> MasterColor:
+        if not re.match(r"^#[0-9A-Fa-f]{6}$", c_in.hex_code or ""):
+            raise ValueError(f"Invalid HEX code '{c_in.hex_code}'. Expected format #RRGGBB.")
+        conn = self.get_connection()
+        try:
+            cid = (c_in.id or c_in.color_id or "").strip() or f"MCOL-{uuid4().hex[:8].upper()}"
+            sid = self._normalize_color_season_id(conn, c_in.season_id, c_in.season_ids)
+            now_iso = datetime.now(timezone.utc).isoformat()
+            conn.execute(
+                """
+                INSERT INTO master_colors (
+                    id, color_code, technical_name_it, technical_name_en, commercial_family,
+                    hex_code, pantone_tcx_code, ral_code, finish_type, applicable_domains_json,
+                    season_id, recipe_notes, is_active, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    color_code = excluded.color_code,
+                    technical_name_it = excluded.technical_name_it,
+                    technical_name_en = excluded.technical_name_en,
+                    commercial_family = excluded.commercial_family,
+                    hex_code = excluded.hex_code,
+                    pantone_tcx_code = excluded.pantone_tcx_code,
+                    ral_code = excluded.ral_code,
+                    finish_type = excluded.finish_type,
+                    applicable_domains_json = excluded.applicable_domains_json,
+                    season_id = excluded.season_id,
+                    recipe_notes = excluded.recipe_notes,
+                    is_active = excluded.is_active
+                """,
+                (
+                    cid,
+                    c_in.color_code.strip().upper(),
+                    c_in.technical_name_it.strip(),
+                    (c_in.technical_name_en or "").strip(),
+                    c_in.commercial_family.strip(),
+                    c_in.hex_code.strip().upper(),
+                    (c_in.pantone_tcx_code or "").strip(),
+                    (c_in.ral_code or "").strip(),
+                    c_in.finish_type.strip(),
+                    json.dumps(c_in.applicable_domains or []),
+                    sid,
+                    c_in.recipe_notes or "",
+                    1 if c_in.is_active else 0,
+                    now_iso,
+                ),
+            )
+            conn.commit()
+            return self.get_master_color(cid)  # type: ignore
+        finally:
+            self._close_if_file(conn)
+
+    def update_master_color(self, color_id: str, c_upd: MasterColorUpdate) -> Optional[MasterColor]:
+        if c_upd.hex_code is not None and not re.match(r"^#[0-9A-Fa-f]{6}$", c_upd.hex_code):
+            raise ValueError(f"Invalid HEX code '{c_upd.hex_code}'. Expected format #RRGGBB.")
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT * FROM master_colors WHERE id = ? OR color_code = ?",
+                (color_id, color_id),
+            ).fetchone()
+            if not row:
+                return None
+            real_id = row["id"]
+            new_code = c_upd.color_code.strip().upper() if c_upd.color_code is not None else row["color_code"]
+            new_it = c_upd.technical_name_it.strip() if c_upd.technical_name_it is not None else row["technical_name_it"]
+            new_en = c_upd.technical_name_en.strip() if c_upd.technical_name_en is not None else row["technical_name_en"]
+            new_fam = c_upd.commercial_family.strip() if c_upd.commercial_family is not None else row["commercial_family"]
+            new_hex = c_upd.hex_code.strip().upper() if c_upd.hex_code is not None else row["hex_code"]
+            new_pantone = c_upd.pantone_tcx_code.strip() if c_upd.pantone_tcx_code is not None else row["pantone_tcx_code"]
+            new_ral = c_upd.ral_code.strip() if c_upd.ral_code is not None else row["ral_code"]
+            new_finish = c_upd.finish_type.strip() if c_upd.finish_type is not None else row["finish_type"]
+            new_domains_json = (
+                json.dumps(c_upd.applicable_domains)
+                if c_upd.applicable_domains is not None
+                else row["applicable_domains_json"]
+            )
+            if c_upd.season_id is not None or c_upd.season_ids is not None:
+                new_sid = self._normalize_color_season_id(conn, c_upd.season_id, c_upd.season_ids)
+            else:
+                new_sid = row["season_id"]
+            new_notes = c_upd.recipe_notes if c_upd.recipe_notes is not None else row["recipe_notes"]
+            new_active = (1 if c_upd.is_active else 0) if c_upd.is_active is not None else int(row["is_active"])
+
+            conn.execute(
+                """
+                UPDATE master_colors
+                SET color_code = ?, technical_name_it = ?, technical_name_en = ?,
+                    commercial_family = ?, hex_code = ?, pantone_tcx_code = ?, ral_code = ?,
+                    finish_type = ?, applicable_domains_json = ?, season_id = ?,
+                    recipe_notes = ?, is_active = ?
+                WHERE id = ?
+                """,
+                (
+                    new_code,
+                    new_it,
+                    new_en,
+                    new_fam,
+                    new_hex,
+                    new_pantone,
+                    new_ral,
+                    new_finish,
+                    new_domains_json,
+                    new_sid,
+                    new_notes,
+                    new_active,
+                    real_id,
+                ),
+            )
+            conn.commit()
+            return self.get_master_color(real_id)
+        finally:
+            self._close_if_file(conn)
+
+    def delete_master_color(self, color_id: str) -> Optional[Dict[str, str]]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT id FROM master_colors WHERE id = ? OR color_code = ?",
+                (color_id, color_id),
+            ).fetchone()
+            if not row:
+                return None
+            real_id = row["id"]
+            ref_count = 0
+            for q, p in (
+                ("SELECT COUNT(*) AS c FROM variant_colorway_bom_mappings WHERE master_color_id = ?", (real_id,)),
+                ("SELECT COUNT(*) AS c FROM bom_items WHERE master_color_id = ?", (real_id,)),
+                (
+                    "SELECT COUNT(*) AS c FROM plm_production_variants WHERE primary_color_id = ? OR secondary_color_id = ? OR hardware_finish_color_id = ?",
+                    (real_id, real_id, real_id),
+                ),
+                ("SELECT COUNT(*) AS c FROM tannery_batches WHERE master_color_id = ?", (real_id,)),
+            ):
+                r = conn.execute(q, p).fetchone()
+                ref_count += int(r["c"]) if r else 0
+
+            if ref_count > 0:
+                conn.execute("UPDATE master_colors SET is_active = 0 WHERE id = ?", (real_id,))
+                conn.commit()
+                return {"status": "deactivated", "color_id": real_id}
+
+            conn.execute("DELETE FROM master_colors WHERE id = ?", (real_id,))
+            conn.commit()
+            return {"status": "deleted", "color_id": real_id}
+        finally:
+            self._close_if_file(conn)
+
+    @staticmethod
+    def _default_part_role(component_type: str) -> str:
+        mapping = {
+            "upper": "tomaia_principale",
+            "lining": "fodera_interna",
+            "insole": "sottopiede",
+            "outsole": "suola_fondo",
+            "heel": "tacco",
+            "hardware": "minuteria_accessori",
+            "fabric": "riporto_secondario",
+            "packaging": "packaging_scatola",
+            "sub_assembly": "sotto_assieme_tecnico",
+        }
+        return mapping.get((component_type or "").lower(), "tomaia_principale")
+
+    def _find_linked_tannery_batch_for_bom(
+        self,
+        conn: sqlite3.Connection,
+        plm_variant_id: str,
+        bom_row: sqlite3.Row,
+        all_batches: List[sqlite3.Row],
+    ) -> Optional[sqlite3.Row]:
+        comp = (bom_row["component_type"] or "").lower()
+        b_meta = json.loads(bom_row["metadata_json"] or "{}")
+        custom_attrs = b_meta.get("custom_attributes") or {}
+        explicit_bid = custom_attrs.get("tannery_batch_id") or custom_attrs.get("batch_code")
+        lot_cert = str(b_meta.get("lot_certificate_id") or "")
+
+        if explicit_bid:
+            for tb in all_batches:
+                if tb["batch_id"] == explicit_bid or tb["batch_code"] == explicit_bid:
+                    return tb
+
+        if comp not in ("upper", "lining"):
+            return None
+
+        for tb in all_batches:
+            if lot_cert and (lot_cert == tb["batch_code"] or (tb["icec_certificate_id"] and lot_cert == tb["icec_certificate_id"])):
+                return tb
+
+        b_keys = bom_row.keys()
+        b_vid = bom_row["vendor_id"] if "vendor_id" in b_keys else None
+        if b_vid:
+            for tb in all_batches:
+                tb_vid = tb["vendor_id"] if "vendor_id" in tb.keys() else None
+                if tb_vid and tb_vid == b_vid:
+                    return tb
+
+        b_sname = (bom_row["supplier_name"] or "").strip().lower()
+        if b_sname:
+            for tb in all_batches:
+                if (tb["tannery_name"] or "").strip().lower() == b_sname:
+                    return tb
+
+        if comp == "upper":
+            po_row = conn.execute(
+                "SELECT tannery_batch_id FROM production_orders WHERE plm_variant_id = ? AND tannery_batch_id IS NOT NULL ORDER BY created_at DESC LIMIT 1",
+                (plm_variant_id,),
+            ).fetchone()
+            if po_row and po_row["tannery_batch_id"]:
+                for tb in all_batches:
+                    if tb["batch_id"] == po_row["tannery_batch_id"]:
+                        return tb
+
+        return None
+
+    def get_variant_colorway_matrix(self, variant_id: str) -> Optional[ColorwayMatrixResponse]:
+        conn = self.get_connection()
+        try:
+            vr = conn.execute(
+                "SELECT * FROM plm_production_variants WHERE plm_variant_id = ?",
+                (variant_id,),
+            ).fetchone()
+            if not vr:
+                return None
+
+            v_keys = vr.keys()
+            p_col = vr["primary_color_id"] if "primary_color_id" in v_keys else None
+            s_col = vr["secondary_color_id"] if "secondary_color_id" in v_keys else None
+            hw_col = vr["hardware_finish_color_id"] if "hardware_finish_color_id" in v_keys else None
+            r_preset = (vr["colorway_rule_preset"] if "colorway_rule_preset" in v_keys else None) or "tone_on_tone"
+
+            bom_rows = conn.execute(
+                "SELECT * FROM bom_items WHERE plm_variant_id = ? ORDER BY level ASC, id ASC",
+                (variant_id,),
+            ).fetchall()
+
+            map_rows = conn.execute(
+                "SELECT * FROM variant_colorway_bom_mappings WHERE plm_variant_id = ?",
+                (variant_id,),
+            ).fetchall()
+            map_by_bom: Dict[str, sqlite3.Row] = {mr["bom_item_id"]: mr for mr in map_rows}
+
+            color_rows = conn.execute("SELECT * FROM master_colors").fetchall()
+            colors_by_id: Dict[str, sqlite3.Row] = {cr["id"]: cr for cr in color_rows}
+
+            all_batches = conn.execute("SELECT * FROM tannery_batches WHERE is_active = 1").fetchall()
+
+            out_mappings: List[ColorwayBomMappingRow] = []
+            mapped_count = 0
+            approved_count = 0
+            rejected_count = 0
+            gate_blocked = False
+
+            for br in bom_rows:
+                bid = br["bom_item_id"]
+                b_keys = br.keys()
+                mr = map_by_bom.get(bid)
+                mcol_id = (
+                    mr["master_color_id"]
+                    if mr is not None
+                    else (br["master_color_id"] if "master_color_id" in b_keys else None)
+                )
+                crow = colors_by_id.get(mcol_id) if mcol_id else None
+
+                lab_status = mr["lab_dip_status"] if mr is not None else "pending"
+                delta_e = float(mr["delta_e_value"]) if (mr is not None and mr["delta_e_value"] is not None) else None
+                part_role = mr["part_role"] if mr is not None else self._default_part_role(br["component_type"])
+                galv = mr["galvanics_finish"] if mr is not None else None
+                app_by = mr["approved_by"] if mr is not None else None
+                app_at = self._parse_dt(mr["approved_at"]) if (mr is not None and mr["approved_at"]) else None
+                notes = (mr["notes"] or "") if mr is not None else ""
+
+                if mcol_id:
+                    mapped_count += 1
+                if lab_status in ("approved", "master_standard", "conditional_waiver"):
+                    approved_count += 1
+                if lab_status == "rejected":
+                    rejected_count += 1
+                    gate_blocked = True
+                if delta_e is not None and delta_e > 2.5 and lab_status != "conditional_waiver":
+                    gate_blocked = True
+
+                linked_tb = self._find_linked_tannery_batch_for_bom(conn, variant_id, br, all_batches)
+                t_consistency = "not_linked"
+                linked_bcode: Optional[str] = None
+                if linked_tb is not None:
+                    linked_bcode = linked_tb["batch_code"]
+                    tb_mcol = linked_tb["master_color_id"] if "master_color_id" in linked_tb.keys() else None
+                    if mcol_id and tb_mcol:
+                        t_consistency = "coherent" if mcol_id == tb_mcol else "mismatch"
+
+                out_mappings.append(
+                    ColorwayBomMappingRow(
+                        id=mr["id"] if mr is not None else None,
+                        plm_variant_id=variant_id,
+                        bom_item_id=bid,
+                        level=int(br["level"]),
+                        parent_bom_item_id=br["parent_bom_item_id"],
+                        component_type=br["component_type"],
+                        material_name=br["material_name"],
+                        supplier_name=br["supplier_name"],
+                        vendor_id=br["vendor_id"] if "vendor_id" in b_keys else None,
+                        master_color_id=mcol_id,
+                        color_code=crow["color_code"] if crow is not None else None,
+                        technical_name_it=crow["technical_name_it"] if crow is not None else None,
+                        commercial_family=crow["commercial_family"] if crow is not None else None,
+                        hex_code=crow["hex_code"] if crow is not None else None,
+                        pantone_tcx_code=crow["pantone_tcx_code"] if crow is not None else None,
+                        ral_code=crow["ral_code"] if crow is not None else None,
+                        finish_type=crow["finish_type"] if crow is not None else None,
+                        part_role=part_role,
+                        galvanics_finish=galv,
+                        lab_dip_status=lab_status,
+                        delta_e_value=delta_e,
+                        approved_by=app_by,
+                        approved_at=app_at,
+                        notes=notes,
+                        tannery_color_consistency=t_consistency,
+                        linked_batch_code=linked_bcode,
+                    )
+                )
+
+            total_nodes = len(bom_rows)
+            readiness_pct = round((approved_count / total_nodes) * 100.0, 1) if total_nodes > 0 else 0.0
+
+            return ColorwayMatrixResponse(
+                plm_variant_id=variant_id,
+                variant_code=vr["variant_code"],
+                colorway_name=vr["colorway_name"],
+                primary_color_id=p_col,
+                secondary_color_id=s_col,
+                hardware_finish_color_id=hw_col,
+                colorway_rule_preset=r_preset,
+                total_bom_nodes=total_nodes,
+                mapped_nodes_count=mapped_count,
+                approved_nodes_count=approved_count,
+                rejected_nodes_count=rejected_count,
+                colorway_readiness_pct=readiness_pct,
+                production_gate_blocked=gate_blocked,
+                mappings=out_mappings,
+            )
+        finally:
+            self._close_if_file(conn)
+
+    def upsert_variant_colorway_matrix(
+        self,
+        variant_id: str,
+        req: ColorwayMatrixUpsertRequest,
+    ) -> Optional[ColorwayMatrixResponse]:
+        conn = self.get_connection()
+        try:
+            vr = conn.execute(
+                "SELECT * FROM plm_production_variants WHERE plm_variant_id = ?",
+                (variant_id,),
+            ).fetchone()
+            if not vr:
+                return None
+
+            v_keys = vr.keys()
+            new_p_col = (
+                req.primary_color_id
+                if req.primary_color_id is not None
+                else (vr["primary_color_id"] if "primary_color_id" in v_keys else None)
+            )
+            new_s_col = (
+                req.secondary_color_id
+                if req.secondary_color_id is not None
+                else (vr["secondary_color_id"] if "secondary_color_id" in v_keys else None)
+            )
+            new_hw_col = (
+                req.hardware_finish_color_id
+                if req.hardware_finish_color_id is not None
+                else (vr["hardware_finish_color_id"] if "hardware_finish_color_id" in v_keys else None)
+            )
+            new_preset = (
+                req.colorway_rule_preset
+                if req.colorway_rule_preset is not None
+                else ((vr["colorway_rule_preset"] if "colorway_rule_preset" in v_keys else None) or "tone_on_tone")
+            )
+
+            conn.execute(
+                """
+                UPDATE plm_production_variants
+                SET primary_color_id = ?, secondary_color_id = ?,
+                    hardware_finish_color_id = ?, colorway_rule_preset = ?
+                WHERE plm_variant_id = ?
+                """,
+                (new_p_col, new_s_col, new_hw_col, new_preset, variant_id),
+            )
+
+            valid_bom_ids = {
+                r["bom_item_id"]
+                for r in conn.execute(
+                    "SELECT bom_item_id FROM bom_items WHERE plm_variant_id = ?",
+                    (variant_id,),
+                ).fetchall()
+            }
+
+            now_iso = datetime.now(timezone.utc).isoformat()
+            for item in req.mappings:
+                if item.bom_item_id not in valid_bom_ids:
+                    raise ValueError(
+                        f"BOM Item '{item.bom_item_id}' does not belong to variant '{variant_id}'."
+                    )
+                if not item.master_color_id:
+                    conn.execute(
+                        "DELETE FROM variant_colorway_bom_mappings WHERE plm_variant_id = ? AND bom_item_id = ?",
+                        (variant_id, item.bom_item_id),
+                    )
+                    conn.execute(
+                        "UPDATE bom_items SET master_color_id = NULL WHERE plm_variant_id = ? AND bom_item_id = ?",
+                        (variant_id, item.bom_item_id),
+                    )
+                    continue
+
+                crow = conn.execute(
+                    "SELECT id FROM master_colors WHERE id = ? OR color_code = ?",
+                    (item.master_color_id, item.master_color_id),
+                ).fetchone()
+                if not crow:
+                    raise ValueError(f"Master color '{item.master_color_id}' not found.")
+                real_mcol_id = crow["id"]
+
+                existing_mr = conn.execute(
+                    "SELECT id, approved_at FROM variant_colorway_bom_mappings WHERE plm_variant_id = ? AND bom_item_id = ?",
+                    (variant_id, item.bom_item_id),
+                ).fetchone()
+                map_id = existing_mr["id"] if existing_mr else f"CMAP-{uuid4().hex[:10].upper()}"
+
+                if item.lab_dip_status in ("approved", "master_standard", "conditional_waiver"):
+                    if item.approved_at is not None:
+                        app_at_iso = (
+                            item.approved_at.isoformat()
+                            if isinstance(item.approved_at, datetime)
+                            else str(item.approved_at)
+                        )
+                    elif existing_mr and existing_mr["approved_at"]:
+                        app_at_iso = existing_mr["approved_at"]
+                    else:
+                        app_at_iso = now_iso
+                else:
+                    app_at_iso = None
+
+                conn.execute(
+                    """
+                    INSERT INTO variant_colorway_bom_mappings (
+                        id, plm_variant_id, bom_item_id, master_color_id,
+                        part_role, galvanics_finish, lab_dip_status, delta_e_value,
+                        approved_by, approved_at, notes
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(plm_variant_id, bom_item_id) DO UPDATE SET
+                        master_color_id = excluded.master_color_id,
+                        part_role = excluded.part_role,
+                        galvanics_finish = excluded.galvanics_finish,
+                        lab_dip_status = excluded.lab_dip_status,
+                        delta_e_value = excluded.delta_e_value,
+                        approved_by = excluded.approved_by,
+                        approved_at = excluded.approved_at,
+                        notes = excluded.notes
+                    """,
+                    (
+                        map_id,
+                        variant_id,
+                        item.bom_item_id,
+                        real_mcol_id,
+                        item.part_role or "tomaia_principale",
+                        item.galvanics_finish,
+                        item.lab_dip_status or "pending",
+                        item.delta_e_value,
+                        item.approved_by,
+                        app_at_iso,
+                        item.notes or "",
+                    ),
+                )
+                conn.execute(
+                    "UPDATE bom_items SET master_color_id = ? WHERE plm_variant_id = ? AND bom_item_id = ?",
+                    (real_mcol_id, variant_id, item.bom_item_id),
+                )
+
+            conn.commit()
+            return self.get_variant_colorway_matrix(variant_id)
+        finally:
+            self._close_if_file(conn)
+
+    def explode_variant_colorways(
+        self,
+        source_variant_id: str,
+        req: ExplodeColorwaysRequest,
+    ) -> ExplodeColorwaysResponse:
+        if not req.target_color_ids:
+            raise ValueError("target_color_ids must contain at least one color ID.")
+        conn = self.get_connection()
+        try:
+            vr = conn.execute(
+                "SELECT * FROM plm_production_variants WHERE plm_variant_id = ?",
+                (source_variant_id,),
+            ).fetchone()
+            if not vr:
+                raise ValueError(f"Source variant '{source_variant_id}' not found.")
+
+            pim_id = vr["pim_item_id"]
+            var_meta = json.loads(vr["metadata_json"] or "{}")
+
+            target_colors: List[MasterColor] = []
+            for tcid in req.target_color_ids:
+                crow = conn.execute(
+                    "SELECT * FROM master_colors WHERE id = ? OR color_code = ?",
+                    (tcid, tcid),
+                ).fetchone()
+                if not crow:
+                    raise ValueError(f"Target MasterColor '{tcid}' not found.")
+                target_colors.append(self._row_to_master_color(crow))
+
+            all_color_ids = {
+                r["id"] for r in conn.execute("SELECT id FROM master_colors").fetchall()
+            }
+
+            def _resolve_opt_color(cid: Optional[str]) -> Optional[str]:
+                if not cid:
+                    return None
+                r = conn.execute(
+                    "SELECT id FROM master_colors WHERE id = ? OR color_code = ?",
+                    (cid, cid),
+                ).fetchone()
+                return r["id"] if r else None
+
+            opt_lining = _resolve_opt_color(req.lining_color_id)
+            opt_sole = _resolve_opt_color(req.sole_color_id)
+            opt_hw = _resolve_opt_color(req.hardware_color_id)
+
+            old_bom_rows = conn.execute(
+                "SELECT * FROM bom_items WHERE plm_variant_id = ? ORDER BY level ASC, id ASC",
+                (source_variant_id,),
+            ).fetchall()
+
+            src_mappings: Dict[str, str] = {
+                mr["bom_item_id"]: mr["master_color_id"]
+                for mr in conn.execute(
+                    "SELECT bom_item_id, master_color_id FROM variant_colorway_bom_mappings WHERE plm_variant_id = ?",
+                    (source_variant_id,),
+                ).fetchall()
+            }
+
+            base_code_raw = vr["variant_code"].strip().upper()
+            # Keep concise base prefix before exploding
+            base_parts = base_code_raw.split("-")
+            base_prefix = "-".join(base_parts[:3]) if len(base_parts) >= 4 else base_code_raw
+
+            created_variants: List[PlmProductionVariant] = []
+            now_dt = datetime.now(timezone.utc)
+            now_iso = now_dt.isoformat()
+
+            for t_color in target_colors:
+                new_var_id = f"PLM-VAR-{uuid4().hex[:8].upper()}"
+                slug = re.sub(r"[^A-Z0-9]+", "-", t_color.color_code.upper().replace("COL-", "").replace("MCOL-", "")).strip("-")
+                if not slug:
+                    slug = t_color.id[-6:].upper()
+                candidate_vcode = f"{base_prefix}-{slug}"
+                suffix_idx = 2
+                while conn.execute(
+                    "SELECT 1 FROM plm_production_variants WHERE variant_code = ?",
+                    (candidate_vcode,),
+                ).fetchone():
+                    candidate_vcode = f"{base_prefix}-{slug}-{suffix_idx}"
+                    suffix_idx += 1
+
+                if req.rule_preset == "luxury_gold_hardware":
+                    hw_finish_col = opt_hw or ("MCOL-GLD-010" if "MCOL-GLD-010" in all_color_ids else t_color.id)
+                elif req.rule_preset == "luxury_palladium_hardware":
+                    hw_finish_col = opt_hw or ("MCOL-SLV-011" if "MCOL-SLV-011" in all_color_ids else t_color.id)
+                else:
+                    hw_finish_col = opt_hw
+
+                if req.rule_preset == "contrast_white_sole":
+                    sec_col = opt_sole or ("MCOL-WHT-004" if "MCOL-WHT-004" in all_color_ids else t_color.id)
+                else:
+                    sec_col = opt_sole or opt_lining
+
+                id_remap: Dict[str, str] = {
+                    b["bom_item_id"]: f"BOM-{uuid4().hex[:8].upper()}" for b in old_bom_rows
+                }
+                cloned_bom_items: List[BomItem] = []
+                mappings_to_insert: List[Tuple[Any, ...]] = []
+
+                for b in old_bom_rows:
+                    old_bid = b["bom_item_id"]
+                    new_bid = id_remap[old_bid]
+                    new_pid = id_remap.get(b["parent_bom_item_id"]) if b["parent_bom_item_id"] else None
+                    comp = (b["component_type"] or "").lower()
+                    b_keys = b.keys()
+                    src_b_color = src_mappings.get(old_bid) or (
+                        b["master_color_id"] if "master_color_id" in b_keys else None
+                    )
+                    if src_b_color and src_b_color not in all_color_ids:
+                        src_b_color = None
+
+                    galv_finish: Optional[str] = None
+                    lab_status = "pending"
+                    app_at_val: Optional[str] = None
+                    app_by_val: Optional[str] = None
+                    part_role = self._default_part_role(comp)
+
+                    if comp in ("upper", "fabric", "sub_assembly", "heel", "insole"):
+                        assigned_col = t_color.id
+                        lab_status = "pending"
+                    elif comp == "lining":
+                        assigned_col = (
+                            opt_lining
+                            or src_b_color
+                            or ("MCOL-TAN-002" if "MCOL-TAN-002" in all_color_ids else t_color.id)
+                        )
+                        lab_status = "pending"
+                    elif comp == "outsole":
+                        if req.rule_preset == "contrast_white_sole":
+                            assigned_col = opt_sole or (
+                                "MCOL-WHT-004" if "MCOL-WHT-004" in all_color_ids else t_color.id
+                            )
+                        else:
+                            assigned_col = opt_sole or t_color.id
+                        lab_status = "pending"
+                    elif comp == "hardware":
+                        if req.rule_preset == "luxury_gold_hardware":
+                            assigned_col = opt_hw or (
+                                "MCOL-GLD-010" if "MCOL-GLD-010" in all_color_ids else t_color.id
+                            )
+                            galv_finish = "oro_chiaro_24k"
+                            lab_status = "master_standard"
+                            app_at_val = now_iso
+                            app_by_val = "Color Intelligence Engine (Preset Galvanica Oro 24K)"
+                        elif req.rule_preset == "luxury_palladium_hardware":
+                            assigned_col = opt_hw or (
+                                "MCOL-SLV-011" if "MCOL-SLV-011" in all_color_ids else t_color.id
+                            )
+                            galv_finish = "palladio_lucido"
+                            lab_status = "master_standard"
+                            app_at_val = now_iso
+                            app_by_val = "Color Intelligence Engine (Preset Palladio)"
+                        else:
+                            assigned_col = opt_hw or src_b_color or t_color.id
+                            lab_status = "master_standard" if opt_hw else "pending"
+                            if lab_status == "master_standard":
+                                app_at_val = now_iso
+                    elif comp == "packaging":
+                        assigned_col = (
+                            src_b_color
+                            or ("MCOL-ECR-005" if "MCOL-ECR-005" in all_color_ids else t_color.id)
+                        )
+                        lab_status = "master_standard"
+                        app_at_val = now_iso
+                    else:
+                        assigned_col = t_color.id
+
+                    b_meta = json.loads(b["metadata_json"] or "{}")
+                    cloned_bom_items.append(
+                        BomItem(
+                            bom_item_id=new_bid,
+                            level=int(b["level"]),
+                            parent_bom_item_id=new_pid,
+                            component_type=BomComponentType(b["component_type"]),
+                            material_name=b["material_name"],
+                            supplier_name=b["supplier_name"],
+                            vendor_id=b["vendor_id"] if "vendor_id" in b_keys else None,
+                            master_color_id=assigned_col,
+                            origin_country_iso2=b["origin_country_iso2"],
+                            unit_of_measure=b["unit_of_measure"],
+                            unit_consumption=float(b["unit_consumption"]),
+                            waste_percentage=float(b["waste_percentage"]),
+                            recycled_content_pct=float(b["recycled_content_pct"]),
+                            certifications=json.loads(b["certifications_json"] or "[]"),
+                            unit_cost_eur=float(b_meta.get("unit_cost_eur", 10.0)),
+                            lot_certificate_id=str(b_meta.get("lot_certificate_id", "CERT-ESPR-EXPLODED")),
+                            custom_attributes=b_meta.get("custom_attributes", {}),
+                        )
+                    )
+                    mappings_to_insert.append(
+                        (
+                            f"CMAP-{uuid4().hex[:10].upper()}",
+                            new_var_id,
+                            new_bid,
+                            assigned_col,
+                            part_role,
+                            galv_finish,
+                            lab_status,
+                            None,
+                            app_by_val,
+                            app_at_val,
+                            f"Generato da 1-Click Colorway Explosion ({req.rule_preset})",
+                        )
+                    )
+
+                new_variant = PlmProductionVariant(
+                    plm_variant_id=new_var_id,
+                    pim_item_id=pim_id,
+                    collection_id=vr["collection_id"],
+                    variant_code=candidate_vcode,
+                    colorway_name=t_color.technical_name_it,
+                    size_range=vr["size_range"],
+                    last_or_pattern_code=vr["last_or_pattern_code"],
+                    lifecycle_status=PlmLifecycleStatus.PROTOTYPE,
+                    bom_version="v1.0 (Colorway Exploded)",
+                    bom_snapshot_locked=False,
+                    sample_base_size=str(var_meta.get("sample_base_size", "42")),
+                    size_grading_step_pct=float(var_meta.get("size_grading_step_pct", 2.8)),
+                    standard_labor_cost_eur=float(var_meta.get("standard_labor_cost_eur", 28.0)),
+                    target_gender=var_meta.get("target_gender", "unisex"),
+                    category_id=var_meta.get("category_id"),
+                    sub_category_id=var_meta.get("sub_category_id"),
+                    construction_type=var_meta.get("construction_type", "cassetta_cucita"),
+                    carryover_status=var_meta.get("carryover_status", "seasonal_core"),
+                    primary_color_id=t_color.id,
+                    secondary_color_id=sec_col,
+                    hardware_finish_color_id=hw_finish_col,
+                    colorway_rule_preset=req.rule_preset,
+                    category_specific_specs=var_meta.get("category_specific_specs", {}),
+                    custom_attributes=var_meta.get("custom_attributes", {}),
+                    bom_items=cloned_bom_items,
+                    subcontractor_assignments=[],
+                    created_at=now_dt,
+                )
+
+                self._insert_variant_in_tx(conn, pim_id, new_variant)
+                for m_tuple in mappings_to_insert:
+                    conn.execute(
+                        """
+                        INSERT INTO variant_colorway_bom_mappings (
+                            id, plm_variant_id, bom_item_id, master_color_id,
+                            part_role, galvanics_finish, lab_dip_status, delta_e_value,
+                            approved_by, approved_at, notes
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        m_tuple,
+                    )
+                created_variants.append(new_variant)
+
+            conn.commit()
+            return ExplodeColorwaysResponse(
+                source_variant_id=source_variant_id,
+                pim_item_id=pim_id,
+                rule_preset=req.rule_preset,
+                created_count=len(created_variants),
+                created_variants=created_variants,
+            )
+        finally:
+            self._close_if_file(conn)
+
+    def get_tannery_color_consistency(self) -> List[TanneryColorConsistencyItem]:
+        conn = self.get_connection()
+        try:
+            batches = conn.execute(
+                "SELECT * FROM tannery_batches ORDER BY created_at DESC"
+            ).fetchall()
+            colors_by_id = {
+                r["id"]: r for r in conn.execute("SELECT * FROM master_colors").fetchall()
+            }
+            leather_boms = conn.execute(
+                """
+                SELECT bi.*, pv.variant_code, cmap.master_color_id AS mapped_color_id
+                FROM bom_items bi
+                JOIN plm_production_variants pv ON bi.plm_variant_id = pv.plm_variant_id
+                LEFT JOIN variant_colorway_bom_mappings cmap
+                    ON cmap.plm_variant_id = bi.plm_variant_id AND cmap.bom_item_id = bi.bom_item_id
+                WHERE bi.component_type IN ('upper', 'lining')
+                ORDER BY pv.variant_code ASC, bi.level ASC
+                """
+            ).fetchall()
+            po_links = conn.execute(
+                "SELECT plm_variant_id, tannery_batch_id FROM production_orders WHERE tannery_batch_id IS NOT NULL"
+            ).fetchall()
+            variants_by_batch: Dict[str, set] = {}
+            for po in po_links:
+                variants_by_batch.setdefault(po["tannery_batch_id"], set()).add(po["plm_variant_id"])
+
+            results: List[TanneryColorConsistencyItem] = []
+            for tb in batches:
+                tb_keys = tb.keys()
+                tb_vid = tb["vendor_id"] if "vendor_id" in tb_keys else None
+                tb_mcol = tb["master_color_id"] if "master_color_id" in tb_keys else None
+                tb_color_row = colors_by_id.get(tb_mcol) if tb_mcol else None
+
+                matched_boms: List[sqlite3.Row] = []
+                for bi in leather_boms:
+                    bi_keys = bi.keys()
+                    bi_vid = bi["vendor_id"] if "vendor_id" in bi_keys else None
+                    b_meta = json.loads(bi["metadata_json"] or "{}")
+                    lot_cert = str(b_meta.get("lot_certificate_id") or "")
+                    c_attrs = b_meta.get("custom_attributes") or {}
+                    exp_batch = c_attrs.get("tannery_batch_id") or c_attrs.get("batch_code")
+
+                    is_match = False
+                    if exp_batch and exp_batch in (tb["batch_id"], tb["batch_code"]):
+                        is_match = True
+                    elif lot_cert and (lot_cert == tb["batch_code"] or (tb["icec_certificate_id"] and lot_cert == tb["icec_certificate_id"])):
+                        is_match = True
+                    elif tb_vid and bi_vid and tb_vid == bi_vid:
+                        is_match = True
+                    elif (tb["tannery_name"] or "").strip().lower() == (bi["supplier_name"] or "").strip().lower():
+                        is_match = True
+                    elif bi["component_type"] == "upper" and bi["plm_variant_id"] in variants_by_batch.get(tb["batch_id"], set()):
+                        is_match = True
+
+                    if is_match:
+                        matched_boms.append(bi)
+
+                if not matched_boms:
+                    results.append(
+                        TanneryColorConsistencyItem(
+                            batch_id=tb["batch_id"],
+                            batch_code=tb["batch_code"],
+                            tannery_name=tb["tannery_name"],
+                            vendor_id=tb_vid,
+                            batch_master_color_id=tb_mcol,
+                            batch_color_code=tb_color_row["color_code"] if tb_color_row else None,
+                            batch_color_name_it=tb_color_row["technical_name_it"] if tb_color_row else None,
+                            batch_hex_code=tb_color_row["hex_code"] if tb_color_row else None,
+                            status="unmapped",
+                            message="Nessun nodo BOM pellame collegato a questo lotto conceria.",
+                        )
+                    )
+                    continue
+
+                for bi in matched_boms:
+                    bi_keys = bi.keys()
+                    bom_mcol = bi["mapped_color_id"] or (
+                        bi["master_color_id"] if "master_color_id" in bi_keys else None
+                    )
+                    bom_color_row = colors_by_id.get(bom_mcol) if bom_mcol else None
+                    if not tb_mcol or not bom_mcol:
+                        st = "unmapped"
+                        msg = "Colore Master non ancora assegnato su lotto conceria o su nodo BOM."
+                    elif tb_mcol == bom_mcol:
+                        st = "coherent"
+                        msg = f"Coerenza cromatica verificata ({tb_color_row['color_code'] if tb_color_row else tb_mcol})."
+                    else:
+                        st = "mismatch"
+                        msg = (
+                            f"Disallineamento colore: Lotto Conceria={tb_color_row['color_code'] if tb_color_row else tb_mcol} "
+                            f"vs Nodo BOM={bom_color_row['color_code'] if bom_color_row else bom_mcol}."
+                        )
+                    results.append(
+                        TanneryColorConsistencyItem(
+                            batch_id=tb["batch_id"],
+                            batch_code=tb["batch_code"],
+                            tannery_name=tb["tannery_name"],
+                            vendor_id=tb_vid,
+                            batch_master_color_id=tb_mcol,
+                            batch_color_code=tb_color_row["color_code"] if tb_color_row else None,
+                            batch_color_name_it=tb_color_row["technical_name_it"] if tb_color_row else None,
+                            batch_hex_code=tb_color_row["hex_code"] if tb_color_row else None,
+                            plm_variant_id=bi["plm_variant_id"],
+                            variant_code=bi["variant_code"],
+                            bom_item_id=bi["bom_item_id"],
+                            bom_material_name=bi["material_name"],
+                            bom_master_color_id=bom_mcol,
+                            bom_color_code=bom_color_row["color_code"] if bom_color_row else None,
+                            bom_color_name_it=bom_color_row["technical_name_it"] if bom_color_row else None,
+                            bom_hex_code=bom_color_row["hex_code"] if bom_color_row else None,
+                            status=st,
+                            message=msg,
+                        )
+                    )
+            return results
+        finally:
+            self._close_if_file(conn)
+
+    def get_pim_colorways_ecommerce(self, pim_item_id: str) -> Optional[PimColorwaysEcommerceResponse]:
+        conn = self.get_connection()
+        try:
+            pim_row = conn.execute(
+                "SELECT pim_item_id, sku_code, model_name FROM pim_commercial_items WHERE pim_item_id = ?",
+                (pim_item_id,),
+            ).fetchone()
+            if not pim_row:
+                return None
+
+            var_rows = conn.execute(
+                "SELECT * FROM plm_production_variants WHERE pim_item_id = ? ORDER BY created_at ASC",
+                (pim_item_id,),
+            ).fetchall()
+            colors_by_id = {
+                r["id"]: r for r in conn.execute("SELECT * FROM master_colors").fetchall()
+            }
+
+            families: List[str] = []
+            variants_map: List[PimVariantColorEcommerceItem] = []
+
+            for vr in var_rows:
+                vid = vr["plm_variant_id"]
+                v_keys = vr.keys()
+                mcol_id = vr["primary_color_id"] if "primary_color_id" in v_keys else None
+                if not mcol_id:
+                    mr = conn.execute(
+                        """
+                        SELECT cmap.master_color_id
+                        FROM variant_colorway_bom_mappings cmap
+                        JOIN bom_items bi ON bi.plm_variant_id = cmap.plm_variant_id AND bi.bom_item_id = cmap.bom_item_id
+                        WHERE cmap.plm_variant_id = ?
+                        ORDER BY CASE WHEN bi.component_type = 'upper' THEN 0 ELSE 1 END, bi.level ASC
+                        LIMIT 1
+                        """,
+                        (vid,),
+                    ).fetchone()
+                    if mr:
+                        mcol_id = mr["master_color_id"]
+                if not mcol_id:
+                    br = conn.execute(
+                        """
+                        SELECT master_color_id FROM bom_items
+                        WHERE plm_variant_id = ? AND master_color_id IS NOT NULL
+                        ORDER BY CASE WHEN component_type = 'upper' THEN 0 ELSE 1 END, level ASC
+                        LIMIT 1
+                        """,
+                        (vid,),
+                    ).fetchone()
+                    if br:
+                        mcol_id = br["master_color_id"]
+
+                crow = colors_by_id.get(mcol_id) if mcol_id else None
+                if crow is not None:
+                    fam = crow["commercial_family"]
+                    item_entry = PimVariantColorEcommerceItem(
+                        plm_variant_id=vid,
+                        variant_code=vr["variant_code"],
+                        colorway_name=vr["colorway_name"],
+                        master_color_id=crow["id"],
+                        color_code=crow["color_code"],
+                        technical_name_it=crow["technical_name_it"],
+                        technical_name_en=crow["technical_name_en"] or "",
+                        commercial_family=fam,
+                        hex_code=crow["hex_code"],
+                        pantone_tcx_code=crow["pantone_tcx_code"] or "",
+                        finish_type=crow["finish_type"],
+                    )
+                else:
+                    cname_low = (vr["colorway_name"] or "").lower()
+                    if any(k in cname_low for k in ("nero", "black", "antracite")):
+                        fam, hx = "Nero / Black", "#141414"
+                    elif any(k in cname_low for k in ("cuoio", "cognac", "moro", "tan", "brown")):
+                        fam, hx = "Cuoio & Marrone", "#C68B59"
+                    elif any(k in cname_low for k in ("bordeaux", "rosso", "red", "amaranto")):
+                        fam, hx = "Rosso & Bordeaux", "#5E1914"
+                    elif any(k in cname_low for k in ("oliva", "verde", "bosco", "green")):
+                        fam, hx = "Verde / Green", "#2D4028"
+                    elif any(k in cname_low for k in ("blu", "navy", "oceano")):
+                        fam, hx = "Blu / Blue", "#1B2A4A"
+                    elif any(k in cname_low for k in ("bianco", "avorio", "white", "ecru")):
+                        fam, hx = "Bianco & Neutri", "#F8F8F6"
+                    else:
+                        fam, hx = "Neutri & Classici", "#6E737B"
+                    item_entry = PimVariantColorEcommerceItem(
+                        plm_variant_id=vid,
+                        variant_code=vr["variant_code"],
+                        colorway_name=vr["colorway_name"],
+                        master_color_id=None,
+                        color_code=None,
+                        technical_name_it=vr["colorway_name"],
+                        technical_name_en=vr["colorway_name"],
+                        commercial_family=fam,
+                        hex_code=hx,
+                        pantone_tcx_code="",
+                        finish_type="pieno_fiore_naturale",
+                    )
+
+                if item_entry.commercial_family not in families:
+                    families.append(item_entry.commercial_family)
+                variants_map.append(item_entry)
+
+            return PimColorwaysEcommerceResponse(
+                pim_item_id=pim_row["pim_item_id"],
+                sku_code=pim_row["sku_code"],
+                model_name=pim_row["model_name"],
+                commercial_color_families=families,
+                variants_color_map=variants_map,
+            )
+        finally:
+            self._close_if_file(conn)
+
+    # ========================================================================
+    # Sprint 8 (FTL-TECH-023): Vendor Hub 360, SHA-256 Certs, L6 & Where-Used
+    # ========================================================================
+
+    @staticmethod
+    def compute_vendor_rating(quality_score: float, otd_score: float, esg_score: float) -> Tuple[float, str]:
+        overall = round(0.40 * float(quality_score) + 0.30 * float(otd_score) + 0.30 * float(esg_score), 1)
+        if overall >= 90.0:
+            r_class = "A+"
+        elif overall >= 75.0:
+            r_class = "A"
+        elif overall >= 60.0:
+            r_class = "B"
+        else:
+            r_class = "C"
+        return overall, r_class
+
+    @staticmethod
+    def compute_cert_expiry_and_status(valid_until: str, stored_status: Optional[str] = None) -> Tuple[int, str]:
+        try:
+            exp_date = date.fromisoformat(str(valid_until).strip()[:10])
+            days = (exp_date - date.today()).days
+        except Exception:
+            days = 365
+        if stored_status == "revoked":
+            return days, "revoked"
+        if days < 0:
+            return days, "expired"
+        if days <= 60:
+            return days, "expiring_soon"
+        return days, "valid"
+
+    @staticmethod
+    def _apply_vendor_l6_segregation(vendor_dict: Dict[str, Any], viewer_role: str = "brand") -> Dict[str, Any]:
+        """Centralized ADR-006 & ADR-011 L6 Cost/Commercial/Rating Segregation Guard."""
+        role_norm = (viewer_role or "brand").strip().lower()
+        if role_norm != "brand":
+            for l6_field in (
+                "quality_score",
+                "otd_score",
+                "esg_score",
+                "overall_rating",
+                "rating_class",
+                "moq_description",
+                "payment_terms_l6",
+                "hourly_or_unit_rate_eur_l6",
+                "negotiated_price_list_l6",
+                "internal_audit_notes_l6",
+            ):
+                vendor_dict[l6_field] = None
+            vendor_dict["l6_segregated"] = True
+        else:
+            vendor_dict["l6_segregated"] = False
+        return vendor_dict
+
+    def _row_to_vendor_cert(self, row: sqlite3.Row) -> VendorCertification:
+        days, dyn_status = self.compute_cert_expiry_and_status(row["valid_until"], row["status"])
+        return VendorCertification(
+            cert_id=row["cert_id"],
+            vendor_id=row["vendor_id"],
+            cert_type=row["cert_type"],
+            cert_code=row["cert_code"],
+            issuing_body=row["issuing_body"],
+            valid_from=row["valid_from"],
+            valid_until=row["valid_until"],
+            days_to_expiry=days,
+            sha256_hash=row["sha256_hash"],
+            status=dyn_status,
+        )
+
+    def _row_to_vendor_record(
+        self,
+        conn: sqlite3.Connection,
+        row: sqlite3.Row,
+        viewer_role: str = "brand",
+    ) -> VendorRecord:
+        vid = row["vendor_id"]
+        cert_rows = conn.execute(
+            "SELECT * FROM vendor_certifications WHERE vendor_id = ? ORDER BY valid_until ASC",
+            (vid,),
+        ).fetchall()
+        certs = [self._row_to_vendor_cert(cr) for cr in cert_rows]
+
+        q_score = float(row["quality_score"])
+        o_score = float(row["otd_score"])
+        e_score = float(row["esg_score"])
+        overall, r_class = self.compute_vendor_rating(q_score, o_score, e_score)
+
+        qual_status = row["qualification_status"]
+        has_expired = (qual_status == "blocked_expired_certs") or any(
+            c.status in ("expired", "revoked") for c in certs
+        )
+        if has_expired:
+            semaphore = "red"
+        elif len(certs) == 0 or any(c.status == "expiring_soon" for c in certs):
+            semaphore = "yellow"
+        else:
+            semaphore = "green"
+
+        try:
+            price_list = json.loads(row["negotiated_price_list_json_l6"] or "[]")
+        except Exception:
+            price_list = []
+
+        raw_dict: Dict[str, Any] = {
+            "vendor_id": vid,
+            "vendor_code": row["vendor_code"],
+            "company_name": row["company_name"],
+            "vat_number": row["vat_number"],
+            "supply_chain_role": row["supply_chain_role"],
+            "district_area": row["district_area"],
+            "city_address": row["city_address"] or "",
+            "country_iso2": row["country_iso2"] or "IT",
+            "paas_tier": row["paas_tier"],
+            "qualification_status": qual_status,
+            "quality_score": q_score,
+            "otd_score": o_score,
+            "esg_score": e_score,
+            "overall_rating": overall,
+            "rating_class": r_class,
+            "standard_lead_time_days": int(row["standard_lead_time_days"]),
+            "moq_description": row["moq_description"],
+            "payment_terms_l6": row["payment_terms_l6"],
+            "hourly_or_unit_rate_eur_l6": float(row["hourly_or_unit_rate_eur_l6"]),
+            "negotiated_price_list_l6": price_list,
+            "internal_audit_notes_l6": row["internal_audit_notes_l6"] or "",
+            "contact_email": row["contact_email"] or "",
+            "district_company_id": row["district_company_id"] if "district_company_id" in row.keys() else None,
+            "district_company": None,
+            "is_active": bool(row["is_active"]),
+            "certifications": certs,
+            "has_expired_critical_certs": has_expired,
+            "cert_semaphore_status": semaphore,
+            "l6_segregated": False,
+            "created_at": self._parse_dt(row["created_at"]) or datetime.now(timezone.utc),
+        }
+        if raw_dict["district_company_id"]:
+            c_row = conn.execute(
+                "SELECT company_id, legal_name, business_name, vat_number, district, company_tier, business_type, contact_email FROM companies WHERE company_id = ?",
+                (raw_dict["district_company_id"],),
+            ).fetchone()
+            if c_row:
+                raw_dict["district_company"] = {
+                    "company_id": c_row["company_id"],
+                    "legal_name": c_row["legal_name"],
+                    "business_name": c_row["business_name"],
+                    "vat_number": c_row["vat_number"],
+                    "district": c_row["district"],
+                    "company_tier": c_row["company_tier"],
+                    "business_type": c_row["business_type"],
+                    "contact_email": c_row["contact_email"],
+                }
+        segregated = self._apply_vendor_l6_segregation(raw_dict, viewer_role=viewer_role)
+        return VendorRecord(**segregated)
+
+    def list_vendors(
+        self,
+        viewer_role: str = "brand",
+        supply_chain_role: Optional[str] = None,
+        district_area: Optional[str] = None,
+        qualification_status: Optional[str] = None,
+        paas_tier: Optional[str] = None,
+        search: Optional[str] = None,
+    ) -> List[VendorRecord]:
+        conn = self.get_connection()
+        try:
+            sql = "SELECT * FROM vendors_registry WHERE 1=1"
+            params: List[Any] = []
+            if supply_chain_role and supply_chain_role.strip():
+                sql += " AND LOWER(supply_chain_role) = LOWER(?)"
+                params.append(supply_chain_role.strip())
+            if district_area and district_area.strip():
+                sql += " AND LOWER(district_area) LIKE ?"
+                params.append(f"%{district_area.strip().lower()}%")
+            if qualification_status and qualification_status.strip():
+                sql += " AND LOWER(qualification_status) = LOWER(?)"
+                params.append(qualification_status.strip())
+            if paas_tier and paas_tier.strip():
+                sql += " AND LOWER(paas_tier) = LOWER(?)"
+                params.append(paas_tier.strip())
+            if search and search.strip():
+                like_q = f"%{search.strip().lower()}%"
+                sql += (
+                    " AND (LOWER(vendor_code) LIKE ? OR LOWER(company_name) LIKE ? "
+                    "OR LOWER(vat_number) LIKE ? OR LOWER(district_area) LIKE ?)"
+                )
+                params.extend([like_q, like_q, like_q, like_q])
+            sql += " ORDER BY vendor_code ASC"
+            rows = conn.execute(sql, params).fetchall()
+            return [self._row_to_vendor_record(conn, r, viewer_role=viewer_role) for r in rows]
+        finally:
+            self._close_if_file(conn)
+
+    def get_vendor(self, vendor_id: str, viewer_role: str = "brand") -> Optional[VendorRecord]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT * FROM vendors_registry WHERE vendor_id = ? OR vendor_code = ?",
+                (vendor_id, vendor_id),
+            ).fetchone()
+            return self._row_to_vendor_record(conn, row, viewer_role=viewer_role) if row else None
+        finally:
+            self._close_if_file(conn)
+
+    def _insert_vendor_cert_in_tx(
+        self,
+        conn: sqlite3.Connection,
+        vendor_id: str,
+        c_in: VendorCertificationCreate,
+    ) -> str:
+        cid = (c_in.cert_id or "").strip() or f"VCERT-{uuid4().hex[:8].upper()}"
+        _, dyn_status = self.compute_cert_expiry_and_status(c_in.valid_until, c_in.status)
+        sha_val = (c_in.sha256_hash or "").strip()
+        if not sha_val or len(sha_val) != 64:
+            sha_val = hashlib.sha256(
+                f"{vendor_id}:{c_in.cert_type}:{c_in.cert_code}:{c_in.valid_until}".encode("utf-8")
+            ).hexdigest()
+        conn.execute(
+            """
+            INSERT INTO vendor_certifications (
+                cert_id, vendor_id, cert_type, cert_code, issuing_body,
+                valid_from, valid_until, sha256_hash, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(cert_id) DO UPDATE SET
+                cert_type = excluded.cert_type,
+                cert_code = excluded.cert_code,
+                issuing_body = excluded.issuing_body,
+                valid_from = excluded.valid_from,
+                valid_until = excluded.valid_until,
+                sha256_hash = excluded.sha256_hash,
+                status = excluded.status
+            """,
+            (
+                cid,
+                vendor_id,
+                c_in.cert_type.strip(),
+                c_in.cert_code.strip(),
+                c_in.issuing_body.strip(),
+                c_in.valid_from.strip(),
+                c_in.valid_until.strip(),
+                sha_val,
+                dyn_status,
+            ),
+        )
+        return cid
+
+    def save_vendor(self, v_in: VendorCreate, viewer_role: str = "brand") -> VendorRecord:
+        conn = self.get_connection()
+        try:
+            vid = (v_in.vendor_id or "").strip() or f"VND-{uuid4().hex[:8].upper()}"
+            vcode = (v_in.vendor_code or "").strip().upper()
+            if not vcode:
+                prefix = "TER" if v_in.paas_tier == "subcontractor_zero_eur" else "FOR"
+                vcode = f"{prefix}-{uuid4().hex[:6].upper()}"
+            overall, _ = self.compute_vendor_rating(v_in.quality_score, v_in.otd_score, v_in.esg_score)
+            rate_val = 0.0 if v_in.paas_tier == "subcontractor_zero_eur" and v_in.hourly_or_unit_rate_eur_l6 == 0 else v_in.hourly_or_unit_rate_eur_l6
+            now_iso = datetime.now(timezone.utc).isoformat()
+
+            conn.execute(
+                """
+                INSERT INTO vendors_registry (
+                    vendor_id, vendor_code, company_name, vat_number, supply_chain_role,
+                    district_area, city_address, country_iso2, paas_tier, qualification_status,
+                    quality_score, otd_score, esg_score, overall_rating, standard_lead_time_days,
+                    moq_description, payment_terms_l6, hourly_or_unit_rate_eur_l6,
+                    negotiated_price_list_json_l6, internal_audit_notes_l6, contact_email,
+                    district_company_id, is_active, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(vendor_id) DO UPDATE SET
+                    vendor_code = excluded.vendor_code,
+                    company_name = excluded.company_name,
+                    vat_number = excluded.vat_number,
+                    supply_chain_role = excluded.supply_chain_role,
+                    district_area = excluded.district_area,
+                    city_address = excluded.city_address,
+                    country_iso2 = excluded.country_iso2,
+                    paas_tier = excluded.paas_tier,
+                    qualification_status = excluded.qualification_status,
+                    quality_score = excluded.quality_score,
+                    otd_score = excluded.otd_score,
+                    esg_score = excluded.esg_score,
+                    overall_rating = excluded.overall_rating,
+                    standard_lead_time_days = excluded.standard_lead_time_days,
+                    moq_description = excluded.moq_description,
+                    payment_terms_l6 = excluded.payment_terms_l6,
+                    hourly_or_unit_rate_eur_l6 = excluded.hourly_or_unit_rate_eur_l6,
+                    negotiated_price_list_json_l6 = excluded.negotiated_price_list_json_l6,
+                    internal_audit_notes_l6 = excluded.internal_audit_notes_l6,
+                    contact_email = excluded.contact_email,
+                    district_company_id = COALESCE(excluded.district_company_id, vendors_registry.district_company_id),
+                    is_active = excluded.is_active
+                """,
+                (
+                    vid,
+                    vcode,
+                    v_in.company_name.strip(),
+                    v_in.vat_number.strip(),
+                    v_in.supply_chain_role.strip(),
+                    v_in.district_area.strip(),
+                    (v_in.city_address or "").strip(),
+                    (v_in.country_iso2 or "IT").strip().upper(),
+                    v_in.paas_tier.strip(),
+                    v_in.qualification_status.strip(),
+                    float(v_in.quality_score),
+                    float(v_in.otd_score),
+                    float(v_in.esg_score),
+                    overall,
+                    int(v_in.standard_lead_time_days),
+                    v_in.moq_description or "",
+                    v_in.payment_terms_l6 or "",
+                    float(rate_val),
+                    json.dumps(v_in.negotiated_price_list_l6 or []),
+                    v_in.internal_audit_notes_l6 or "",
+                    (v_in.contact_email or "").strip(),
+                    v_in.district_company_id,
+                    1 if v_in.is_active else 0,
+                    now_iso,
+                ),
+            )
+
+            for cert_in in v_in.initial_certifications:
+                self._insert_vendor_cert_in_tx(conn, vid, cert_in)
+
+            # Backfill any existing bom_items or tannery_batches matching company_name without vendor_id
+            conn.execute(
+                "UPDATE bom_items SET vendor_id = ? WHERE vendor_id IS NULL AND LOWER(supplier_name) = LOWER(?)",
+                (vid, v_in.company_name.strip()),
+            )
+            conn.execute(
+                "UPDATE tannery_batches SET vendor_id = ? WHERE vendor_id IS NULL AND LOWER(tannery_name) = LOWER(?)",
+                (vid, v_in.company_name.strip()),
+            )
+
+            conn.commit()
+            return self.get_vendor(vid, viewer_role=viewer_role)  # type: ignore
+        finally:
+            self._close_if_file(conn)
+
+    def update_vendor(
+        self,
+        vendor_id: str,
+        v_upd: VendorUpdate,
+        viewer_role: str = "brand",
+    ) -> Optional[VendorRecord]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT * FROM vendors_registry WHERE vendor_id = ? OR vendor_code = ?",
+                (vendor_id, vendor_id),
+            ).fetchone()
+            if not row:
+                return None
+            real_vid = row["vendor_id"]
+
+            new_code = v_upd.vendor_code.strip().upper() if v_upd.vendor_code is not None else row["vendor_code"]
+            new_name = v_upd.company_name.strip() if v_upd.company_name is not None else row["company_name"]
+            new_vat = v_upd.vat_number.strip() if v_upd.vat_number is not None else row["vat_number"]
+            new_role = v_upd.supply_chain_role.strip() if v_upd.supply_chain_role is not None else row["supply_chain_role"]
+            new_dist = v_upd.district_area.strip() if v_upd.district_area is not None else row["district_area"]
+            new_city = v_upd.city_address.strip() if v_upd.city_address is not None else row["city_address"]
+            new_iso = v_upd.country_iso2.strip().upper() if v_upd.country_iso2 is not None else row["country_iso2"]
+            new_tier = v_upd.paas_tier.strip() if v_upd.paas_tier is not None else row["paas_tier"]
+            new_qual = v_upd.qualification_status.strip() if v_upd.qualification_status is not None else row["qualification_status"]
+            new_q = float(v_upd.quality_score) if v_upd.quality_score is not None else float(row["quality_score"])
+            new_o = float(v_upd.otd_score) if v_upd.otd_score is not None else float(row["otd_score"])
+            new_e = float(v_upd.esg_score) if v_upd.esg_score is not None else float(row["esg_score"])
+            overall, _ = self.compute_vendor_rating(new_q, new_o, new_e)
+            new_lead = int(v_upd.standard_lead_time_days) if v_upd.standard_lead_time_days is not None else int(row["standard_lead_time_days"])
+            new_moq = v_upd.moq_description if v_upd.moq_description is not None else row["moq_description"]
+            new_pay = v_upd.payment_terms_l6 if v_upd.payment_terms_l6 is not None else row["payment_terms_l6"]
+            new_rate = (
+                float(v_upd.hourly_or_unit_rate_eur_l6)
+                if v_upd.hourly_or_unit_rate_eur_l6 is not None
+                else float(row["hourly_or_unit_rate_eur_l6"])
+            )
+            new_plist = (
+                json.dumps(v_upd.negotiated_price_list_l6)
+                if v_upd.negotiated_price_list_l6 is not None
+                else row["negotiated_price_list_json_l6"]
+            )
+            new_notes = (
+                v_upd.internal_audit_notes_l6
+                if v_upd.internal_audit_notes_l6 is not None
+                else row["internal_audit_notes_l6"]
+            )
+            new_email = v_upd.contact_email.strip() if v_upd.contact_email is not None else row["contact_email"]
+            new_dist_comp = v_upd.district_company_id if v_upd.district_company_id is not None else (row["district_company_id"] if "district_company_id" in row.keys() else None)
+            new_active = (1 if v_upd.is_active else 0) if v_upd.is_active is not None else int(row["is_active"])
+
+            conn.execute(
+                """
+                UPDATE vendors_registry
+                SET vendor_code = ?, company_name = ?, vat_number = ?, supply_chain_role = ?,
+                    district_area = ?, city_address = ?, country_iso2 = ?, paas_tier = ?,
+                    qualification_status = ?, quality_score = ?, otd_score = ?, esg_score = ?,
+                    overall_rating = ?, standard_lead_time_days = ?, moq_description = ?,
+                    payment_terms_l6 = ?, hourly_or_unit_rate_eur_l6 = ?,
+                    negotiated_price_list_json_l6 = ?, internal_audit_notes_l6 = ?,
+                    contact_email = ?, district_company_id = ?, is_active = ?
+                WHERE vendor_id = ?
+                """,
+                (
+                    new_code,
+                    new_name,
+                    new_vat,
+                    new_role,
+                    new_dist,
+                    new_city,
+                    new_iso,
+                    new_tier,
+                    new_qual,
+                    new_q,
+                    new_o,
+                    new_e,
+                    overall,
+                    new_lead,
+                    new_moq,
+                    new_pay,
+                    new_rate,
+                    new_plist,
+                    new_notes,
+                    new_email,
+                    new_dist_comp,
+                    new_active,
+                    real_vid,
+                ),
+            )
+            conn.commit()
+            return self.get_vendor(real_vid, viewer_role=viewer_role)
+        finally:
+            self._close_if_file(conn)
+
+    def delete_vendor(self, vendor_id: str) -> Optional[Dict[str, str]]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT vendor_id, company_name FROM vendors_registry WHERE vendor_id = ? OR vendor_code = ?",
+                (vendor_id, vendor_id),
+            ).fetchone()
+            if not row:
+                return None
+            real_vid = row["vendor_id"]
+            cname = row["company_name"]
+            ref_count = 0
+            for q, p in (
+                ("SELECT COUNT(*) AS c FROM bom_items WHERE vendor_id = ? OR LOWER(supplier_name) = LOWER(?)", (real_vid, cname)),
+                ("SELECT COUNT(*) AS c FROM tannery_batches WHERE vendor_id = ? OR LOWER(tannery_name) = LOWER(?)", (real_vid, cname)),
+                ("SELECT COUNT(*) AS c FROM subcontractor_assignments WHERE LOWER(subcontractor_name) = LOWER(?)", (cname,)),
+                ("SELECT COUNT(*) AS c FROM production_order_phases WHERE LOWER(subcontractor_name) = LOWER(?)", (cname,)),
+            ):
+                r = conn.execute(q, p).fetchone()
+                ref_count += int(r["c"]) if r else 0
+
+            if ref_count > 0:
+                conn.execute("UPDATE vendors_registry SET is_active = 0 WHERE vendor_id = ?", (real_vid,))
+                conn.commit()
+                return {"status": "deactivated", "vendor_id": real_vid}
+
+            conn.execute("DELETE FROM vendors_registry WHERE vendor_id = ?", (real_vid,))
+            conn.commit()
+            return {"status": "deleted", "vendor_id": real_vid}
+        finally:
+            self._close_if_file(conn)
+
+    def list_vendor_certifications(self, vendor_id: str) -> Optional[List[VendorCertification]]:
+        conn = self.get_connection()
+        try:
+            vrow = conn.execute(
+                "SELECT vendor_id FROM vendors_registry WHERE vendor_id = ? OR vendor_code = ?",
+                (vendor_id, vendor_id),
+            ).fetchone()
+            if not vrow:
+                return None
+            real_vid = vrow["vendor_id"]
+            rows = conn.execute(
+                "SELECT * FROM vendor_certifications WHERE vendor_id = ? ORDER BY valid_until ASC",
+                (real_vid,),
+            ).fetchall()
+            return [self._row_to_vendor_cert(r) for r in rows]
+        finally:
+            self._close_if_file(conn)
+
+    def add_vendor_certification(
+        self,
+        vendor_id: str,
+        c_in: VendorCertificationCreate,
+    ) -> Optional[VendorCertification]:
+        conn = self.get_connection()
+        try:
+            vrow = conn.execute(
+                "SELECT vendor_id FROM vendors_registry WHERE vendor_id = ? OR vendor_code = ?",
+                (vendor_id, vendor_id),
+            ).fetchone()
+            if not vrow:
+                return None
+            real_vid = vrow["vendor_id"]
+            cid = self._insert_vendor_cert_in_tx(conn, real_vid, c_in)
+            conn.commit()
+            crow = conn.execute(
+                "SELECT * FROM vendor_certifications WHERE cert_id = ?",
+                (cid,),
+            ).fetchone()
+            return self._row_to_vendor_cert(crow) if crow else None
+        finally:
+            self._close_if_file(conn)
+
+    def delete_vendor_certification(self, vendor_id: str, cert_id: str) -> Optional[Dict[str, str]]:
+        conn = self.get_connection()
+        try:
+            vrow = conn.execute(
+                "SELECT vendor_id FROM vendors_registry WHERE vendor_id = ? OR vendor_code = ?",
+                (vendor_id, vendor_id),
+            ).fetchone()
+            if not vrow:
+                return None
+            real_vid = vrow["vendor_id"]
+            cur = conn.execute(
+                "DELETE FROM vendor_certifications WHERE vendor_id = ? AND cert_id = ?",
+                (real_vid, cert_id),
+            )
+            conn.commit()
+            if cur.rowcount == 0:
+                return None
+            return {"status": "deleted", "cert_id": cert_id}
+        finally:
+            self._close_if_file(conn)
+
+    def get_vendor_where_used(
+        self,
+        vendor_id: str,
+        viewer_role: str = "brand",
+    ) -> Optional[VendorWhereUsedResponse]:
+        conn = self.get_connection()
+        try:
+            vrow = conn.execute(
+                "SELECT * FROM vendors_registry WHERE vendor_id = ? OR vendor_code = ?",
+                (vendor_id, vendor_id),
+            ).fetchone()
+            if not vrow:
+                return None
+
+            real_vid = vrow["vendor_id"]
+            cname = vrow["company_name"]
+            role_norm = (viewer_role or "brand").strip().lower()
+            is_brand = role_norm == "brand"
+
+            bom_rows = conn.execute(
+                """
+                SELECT bi.*, pv.variant_code, pv.pim_item_id
+                FROM bom_items bi
+                JOIN plm_production_variants pv ON bi.plm_variant_id = pv.plm_variant_id
+                WHERE bi.vendor_id = ? OR LOWER(bi.supplier_name) = LOWER(?)
+                ORDER BY pv.variant_code ASC, bi.level ASC
+                """,
+                (real_vid, cname),
+            ).fetchall()
+
+            sub_rows = conn.execute(
+                """
+                SELECT DISTINCT plm_variant_id
+                FROM subcontractor_assignments
+                WHERE LOWER(subcontractor_name) = LOWER(?)
+                """,
+                (cname,),
+            ).fetchall()
+
+            phase_rows = conn.execute(
+                """
+                SELECT DISTINCT po.order_id, po.plm_variant_id, po.status
+                FROM production_order_phases pop
+                JOIN production_orders po ON pop.order_id = po.order_id
+                WHERE LOWER(pop.subcontractor_name) = LOWER(?) OR pop.subcontractor_id = ?
+                """,
+                (cname, real_vid),
+            ).fetchall()
+
+            tb_rows = conn.execute(
+                """
+                SELECT * FROM tannery_batches
+                WHERE vendor_id = ? OR LOWER(tannery_name) = LOWER(?)
+                ORDER BY created_at DESC
+                """,
+                (real_vid, cname),
+            ).fetchall()
+            tb_ids = {tb["batch_id"] for tb in tb_rows}
+
+            impacted_var_ids = {r["plm_variant_id"] for r in bom_rows}
+            impacted_var_ids.update(r["plm_variant_id"] for r in sub_rows)
+            impacted_var_ids.update(r["plm_variant_id"] for r in phase_rows)
+
+            if tb_ids:
+                ph = ",".join("?" for _ in tb_ids)
+                for po_r in conn.execute(
+                    f"SELECT DISTINCT plm_variant_id FROM production_orders WHERE tannery_batch_id IN ({ph})",
+                    list(tb_ids),
+                ).fetchall():
+                    impacted_var_ids.add(po_r["plm_variant_id"])
+
+            variant_rows: List[sqlite3.Row] = []
+            if impacted_var_ids:
+                ph = ",".join("?" for _ in impacted_var_ids)
+                variant_rows = conn.execute(
+                    f"SELECT * FROM plm_production_variants WHERE plm_variant_id IN ({ph}) ORDER BY variant_code ASC",
+                    list(impacted_var_ids),
+                ).fetchall()
+
+            impacted_pim_ids = {vr["pim_item_id"] for vr in variant_rows}
+            pim_rows: List[sqlite3.Row] = []
+            if impacted_pim_ids:
+                ph = ",".join("?" for _ in impacted_pim_ids)
+                pim_rows = conn.execute(
+                    f"SELECT * FROM pim_commercial_items WHERE pim_item_id IN ({ph}) ORDER BY sku_code ASC",
+                    list(impacted_pim_ids),
+                ).fetchall()
+
+            active_order_ids = {
+                r["order_id"] for r in phase_rows if r["status"] not in ("completed", "cancelled")
+            }
+            if impacted_var_ids:
+                ph = ",".join("?" for _ in impacted_var_ids)
+                for po_r in conn.execute(
+                    f"SELECT order_id FROM production_orders WHERE plm_variant_id IN ({ph}) AND status NOT IN ('completed', 'cancelled')",
+                    list(impacted_var_ids),
+                ).fetchall():
+                    active_order_ids.add(po_r["order_id"])
+            if tb_ids:
+                ph = ",".join("?" for _ in tb_ids)
+                for po_r in conn.execute(
+                    f"SELECT order_id FROM production_orders WHERE tannery_batch_id IN ({ph}) AND status NOT IN ('completed', 'cancelled')",
+                    list(tb_ids),
+                ).fetchall():
+                    active_order_ids.add(po_r["order_id"])
+
+            impacted_bom_nodes: List[VendorImpactedBomNode] = []
+            bom_pair_contribs: List[float] = []
+            for br in bom_rows:
+                b_meta = json.loads(br["metadata_json"] or "{}")
+                b_keys = br.keys()
+                raw_cost = float(b_meta.get("unit_cost_eur", 0.0))
+                gross_contrib = float(br["unit_consumption"]) * (1.0 + float(br["waste_percentage"]) / 100.0) * raw_cost
+                bom_pair_contribs.append(gross_contrib)
+                impacted_bom_nodes.append(
+                    VendorImpactedBomNode(
+                        bom_item_id=br["bom_item_id"],
+                        plm_variant_id=br["plm_variant_id"],
+                        variant_code=br["variant_code"],
+                        level=int(br["level"]),
+                        component_type=br["component_type"],
+                        material_name=br["material_name"],
+                        unit_of_measure=br["unit_of_measure"],
+                        unit_consumption=float(br["unit_consumption"]),
+                        waste_percentage=float(br["waste_percentage"]),
+                        master_color_id=br["master_color_id"] if "master_color_id" in b_keys else None,
+                        unit_cost_eur_l6=round(raw_cost, 2) if is_brand else None,
+                    )
+                )
+
+            impacted_variants = [
+                VendorImpactedPlmVariant(
+                    plm_variant_id=vr["plm_variant_id"],
+                    pim_item_id=vr["pim_item_id"],
+                    variant_code=vr["variant_code"],
+                    colorway_name=vr["colorway_name"],
+                    lifecycle_status=vr["lifecycle_status"],
+                )
+                for vr in variant_rows
+            ]
+
+            impacted_pims = [
+                VendorImpactedPimModel(
+                    pim_item_id=pr["pim_item_id"],
+                    sku_code=pr["sku_code"],
+                    model_name=pr["model_name"],
+                    season=pr["season"],
+                    category=pr["category"],
+                )
+                for pr in pim_rows
+            ]
+
+            impacted_batches = [
+                VendorImpactedTanneryBatch(
+                    batch_id=tb["batch_id"],
+                    batch_code=tb["batch_code"],
+                    leather_type=tb["leather_type"],
+                    lwg_rating=tb["lwg_rating"],
+                    available_qty_sqft=float(tb["available_qty_sqft"]),
+                    master_color_id=tb["master_color_id"] if "master_color_id" in tb.keys() else None,
+                )
+                for tb in tb_rows
+            ]
+
+            pim_cnt = len(impacted_pims)
+            var_cnt = len(impacted_variants)
+            bom_cnt = len(impacted_bom_nodes)
+            tb_cnt = len(impacted_batches)
+            ord_cnt = len(active_order_ids)
+
+            if pim_cnt >= 2 or bom_cnt >= 3:
+                crit = "HIGH"
+            elif pim_cnt >= 1 or bom_cnt >= 1 or tb_cnt >= 1:
+                crit = "MEDIUM"
+            else:
+                crit = "LOW"
+
+            summary = VendorImpactSummary(
+                pim_models_count=pim_cnt,
+                plm_variants_count=var_cnt,
+                bom_nodes_count=bom_cnt,
+                tannery_batches_count=tb_cnt,
+                active_production_orders_count=ord_cnt,
+                supply_chain_criticality=crit,
+            )
+
+            overall_val, _ = self.compute_vendor_rating(
+                float(vrow["quality_score"]),
+                float(vrow["otd_score"]),
+                float(vrow["esg_score"]),
+            )
+
+            if is_brand:
+                unit_rate = float(vrow["hourly_or_unit_rate_eur_l6"])
+                avg_contrib = (
+                    round(sum(bom_pair_contribs) / len(bom_pair_contribs), 2)
+                    if bom_pair_contribs
+                    else round(unit_rate, 2)
+                )
+                stock_val = round(
+                    sum(float(tb["available_qty_sqft"]) * max(unit_rate, 4.5) for tb in tb_rows),
+                    2,
+                )
+                seasonal_exp = round(avg_contrib * max(var_cnt, 1) * 250.0 + stock_val, 2)
+                fin_exp: Optional[VendorFinancialExposureL6] = VendorFinancialExposureL6(
+                    avg_bom_cost_contribution_per_pair_eur=avg_contrib,
+                    tannery_stock_value_eur=stock_val,
+                    estimated_seasonal_exposure_eur=seasonal_exp,
+                    hourly_or_unit_rate_eur=unit_rate,
+                    payment_terms=vrow["payment_terms_l6"] or "",
+                )
+            else:
+                fin_exp = None
+
+            return VendorWhereUsedResponse(
+                vendor_id=real_vid,
+                vendor_code=vrow["vendor_code"],
+                company_name=cname,
+                supply_chain_role=vrow["supply_chain_role"],
+                district_area=vrow["district_area"],
+                qualification_status=vrow["qualification_status"],
+                paas_tier=vrow["paas_tier"],
+                overall_rating=overall_val if is_brand else None,
+                viewer_role=role_norm,
+                l6_segregated=not is_brand,
+                impact_summary=summary,
+                financial_exposure_l6=fin_exp,
+                impacted_pim_models=impacted_pims,
+                impacted_plm_variants=impacted_variants,
+                impacted_bom_nodes=impacted_bom_nodes,
+                impacted_tannery_batches=impacted_batches,
+            )
+        finally:
+            self._close_if_file(conn)
+
+    # =========================================================================
+    # Product Models (FTL-CEO-021)
+    # =========================================================================
+
+    def _row_to_product_model(self, conn: sqlite3.Connection, row: sqlite3.Row) -> ProductModel:
+        mid = row["model_id"]
+        p_count = conn.execute(
+            "SELECT COUNT(*) FROM pim_commercial_items WHERE model_id = ?",
+            (mid,),
+        ).fetchone()[0]
+        v_count = conn.execute(
+            """
+            SELECT COUNT(*) FROM plm_production_variants v
+            JOIN pim_commercial_items p ON v.pim_item_id = p.pim_item_id
+            WHERE p.model_id = ?
+            """,
+            (mid,),
+        ).fetchone()[0]
+
+        try:
+            meta = json.loads(row["metadata_json"] or "{}")
+        except Exception:
+            meta = {}
+
+        return ProductModel(
+            model_id=mid,
+            model_code=row["model_code"],
+            name=row["name"],
+            category=ProductCategory(row["category"]) if "category" in row.keys() and row["category"] else ProductCategory.FOOTWEAR,
+            target_gender=row["target_gender"] if "target_gender" in row.keys() else "unisex",
+            last_code=row["last_code"] if "last_code" in row.keys() else "Forma Standard",
+            sole_construction=row["sole_construction"] if "sole_construction" in row.keys() else "Blake",
+            heel_height_mm=float(row["heel_height_mm"]) if "heel_height_mm" in row.keys() else 25.0,
+            default_size_range=row["default_size_range"] if "default_size_range" in row.keys() else "39-46",
+            season_id=row["season_id"] if "season_id" in row.keys() else None,
+            collection_id=row["collection_id"] if "collection_id" in row.keys() else None,
+            description=row["description"] if "description" in row.keys() else "",
+            cad_drawing_ref=row["cad_drawing_ref"] if "cad_drawing_ref" in row.keys() else "",
+            is_active=bool(row["is_active"]) if "is_active" in row.keys() else True,
+            metadata=meta,
+            attached_products_count=p_count,
+            attached_variants_count=v_count,
+            created_at=self._parse_dt(row["created_at"]) or datetime.now(timezone.utc),
+        )
+
+    def save_product_model(self, model: ProductModelCreate, model_id: Optional[str] = None) -> ProductModel:
+        conn = self.get_connection()
+        try:
+            mid = model_id or getattr(model, "model_id", None) or f"MOD-{uuid4().hex[:8].upper()}"
+            now_iso = datetime.now(timezone.utc).isoformat()
+            meta_json = json.dumps(model.metadata)
+            cat_val = model.category.value if hasattr(model.category, "value") else str(model.category)
+
+            conn.execute(
+                """
+                INSERT INTO product_models (
+                    model_id, model_code, name, category, target_gender,
+                    last_code, sole_construction, heel_height_mm, default_size_range,
+                    season_id, collection_id, description, cad_drawing_ref,
+                    is_active, metadata_json, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(model_id) DO UPDATE SET
+                    model_code = excluded.model_code,
+                    name = excluded.name,
+                    category = excluded.category,
+                    target_gender = excluded.target_gender,
+                    last_code = excluded.last_code,
+                    sole_construction = excluded.sole_construction,
+                    heel_height_mm = excluded.heel_height_mm,
+                    default_size_range = excluded.default_size_range,
+                    season_id = excluded.season_id,
+                    collection_id = excluded.collection_id,
+                    description = excluded.description,
+                    cad_drawing_ref = excluded.cad_drawing_ref,
+                    is_active = excluded.is_active,
+                    metadata_json = excluded.metadata_json
+                """,
+                (
+                    mid,
+                    model.model_code,
+                    model.name,
+                    cat_val,
+                    model.target_gender,
+                    model.last_code,
+                    model.sole_construction,
+                    model.heel_height_mm,
+                    model.default_size_range,
+                    model.season_id,
+                    model.collection_id,
+                    model.description,
+                    model.cad_drawing_ref,
+                    1 if model.is_active else 0,
+                    meta_json,
+                    now_iso,
+                ),
+            )
+            conn.commit()
+            res = self.get_product_model(mid)
+            if not res:
+                raise RuntimeError(f"Failed to retrieve saved product model '{mid}'")
+            return res
+        finally:
+            self._close_if_file(conn)
+
+    def get_product_model(self, model_id: str) -> Optional[ProductModel]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT * FROM product_models WHERE model_id = ? OR model_code = ?",
+                (model_id, model_id),
+            ).fetchone()
+            if not row:
+                return None
+            return self._row_to_product_model(conn, row)
+        finally:
+            self._close_if_file(conn)
+
+    def get_product_model_with_products(self, model_id: str) -> Optional[ProductModelWithProducts]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT * FROM product_models WHERE model_id = ? OR model_code = ?",
+                (model_id, model_id),
+            ).fetchone()
+            if not row:
+                return None
+            real_mid = row["model_id"]
+            base = self._row_to_product_model(conn, row)
+            p_rows = conn.execute(
+                "SELECT * FROM pim_commercial_items WHERE model_id = ? ORDER BY sku_code ASC",
+                (real_mid,),
+            ).fetchall()
+            attached_items = [self._row_to_pim_item(conn, pr) for pr in p_rows]
+            return ProductModelWithProducts(
+                **base.model_dump(),
+                attached_pim_items=attached_items,
+            )
+        finally:
+            self._close_if_file(conn)
+
+    def list_product_models(
+        self,
+        category: Optional[str] = None,
+        is_active: Optional[bool] = None,
+        search: Optional[str] = None,
+    ) -> List[ProductModel]:
+        conn = self.get_connection()
+        try:
+            sql = "SELECT * FROM product_models WHERE 1=1"
+            params: List[Any] = []
+            if category and category.strip() and category != "ALL":
+                sql += " AND LOWER(category) = LOWER(?)"
+                params.append(category.strip())
+            if is_active is not None:
+                sql += " AND is_active = ?"
+                params.append(1 if is_active else 0)
+            if search and search.strip():
+                s = f"%{search.strip().lower()}%"
+                sql += " AND (LOWER(model_code) LIKE ? OR LOWER(name) LIKE ? OR LOWER(last_code) LIKE ?)"
+                params.extend([s, s, s])
+            sql += " ORDER BY model_code ASC"
+            rows = conn.execute(sql, params).fetchall()
+            return [self._row_to_product_model(conn, r) for r in rows]
+        finally:
+            self._close_if_file(conn)
+
+    def update_product_model(self, model_id: str, payload: ProductModelUpdate) -> Optional[ProductModel]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT * FROM product_models WHERE model_id = ? OR model_code = ?",
+                (model_id, model_id),
+            ).fetchone()
+            if not row:
+                return None
+            real_mid = row["model_id"]
+            fields: List[str] = []
+            params: List[Any] = []
+            if payload.name is not None:
+                fields.append("name = ?")
+                params.append(payload.name.strip())
+            if payload.category is not None:
+                fields.append("category = ?")
+                params.append(payload.category.value if hasattr(payload.category, "value") else str(payload.category))
+            if payload.target_gender is not None:
+                fields.append("target_gender = ?")
+                params.append(payload.target_gender)
+            if payload.last_code is not None:
+                fields.append("last_code = ?")
+                params.append(payload.last_code)
+            if payload.sole_construction is not None:
+                fields.append("sole_construction = ?")
+                params.append(payload.sole_construction)
+            if payload.heel_height_mm is not None:
+                fields.append("heel_height_mm = ?")
+                params.append(float(payload.heel_height_mm))
+            if payload.default_size_range is not None:
+                fields.append("default_size_range = ?")
+                params.append(payload.default_size_range)
+            if payload.season_id is not None:
+                fields.append("season_id = ?")
+                params.append(payload.season_id)
+            if payload.collection_id is not None:
+                fields.append("collection_id = ?")
+                params.append(payload.collection_id)
+            if payload.description is not None:
+                fields.append("description = ?")
+                params.append(payload.description)
+            if payload.cad_drawing_ref is not None:
+                fields.append("cad_drawing_ref = ?")
+                params.append(payload.cad_drawing_ref)
+            if payload.is_active is not None:
+                fields.append("is_active = ?")
+                params.append(1 if payload.is_active else 0)
+            if payload.metadata is not None:
+                fields.append("metadata_json = ?")
+                params.append(json.dumps(payload.metadata))
+
+            if fields:
+                params.append(real_mid)
+                conn.execute(f"UPDATE product_models SET {', '.join(fields)} WHERE model_id = ?", params)
+                conn.commit()
+            return self.get_product_model(real_mid)
+        finally:
+            self._close_if_file(conn)
+
+    def delete_product_model(self, model_id: str) -> bool:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT * FROM product_models WHERE model_id = ? OR model_code = ?",
+                (model_id, model_id),
+            ).fetchone()
+            if not row:
+                return False
+            real_mid = row["model_id"]
+            conn.execute("UPDATE pim_commercial_items SET model_id = NULL WHERE model_id = ?", (real_mid,))
+            res = conn.execute("DELETE FROM product_models WHERE model_id = ?", (real_mid,))
+            conn.commit()
+            return res.rowcount > 0
+        finally:
+            self._close_if_file(conn)
+
+    def attach_product_to_model(self, model_id: str, pim_item_id: str) -> bool:
+        conn = self.get_connection()
+        try:
+            m_row = conn.execute(
+                "SELECT * FROM product_models WHERE model_id = ? OR model_code = ?",
+                (model_id, model_id),
+            ).fetchone()
+            if not m_row:
+                return False
+            real_mid = m_row["model_id"]
+            res = conn.execute(
+                "UPDATE pim_commercial_items SET model_id = ? WHERE pim_item_id = ?",
+                (real_mid, pim_item_id),
+            )
+            conn.commit()
+            return res.rowcount > 0
+        finally:
+            self._close_if_file(conn)
+
+    def detach_product_from_model(self, model_id: str, pim_item_id: str) -> bool:
+        conn = self.get_connection()
+        try:
+            m_row = conn.execute(
+                "SELECT * FROM product_models WHERE model_id = ? OR model_code = ?",
+                (model_id, model_id),
+            ).fetchone()
+            real_mid = m_row["model_id"] if m_row else model_id
+            res = conn.execute(
+                "UPDATE pim_commercial_items SET model_id = NULL WHERE pim_item_id = ? AND model_id = ?",
+                (pim_item_id, real_mid),
+            )
+            conn.commit()
+            return res.rowcount > 0
+        finally:
+            self._close_if_file(conn)
+
+    # =========================================================================
+    # Albo Fornitori <-> Hub Distretto PaaS Linking (FTL-CEO-022)
+    # =========================================================================
+
+    def link_vendor_to_district_company(self, vendor_id: str, company_id: str) -> Optional[VendorRecord]:
+        conn = self.get_connection()
+        try:
+            c_row = conn.execute("SELECT * FROM companies WHERE company_id = ?", (company_id,)).fetchone()
+            if not c_row:
+                return None
+            res = conn.execute(
+                "UPDATE vendors_registry SET district_company_id = ? WHERE vendor_id = ? OR vendor_code = ?",
+                (company_id, vendor_id, vendor_id),
+            )
+            conn.commit()
+            if res.rowcount == 0:
+                return None
+            return self.get_vendor(vendor_id)
+        finally:
+            self._close_if_file(conn)
+
+    def unlink_vendor_from_district_company(self, vendor_id: str) -> Optional[VendorRecord]:
+        conn = self.get_connection()
+        try:
+            res = conn.execute(
+                "UPDATE vendors_registry SET district_company_id = NULL WHERE vendor_id = ? OR vendor_code = ?",
+                (vendor_id, vendor_id),
+            )
+            conn.commit()
+            if res.rowcount == 0:
+                return None
+            return self.get_vendor(vendor_id)
+        finally:
+            self._close_if_file(conn)
+
+    def auto_link_vendors_to_district_companies(self) -> Dict[str, Any]:
+        """Automatically match vendors_registry and companies by VAT number or matching company name."""
+        conn = self.get_connection()
+        try:
+            vendors = conn.execute("SELECT vendor_id, vendor_code, company_name, vat_number, district_company_id FROM vendors_registry").fetchall()
+            companies = conn.execute("SELECT company_id, legal_name, business_name, vat_number FROM companies").fetchall()
+
+            linked_pairs: List[Dict[str, Any]] = []
+
+            for v in vendors:
+                if v["district_company_id"]:
+                    continue  # already linked
+                v_vat = (v["vat_number"] or "").strip().upper()
+                v_name = (v["company_name"] or "").strip().lower()
+
+                matched_company_id = None
+                matched_company_name = None
+
+                for c in companies:
+                    c_vat = (c["vat_number"] or "").strip().upper()
+                    c_legal = (c["legal_name"] or "").strip().lower()
+                    c_biz = (c["business_name"] or "").strip().lower()
+
+                    # Exact VAT match
+                    if v_vat and c_vat and v_vat == c_vat:
+                        matched_company_id = c["company_id"]
+                        matched_company_name = c["legal_name"]
+                        break
+
+                    # Strong substring/name match
+                    if (v_name in c_legal or c_legal in v_name) and len(v_name) > 6:
+                        matched_company_id = c["company_id"]
+                        matched_company_name = c["legal_name"]
+                        break
+
+                if matched_company_id:
+                    conn.execute(
+                        "UPDATE vendors_registry SET district_company_id = ? WHERE vendor_id = ?",
+                        (matched_company_id, v["vendor_id"]),
+                    )
+                    linked_pairs.append({
+                        "vendor_id": v["vendor_id"],
+                        "vendor_code": v["vendor_code"],
+                        "company_name": v["company_name"],
+                        "district_company_id": matched_company_id,
+                        "district_company_name": matched_company_name,
+                    })
+
+            conn.commit()
+            return {
+                "matched_count": len(linked_pairs),
+                "linked_vendors": linked_pairs,
+            }
         finally:
             self._close_if_file(conn)
 

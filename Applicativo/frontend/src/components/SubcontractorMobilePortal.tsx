@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { findMasterColorById } from "../mockSeedData";
 import {
+  ColorwayMatrixResponse,
+  MasterColor,
   PlmProductionVariant,
   ProductionPhase,
   SubcontractorAssignment,
@@ -7,6 +10,8 @@ import {
 
 interface SubcontractorMobilePortalProps {
   variant: PlmProductionVariant;
+  colors?: MasterColor[];
+  colorwayMatrix?: ColorwayMatrixResponse;
   onConfirmStep: (assignmentId: string, updatedLotCode: string) => void;
   onAddSubcontractor?: (assignment: SubcontractorAssignment) => void;
 }
@@ -22,7 +27,13 @@ const PHASE_LABELS: Record<ProductionPhase, string> = {
 
 export const SubcontractorMobilePortal: React.FC<
   SubcontractorMobilePortalProps
-> = ({ variant, onConfirmStep, onAddSubcontractor }) => {
+> = ({
+  variant,
+  colors = [],
+  colorwayMatrix,
+  onConfirmStep,
+  onAddSubcontractor,
+}) => {
   const assignments = variant.subcontractor_assignments;
   const firstPending =
     assignments.find((a) => !a.completed) || assignments[0];
@@ -190,6 +201,56 @@ export const SubcontractorMobilePortal: React.FC<
               {variant.variant_code}
             </span>
           </div>
+
+          {/* Sprint 8: Tirella Colore & Presidio L6 0,00 € Perpetuo */}
+          {(() => {
+            const activeColor =
+              findMasterColorById(colors, variant.primary_color_id) ||
+              findMasterColorById(colors, variant.bom_items?.[0]?.master_color_id);
+            const isGateBlocked = colorwayMatrix?.production_gate_blocked;
+            return (
+              <div className="bg-white border border-[#E5E5E5] rounded-2xl p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span
+                      className="w-8 h-8 rounded-xl border border-slate-300 shadow-inner shrink-0"
+                      style={{
+                        backgroundColor: activeColor?.hex_code || "#141414",
+                      }}
+                    />
+                    <div className="min-w-0">
+                      <div className="font-mono text-[10px] font-bold text-[#707072]">
+                        {activeColor?.color_code || "COL-STD"} ·{" "}
+                        {activeColor?.pantone_tcx_code || "Pantone Master"}
+                      </div>
+                      <div className="text-xs font-extrabold text-[#111111] truncate">
+                        {activeColor?.technical_name_it || variant.colorway_name}
+                      </div>
+                    </div>
+                  </div>
+
+                  {isGateBlocked ? (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-100 text-rose-900 border border-rose-300 shrink-0">
+                      🔴 TIRELLA BLOCCATA
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 shrink-0">
+                      ● TIRELLA APPROVATA MASTER
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between pt-1.5 border-t border-[#F0F0F0] text-[10px]">
+                  <span className="font-bold text-emerald-800">
+                    🤝 0,00 € Canone Perpetuo
+                  </span>
+                  <span className="font-semibold text-[#707072]">
+                    🔒 Zero Costi/Listini Esposti (L6)
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* CLIC 1: Select Department / Phase Assignment */}
           <div>

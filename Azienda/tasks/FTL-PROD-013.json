@@ -1,0 +1,39 @@
+{
+  "task_id": "FTL-PROD-013",
+  "title": "Collaudo UX/UI Verticale Sprint 8, Audit Segregazione L6 Fornitori e Certificazione Zero-Training",
+  "description": "Validazione funzionale end-to-end dei due motori verticali dello Sprint 8 (Gestione Colori Intelligente & Colorway BOM Matrix + Albo Fornitori & Terzisti Centralizzato 360°): collaudo usabilità Zero-JSON per modellisti e buyer, verifica dell'oscuramento totale L6 dei listini/condizioni fornitore nella vista Terzista 0 EUR, e certificazione della suite di test.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "CEO (footlink-ceo)",
+  "created_at": "2026-10-26T00:42:00+01:00",
+  "updated_at": "2026-10-28T17:10:00+02:00",
+  "due_date": "2026-11-12T23:59:59+01:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "4h (Audit formale L6, verifica 7 AC PRD-009, suite Pytest 36/36 e report di collaudo)",
+  "dependencies": [
+    "FTL-TECH-022",
+    "FTL-TECH-023"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/sprint-8-vertical-qa-and-l6-audit-report.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-011",
+  "tags": [
+    "governance",
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Collaudo end-to-end della creazione Cartella Colori, assegnazione Colorway BOM Matrix, stato Lab-Dip ed esplosione multi-variante in 1 clic",
+    "Collaudo end-to-end dell'Albo Fornitori 360°, alert scadenze certificazioni LWG/EUDR, legame con BOM/Conceria e vista Where-Used",
+    "Verifica formale della segregazione L6 (zero leak di listini/rating negoziali verso il profilo Terzista 0 EUR)"
+  ],
+  "notes": "Completato con successo da footlink-cpo il 28 Ottobre 2026. Tutti i 7 AC PRD-009 certificati conformi (10/10 test Sprint 8 e 36/36 complessivi superati). Segregazione L6 matematicamente blindata e Zero-JSON rispettato."
+}

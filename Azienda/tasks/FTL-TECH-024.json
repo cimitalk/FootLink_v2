@@ -1,0 +1,31 @@
+{
+  "task_id": "FTL-TECH-024",
+  "title": "Togliere il tasto \"Archivio DAM Adv & Social\" dalla Home Launchpad",
+  "description": "Togliere il tasto \"Archivio DAM Adv & Social\" dalla Home Launchpad",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-28T18:09:16+02:00",
+  "updated_at": "2026-10-28T19:05:00+02:00",
+  "due_date": "2026-11-27T23:59:59+02:00",
+  "estimated_effort": "XS (<2h)",
+  "actual_effort": "0.5h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/FootlinkHomeHub.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": null,
+  "tags": [
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Il taso non è più visibile"
+  ],
+  "notes": "Iniziativa inserita dal Founder nel Control Center per triage e strutturazione CTO."
+}

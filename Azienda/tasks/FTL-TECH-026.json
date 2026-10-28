@@ -1,0 +1,32 @@
+{
+  "task_id": "FTL-TECH-026",
+  "title": "Rinominare e riorganizzare i 5 Tab Operativi Ergonomici",
+  "description": "📦 Catalogo Varianti PLM: rinominare in: 📦 Prodtti\n\n📐 Modelli di Base (Forme & Cartamodelli); Rinominare in: 📐 Modelli\n\n🌿 Distinta Base (BOM 3 Livelli & Costi L6) rinominare in: 🌿 Distinta Base\n\n🎨 Colorway BOM Matrix & Lab-Dip ΔE ≤ 2.5: Rinominare in: 🎨 Colori\n\n⚙️ Template & Preset BOM: Spostare all'interno di 🌿 Distinta Base e rinominare in: ⚙️ Template BOM",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-28T19:00:27+02:00",
+  "updated_at": "2026-10-28T19:15:00+02:00",
+  "due_date": "2026-11-27T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "2h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": null,
+  "tags": [
+    "product",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Tutti i tasti sono rinominati come descritto"
+  ],
+  "notes": "Iniziativa inserita dal Founder nel Control Center per triage e strutturazione CTO."
+}

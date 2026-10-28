@@ -1,0 +1,57 @@
+{
+  "task_id": "FTL-TECH-022",
+  "title": "Sviluppo Full-Stack Verticalizzazione 1: Motore Gestione Colori Intelligente, Lab-Dip & Colorway BOM Matrix",
+  "description": "Implementazione full-stack (Backend FastAPI + SQLite/PostgreSQL + Frontend React 18 TypeScript) del motore di Gestione Colori Intelligente (da FTL-CEO-017 e PRD-009): (1) Tabella e API Cartella Colori Master & Stagionale (codice, HEX, Pantone TCX, RAL, finitura, famiglia commerciale PIM); (2) Matrice Abbinamenti Colore per Nodo BOM a 3 Livelli (Colorway BOM Matrix) con stato approvazione Tirella/Lab-Dip e Delta-E; (3) Generatore 1-Click Multi-Variante Colore da Cartella Stagionale; (4) Controllo coerenza colore Lotto Conceria <-> BOM e auto-mapping famiglia colore per feed Shopify/B2B.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "CEO (footlink-ceo)",
+  "created_at": "2026-10-26T00:42:00+01:00",
+  "updated_at": "2026-10-28T14:51:00+01:00",
+  "due_date": "2026-11-10T23:59:59+01:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": "1 sessione intensiva C-Suite (Full-Stack FastAPI + SQLite/PostgreSQL + React 18 TS + 36/36 Pytest)",
+  "dependencies": [
+    "FTL-CEO-017",
+    "FTL-PROD-012",
+    "FTL-TECH-021"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/database/schema.sql",
+    "Applicativo/backend/app/models.py",
+    "Applicativo/backend/app/database.py",
+    "Applicativo/backend/app/seed.py",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/tests/test_sprint8_color_and_vendor_hub.py",
+    "Applicativo/frontend/src/types.ts",
+    "Applicativo/frontend/src/mockSeedData.ts",
+    "Applicativo/frontend/src/App.tsx",
+    "Applicativo/frontend/src/components/ColorIntelligenceStudio.tsx",
+    "Applicativo/frontend/src/components/ColorwayBomMatrixPanel.tsx",
+    "Applicativo/frontend/src/components/DomainRegistriesManager.tsx",
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/components/BomThreeLevelTree.tsx",
+    "Applicativo/frontend/src/components/TanneryVaultManager.tsx",
+    "Applicativo/frontend/src/components/PimCatalogManager.tsx",
+    "Applicativo/frontend/src/components/SubcontractorMobilePortal.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-011",
+  "tags": [
+    "PLM",
+    "PIM",
+    "product",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Implementazione DDL e API REST (/api/v1/colors, /api/v1/plm-variants/{id}/colorway-matrix, /api/v1/plm-variants/{id}/explode-colorways)",
+    "Interfaccia visuale Cartella Colori (swatch HEX, Pantone TCX, finitura, stagione) in Modulo 06 Anagrafiche e Modulo 02 Prodotti PLM",
+    "Matrice Colorway su Albero BOM a 3 livelli con badge stato Lab-Dip (Approvato, In Attesa Tirella, Rigettato Delta-E) ed esplosione automatica varianti",
+    "Copertura test unitari Pytest al 100% e compilazione TypeScript/Vite con 0 errori"
+  ],
+  "notes": "Task esecutivo primario dello Sprint 8 (Stream 1 Verticalizzazione: Color Intelligence). Pronto per l'esecuzione."
+}
