@@ -67,6 +67,7 @@ from app.models import (
     PimColorwaysEcommerceResponse,
     PimCommercialItem,
     PimCommercialItemCreate,
+    PimCommercialItemUpdate,
     PimDataQualityReport,
     PlmLifecycleStatus,
     PlmProductionVariant,
@@ -338,19 +339,28 @@ def create_pim_item(payload: PimCommercialItemCreate) -> PimCommercialItem:
                 detail=f"SKU '{payload.sku_code}' already exists for tenant '{payload.brand_tenant_id}'.",
             )
 
-    pim_id = f"PIM-{uuid4().hex[:8].upper()}"
+    if payload.pim_item_id and PIM_STORE.get(payload.pim_item_id) is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"PIM item '{payload.pim_item_id}' already exists.",
+        )
+
+    # FTL-CEO-028: keep client-generated IDs so PLM and PIM address the same record after refresh
+    pim_id = payload.pim_item_id or f"PIM-{uuid4().hex[:8].upper()}"
     variants: List[PlmProductionVariant] = []
 
     for v_payload in payload.initial_plm_variants:
+        v_data = v_payload.model_dump(exclude={"plm_variant_id"})
         plm_variant = PlmProductionVariant(
-            plm_variant_id=f"PLM-{uuid4().hex[:8].upper()}",
+            plm_variant_id=v_payload.plm_variant_id or f"PLM-{uuid4().hex[:8].upper()}",
             pim_item_id=pim_id,
-            **v_payload.model_dump(),
+            **v_data,
         )
         variants.append(plm_variant)
 
     item = PimCommercialItem(
         pim_item_id=pim_id,
+        model_id=payload.model_id,
         sku_code=payload.sku_code,
         model_name=payload.model_name,
         brand_tenant_id=payload.brand_tenant_id,
@@ -359,6 +369,13 @@ def create_pim_item(payload: PimCommercialItemCreate) -> PimCommercialItem:
         collection_id=payload.collection_id,
         collection_name=payload.collection_name,
         category=payload.category,
+        category_id=payload.category_id,
+        sub_category_id=payload.sub_category_id,
+        target_gender=payload.target_gender,
+        carryover_status=payload.carryover_status,
+        brand_line=payload.brand_line,
+        target_occasion=payload.target_occasion,
+        price_tier=payload.price_tier,
         commercial_description_it=payload.commercial_description_it,
         commercial_description_en=payload.commercial_description_en,
         retail_channels=payload.retail_channels,
@@ -513,6 +530,24 @@ def get_pim_item(pim_item_id: str) -> PimCommercialItem:
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PIM Commercial Item not found.")
     return item
+
+
+@app.patch(
+    "/api/v1/pim-items/{pim_item_id}",
+    response_model=PimCommercialItem,
+    tags=["pim"],
+)
+def enrich_pim_item(pim_item_id: str, payload: PimCommercialItemUpdate) -> PimCommercialItem:
+    """FTL-CEO-028: Enrich a PIM item with commercial fields. PLM variants/BOM are never modified here."""
+    item = PIM_STORE.get(pim_item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PIM Commercial Item not found.")
+    updates = payload.model_dump(exclude_unset=True, exclude_none=True)
+    if "custom_attributes" in updates:
+        updates["custom_attributes"] = {**(item.custom_attributes or {}), **updates["custom_attributes"]}
+    updated = item.model_copy(update=updates)
+    PIM_STORE[pim_item_id] = updated
+    return PIM_STORE.get(pim_item_id)
 
 
 @app.get(
@@ -1681,6 +1716,63 @@ def delete_collection(collection_id: str) -> Dict[str, Any]:
 def list_products_in_collection(season_id: str, collection_id: str) -> List[PimCommercialItem]:
     """List all PIM Commercial Items and their N PLM variants belonging to a specific collection."""
     return db_manager.list_pim_items(season_id=season_id, collection_id=collection_id)
+
+
+class CollectionProductsAssignRequest(BaseModel):
+    """FTL-PROD-014: list of PIM Commercial Item IDs to associate to a collection."""
+
+    pim_item_ids: List[str]
+
+
+@app.post(
+    "/api/v1/collections/{collection_id}/products",
+    response_model=List[PimCommercialItem],
+    tags=["collections", "pim"],
+)
+def assign_products_to_collection(
+    collection_id: str, payload: CollectionProductsAssignRequest
+) -> List[PimCommercialItem]:
+    """FTL-PROD-014: Associate existing PIM products to a collection.
+
+    The product's season is aligned to the collection's season. Products already in another
+    collection are moved (a PIM item belongs to at most one collection).
+    """
+    col = db_manager.get_collection(collection_id)
+    if not col:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Collection '{collection_id}' not found.")
+    if not payload.pim_item_ids:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="pim_item_ids must not be empty.")
+    season = db_manager.get_season(col.season_id)
+    missing = [pid for pid in payload.pim_item_ids if PIM_STORE.get(pid) is None]
+    if missing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"PIM items not found: {missing}")
+    for pid in payload.pim_item_ids:
+        db_manager.set_pim_item_collection(
+            pid,
+            collection_id,
+            collection_name=col.name,
+            season_id=col.season_id,
+            season_code=season.code if season else None,
+        )
+    return db_manager.list_pim_items(collection_id=collection_id)
+
+
+@app.delete(
+    "/api/v1/collections/{collection_id}/products/{pim_item_id}",
+    tags=["collections", "pim"],
+)
+def remove_product_from_collection(collection_id: str, pim_item_id: str) -> Dict[str, Any]:
+    """FTL-PROD-014: Remove a PIM product from a collection (the product stays in PIM and in its season)."""
+    item = PIM_STORE.get(pim_item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PIM Commercial Item not found.")
+    if item.collection_id != collection_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"PIM item '{pim_item_id}' is not assigned to collection '{collection_id}'.",
+        )
+    db_manager.set_pim_item_collection(pim_item_id, None)
+    return {"status": "removed", "collection_id": collection_id, "pim_item_id": pim_item_id}
 
 
 # ============================================================================

@@ -120,7 +120,7 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
 }) => {
   const [activeMasterHubTab, setActiveMasterHubTab] = useState<
     "vendors" | "colors" | "registries"
-  >("vendors");
+  >("registries");
   const [activeDomain, setActiveDomain] = useState<RegistryDomain>("plm");
   const [selectedRegistryName, setSelectedRegistryName] = useState<string>("production_phases");
   const [searchQuery, setSearchQuery] = useState("");
@@ -591,19 +591,19 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
 
   return (
     <div className="space-y-6">
-      {/* Sprint 8 Editorial Sub-Navigation Bar (ADR-011 Zero Horizontal Bloat) */}
+      {/* Sprint 8 / FTL-CEO-027 Editorial Sub-Navigation Bar (Modulo 05 Anagrafiche di Dominio) */}
       <div className="bg-white border border-[#E5E5E5] rounded-2xl p-2 shadow-xs flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setActiveMasterHubTab("vendors")}
+            onClick={() => setActiveMasterHubTab("registries")}
             className={`px-4 py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition ${
-              activeMasterHubTab === "vendors"
+              activeMasterHubTab === "registries"
                 ? "bg-[#111111] text-white shadow-sm"
                 : "text-[#555555] hover:bg-[#F5F5F5] hover:text-[#111111]"
             }`}
           >
-            🏭 ALBO FORNITORI &amp; TERZISTI 360° ({vendors.length})
+            📚 TABELLE ANAGRAFICHE DI DOMINIO (PLM &amp; PIM) ({registries.length})
           </button>
           <button
             type="button"
@@ -618,19 +618,19 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
           </button>
           <button
             type="button"
-            onClick={() => setActiveMasterHubTab("registries")}
+            onClick={() => setActiveMasterHubTab("vendors")}
             className={`px-4 py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition ${
-              activeMasterHubTab === "registries"
+              activeMasterHubTab === "vendors"
                 ? "bg-[#111111] text-white shadow-sm"
                 : "text-[#555555] hover:bg-[#F5F5F5] hover:text-[#111111]"
             }`}
           >
-            📚 TABELLE ANAGRAFICHE DI DOMINIO (PLM &amp; PIM) ({registries.length})
+            🏭 ALBO FORNITORI &amp; TERZISTI 360° ({vendors.length})
           </button>
         </div>
 
         <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
-          ADR-011 · Verticalizzazione Master Data
+          Modulo 05 · Master Data &amp; Registri
         </span>
       </div>
 
@@ -671,7 +671,7 @@ export const DomainRegistriesManager: React.FC<DomainRegistriesManagerProps> = (
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9E9E9E]">
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            MODULO 03 · TABELLE ANAGRAFICHE DI DOMINIO
+            MODULO 05 · TABELLE ANAGRAFICHE DI DOMINIO (FTL-CEO-027)
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
             Master Data PLM &amp; PIM

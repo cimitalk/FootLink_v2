@@ -34,6 +34,7 @@ Questa directory raccoglie le specifiche di ruolo della C-Suite autonoma e tutti
 
 ## 🔗 Registri Collegati (Root Repository)
 - **[Manifesto di Fondazione](../Manifesto_Fondazione_Footlink.md)** — Fonte #1 e inderogabile di verità.
+- **[Catalogo Master Entità di Dominio (`../entita/`)](../entita/README.md)** — Living Specs delle entità primarie (Modelli, Prodotti, Stagioni, Collezioni, BOM, Fornitori).
 - **[Registro Ufficiale dell'Archivio per Epoche](../ARCHIVIO_EPOCHE.md)** — Struttura e mappatura completa dei deliverable per Epoca I, Epoca II ed Epoca III.
 - **[Registro ADR (`../adr/`)](../adr/README.md)** — Architecture & Any Decision Records (`ADR-001`..`ADR-011`, Fonte #3 di verità).
 - **[Dashboard Task (`../tasks/`)](../tasks/README.md)** — Task Object JSON v1.0 divisi per Epoca II ed Epoca I (Fonte #4 di verità).

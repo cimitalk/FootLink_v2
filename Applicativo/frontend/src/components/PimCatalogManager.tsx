@@ -31,10 +31,51 @@ interface PimCatalogManagerProps {
     retail_price_eur: number;
     commercial_description_it?: string;
     commercial_description_en?: string;
+    custom_attributes?: Record<string, any>;
+    initialVariant?: {
+      variant_code?: string;
+      colorway_name?: string;
+      size_range?: string;
+      last_or_pattern_code?: string;
+      construction_type?: string;
+      lifecycle_status?: PlmLifecycleStatus;
+    };
   }) => void;
+  onUpdatePimItem?: (pimItemId: string, patch: PimEnrichmentPatch) => void;
   onNavigateToPlm?: (pimItemId: string, variantId?: string) => void;
   onNavigateToDpp?: (pimItemId: string) => void;
 }
+
+/** FTL-CEO-028: commercial fields the PIM can enrich on top of PLM data. */
+export interface PimEnrichmentPatch {
+  model_name?: string;
+  commercial_description_it?: string;
+  commercial_description_en?: string;
+  wholesale_price_eur?: number;
+  retail_price_eur?: number;
+  gtin_ean?: string;
+  hs_customs_code?: string;
+  publishing_status?: string;
+  care_instructions?: string;
+  end_of_life_guide?: string;
+  brand_line?: string;
+  target_occasion?: string;
+  price_tier?: string;
+  retail_channels?: string[];
+}
+
+const AGG_KEY = "aggregated_plm_variant_ids";
+
+/** A PIM card is "da arricchire" when its commercial copy is still the auto-generated fallback. */
+const needsEnrichment = (item: PimCommercialItem): boolean => {
+  const desc = (item.commercial_description_it || "").trim();
+  return (
+    desc.length < 5 ||
+    desc === item.model_name.trim() ||
+    desc === `${item.model_name} · ${item.sku_code}` ||
+    !item.gtin_ean
+  );
+};
 
 export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
   pimItems,
@@ -43,6 +84,7 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
   colors = [],
   onSelectPim,
   onCreatePimItem,
+  onUpdatePimItem,
   onNavigateToPlm,
   onNavigateToDpp,
 }) => {
@@ -50,9 +92,14 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>("ALL");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [onlyToEnrich, setOnlyToEnrich] = useState(false);
   const [activeTab, setActiveTab] = useState<"catalog" | "feeds" | "aggregate_builder">("catalog");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [copiedFeed, setCopiedFeed] = useState<string | null>(null);
+
+  // PIM Enrichment modal state (FTL-CEO-028)
+  const [enrichItem, setEnrichItem] = useState<PimCommercialItem | null>(null);
+  const [enrichForm, setEnrichForm] = useState<PimEnrichmentPatch>({});
 
   // New PIM Item Form State
   const [newSku, setNewSku] = useState("");
@@ -83,6 +130,7 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
       if (!sMatch) return false;
     }
     if (categoryFilter !== "ALL" && item.category !== categoryFilter) return false;
+    if (onlyToEnrich && !needsEnrichment(item)) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchSku = (item.sku_code || (item as any).commercial_sku || "").toLowerCase().includes(q);
@@ -229,23 +277,80 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
   };
 
   const handleCreateAggregate = () => {
-    if (!aggName.trim() || !aggSku.trim()) return;
-    const targetSeason = seasons[0];
+    if (!aggName.trim() || !aggSku.trim() || selectedVariantsForAgg.length === 0) return;
+    const components = allPlmVariants.filter((v) =>
+      selectedVariantsForAgg.includes(v.plm_variant_id)
+    );
+    const first = components[0]?.parentPim;
+    const targetSeason =
+      seasons.find((s) => s.season_id === first?.season_id) || seasons[0];
+    const sku = aggSku.trim().toUpperCase();
 
+    // FTL-CEO-028: the PIM aggregate "encompasses" the selected PLM variants by reference.
+    // Component variants stay owned by their PLM product (no BOM/lifecycle duplication);
+    // a single kitting variant represents the commercial pack in PLM.
     onCreatePimItem({
-      sku_code: aggSku.trim().toUpperCase(),
+      sku_code: sku,
       model_name: aggName.trim(),
-      category: "footwear",
+      category: first?.category || "footwear",
       season: targetSeason?.code || "PE26",
       season_id: targetSeason?.season_id,
-      wholesale_price_eur: 280.0,
-      retail_price_eur: 650.0,
-      commercial_description_it: `Prodotto commerciale aggregato (1:N) composto da ${selectedVariantsForAgg.length} varianti PLM industriali.`,
+      wholesale_price_eur: components.reduce((s, v) => s + (v.parentPim.wholesale_price_eur || 0), 0) || 280.0,
+      retail_price_eur: components.reduce((s, v) => s + (v.parentPim.retail_price_eur || 0), 0) || 650.0,
+      commercial_description_it: `Prodotto commerciale aggregato (1:N) composto da ${components.length} varianti PLM: ${components
+        .map((v) => v.variant_code)
+        .join(", ")}.`,
+      custom_attributes: {
+        [AGG_KEY]: components.map((v) => v.plm_variant_id),
+        aggregated_pim_item_ids: Array.from(new Set(components.map((v) => v.parentPim.pim_item_id))),
+      },
+      initialVariant: {
+        variant_code: `${sku}-KIT`,
+        colorway_name: "Kit commerciale (confezionamento bundle)",
+        size_range: components[0]?.size_range,
+        last_or_pattern_code: "KIT-BUNDLE",
+        construction_type: "kitting_bundle",
+        lifecycle_status: "new_from_pim",
+      },
     });
 
     setSelectedVariantsForAgg([]);
     setActiveTab("catalog");
   };
+
+  const openEnrichModal = (item: PimCommercialItem) => {
+    setEnrichItem(item);
+    setEnrichForm({
+      model_name: item.model_name,
+      commercial_description_it: item.commercial_description_it || "",
+      commercial_description_en: item.commercial_description_en || "",
+      wholesale_price_eur: item.wholesale_price_eur,
+      retail_price_eur: item.retail_price_eur,
+      gtin_ean: item.gtin_ean || "",
+      hs_customs_code: item.hs_customs_code || "",
+      publishing_status: item.publishing_status || "READY",
+      care_instructions: item.care_instructions || "",
+      end_of_life_guide: item.end_of_life_guide || "",
+      brand_line: item.brand_line || "Main Line",
+      target_occasion: item.target_occasion || "smart_casual",
+      price_tier: item.price_tier || "core_luxury",
+      retail_channels: item.retail_channels || [],
+    });
+  };
+
+  const handleEnrichSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!enrichItem || !onUpdatePimItem) return;
+    onUpdatePimItem(enrichItem.pim_item_id, {
+      ...enrichForm,
+      wholesale_price_eur: Number(enrichForm.wholesale_price_eur) || 0,
+      retail_price_eur: Number(enrichForm.retail_price_eur) || 0,
+    });
+    setEnrichItem(null);
+  };
+
+  const plmVariantsTotal = allPlmVariants.length;
+  const toEnrichCount = pimItems.filter(needsEnrichment).length;
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -255,7 +360,7 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
           <div className="max-w-3xl">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-3 py-0.5 rounded-full text-[10px] font-bold tracking-widest bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                03 · PIM (PRODUCT INFORMATION MANAGEMENT) · FTL-CEO-010
+                03 · PIM (CATALOGO COMMERCIALE &amp; FEED) (FTL-TECH-027)
               </span>
               <span className="text-xs text-neutral-400 font-mono">
                 Default 1:1 Speculare · Aggregazione 1:N · Feed E-Commerce & B2B
@@ -371,10 +476,27 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
                 <option value="leather_goods">👜 Pelletteria</option>
                 <option value="apparel">🧥 Abbigliamento</option>
               </select>
+
+              <label className="flex items-center gap-1.5 px-3 py-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-full text-xs font-semibold text-[#111111] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={onlyToEnrich}
+                  onChange={(e) => setOnlyToEnrich(e.target.checked)}
+                />
+                Solo da arricchire ({toEnrichCount})
+              </label>
             </div>
 
-            <div className="text-xs text-[#707072] font-semibold">
-              Totale Schede: <strong className="text-[#111111]">{filteredItems.length}</strong>
+            <div className="text-xs text-[#707072] font-semibold text-right">
+              <div>
+                Totale Schede: <strong className="text-[#111111]">{filteredItems.length}</strong>
+              </div>
+              <div
+                className="text-[10px] text-emerald-700"
+                title="FTL-CEO-028: ogni prodotto creato nel PLM è automaticamente una scheda PIM"
+              >
+                ✓ {plmVariantsTotal} varianti PLM · 100% presenti nel PIM
+              </div>
             </div>
           </div>
 
@@ -404,6 +526,12 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
                         {item.season}
                       </span>
                     </div>
+
+                    {needsEnrichment(item) && (
+                      <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                        ⚠ Da arricchire (nuovo dal PLM)
+                      </span>
+                    )}
 
                     <div>
                       <h3 className="font-extrabold text-base text-[#111111]">{item.model_name}</h3>
@@ -456,6 +584,38 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
                         })}
                       </div>
                     </div>
+
+                    {/* FTL-CEO-028: PLM components encompassed by a 1:N aggregate */}
+                    {Array.isArray(item.custom_attributes?.[AGG_KEY]) &&
+                      item.custom_attributes[AGG_KEY].length > 0 && (
+                        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3 space-y-1.5 text-xs">
+                          <div className="text-[10px] font-bold text-blue-700 uppercase">
+                            Prodotti PLM inglobati ({item.custom_attributes[AGG_KEY].length})
+                          </div>
+                          {(item.custom_attributes[AGG_KEY] as string[]).map((vid) => {
+                            const comp = allPlmVariants.find((v) => v.plm_variant_id === vid);
+                            return (
+                              <button
+                                key={vid}
+                                type="button"
+                                disabled={!comp || !onNavigateToPlm}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (comp) onNavigateToPlm?.(comp.parentPim.pim_item_id, vid);
+                                }}
+                                className="w-full text-left bg-white border border-blue-100 px-2.5 py-1.5 rounded-lg hover:border-blue-300 disabled:opacity-60"
+                              >
+                                <span className="font-mono text-[10px] font-bold text-[#111111]">
+                                  {comp?.variant_code || vid}
+                                </span>
+                                <span className="text-[10px] text-[#707072]">
+                                  {" "}· {comp ? comp.parentPim.model_name : "variante non trovata"}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                   </div>
 
                   <div className="pt-4 mt-4 border-t border-[#EAEAEA] flex items-center justify-between">
@@ -467,6 +627,18 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                      {onUpdatePimItem && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEnrichModal(item);
+                          }}
+                          className="px-3 py-1 rounded-full border border-[#D5D5D5] bg-white text-[#111111] text-[10px] font-bold hover:border-[#111111]"
+                        >
+                          ✏️ Arricchisci
+                        </button>
+                      )}
                       {onNavigateToPlm && (
                         <button
                           type="button"
@@ -892,6 +1064,266 @@ export const PimCatalogManager: React.FC<PimCatalogManagerProps> = ({
                   className="px-6 py-2 rounded-full bg-[#111111] text-white font-bold hover:bg-neutral-800"
                 >
                   Salva nel PIM
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Arricchimento Scheda PIM (FTL-CEO-028) */}
+      {enrichItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col animate-scaleUp">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EAEAEA]">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-[#111111]">
+                    Arricchisci Scheda Commerciale PIM
+                  </h3>
+                  <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                    {enrichItem.sku_code}
+                  </span>
+                </div>
+                <p className="text-xs text-[#707072]">
+                  Completa i campi commerciali PIM mantenendo la perfetta sincronizzazione con le {enrichItem.plm_variants.length} varianti PLM industriali.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEnrichItem(null)}
+                className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-500 hover:text-black flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEnrichSubmit} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1">
+              {/* Basic Commercial Fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Nome Modello Commerciale *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={enrichForm.model_name || ""}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, model_name: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Linea Brand
+                  </label>
+                  <select
+                    value={enrichForm.brand_line || "Main Line"}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, brand_line: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  >
+                    <option value="Main Line">Main Line</option>
+                    <option value="Studio">Studio</option>
+                    <option value="Heritage">Heritage</option>
+                    <option value="Atelier">Atelier</option>
+                    <option value="Signature Capsule">Signature Capsule</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Descriptions */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                  Descrizione Commerciale IT (E-Commerce & Showroom) *
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  value={enrichForm.commercial_description_it || ""}
+                  onChange={(e) => setEnrichForm({ ...enrichForm, commercial_description_it: e.target.value })}
+                  placeholder="Descrizione storytelling in italiano (minimo 5 caratteri)..."
+                  className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                  Descrizione Commerciale EN (Global Syndication) *
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  value={enrichForm.commercial_description_en || ""}
+                  onChange={(e) => setEnrichForm({ ...enrichForm, commercial_description_en: e.target.value })}
+                  placeholder="Commercial storytelling in English..."
+                  className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                />
+              </div>
+
+              {/* Pricing & Tier */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Prezzo Wholesale (€) *
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={enrichForm.wholesale_price_eur ?? 0}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, wholesale_price_eur: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Prezzo Retail (€) *
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={enrichForm.retail_price_eur ?? 0}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, retail_price_eur: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Fascia Prezzo (Tier)
+                  </label>
+                  <select
+                    value={enrichForm.price_tier || "core_luxury"}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, price_tier: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  >
+                    <option value="entry_luxury">Entry Luxury</option>
+                    <option value="core_luxury">Core Luxury</option>
+                    <option value="high_luxury">High Luxury</option>
+                    <option value="bespoke">Bespoke / Couture</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Occasion & Status & Identifiers */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Occasione d'Uso
+                  </label>
+                  <select
+                    value={enrichForm.target_occasion || "smart_casual"}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, target_occasion: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  >
+                    <option value="business_formal">Business Formal</option>
+                    <option value="smart_casual">Smart Casual</option>
+                    <option value="evening_gala">Evening Gala</option>
+                    <option value="urban_active">Urban Active</option>
+                    <option value="outdoor_leisure">Outdoor Leisure</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Stato Catalogo
+                  </label>
+                  <select
+                    value={enrichForm.publishing_status || "READY"}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, publishing_status: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                  >
+                    <option value="DRAFT">Draft (Bozza)</option>
+                    <option value="READY">Ready (Pronto)</option>
+                    <option value="PUBLISHED">Published (Pubblicato)</option>
+                    <option value="ARCHIVED">Archived (Archiviato)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Codice GTIN / EAN
+                  </label>
+                  <input
+                    type="text"
+                    value={enrichForm.gtin_ean || ""}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, gtin_ean: e.target.value })}
+                    placeholder="es. 8050012026018"
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Circularity & Care */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Istruzioni di Cura (DPP)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={enrichForm.care_instructions || ""}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, care_instructions: e.target.value })}
+                    placeholder="Istruzioni manutenzione..."
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Guida Fine Vita (Circolarità)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={enrichForm.end_of_life_guide || ""}
+                    onChange={(e) => setEnrichForm({ ...enrichForm, end_of_life_guide: e.target.value })}
+                    placeholder="Programma take-back / disassemblaggio..."
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Encompassed PLM Variants Box */}
+              <div className="bg-[#F5F5F5] rounded-2xl p-3 border border-[#E5E5E5] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase text-[#707072]">
+                    Varianti Industriali PLM Inglobate ({enrichItem.plm_variants.length})
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-bold">
+                    ✓ Fonte di Verità PLM Protetta
+                  </span>
+                </div>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {enrichItem.plm_variants.map((v) => (
+                    <div
+                      key={v.plm_variant_id}
+                      className="bg-white border border-[#E5E5E5] p-2 rounded-lg flex items-center justify-between text-[11px]"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-[#111111]">{v.variant_code}</span>
+                        <span className="text-[#707072]">{v.colorway_name}</span>
+                        <span className="text-[10px] bg-[#F5F5F5] px-1.5 py-0.5 rounded text-[#707072]">
+                          Taglie: {v.size_range}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                        {v.lifecycle_status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#EAEAEA]">
+                <button
+                  type="button"
+                  onClick={() => setEnrichItem(null)}
+                  className="px-4 py-2 rounded-full border border-neutral-300 text-neutral-700 font-bold hover:bg-neutral-50"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 rounded-full bg-[#111111] text-white font-bold hover:bg-neutral-800 transition shadow-sm"
+                >
+                  Salva Arricchimento PIM
                 </button>
               </div>
             </form>

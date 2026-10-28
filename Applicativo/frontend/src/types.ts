@@ -105,18 +105,19 @@ export type ViewerSecurityRole = "brand" | "subcontractor";
 
 export type ActiveWorkspaceModule =
   | "home"
+  | "seasons_collections"  // Modulo 01 (FTL-TECH-027)
+  | "products"             // Modulo 02 (FTL-TECH-027)
+  | "pim_catalog"          // Modulo 03 (FTL-TECH-027)
+  | "vendor_management"    // Modulo 04 Gestione Fornitori (FTL-TECH-027)
+  | "domain_registries"    // Modulo 05 (FTL-TECH-027)
+  | "schema_studio"        // Modulo 06 (FTL-TECH-027)
+  | "subcontractor_portal" // Modulo 07 (FTL-TECH-027)
+  | "dpp_passport"         // Modulo 08 (FTL-TECH-027)
+  // Backwards compatibility aliases
   | "district_paas"
-  | "production_orders"
   | "tannery_vault"
-  | "products"
-  | "seasons_collections"
-  | "domain_registries"
-  | "schema_studio"
-  | "subcontractor_portal"
-  | "dpp_passport"
-  // Legacy / granular aliases for full backwards compatibility
+  | "production_orders"
   | "all"
-  | "pim_catalog"
   | "bridge_vertical_specs"
   | "bom_costing";
 

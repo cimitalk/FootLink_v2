@@ -1065,6 +1065,49 @@ class FootlinkSQLitePersistence:
         finally:
             self._close_if_file(conn)
 
+    def set_pim_item_collection(
+        self,
+        pim_item_id: str,
+        collection_id: Optional[str],
+        collection_name: Optional[str] = None,
+        season_id: Optional[str] = None,
+        season_code: Optional[str] = None,
+    ) -> bool:
+        """FTL-PROD-014: Assign (or unassign when collection_id is None) a PIM item to a collection.
+
+        Targeted UPDATE: PLM variants, BOM and subcontractor assignments are left untouched.
+        When assigning, the item's season is aligned to the collection's season (a collection
+        always belongs to exactly one season).
+        """
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                "SELECT metadata_json FROM pim_commercial_items WHERE pim_item_id = ?",
+                (pim_item_id,),
+            ).fetchone()
+            if not row:
+                return False
+            meta = json.loads(row["metadata_json"] or "{}")
+            meta["collection_name"] = collection_name if collection_id else None
+            if collection_id and season_id:
+                conn.execute(
+                    """
+                    UPDATE pim_commercial_items
+                    SET collection_id = ?, season_id = ?, season = COALESCE(?, season), metadata_json = ?
+                    WHERE pim_item_id = ?
+                    """,
+                    (collection_id, season_id, season_code, json.dumps(meta), pim_item_id),
+                )
+            else:
+                conn.execute(
+                    "UPDATE pim_commercial_items SET collection_id = ?, metadata_json = ? WHERE pim_item_id = ?",
+                    (collection_id, json.dumps(meta), pim_item_id),
+                )
+            conn.commit()
+            return True
+        finally:
+            self._close_if_file(conn)
+
     def _row_to_pim_item(self, conn: sqlite3.Connection, row: sqlite3.Row) -> PimCommercialItem:
         pim_id = row["pim_item_id"]
         variant_rows = conn.execute(

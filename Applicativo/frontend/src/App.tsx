@@ -11,6 +11,7 @@ import { PlmProductsManager } from "./components/PlmProductsManager";
 import { ProductionOrdersManager } from "./components/ProductionOrdersManager";
 import { SeasonsCollectionsHub } from "./components/SeasonsCollectionsHub";
 import { SubcontractorMobilePortal } from "./components/SubcontractorMobilePortal";
+import { SupplierManagementHub } from "./components/SupplierManagementHub";
 import { TanneryVaultManager } from "./components/TanneryVaultManager";
 import {
   ColorwayExplosionPayload,
@@ -148,6 +149,8 @@ export const App: React.FC = () => {
   const [viewerRole, setViewerRole] = useState<ViewerSecurityRole>("brand");
   const [backendConnected, setBackendConnected] = useState<boolean>(false);
   const [selectedSeasonFilter, setSelectedSeasonFilter] = useState<string>("ALL");
+  // FTL-PROD-014: collection focused in Module 01 (click again to deselect)
+  const [selectedHubCollectionId, setSelectedHubCollectionId] = useState<string | undefined>(undefined);
   const [showBomDrawerInProducts, setShowBomDrawerInProducts] = useState<boolean>(true);
 
   const [dppData, setDppData] = useState<DigitalProductPassport>(() =>
@@ -472,29 +475,74 @@ export const App: React.FC = () => {
     commercial_description_en?: string;
     wholesale_price_eur: number;
     retail_price_eur: number;
+    carryover_status?: string;
+    brand_line?: string;
+    target_occasion?: string;
+    price_tier?: string;
     custom_attributes?: Record<string, any>;
+    initialVariant?: {
+      variant_code?: string;
+      colorway_name?: string;
+      size_range?: string;
+      last_or_pattern_code?: string;
+      construction_type?: string;
+      carryover_status?: string;
+      lifecycle_status?: PlmLifecycleStatus;
+      custom_attributes?: Record<string, any>;
+    };
   }) => {
+    const { initialVariant: _initialVariant, ...pimPayload } = payload;
     const newPimId = `PIM-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const foundModel = payload.model_id
+      ? productModels.find((m) => m.model_id === payload.model_id)
+      : null;
+
+    const vCode =
+      payload.initialVariant?.variant_code || `${payload.sku_code}-A1`;
+    const cName =
+      payload.initialVariant?.colorway_name || "Edizione Lancio Master";
+    const sRange =
+      payload.initialVariant?.size_range ||
+      foundModel?.default_size_range ||
+      (payload.category === "apparel" ? "IT 46-56" : "38-46");
+    const lCode =
+      payload.initialVariant?.last_or_pattern_code ||
+      foundModel?.last_code ||
+      `FORMA-${payload.category.toUpperCase()}-01`;
+    const cType =
+      payload.initialVariant?.construction_type ||
+      foundModel?.sole_construction ||
+      "cassetta_cucita";
+    const cStatus =
+      payload.initialVariant?.carryover_status || payload.carryover_status || "seasonal_core";
+    const lStatus =
+      payload.initialVariant?.lifecycle_status ||
+      payload.lifecycle_status ||
+      "prototype";
+
     const initialPlm: PlmProductionVariant = {
       plm_variant_id: `PLM-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
       pim_item_id: newPimId,
-      variant_code: `${payload.sku_code}-A1`,
-      colorway_name: "Edizione Lancio Master",
-      size_range: payload.category === "apparel" ? "IT 46-56" : "38-46",
-      last_or_pattern_code: `FORMA-${payload.category.toUpperCase()}-01`,
-      target_gender: payload.target_gender || "unisex",
-      lifecycle_status: payload.lifecycle_status || "new_from_pim",
+      variant_code: vCode,
+      colorway_name: cName,
+      size_range: sRange,
+      last_or_pattern_code: lCode,
+      target_gender: payload.target_gender || foundModel?.target_gender || "unisex",
+      construction_type: cType,
+      carryover_status: cStatus,
+      lifecycle_status: lStatus,
       bom_version: "v1.0 (Draft)",
       bom_snapshot_locked: false,
       sample_base_size: payload.category === "apparel" ? "IT 50" : "42",
       size_grading_step_pct: payload.category === "apparel" ? 3.4 : 2.8,
       standard_labor_cost_eur: 32.0,
-      custom_attributes: {},
+      custom_attributes: payload.initialVariant?.custom_attributes || {},
       category_specific_specs: {
-        "Codice Cartamodello / Forma": `MOD-${payload.category.toUpperCase()}-01`,
-        "Scala Taglie": payload.category === "apparel" ? "IT 46-56" : "38-46",
+        "Codice Cartamodello / Forma": lCode,
+        "Scala Taglie": sRange,
         "Genere Target": payload.target_gender || "unisex",
-        "Stato Ciclo di Vita": payload.lifecycle_status || "new_from_pim",
+        "Stato Ciclo di Vita": lStatus,
+        "Tipo Costruzione": cType,
       },
       bom_items: [
         {
@@ -544,9 +592,16 @@ export const App: React.FC = () => {
         "Trattare con prodotti naturali certificati. Componenti riparabili presso la rete ufficiale.",
       end_of_life_guide:
         "Programma Take-Back Footlink per riciclo e disassemblaggio circolare.",
-      ...payload,
-      commercial_description_it: payload.commercial_description_it || payload.model_name,
-      commercial_description_en: payload.commercial_description_en || payload.model_name,
+      ...pimPayload,
+      // Backend requires >= 5 chars for commercial descriptions
+      commercial_description_it:
+        (payload.commercial_description_it || "").trim().length >= 5
+          ? payload.commercial_description_it!
+          : `${payload.model_name} · ${payload.sku_code}`,
+      commercial_description_en:
+        (payload.commercial_description_en || "").trim().length >= 5
+          ? payload.commercial_description_en!
+          : `${payload.model_name} · ${payload.sku_code}`,
       plm_variants: [initialPlm],
     };
 
@@ -565,10 +620,12 @@ export const App: React.FC = () => {
     }
 
     if (backendConnected) {
+      // FTL-CEO-028: send client IDs + initial PLM variant so PLM & PIM stay aligned after refresh
+      const { plm_variants: _omitVariants, ...pimBody } = newPim;
       fetch(`${API_BASE}/api/v1/pim-items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPim),
+        body: JSON.stringify({ ...pimBody, initial_plm_variants: [initialPlm] }),
       }).catch(() => {});
 
       if (payload.model_id) {
@@ -1004,6 +1061,91 @@ export const App: React.FC = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCol),
+      }).catch(() => {});
+    }
+  };
+
+  // Sprint 8 / FTL-PROD-014: Association of PIM Products to Collections
+  const handleAddProductsToCollection = (collectionId: string, pimItemIds: string[]) => {
+    let targetColName = "";
+    let targetSeason: Season | undefined;
+    for (const s of seasons) {
+      const found = s.collections.find((c) => c.collection_id === collectionId);
+      if (found) {
+        targetColName = found.name;
+        targetSeason = s;
+        break;
+      }
+    }
+
+    setPimItems((prev) =>
+      prev.map((item) =>
+        pimItemIds.includes(item.pim_item_id)
+          ? {
+              ...item,
+              collection_id: collectionId,
+              collection_name: targetColName || item.collection_name,
+              season_id: targetSeason?.season_id ?? item.season_id,
+              season: targetSeason?.code ?? item.season,
+            }
+          : item
+      )
+    );
+
+    if (backendConnected) {
+      fetch(`${API_BASE}/api/v1/collections/${collectionId}/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pim_item_ids: pimItemIds }),
+      }).catch(() => {});
+    }
+  };
+
+  const handleRemoveProductFromCollection = (pimItemId: string) => {
+    const current = pimItems.find((i) => i.pim_item_id === pimItemId);
+    const prevCollectionId = current?.collection_id;
+
+    setPimItems((prev) =>
+      prev.map((item) =>
+        item.pim_item_id === pimItemId
+          ? {
+              ...item,
+              collection_id: undefined,
+              collection_name: undefined,
+            }
+          : item
+      )
+    );
+
+    if (backendConnected && prevCollectionId) {
+      fetch(`${API_BASE}/api/v1/collections/${prevCollectionId}/products/${pimItemId}`, {
+        method: "DELETE",
+      }).catch(() => {});
+    }
+  };
+
+  // Sprint 8 / FTL-CEO-028: Enrich PIM Commercial Item
+  const handleUpdatePimItem = (
+    pimItemId: string,
+    patch: Partial<PimCommercialItem>
+  ) => {
+    setPimItems((prev) =>
+      prev.map((item) => {
+        if (item.pim_item_id === pimItemId) {
+          return {
+            ...item,
+            ...patch,
+          };
+        }
+        return item;
+      })
+    );
+
+    if (backendConnected) {
+      fetch(`${API_BASE}/api/v1/pim-items/${pimItemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
       }).catch(() => {});
     }
   };
@@ -2287,15 +2429,14 @@ export const App: React.FC = () => {
 
   const NAV_MODULES: { id: ActiveWorkspaceModule; label: string }[] = [
     { id: "home", label: "Home Launchpad" },
-    { id: "district_paas", label: "01 PaaS Distretto & Utenti" },
+    { id: "seasons_collections", label: "01 Stagioni & Collezioni" },
     { id: "products", label: "02 Prodotti (PLM & BOM)" },
     { id: "pim_catalog", label: "03 PIM (Catalogo & Feed)" },
-    { id: "tannery_vault", label: "04 Vault Conceria & LWG" },
-    { id: "seasons_collections", label: "05 Stagioni & Collezioni" },
-    { id: "domain_registries", label: "06 Anagrafiche di Dominio" },
-    { id: "schema_studio", label: "07 Modello Dati Flessibile" },
-    { id: "subcontractor_portal", label: "08 Terzisti 0 €" },
-    { id: "dpp_passport", label: "09 Passaporto DPP" },
+    { id: "vendor_management", label: "04 Gestione Fornitori" },
+    { id: "domain_registries", label: "05 Anagrafiche di Dominio" },
+    { id: "schema_studio", label: "06 Modello Dati Flessibile" },
+    { id: "subcontractor_portal", label: "07 Terzisti 0 €" },
+    { id: "dpp_passport", label: "08 Passaporto DPP" },
   ];
 
   return (
@@ -2462,55 +2603,31 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* VIEW 1: MODULE 01 - PAAS DISTRETTO & GESTIONE UTENTI */}
-        {activeModule === "district_paas" && (
-          <DistrictPaasManager
-            companies={companies}
-            selectedCompanyId={selectedCompanyId}
-            onSelectCompany={(id) => setSelectedCompanyId(id)}
-            onCreateCompany={handleCreateCompany}
-            memberships={companyMemberships}
-            onAddMember={handleAddCompanyMember}
-            users={users}
-            onCreateUser={handleCreateUser}
+        {/* VIEW 1: MODULE 01 - STAGIONI & COLLEZIONI - FTL-TECH-027 */}
+        {activeModule === "seasons_collections" && (
+          <SeasonsCollectionsHub
+            seasons={seasons}
+            pimItems={pimItems}
+            selectedSeasonId={
+              selectedSeasonFilter === "ALL" ? seasons[0]?.season_id : selectedSeasonFilter
+            }
+            onSelectSeason={(sId) => {
+              setSelectedSeasonFilter(sId);
+              setSelectedHubCollectionId(undefined);
+            }}
+            selectedCollectionId={selectedHubCollectionId}
+            onSelectCollection={(cId) =>
+              setSelectedHubCollectionId((prev) => (prev === cId ? undefined : cId))
+            }
+            onCreateSeason={handleCreateSeason}
+            onCreateCollection={handleCreateCollection}
+            onNavigateToProduct={handleNavigateToProductFromHub}
+            onAddProductsToCollection={handleAddProductsToCollection}
+            onRemoveProductFromCollection={handleRemoveProductFromCollection}
           />
         )}
 
-        {/* MODULE IN STAND-BY: COMMESSE DI PRODUZIONE & MATRICE TAGLIE (ADR-009) */}
-        {activeModule === "production_orders" && (
-          <div className="bg-white border border-[#E5E5E5] rounded-3xl p-8 max-w-3xl mx-auto text-center space-y-4">
-            <div className="w-12 h-12 bg-[#F5F5F5] rounded-full flex items-center justify-center mx-auto text-xl">
-              ⏸️
-            </div>
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#707072]">
-              Architecture Decision Record ADR-009 · Governance Notice
-            </div>
-            <h2 className="display-title text-2xl text-[#111111]">
-              MODULO 02 IN STAND-BY TEMPORANEO
-            </h2>
-            <p className="text-sm text-[#707072] max-w-xl mx-auto leading-relaxed">
-              In conformità alla direttiva del Founder FTL-CEO-011 e ad ADR-009, il modulo Work Orders Hub &amp; Matrice Taglie è stato temporaneamente congelato per rifocalizzare la roadmap esecutiva su PLM &amp; Ingegneria BOM, Catalogo PIM Commerciale e Vault Conceria. I dati relazionali e le API backend rimangono preservati e integri.
-            </p>
-            <div className="pt-4 flex justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setActiveModule("products")}
-                className="px-6 py-2.5 rounded-full bg-[#111111] text-white text-xs font-bold hover:bg-black transition"
-              >
-                Vai ad Area Prodotti (PLM) →
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModule("pim_catalog")}
-                className="px-6 py-2.5 rounded-full border border-[#111111] bg-white text-[#111111] text-xs font-bold hover:bg-[#F5F5F5] transition"
-              >
-                Vai a Catalogo Commerciale (PIM) →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* VIEW 2: MODULE 02 - PRODOTTI (PLM & DISTINTA BASE BOM) */}
+        {/* VIEW 2: MODULE 02 - PRODOTTI (PLM & DISTINTA BASE BOM) - FTL-TECH-027 */}
         {activeModule === "products" && (
           <PlmProductsManager
             pimItems={activePimList}
@@ -2547,7 +2664,7 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* VIEW 3: MODULE 03 - PIM (CATALOGO COMMERCIALE & FEED SYNDICATION) */}
+        {/* VIEW 3: MODULE 03 - PIM (CATALOGO COMMERCIALE & FEED SYNDICATION) - FTL-TECH-027 */}
         {activeModule === "pim_catalog" && (
           <PimCatalogManager
             pimItems={activePimList}
@@ -2556,6 +2673,7 @@ export const App: React.FC = () => {
             colors={masterColors}
             onSelectPim={handleSelectPim}
             onCreatePimItem={handleCreatePimItem}
+            onUpdatePimItem={handleUpdatePimItem}
             onNavigateToPlm={(pimId) => {
               handleNavigateToProductFromHub(pimId);
             }}
@@ -2566,20 +2684,80 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* VIEW 4: MODULE 04 - VAULT CONCERIA & CERTIFICAZIONI LWG/ICEC */}
-        {activeModule === "tannery_vault" && (
-          <TanneryVaultManager
-            batches={tanneryBatches}
-            companies={companies}
-            availableLeatherBomMaterials={availableLeatherBomMaterials}
+        {/* VIEW 4: MODULE 04 - GESTIONE FORNITORI, DISTRETTO PaaS & CONCERIE - FTL-TECH-027 */}
+        {(activeModule === "vendor_management" ||
+          activeModule === "district_paas" ||
+          activeModule === "tannery_vault") && (
+          <SupplierManagementHub
             vendors={vendors}
+            viewerRole={viewerRole}
+            onCreateVendor={handleCreateVendor}
+            onUpdateVendor={handleUpdateVendor}
+            onDeleteVendor={handleDeleteVendor}
+            onAddCertification={handleAddVendorCertification}
+            onDeleteCertification={handleDeleteVendorCertification}
+            onFetchWhereUsed={handleFetchVendorWhereUsed}
+            onLinkDistrictCompany={handleLinkVendorDistrictCompany}
+            onUnlinkDistrictCompany={handleUnlinkVendorDistrictCompany}
+            onAutoLinkDistrictCompanies={handleAutoLinkDistrictCompanies}
+            companies={companies}
+            selectedCompanyId={selectedCompanyId}
+            onSelectCompany={(id) => setSelectedCompanyId(id)}
+            onCreateCompany={handleCreateCompany}
+            memberships={companyMemberships}
+            onAddMember={handleAddCompanyMember}
+            users={users}
+            onCreateUser={handleCreateUser}
+            batches={tanneryBatches}
+            availableLeatherBomMaterials={availableLeatherBomMaterials}
             colors={masterColors}
             pimItems={pimItems}
             onCreateBatch={handleCreateTanneryBatch}
             onUploadDocument={handleUploadTanneryDocument}
             onVerifyDocument={handleVerifyTanneryDocument}
             onImportBatches={handleImportTanneryBatches}
+            initialSubTab={
+              activeModule === "district_paas"
+                ? "district"
+                : activeModule === "tannery_vault"
+                ? "tannery"
+                : "vendors"
+            }
           />
+        )}
+
+        {/* MODULE IN STAND-BY: COMMESSE DI PRODUZIONE & MATRICE TAGLIE (ADR-009) */}
+        {activeModule === "production_orders" && (
+          <div className="bg-white border border-[#E5E5E5] rounded-3xl p-8 max-w-3xl mx-auto text-center space-y-4">
+            <div className="w-12 h-12 bg-[#F5F5F5] rounded-full flex items-center justify-center mx-auto text-xl">
+              ⏸️
+            </div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#707072]">
+              Architecture Decision Record ADR-009 · Governance Notice
+            </div>
+            <h2 className="display-title text-2xl text-[#111111]">
+              MODULO IN STAND-BY TEMPORANEO
+            </h2>
+            <p className="text-sm text-[#707072] max-w-xl mx-auto leading-relaxed">
+              In conformità alla direttiva del Founder FTL-CEO-011 e ad ADR-009, il modulo Work Orders Hub &amp; Matrice Taglie è stato temporaneamente congelato per rifocalizzare la roadmap esecutiva su PLM &amp; Ingegneria BOM, Catalogo PIM Commerciale e Gestione Fornitori. I dati relazionali e le API backend rimangono preservati e integri.
+            </p>
+            <div className="pt-4 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveModule("products")}
+                className="px-6 py-2.5 rounded-full bg-[#111111] text-white text-xs font-bold hover:bg-black transition"
+              >
+                Vai ad Area Prodotti (PLM) →
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModule("pim_catalog")}
+                className="px-6 py-2.5 rounded-full border border-[#111111] bg-white text-[#111111] text-xs font-bold hover:bg-[#F5F5F5] transition"
+              >
+                Vai a Catalogo Commerciale (PIM) →
+              </button>
+            </div>
+          </div>
         )}
 
         {/* LEGACY BRIDGE / SPECIFICHE VERTICALI / BOM COSTING */}
@@ -2639,22 +2817,7 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* VIEW 5: MODULE 05 - STAGIONI & COLLEZIONI */}
-        {activeModule === "seasons_collections" && (
-          <SeasonsCollectionsHub
-            seasons={seasons}
-            pimItems={pimItems}
-            selectedSeasonId={
-              selectedSeasonFilter === "ALL" ? seasons[0]?.season_id : selectedSeasonFilter
-            }
-            onSelectSeason={(sId) => setSelectedSeasonFilter(sId)}
-            onCreateSeason={handleCreateSeason}
-            onCreateCollection={handleCreateCollection}
-            onNavigateToProduct={handleNavigateToProductFromHub}
-          />
-        )}
-
-        {/* VIEW 6: MODULE 06 - ANAGRAFICHE DI DOMINIO MASTER */}
+        {/* VIEW 5: MODULE 05 - ANAGRAFICHE DI DOMINIO MASTER - FTL-CEO-027 */}
         {activeModule === "domain_registries" && (
           <DomainRegistriesManager
             registries={registries}
@@ -2681,7 +2844,7 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* VIEW 7: MODULE 07 - MODELLO DATI FLESSIBILE & FOUNDER STUDIO */}
+        {/* VIEW 6: MODULE 06 - MODELLO DATI FLESSIBILE & FOUNDER STUDIO - FTL-CEO-027 */}
         {activeModule === "schema_studio" && (
           <DataModelSchemaStudio
             attributes={schemaAttributes}
@@ -2690,7 +2853,7 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* VIEW 8: MODULE 08 - RETE TERZISTI 0 € */}
+        {/* VIEW 7: MODULE 07 - RETE TERZISTI 0 € - FTL-CEO-027 */}
         {activeModule === "subcontractor_portal" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-5">
@@ -2726,7 +2889,7 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* VIEW 9: MODULE 09 - PASSAPORTO DIGITALE UE (DPP) */}
+        {/* VIEW 8: MODULE 08 - PASSAPORTO DIGITALE UE (DPP) - FTL-CEO-027 */}
         {activeModule === "dpp_passport" && (
           <LiveDppPassportGenerator pimItem={currentPim} dpp={dppData} />
         )}

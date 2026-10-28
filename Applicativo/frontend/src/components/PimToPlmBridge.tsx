@@ -654,25 +654,31 @@ export const PimToPlmBridge: React.FC<PimToPlmBridgeProps> = ({
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold uppercase text-[#707072] mb-1">
-                Scala Taglie
+              <label className="block text-[11px] font-bold uppercase text-[#707072] mb-1 flex items-center justify-between">
+                <span>Scala Taglie 🔒</span>
+                <span className="text-[9px] text-amber-700 font-bold">Modello (FTL-CEO-025)</span>
               </label>
               <input
                 type="text"
+                disabled
+                readOnly
                 value={sizeRange}
-                onChange={(e) => setSizeRange(e.target.value)}
-                className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs text-[#111111]"
+                className="w-full bg-neutral-100 border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs text-[#555555] font-mono cursor-not-allowed font-bold"
+                title="La scala taglie appartiene al Modello di Base"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold uppercase text-[#707072] mb-1">
-                Codice Forma / Cartamodello
+              <label className="block text-[11px] font-bold uppercase text-[#707072] mb-1 flex items-center justify-between">
+                <span>Forma / Cartamodello 🔒</span>
+                <span className="text-[9px] text-amber-700 font-bold">Modello (FTL-CEO-025)</span>
               </label>
               <input
                 type="text"
+                disabled
+                readOnly
                 value={lastOrPattern}
-                onChange={(e) => setLastOrPattern(e.target.value)}
-                className="w-full bg-white border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs text-[#111111]"
+                className="w-full bg-neutral-100 border border-[#CCCCCC] rounded-xl px-3 py-2 text-xs text-[#555555] font-mono cursor-not-allowed font-bold"
+                title="Forma e cartamodello appartengono al Modello di Base"
               />
             </div>
             <div className="flex flex-col justify-between">

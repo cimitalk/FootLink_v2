@@ -1,0 +1,47 @@
+{
+  "task_id": "FTL-TECH-027",
+  "title": "Ordine definitivo moduli",
+  "description": "Sposta \"04 Stagioni & Collezioni\" in \"01 Stagioni & Collezioni\" e riordina tutti gli altri moduli:\n01 Stagioni & Collezioni\n02 Prodotti (PLM & BOM)\n03 PIM (Catalogo & Feed)\n04 Gestione Fornitori\n05 Anagrafiche di Dominio\n06 Modello Dati Flessibile\n07 Terzisti 0 €\n08 Passaporto DPP",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-28T22:38:27+02:00",
+  "updated_at": "2026-10-28T22:45:00+02:00",
+  "due_date": "2026-11-27T23:59:59+02:00",
+  "estimated_effort": "XS (<2h)",
+  "actual_effort": "1h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/types.ts",
+    "Applicativo/frontend/src/App.tsx",
+    "Applicativo/frontend/src/components/FootlinkHomeHub.tsx",
+    "Applicativo/frontend/src/components/SeasonsCollectionsHub.tsx",
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/components/PimCatalogManager.tsx",
+    "Applicativo/frontend/src/components/SupplierManagementHub.tsx",
+    "Azienda/adr/ADR-015-definitive-module-ordering-and-collection-pim-product-association.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": "ADR-015",
+  "tags": [
+    "product",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "ordine:",
+    "01 Stagioni & Collezioni",
+    "02 Prodotti (PLM & BOM)",
+    "03 PIM (Catalogo & Feed)",
+    "04 Gestione Fornitori",
+    "05 Anagrafiche di Dominio",
+    "06 Modello Dati Flessibile",
+    "07 Terzisti 0 €",
+    "08 Passaporto DPP"
+  ],
+  "notes": "Completato e ratificato in ADR-015. Menù e viste allineati esattamente alla sequenza naturale del ciclo moda richiesta dal Founder."
+}

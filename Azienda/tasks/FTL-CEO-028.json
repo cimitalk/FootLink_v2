@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-CEO-028",
+  "title": "Ogni prodotto definito nel PLM deve essere presente nel PIM",
+  "description": "Il PIM deve contenere tutti i prodotti definiti in PLM e quando creo un nuovo prodotto nel PLM lo devo vedere automaticamente anche in PIM. Poi l'utente deve poter avere la possibilità di arricchire le informazione con i campi previsto a livello di PIM per ogni prodotto. Se viene creato un prodotto PIM, questo \"ingloba\" al proprio interno i prodotti PLM che lo compongono.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-28T22:50:47+02:00",
+  "updated_at": "2026-10-28T22:45:00+02:00",
+  "due_date": "2026-11-27T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/components/PimCatalogManager.tsx",
+    "Applicativo/frontend/src/App.tsx",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/app/models.py",
+    "Applicativo/backend/tests/test_main.py",
+    "Azienda/adr/ADR-015-definitive-module-ordering-and-collection-pim-product-association.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": "ADR-015",
+  "tags": [
+    "governance",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Apro il modulo PIM e ci ritrovo tutti gli articoli presenti nel PLM."
+  ],
+  "notes": "Completato e ratificato in ADR-015. Garantita sincronizzazione speculare 1:1 e aggregazione 1:N tra PLM e PIM, con modale per arricchimento commerciale PIM (copy IT/EN, storytelling, tier, GTIN) e protezione delle varianti PLM inglobate."
+}

@@ -588,6 +588,14 @@ def list_all_docs():
             if norm.endswith(k) or k.endswith(norm):
                 return r
         low = norm.lower()
+        if "entita/modelli" in low or "entita/prodotti" in low or "entita/distinte_basi" in low or "entita/template" in low:
+            return "CPO"
+        if "entita/fornitori" in low:
+            return "CRO"
+        if "entita/stagioni" in low or "entita/collezioni" in low:
+            return "CMO"
+        if "entita/" in low:
+            return "CPO"
         if "piano_prosecuzione_strategico" in low or "role_ceo" in low or "/okr/" in low or "ftl-ceo" in low:
             return "CEO"
         if "archivio_epoche" in low or "role_cgo" in low or "/adr/" in low or "/governance/" in low or "ftl-gov" in low or "portale_founder_control" in low:
@@ -633,7 +641,7 @@ def list_all_docs():
             return "EPOCH_1"
         if any(k in low for k in (
             "manifesto", "role_", "identity.md", "soul.md", "user.md", "memory.md", "dreams.md",
-            "archivio_epoche"
+            "archivio_epoche", "entita"
         )):
             return "CORE"
         return "CORE"
@@ -724,7 +732,11 @@ def list_all_docs():
     ]
     root_files = ["README.md", "AGENTS.md", ".github/workflows/ci.yml"]
 
-    candidates = azienda_core + adr_files + task_json_files + doc_files + dam_files + memory_files + applicativo_files + portale_files + root_files
+    entita_files = [
+        os.path.relpath(p, ROOT_DIR)
+        for p in sorted(glob.glob(os.path.join(ROOT_DIR, "Azienda", "entita", "*.md")))
+    ]
+    candidates = azienda_core + adr_files + entita_files + task_json_files + doc_files + dam_files + memory_files + applicativo_files + portale_files + root_files
     seen = set()
     for rel in candidates:
         full_p = os.path.join(ROOT_DIR, rel)
@@ -1595,6 +1607,9 @@ INDEX_HTML = r"""<!DOCTYPE html>
       <button class="btn btn-sm" id="btn-epoch-all" onclick="setEpochFilter('ALL')">
         🌐 Tutte le Epoche
       </button>
+      <button class="btn btn-sm" style="background:rgba(56,189,248,0.22);border-color:#38bdf8;color:#7dd3fc;font-weight:700;" onclick="openDoc('Azienda/entita/README.md', 'preview')" title="Apri il Catalogo Master delle Entità di Dominio">
+        🏛️ Entità di Dominio
+      </button>
       <button class="btn btn-sm" style="background:linear-gradient(135deg,rgba(245,158,11,0.25),rgba(234,179,8,0.35));border-color:#f59e0b;color:#fef08a;font-weight:700;" onclick="openDoc('Azienda/ARCHIVIO_EPOCHE.md', 'preview')" title="Apri il Registro Ufficiale dell'Archivio per Epoche">
         🏛️ Registro Epoche
       </button>
@@ -1618,13 +1633,13 @@ INDEX_HTML = r"""<!DOCTYPE html>
     <div class="hub-header">
       <div class="hub-title-box">
         <h2>📚 Archivio Documentale &amp; Deliverable C-Suite</h2>
-        <p>Consultazione rapida per ruolo C-Level, ricerca in tempo reale e anteprima interattiva (.md ed .html)</p>
+        <p>Consultazione rapida per ruolo C-Level, ricerca in tempo reale, visualizzazione e modifica interattiva di file e schede entità</p>
       </div>
       <div class="hub-stats" id="hub-doc-count">0 Documenti</div>
     </div>
 
     <!-- Dedicated Epoch Selector Bar in Knowledge Hub -->
-    <div style="background:rgba(15,23,42,0.65);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div style="background:rgba(15,23,42,0.65);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <span style="font-size:12px;font-weight:700;color:#94a3b8;letter-spacing:0.3px;display:flex;align-items:center;gap:6px;">
           <span>🏛️</span> ARCHIVIO EPOCA:
@@ -1642,6 +1657,30 @@ INDEX_HTML = r"""<!DOCTYPE html>
       </div>
     </div>
 
+    <!-- Dedicated Domain Entities Quick Shelf -->
+    <div style="background:linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.75));border:1px solid rgba(56,189,248,0.35);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:16px;">🏛️</span>
+          <strong style="font-size:13px;color:#f8fafc;letter-spacing:-0.2px;">ANAGRAFE ENTITÀ DI DOMINIO (LIVING SPECS PLM + PIM)</strong>
+          <span class="pill" style="font-size:10px;background:rgba(56,189,248,0.18);color:#38bdf8;border:1px solid rgba(56,189,248,0.4);">Visualizzabili &amp; Modificabili</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);">
+          File Markdown in <code>Azienda/entita/</code> • Regolano lo sviluppo software e guidano CPO e CTO
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/MODELLI.md', 'preview')" style="background:rgba(56,189,248,0.12);border-color:#0284c7;color:#bae6fd;" title="Forma calzatura, costruzione suola, linee CAD">🏷️ Modelli</button>
+        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/PRODOTTI.md', 'preview')" style="background:rgba(34,197,94,0.12);border-color:#16a34a;color:#bbf7d0;" title="Ponte 1 Articolo Commerciale PIM : N Varianti PLM">📦 Prodotti (PIM/PLM)</button>
+        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/STAGIONI.md', 'preview')" style="background:rgba(234,179,8,0.12);border-color:#ca8a04;color:#fef08a;" title="Calendario moda P/E, A/I e Continuativo">🗓️ Stagioni</button>
+        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/COLLEZIONI.md', 'preview')" style="background:rgba(168,85,247,0.12);border-color:#9333ea;color:#e9d5ff;" title="Main Collection, Runway, Capsule e canali">🎨 Collezioni</button>
+        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/DISTINTE_BASI.md', 'preview')" style="background:rgba(236,72,153,0.12);border-color:#db2777;color:#fbcfe8;" title="Distinta base multi-livello a 3 livelli e template">🌲 Distinte Basi (BOM)</button>
+        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/FORNITORI.md', 'preview')" style="background:rgba(249,115,22,0.12);border-color:#ea580c;color:#fed7aa;" title="Concerie, terzisti a 0 € e albo 360°">🏭 Fornitori &amp; Vendor Hub</button>
+        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/README.md', 'preview')" style="background:rgba(148,163,184,0.15);border-color:#64748b;color:#e2e8f0;" title="Catalogo Ontologico e Regole di Allineamento">📖 Catalogo &amp; Regole</button>
+        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/TEMPLATE_ENTITA.md', 'preview')" style="background:rgba(148,163,184,0.1);border-color:#475569;color:#94a3b8;" title="Template standard per nuove entità">📋 Template Standard</button>
+      </div>
+    </div>
+
     <!-- C-Level Role Filter Tabs -->
     <div class="role-tabs" id="role-tabs-container"></div>
 
@@ -1655,6 +1694,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
       
       <div class="hub-format-filters" id="format-filter-group">
         <button class="filter-chip active" data-ext="all" onclick="setDocFilterExt('all')">Tutti i formati</button>
+        <button class="filter-chip" id="chip-entities-filter" onclick="toggleDomainEntitiesFilter()" style="border-color:#38bdf8;color:#7dd3fc;">🏛️ Solo Entità di Dominio</button>
         <button class="filter-chip" data-ext=".md" onclick="setDocFilterExt('.md')">📝 Markdown (.md)</button>
         <button class="filter-chip" data-ext=".html" onclick="setDocFilterExt('.html')">🌐 HTML / Preview (.html)</button>
         <button class="filter-chip" data-ext=".json" onclick="setDocFilterExt('.json')">⚙️ JSON Task</button>
@@ -1685,10 +1725,13 @@ INDEX_HTML = r"""<!DOCTYPE html>
       <div class="modal-header-center">
         <div class="segmented-control" id="view-mode-selector">
           <button type="button" class="seg-btn active" id="btn-seg-preview" onclick="setDocMode('preview')">
-            <span>👁️ Anteprima / Render</span>
+            <span>👁️ Anteprima</span>
           </button>
           <button type="button" class="seg-btn" id="btn-seg-code" onclick="setDocMode('code')">
-            <span>💻 Codice Sorgente</span>
+            <span>💻 Codice</span>
+          </button>
+          <button type="button" class="seg-btn" id="btn-seg-edit" onclick="setDocMode('edit')" style="border-left:1px solid rgba(255,255,255,0.12);">
+            <span>✏️ Modifica</span>
           </button>
         </div>
       </div>
@@ -1698,6 +1741,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
           <button class="btn btn-sm" id="btn-vp-desktop" onclick="setHtmlViewport('desktop')" title="Vista Desktop (100%)">🖥️ 100%</button>
           <button class="btn btn-sm" id="btn-vp-mobile" onclick="setHtmlViewport('mobile')" title="Vista Mobile (375px)">📱 375px</button>
         </div>
+        <button class="btn btn-sm btn-approve" id="btn-save-doc" onclick="saveCurrentDoc()" style="display:none;background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;font-weight:700;" title="Salva modifiche su disco">💾 Salva Modifiche</button>
         <button class="btn btn-sm" id="btn-open-tab" onclick="openInNewTab()" style="display:none;" title="Apri in una nuova scheda del browser">↗ Nuova Scheda</button>
         <button class="btn btn-sm" id="btn-copy" onclick="copyModalContent()" title="Copia contenuto negli appunti">📋 Copia</button>
         <button class="btn btn-sm" onclick="closeModal()" title="Chiudi finestra (Esc)">✕ Chiudi</button>
@@ -1711,6 +1755,17 @@ INDEX_HTML = r"""<!DOCTYPE html>
       </div>
       <div id="modal-code-view" class="code-preview" style="display:none;">
         <pre><code id="modal-code-text"></code></pre>
+      </div>
+      <div id="modal-edit-view" style="display:none;flex:1;height:100%;flex-direction:column;padding:12px;background:#090d16;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;color:var(--muted);">
+          <span>✏️ <strong>Editor Markdown Live:</strong> Modifica il contenuto testuale e clicca su "💾 Salva Modifiche" per aggiornare il file su disco.</span>
+          <span id="doc-edit-status" style="font-weight:700;color:#22c55e;"></span>
+        </div>
+        <textarea id="modal-edit-textarea" style="width:100%;flex:1;min-height:550px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13.5px;line-height:1.6;resize:none;outline:none;" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
     </div>
   </div>
@@ -2731,8 +2786,16 @@ let hubFilter = {
   role: 'TUTTI',
   ext: 'all',
   founderOnly: false,
+  entitiesOnly: false,
   query: ''
 };
+
+function toggleDomainEntitiesFilter() {
+  hubFilter.entitiesOnly = !hubFilter.entitiesOnly;
+  const chip = document.getElementById('chip-entities-filter');
+  if (chip) chip.classList.toggle('active', hubFilter.entitiesOnly);
+  renderKnowledgeHub();
+}
 
 function renderKnowledgeHub() {
   const rawDocs = currentState.docs || [];
@@ -2781,6 +2844,9 @@ function renderKnowledgeHub() {
   }
 
   let filtered = allDocs.filter(d => {
+    if (hubFilter.entitiesOnly && !d.path.startsWith('Azienda/entita/')) {
+      return false;
+    }
     if (hubFilter.founderOnly && !d.is_founder_directive) {
       return false;
     }
@@ -2828,7 +2894,7 @@ function renderKnowledgeHub() {
     if (activeEpochFilter === 'EPOCH_3') {
       metaEl.textContent = 'Epoca: ✨ Nuova Epoca (Epoca III) • Ambiente tabula rasa inizializzato a default vuoto per il Founder';
     } else {
-      metaEl.textContent = `Mostrando ${filtered.length} file • Epoca: ${activeEpochLabel} • Filtro: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.founderOnly ? ' • 👑 Solo Direttive Founder' : ''}${hubFilter.query ? ' • Ricerca: "' + hubFilter.query + '"' : ''}`;
+      metaEl.textContent = `Mostrando ${filtered.length} file • Epoca: ${activeEpochLabel}${hubFilter.entitiesOnly ? ' • 🏛️ Solo Entità di Dominio' : ''} • Filtro: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.founderOnly ? ' • 👑 Solo Direttive Founder' : ''}${hubFilter.query ? ' • Ricerca: "' + hubFilter.query + '"' : ''}`;
     }
   }
 
@@ -2886,12 +2952,16 @@ function renderKnowledgeHub() {
       ? `<span class="epoch-card-badge e3">✨ Epoca III</span>`
       : `<span class="epoch-card-badge core">🏛️ Core</span>`;
 
+    const isEntity = (d.path || '').startsWith('Azienda/entita/');
+    const entityBadge = isEntity ? `<span class="doc-role-badge" style="background:rgba(56,189,248,0.18);color:#38bdf8;border:1px solid rgba(56,189,248,0.4);font-size:10px;font-weight:700;">🏛️ Entità di Dominio</span>` : '';
+
     return `
       <div class="doc-card">
         <div>
           <div class="doc-card-top">
             ${epochBadge}
             <span class="doc-role-badge role-${d.role}">${emoji} ${d.role}</span>
+            ${entityBadge}
             <span class="doc-type-badge type-${cleanExt}">${cleanExt.toUpperCase()}</span>
             ${d.is_founder_directive ? `<span class="doc-role-badge" style="background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.4);font-weight:bold;font-size:10px;">👑 Direttiva Founder</span>` : ''}
             <span class="doc-size" style="font-size:11px;color:var(--muted);">${(d.size/1024).toFixed(1)} KB</span>
@@ -2906,6 +2976,7 @@ function renderKnowledgeHub() {
         <div class="doc-card-actions">
           <button class="btn btn-sm btn-approve" onclick="openDoc('${d.path}', 'preview')">👁️ Anteprima Live</button>
           <button class="btn btn-sm" onclick="openDoc('${d.path}', 'code')">💻 Codice</button>
+          <button class="btn btn-sm" onclick="openDoc('${d.path}', 'edit')" style="background:rgba(56,189,248,0.12);border-color:rgba(56,189,248,0.35);color:#38bdf8;" title="Modifica questo file direttamente">✏️ Modifica</button>
           ${isHtml ? `<button class="btn btn-sm" onclick="window.open('/raw?path=' + encodeURIComponent('${d.path}'), '_blank')" title="Apri in nuova scheda">↗ Scheda</button>` : ''}
         </div>
       </div>
@@ -3022,6 +3093,10 @@ async function openDoc(path, forcedMode = null) {
 }
 
 function setDocMode(mode) {
+  if (currentDoc.mode === 'edit') {
+    const textarea = document.getElementById('modal-edit-textarea');
+    if (textarea) currentDoc.content = textarea.value;
+  }
   currentDoc.mode = mode;
   updateModalView();
 }
@@ -3029,25 +3104,34 @@ function setDocMode(mode) {
 function updateModalView() {
   const btnPrev = document.getElementById('btn-seg-preview');
   const btnCode = document.getElementById('btn-seg-code');
+  const btnEdit = document.getElementById('btn-seg-edit');
+  const btnSave = document.getElementById('btn-save-doc');
   const mdView = document.getElementById('modal-md-view');
   const htmlView = document.getElementById('modal-html-view');
   const codeView = document.getElementById('modal-code-view');
+  const editView = document.getElementById('modal-edit-view');
+  const editTextarea = document.getElementById('modal-edit-textarea');
   const iframe = document.getElementById('modal-html-iframe');
   const codeText = document.getElementById('modal-code-text');
 
-  if (currentDoc.mode === 'preview') {
-    btnPrev.classList.add('active');
-    btnCode.classList.remove('active');
-  } else {
-    btnPrev.classList.remove('active');
-    btnCode.classList.add('active');
-  }
+  if (btnPrev) btnPrev.classList.toggle('active', currentDoc.mode === 'preview');
+  if (btnCode) btnCode.classList.toggle('active', currentDoc.mode === 'code');
+  if (btnEdit) btnEdit.classList.toggle('active', currentDoc.mode === 'edit');
+  if (btnSave) btnSave.style.display = currentDoc.mode === 'edit' ? 'inline-flex' : 'none';
 
-  mdView.style.display = 'none';
-  htmlView.style.display = 'none';
-  codeView.style.display = 'none';
+  if (mdView) mdView.style.display = 'none';
+  if (htmlView) htmlView.style.display = 'none';
+  if (codeView) codeView.style.display = 'none';
+  if (editView) editView.style.display = 'none';
 
-  if (currentDoc.mode === 'code') {
+  if (currentDoc.mode === 'edit') {
+    if (editTextarea) {
+      editTextarea.value = currentDoc.content || '';
+    }
+    const statusEl = document.getElementById('doc-edit-status');
+    if (statusEl) statusEl.textContent = '';
+    if (editView) editView.style.display = 'flex';
+  } else if (currentDoc.mode === 'code') {
     codeText.textContent = currentDoc.content || '(File vuoto o non presente)';
     codeView.style.display = 'block';
   } else {
@@ -3062,6 +3146,67 @@ function updateModalView() {
       codeText.textContent = currentDoc.content;
       codeView.style.display = 'block';
     }
+  }
+}
+
+async function saveCurrentDoc() {
+  const textarea = document.getElementById('modal-edit-textarea');
+  const statusEl = document.getElementById('doc-edit-status');
+  const btnSave = document.getElementById('btn-save-doc');
+  if (!textarea || !currentDoc.path) return;
+
+  const newContent = textarea.value;
+  if (statusEl) {
+    statusEl.textContent = '⏳ Salvataggio in corso...';
+    statusEl.style.color = '#38bdf8';
+  }
+  if (btnSave) btnSave.disabled = true;
+
+  try {
+    const res = await fetch('/api/save_doc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: currentDoc.path,
+        content: newContent
+      })
+    });
+    const result = await res.json();
+    if (result.ok) {
+      currentDoc.content = newContent;
+      if (statusEl) {
+        statusEl.textContent = '✅ File salvato su disco con successo!';
+        statusEl.style.color = '#22c55e';
+      }
+      const sizeKb = (new Blob([newContent]).size / 1024).toFixed(1);
+      const sub = document.getElementById('modal-subtitle');
+      if (sub) sub.textContent = `Estensione: .${currentDoc.ext} • Dimensione: ${sizeKb} KB • Salvato: ${result.mtime || 'adesso'}`;
+
+      if (currentState.docs) {
+        const d = currentState.docs.find(x => x.path === currentDoc.path);
+        if (d) {
+          d.size = result.size || newContent.length;
+          d.mtime = result.mtime || d.mtime;
+        }
+      }
+      setTimeout(() => {
+        if (statusEl && statusEl.textContent.includes('successo')) {
+          statusEl.textContent = '';
+        }
+      }, 4000);
+    } else {
+      if (statusEl) {
+        statusEl.textContent = '❌ Errore: ' + (result.error || 'Impossibile salvare');
+        statusEl.style.color = '#ef4444';
+      }
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = '❌ Errore di connessione: ' + err;
+      statusEl.style.color = '#ef4444';
+    }
+  } finally {
+    if (btnSave) btnSave.disabled = false;
   }
 }
 
@@ -3467,6 +3612,27 @@ class ControlCenterHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 print(f"[/api/edit_task ERROR] {e}", flush=True)
                 self._send_json({"ok": False, "error": str(e)}, status=400)
+        elif parsed.path == "/api/save_doc":
+            try:
+                rel_path = payload.get("path", "").strip()
+                new_content = payload.get("content", "")
+                if not rel_path:
+                    self._send_json({"ok": False, "error": "Path del file mancante"}, status=400)
+                    return
+                abs_path = os.path.abspath(os.path.join(ROOT_DIR, rel_path))
+                if not abs_path.startswith(ROOT_DIR):
+                    self._send_json({"ok": False, "error": "Percorso non autorizzato (Forbidden)"}, status=403)
+                    return
+                os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                with open(abs_path, "w", encoding="utf-8") as f:
+                    f.write(new_content)
+                mtime_str = datetime.datetime.fromtimestamp(os.path.getmtime(abs_path)).strftime("%Y-%m-%d %H:%M:%S")
+                size = os.path.getsize(abs_path)
+                print(f"[/api/save_doc] Salvato con successo {rel_path} ({size} byte)", flush=True)
+                self._send_json({"ok": True, "path": rel_path, "size": size, "mtime": mtime_str})
+            except Exception as e:
+                print(f"[/api/save_doc ERROR] {e}", flush=True)
+                self._send_json({"ok": False, "error": str(e)}, status=500)
         else:
             self.send_error(404)
 

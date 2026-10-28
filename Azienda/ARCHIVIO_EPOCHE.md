@@ -114,6 +114,8 @@ Quando il Founder o la C-Suite selezionano la **Nuova Epoca (Epoca III)** nel Fo
 *Documenti perenni e trasversali a tutte le Epoche:*
 - [`Azienda/Manifesto_Fondazione_Footlink.md`](./Manifesto_Fondazione_Footlink.md) *(Fonte Primaria #1)*
 - Specifiche di Ruolo C-Suite: [`Role_CEO`](./docs/roles/Role_CEO_Footlink.md), [`Role_CGO`](./docs/roles/Role_CGO_Footlink.md), [`Role_CPO`](./docs/roles/Role_CPO_Footlink.md), [`Role_CTO`](./docs/roles/Role_CTO_Footlink.md), [`Role_CRO`](./docs/roles/Role_CRO_Footlink.md), [`Role_CMO`](./docs/roles/Role_CMO_Footlink.md) *(Fonte #2)*
+- [**Catalogo Master Entità di Dominio** (`Azienda/entita/README.md`)](./entita/README.md) e Living Specs:
+  - [`MODELLI.md`](./entita/MODELLI.md) • [`PRODOTTI.md`](./entita/PRODOTTI.md) • [`STAGIONI.md`](./entita/STAGIONI.md) • [`COLLEZIONI.md`](./entita/COLLEZIONI.md) • [`DISTINTE_BASI.md`](./entita/DISTINTE_BASI.md) • [`FORNITORI.md`](./entita/FORNITORI.md) • [`TEMPLATE_ENTITA.md`](./entita/TEMPLATE_ENTITA.md)
 - [`Azienda/IDENTITY.md`](./IDENTITY.md), [`SOUL.md`](./SOUL.md), [`USER.md`](./USER.md), [`MEMORY.md`](./MEMORY.md), [`DREAMS.md`](./DREAMS.md)
 - [`Azienda/ARCHIVIO_EPOCHE.md`](./ARCHIVIO_EPOCHE.md) *(Questo Registro)*
 - [`README.md`](../README.md) e [`AGENTS.md`](../AGENTS.md)

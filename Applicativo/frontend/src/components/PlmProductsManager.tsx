@@ -100,6 +100,16 @@ interface PlmProductsManagerProps {
     brand_line?: string;
     target_occasion?: string;
     price_tier?: string;
+    initialVariant?: {
+      variant_code?: string;
+      colorway_name?: string;
+      size_range?: string;
+      last_or_pattern_code?: string;
+      construction_type?: string;
+      carryover_status?: string;
+      lifecycle_status?: PlmLifecycleStatus;
+      custom_attributes?: Record<string, any>;
+    };
   }) => void;
   onUpdateVariantLifecycle: (variantId: string, status: PlmLifecycleStatus) => void;
   onUpdateProductVariant?: (
@@ -168,10 +178,10 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
     pimItems[0]?.plm_variants[0]?.plm_variant_id || ""
   );
-  // Sprint 8 / FTL-TECH-026: Operational Tabs Navigation (4 main tabs + sub-tab inside Distinta Base)
+  // Sprint 8 / FTL-CEO-027: Operational Tabs Navigation (Modelli, Prodotti, Distinta Base, Colori)
   const [activeOperationalTab, setActiveOperationalTab] = useState<
-    "catalogo" | "modelli" | "bom_tree" | "colorway" | "presets"
-  >("catalogo");
+    "modelli" | "catalogo" | "bom_tree" | "colorway" | "presets"
+  >("modelli");
   const [bomSubTab, setBomSubTab] = useState<"tree" | "templates">("tree");
 
   const [showColorMatrixPanel, setShowColorMatrixPanel] = useState<boolean>(true);
@@ -673,7 +683,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
     const targetSeason = seasons.find((s) => s.season_id === newSeasonId) || seasons[0];
     const generatedSku = `SKU-${newVariantCode.trim().toUpperCase()}`;
 
-    // Create Commercial PIM Parent with Model association (FTL-TECH-025)
+    // Create Commercial PIM Parent with Model association & linked initial PLM Variant (FTL-CEO-028)
     onCreatePimItem({
       sku_code: generatedSku,
       model_name: newModelName.trim(),
@@ -688,20 +698,17 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
       brand_line: "Main Line",
       target_occasion: "smart_casual",
       price_tier: "core_luxury",
-    });
-
-    // Create PLM Production Variant
-    onAddVariant({
-      variant_code: newVariantCode.trim().toUpperCase(),
-      colorway_name: newColorway.trim(),
-      size_range: newSizeRange.trim(),
-      last_or_pattern_code: newLastCode.trim().toUpperCase(),
-      target_gender: newTargetGender,
-      construction_type: newConstructionType,
-      carryover_status: newCarryoverStatus,
-      lifecycle_status: "prototype",
-      custom_attributes: {
-        cloned_bom_source: cloneBomFromId || null,
+      initialVariant: {
+        variant_code: newVariantCode.trim().toUpperCase(),
+        colorway_name: newColorway.trim(),
+        size_range: newSizeRange.trim(),
+        last_or_pattern_code: newLastCode.trim().toUpperCase(),
+        construction_type: newConstructionType,
+        carryover_status: newCarryoverStatus,
+        lifecycle_status: "prototype",
+        custom_attributes: {
+          cloned_bom_source: cloneBomFromId || null,
+        },
       },
     });
 
@@ -779,7 +786,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           <div className="max-w-3xl">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-3 py-0.5 rounded-full text-[10px] font-bold tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                02 · PLM & INGEGNERIA DI PRODUZIONE (FTL-CEO-009)
+                02 · PRODOTTI (PLM &amp; BOM) (FTL-TECH-027)
               </span>
               <span className="text-xs text-neutral-400 font-mono">
                 Modelleria Fabbrica · Distinta Base a 3 Livelli · Costing L6 Riservato
@@ -883,24 +890,8 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
         </div>
       )}
 
-      {/* Sprint 8 / FTL-TECH-026: Operational Navigation Tabs Reorganized & Renamed */}
+      {/* Sprint 8 / FTL-CEO-027: Operational Navigation Tabs Reorganized: Modelli, Prodotti, Distinta Base, Colori */}
       <div className="flex items-center gap-2 border-b border-neutral-200 pb-2 overflow-x-auto">
-        <button
-          type="button"
-          onClick={() => setActiveOperationalTab("catalogo")}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
-            activeOperationalTab === "catalogo"
-              ? "bg-[#111111] text-white shadow-sm"
-              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-          }`}
-        >
-          <span>📦</span>
-          <span>Prodotti</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-neutral-800 text-neutral-300">
-            {filteredVariants.length}
-          </span>
-        </button>
-
         <button
           type="button"
           onClick={() => setActiveOperationalTab("modelli")}
@@ -914,6 +905,22 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           <span>Modelli</span>
           <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-200 text-amber-950 font-extrabold">
             {models?.length || 0}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveOperationalTab("catalogo")}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+            activeOperationalTab === "catalogo"
+              ? "bg-[#111111] text-white shadow-sm"
+              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+          }`}
+        >
+          <span>📦</span>
+          <span>Prodotti</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-neutral-800 text-neutral-300">
+            {filteredVariants.length}
           </span>
         </button>
 
@@ -1006,6 +1013,28 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
             <div className="flex items-center gap-1 bg-neutral-800 p-1 rounded-xl border border-neutral-700">
               <button
                 type="button"
+                onClick={() => setActiveOperationalTab("modelli")}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                  activeOperationalTab === "modelli"
+                    ? "bg-amber-400 text-neutral-950 font-black shadow-xs"
+                    : "text-neutral-300 hover:text-white"
+                }`}
+              >
+                📐 Modelli
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveOperationalTab("catalogo")}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                  activeOperationalTab === "catalogo"
+                    ? "bg-neutral-700 text-white shadow-xs"
+                    : "text-neutral-300 hover:text-white"
+                }`}
+              >
+                📦 Prodotti
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveOperationalTab("bom_tree")}
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
                   activeOperationalTab === "bom_tree"
@@ -1025,17 +1054,6 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 }`}
               >
                 🎨 Colorway
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveOperationalTab("catalogo")}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
-                  activeOperationalTab === "catalogo"
-                    ? "bg-neutral-700 text-white shadow-xs"
-                    : "text-neutral-300 hover:text-white"
-                }`}
-              >
-                📦 Catalogo
               </button>
             </div>
 
@@ -1088,7 +1106,32 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
         </div>
       )}
 
-      {/* TAB 1: Catalogo Varianti & Prodotti PLM */}
+      {/* TAB 1: Modelli di Base (Forme & Cartamodelli) - FTL-CEO-021 & FTL-CEO-027 */}
+      {activeOperationalTab === "modelli" && (
+        <ProductModelsManager
+          models={models}
+          pimItems={pimItems}
+          seasons={seasons}
+          viewerRole={viewerRole}
+          onCreateModel={onCreateModel || (() => {})}
+          onUpdateModel={onUpdateModel || (() => {})}
+          onDeleteModel={onDeleteModel || (() => {})}
+          onAttachProduct={onAttachProductToModel || (() => {})}
+          onDetachProduct={onDetachProductFromModel || (() => {})}
+          onCreateProductFromModel={handleCreateProductFromModel}
+          onSelectPimItem={(pim) => {
+            setSelectedPimId(pim.pim_item_id);
+            if (pim.plm_variants && pim.plm_variants.length > 0) {
+              setSelectedVariantId(pim.plm_variants[0].plm_variant_id);
+              onSelectVariant(pim.plm_variants[0]);
+            }
+            onSelectPim(pim);
+            setActiveOperationalTab("catalogo");
+          }}
+        />
+      )}
+
+      {/* TAB 2: Prodotti & Varianti PLM (Stile) */}
       {activeOperationalTab === "catalogo" && (
       <div className="bg-white border border-[#E5E5E5] rounded-3xl p-6 shadow-sm space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1390,31 +1433,6 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           </table>
         </div>
       </div>
-      )}
-
-      {/* TAB 2: Modelli di Base (Forme & Cartamodelli) - FTL-CEO-021 */}
-      {activeOperationalTab === "modelli" && (
-        <ProductModelsManager
-          models={models}
-          pimItems={pimItems}
-          seasons={seasons}
-          viewerRole={viewerRole}
-          onCreateModel={onCreateModel || (() => {})}
-          onUpdateModel={onUpdateModel || (() => {})}
-          onDeleteModel={onDeleteModel || (() => {})}
-          onAttachProduct={onAttachProductToModel || (() => {})}
-          onDetachProduct={onDetachProductFromModel || (() => {})}
-          onCreateProductFromModel={handleCreateProductFromModel}
-          onSelectPimItem={(pim) => {
-            setSelectedPimId(pim.pim_item_id);
-            if (pim.plm_variants && pim.plm_variants.length > 0) {
-              setSelectedVariantId(pim.plm_variants[0].plm_variant_id);
-              onSelectVariant(pim.plm_variants[0]);
-            }
-            onSelectPim(pim);
-            setActiveOperationalTab("catalogo");
-          }}
-        />
       )}
 
       {/* TAB 3: Distinta Base Ingegnerizzata & Template BOM (FTL-TECH-026) */}
@@ -1780,117 +1798,69 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Forma / Cartamodello *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="FORMA-FM-108"
-                    value={newLastCode}
-                    onChange={(e) => setNewLastCode(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
-                  />
+              {/* FTL-CEO-025 & FTL-CEO-026: Parametri Costruttivi Bloccati dal Modello di Base */}
+              <div className="p-3 bg-neutral-100 rounded-2xl border border-neutral-200 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-neutral-600 tracking-wider flex items-center gap-1.5">
+                    <span>🔒</span>
+                    <span>Costruzione Modello (Immutabile a livello di Prodotto)</span>
+                  </span>
+                  <span className="text-[10px] font-semibold text-neutral-500">
+                    Modello: {models?.find((m) => m.model_id === newSelectedModelId)?.model_code || "Non selezionato"}
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Scala Taglie Certificata *</label>
-                  {(() => {
-                    const scaleOpts = getSizeScaleOptions(newCategory, newTargetGender);
-                    if (!scaleOpts) {
-                      return (
-                        <input
-                          type="text"
-                          required
-                          placeholder="Donna EU 35-42"
-                          value={newSizeRange}
-                          onChange={(e) => setNewSizeRange(e.target.value)}
-                          className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
-                        />
-                      );
-                    }
-                    return (
-                      <select
-                        value={newSizeRange}
-                        onChange={(e) => setNewSizeRange(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono font-semibold"
-                      >
-                        {scaleOpts.recommended.length > 0 && (
-                          <optgroup label={`⭐ Scale Consigliate (${newCategory} · ${newTargetGender})`}>
-                            {scaleOpts.recommended.map((reg) => (
-                              <option key={reg.entry_code} value={reg.label_it}>
-                                {reg.label_it} ({reg.entry_code})
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {scaleOpts.others.length > 0 && (
-                          <optgroup label="Altre Scale di Dominio">
-                            {scaleOpts.others.map((reg) => (
-                              <option key={reg.entry_code} value={reg.label_it}>
-                                {reg.label_it} ({reg.entry_code})
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                      </select>
-                    );
-                  })()}
+
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                      Forma / Cartamodello 🔒
+                    </label>
+                    <input
+                      type="text"
+                      disabled
+                      readOnly
+                      value={newLastCode || "—"}
+                      className="w-full p-2 rounded-xl border border-neutral-300 bg-white font-mono text-neutral-700 font-bold cursor-not-allowed text-xs"
+                      title="Forma e cartamodello sono definiti unicamente a livello di Modello (FTL-CEO-025)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                      Scala Taglie 🔒
+                    </label>
+                    <input
+                      type="text"
+                      disabled
+                      readOnly
+                      value={newSizeRange || "—"}
+                      className="w-full p-2 rounded-xl border border-neutral-300 bg-white font-mono text-neutral-700 font-bold cursor-not-allowed text-xs"
+                      title="La scala taglie è definita unicamente a livello di Modello (FTL-CEO-025)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#707072] uppercase mb-1">
+                      Tipo Costruzione 🔒
+                    </label>
+                    <input
+                      type="text"
+                      disabled
+                      readOnly
+                      value={newConstructionType || "—"}
+                      className="w-full p-2 rounded-xl border border-neutral-300 bg-white text-neutral-700 font-bold cursor-not-allowed text-xs"
+                      title="La tipologia di costruzione è definita unicamente a livello di Modello"
+                    />
+                  </div>
                 </div>
+
+                <p className="text-[10px] text-neutral-500 italic">
+                  💡 Regola di Fondazione (FTL-CEO-026): Il Modello è la Costruzione. Il Prodotto è lo Stile (Materiali, Colori, Combinazioni). Forma e Scala Taglie si modificano solo nei Modelli.
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Tipo di Costruzione *</label>
-                  {(() => {
-                    const constOpts = getConstructionTypeOptions(newCategory);
-                    if (!constOpts) {
-                      return (
-                        <select
-                          value={newConstructionType}
-                          onChange={(e) => setNewConstructionType(e.target.value)}
-                          className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
-                        >
-                          <option value="cassetta_cucita">Fondo Cassetta Cucita</option>
-                          <option value="blake">Lavorazione Blake</option>
-                          <option value="goodyear">Goodyear Welton</option>
-                          <option value="sacchetto">Sacchetto (Bologna)</option>
-                          <option value="slip_lasting">Slip Lasting / Strobel</option>
-                          <option value="tubolare">Tubolare Mocassino</option>
-                          <option value="costa_taglio_vivo">Costa Taglio Vivo</option>
-                          <option value="rimboccato">Rimboccato Pregiato</option>
-                        </select>
-                      );
-                    }
-                    return (
-                      <select
-                        value={newConstructionType}
-                        onChange={(e) => setNewConstructionType(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
-                      >
-                        {constOpts.categorySpecific.length > 0 && (
-                          <optgroup label={`🔨 Costruzioni per ${newCategory.toUpperCase()}`}>
-                            {constOpts.categorySpecific.map((reg) => (
-                              <option key={reg.entry_code} value={reg.entry_code}>
-                                {reg.label_it} ({reg.entry_code})
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {constOpts.others.length > 0 && (
-                          <optgroup label="Altre Costruzioni e Lavorazioni">
-                            {constOpts.others.map((reg) => (
-                              <option key={reg.entry_code} value={reg.entry_code}>
-                                {reg.label_it} ({reg.entry_code})
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                      </select>
-                    );
-                  })()}
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Piramide di Collezione *</label>
+              <div>
+                <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Piramide di Collezione *</label>
                   {registries.filter((r) => r.registry_name === "collection_pyramids" && r.is_active).length > 0 ? (
                     <select
                       value={newCarryoverStatus}
@@ -1918,7 +1888,6 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                     </select>
                   )}
                 </div>
-              </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
@@ -1995,6 +1964,21 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
             </div>
 
             <form onSubmit={handleSaveQuickEdit} className="space-y-4 text-xs">
+              {/* FTL-CEO-025 & FTL-CEO-026: Direttiva Fondativa Modello vs Prodotto */}
+              <div className="p-3 bg-slate-900 text-white rounded-2xl flex items-center justify-between gap-3 text-xs border border-slate-800 shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-lg">🔒</span>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block">
+                      Governance FTL-CEO-025 · Il Modello è la Costruzione, il Prodotto è lo Stile
+                    </span>
+                    <p className="text-[11px] text-slate-300">
+                      Forma geometrica, Cartamodello 3D e Scala Taglie appartengono al Modello di Base e non sono modificabili qui. In questa maschera modifichi gli attributi di Stile (Colore, Materiali, Nome commerciale, Variante PLM).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Sezione 1: Attributi Modello Commerciale PIM */}
               <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200 space-y-3">
                 <div className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-600">
@@ -2138,64 +2122,45 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
-                      Forma / Cartamodello *
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1 flex items-center justify-between">
+                      <span>Forma / Cartamodello 🔒</span>
+                      <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                        Vincolo Modello (FTL-CEO-025)
+                      </span>
                     </label>
                     <input
                       type="text"
-                      required
+                      disabled
+                      readOnly
                       value={editLastCode}
-                      onChange={(e) => setEditLastCode(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
+                      className="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 font-mono text-neutral-600 font-bold cursor-not-allowed"
+                      title="Forma e cartamodello sono vincolati al Modello di Base e non modificabili dal Prodotto"
                     />
+                    <span className="text-[10px] text-neutral-400 mt-0.5 block">
+                      🔒 Modificabile unicamente nella scheda 📐 Modelli
+                    </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
-                      Scala Taglie Certificata *
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1 flex items-center justify-between">
+                      <span>Scala Taglie 🔒</span>
+                      <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                        Vincolo Modello
+                      </span>
                     </label>
-                    {(() => {
-                      const scaleOpts = getSizeScaleOptions(editCategory, editTargetGender);
-                      if (!scaleOpts) {
-                        return (
-                          <input
-                            type="text"
-                            required
-                            value={editSizeRange}
-                            onChange={(e) => setEditSizeRange(e.target.value)}
-                            className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
-                          />
-                        );
-                      }
-                      return (
-                        <select
-                          value={editSizeRange}
-                          onChange={(e) => setEditSizeRange(e.target.value)}
-                          className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono font-semibold"
-                        >
-                          {scaleOpts.recommended.length > 0 && (
-                            <optgroup label={`⭐ Scale Consigliate (${editCategory} · ${editTargetGender})`}>
-                              {scaleOpts.recommended.map((reg) => (
-                                <option key={reg.entry_code} value={reg.label_it}>
-                                  {reg.label_it} ({reg.entry_code})
-                                </option>
-                              ))}
-                            </optgroup>
-                          )}
-                          {scaleOpts.others.length > 0 && (
-                            <optgroup label="Altre Scale di Dominio">
-                              {scaleOpts.others.map((reg) => (
-                                <option key={reg.entry_code} value={reg.label_it}>
-                                  {reg.label_it} ({reg.entry_code})
-                                </option>
-                              ))}
-                            </optgroup>
-                          )}
-                        </select>
-                      );
-                    })()}
+                    <input
+                      type="text"
+                      disabled
+                      readOnly
+                      value={editSizeRange}
+                      className="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 font-mono text-neutral-600 font-bold cursor-not-allowed"
+                      title="La scala taglie appartiene al Modello di Base (FTL-CEO-025)"
+                    />
+                    <span className="text-[10px] text-neutral-400 mt-0.5 block">
+                      🔒 Bloccata: eredità geometrica del modello
+                    </span>
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
@@ -2226,57 +2191,25 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
-                      Tipo di Costruzione *
+                    <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1 flex items-center justify-between">
+                      <span>Tipo di Costruzione 🔒</span>
+                      <span className="text-[9px] font-bold text-neutral-600 bg-neutral-200 px-1.5 py-0.2 rounded">
+                        Modello
+                      </span>
                     </label>
-                    {(() => {
-                      const constOpts = getConstructionTypeOptions(editCategory);
-                      if (!constOpts) {
-                        return (
-                          <select
-                            value={editConstructionType}
-                            onChange={(e) => setEditConstructionType(e.target.value)}
-                            className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
-                          >
-                            <option value="cassetta_cucita">Fondo Cassetta Cucita</option>
-                            <option value="blake">Lavorazione Blake</option>
-                            <option value="goodyear">Goodyear Welton</option>
-                            <option value="sacchetto">Sacchetto (Bologna)</option>
-                            <option value="slip_lasting">Slip Lasting / Strobel</option>
-                            <option value="tubolare">Tubolare Mocassino</option>
-                            <option value="costa_taglio_vivo">Costa Taglio Vivo</option>
-                            <option value="rimboccato">Rimboccato Pregiato</option>
-                          </select>
-                        );
-                      }
-                      return (
-                        <select
-                          value={editConstructionType}
-                          onChange={(e) => setEditConstructionType(e.target.value)}
-                          className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
-                        >
-                          {constOpts.categorySpecific.length > 0 && (
-                            <optgroup label={`🔨 Costruzioni per ${editCategory.toUpperCase()}`}>
-                              {constOpts.categorySpecific.map((reg) => (
-                                <option key={reg.entry_code} value={reg.entry_code}>
-                                  {reg.label_it} ({reg.entry_code})
-                                </option>
-                              ))}
-                            </optgroup>
-                          )}
-                          {constOpts.others.length > 0 && (
-                            <optgroup label="Altre Costruzioni e Lavorazioni">
-                              {constOpts.others.map((reg) => (
-                                <option key={reg.entry_code} value={reg.entry_code}>
-                                  {reg.label_it} ({reg.entry_code})
-                                </option>
-                              ))}
-                            </optgroup>
-                          )}
-                        </select>
-                      );
-                    })()}
+                    <input
+                      type="text"
+                      disabled
+                      readOnly
+                      value={editConstructionType}
+                      className="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-600 font-bold cursor-not-allowed"
+                      title="La tipologia di costruzione è vincolata al Modello di Base"
+                    />
+                    <span className="text-[10px] text-neutral-400 mt-0.5 block">
+                      🔒 Definito a livello di Modello
+                    </span>
                   </div>
+
                   <div>
                     <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
                       Stato Ciclo di Vita *
@@ -2372,15 +2305,23 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
-                  Scala Taglie
+                <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1 flex items-center justify-between">
+                  <span>Scala Taglie 🔒</span>
+                  <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                    Vincolo Modello (FTL-CEO-025)
+                  </span>
                 </label>
                 <input
                   type="text"
+                  disabled
+                  readOnly
                   value={cloneNewSizeRange}
-                  onChange={(e) => setCloneNewSizeRange(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono"
+                  className="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 font-mono text-neutral-600 font-bold cursor-not-allowed"
+                  title="La scala taglie è vincolata al Modello di Base (FTL-CEO-025)"
                 />
+                <span className="text-[10px] text-neutral-400 mt-0.5 block">
+                  🔒 Ereditata dal Modello di Base. La duplicazione genera una nuova declinazione di Stile (colore / materiali).
+                </span>
               </div>
 
               <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl space-y-3">

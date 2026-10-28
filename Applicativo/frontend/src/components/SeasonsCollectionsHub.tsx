@@ -34,6 +34,8 @@ interface SeasonsCollectionsHubProps {
     }
   ) => void;
   onNavigateToProduct?: (pimItemId: string) => void;
+  onAddProductsToCollection?: (collectionId: string, pimItemIds: string[]) => void;
+  onRemoveProductFromCollection?: (pimItemId: string) => void;
 }
 
 export const SeasonsCollectionsHub: React.FC<SeasonsCollectionsHubProps> = ({
@@ -46,9 +48,21 @@ export const SeasonsCollectionsHub: React.FC<SeasonsCollectionsHubProps> = ({
   onCreateSeason,
   onCreateCollection,
   onNavigateToProduct,
+  onAddProductsToCollection,
+  onRemoveProductFromCollection,
 }) => {
   const [showNewSeasonModal, setShowNewSeasonModal] = useState(false);
   const [showNewColModal, setShowNewColModal] = useState(false);
+
+  // Modal state for adding products to a collection (FTL-PROD-014)
+  const [showAddProductsModal, setShowAddProductsModal] = useState(false);
+  const [targetCollection, setTargetCollection] = useState<Collection | null>(null);
+  const [modalSearch, setModalSearch] = useState("");
+  const [modalCategory, setModalCategory] = useState<string>("ALL");
+  const [modalGender, setModalGender] = useState<string>("ALL");
+  const [modalSeasonScope, setModalSeasonScope] = useState<string>("CURRENT");
+  const [modalOnlyUnassigned, setModalOnlyUnassigned] = useState(false);
+  const [selectedPimIdsForAssignment, setSelectedPimIdsForAssignment] = useState<string[]>([]);
 
   // New Season form state
   const [newSeasonCode, setNewSeasonCode] = useState("");
@@ -99,12 +113,81 @@ export const SeasonsCollectionsHub: React.FC<SeasonsCollectionsHubProps> = ({
     setShowNewColModal(false);
   };
 
+  const openAddProductsModal = (col: Collection) => {
+    setTargetCollection(col);
+    setModalSearch("");
+    setModalCategory("ALL");
+    setModalGender("ALL");
+    setModalSeasonScope("CURRENT");
+    setModalOnlyUnassigned(false);
+    setSelectedPimIdsForAssignment([]);
+    setShowAddProductsModal(true);
+  };
+
+  const handleToggleSelectPim = (pimId: string) => {
+    setSelectedPimIdsForAssignment((prev) =>
+      prev.includes(pimId) ? prev.filter((id) => id !== pimId) : [...prev, pimId]
+    );
+  };
+
+  const handleConfirmAddProducts = () => {
+    if (!targetCollection || selectedPimIdsForAssignment.length === 0) return;
+    onAddProductsToCollection?.(targetCollection.collection_id, selectedPimIdsForAssignment);
+    setShowAddProductsModal(false);
+    setSelectedPimIdsForAssignment([]);
+    setTargetCollection(null);
+  };
+
   // Compute products associated with active season / collections
   const seasonProducts = pimItems.filter(
     (item) =>
       item.season_id === activeSeason?.season_id ||
       item.season.trim().toUpperCase() === activeSeason?.code.trim().toUpperCase()
   );
+
+  const selectedCol = activeSeason?.collections.find(
+    (c) => c.collection_id === selectedCollectionId
+  );
+
+  const displayedProducts = selectedCol
+    ? seasonProducts.filter(
+        (p) =>
+          p.collection_id === selectedCol.collection_id ||
+          p.collection_name?.trim().toLowerCase() === selectedCol.name.trim().toLowerCase()
+      )
+    : seasonProducts;
+
+  // Filter products for the Add Products Modal (FTL-PROD-014)
+  const filteredPimItemsForModal = pimItems.filter((p) => {
+    // Season filter
+    if (modalSeasonScope === "CURRENT") {
+      const matchSeason =
+        p.season_id === activeSeason?.season_id ||
+        p.season.trim().toUpperCase() === activeSeason?.code.trim().toUpperCase();
+      if (!matchSeason) return false;
+    }
+    // Category filter
+    if (modalCategory !== "ALL" && p.category !== modalCategory) {
+      return false;
+    }
+    // Gender filter
+    if (modalGender !== "ALL" && p.target_gender?.toLowerCase() !== modalGender.toLowerCase()) {
+      return false;
+    }
+    // Unassigned filter
+    if (modalOnlyUnassigned && (p.collection_id || p.collection_name)) {
+      return false;
+    }
+    // Search query
+    if (modalSearch.trim()) {
+      const q = modalSearch.toLowerCase().trim();
+      const matchSku = p.sku_code.toLowerCase().includes(q);
+      const matchName = p.model_name.toLowerCase().includes(q);
+      const matchDesc = p.commercial_description_it?.toLowerCase().includes(q);
+      if (!matchSku && !matchName && !matchDesc) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -113,7 +196,7 @@ export const SeasonsCollectionsHub: React.FC<SeasonsCollectionsHubProps> = ({
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9E9E9E]">
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            MODULO 02 · GESTIONE STAGIONI &amp; COLLEZIONI
+            MODULO 01 · GESTIONE STAGIONI &amp; COLLEZIONI (FTL-TECH-027)
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
             Calendario Moda &amp; Campionari
@@ -303,6 +386,19 @@ export const SeasonsCollectionsHub: React.FC<SeasonsCollectionsHubProps> = ({
                               {colProducts.length} Modelli PIM
                             </span>
                           </div>
+
+                          {onAddProductsToCollection && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openAddProductsModal(col);
+                              }}
+                              className="mt-3 w-full px-3 py-2 rounded-full bg-[#111111] text-white text-[11px] font-bold hover:bg-black transition"
+                            >
+                              ➕ Associa Prodotti dal PIM
+                            </button>
+                          )}
                         </div>
                       );
                     })}
@@ -315,21 +411,45 @@ export const SeasonsCollectionsHub: React.FC<SeasonsCollectionsHubProps> = ({
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-base font-extrabold text-[#111111]">
-                      Prodotti Gestiti in {activeSeason.code}
+                      {selectedCol
+                        ? `Prodotti in ${selectedCol.name} (${activeSeason.code})`
+                        : `Prodotti Gestiti in ${activeSeason.code}`}
                     </h3>
                     <p className="text-xs text-[#707072] mt-0.5">
-                      Tutti i modelli PIM e le varianti industriali PLM pianificati per questa stagione.
+                      {selectedCol
+                        ? "Modelli PIM associati a questa collezione. Clicca di nuovo sulla collezione per vedere tutta la stagione."
+                        : "Tutti i modelli PIM e le varianti industriali PLM pianificati per questa stagione."}
                     </p>
                   </div>
-                  <span className="text-xs font-bold bg-[#F5F5F5] px-2.5 py-1 rounded-full text-[#111111]">
-                    {seasonProducts.length} Articoli
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {selectedCol && onAddProductsToCollection && (
+                      <button
+                        type="button"
+                        onClick={() => openAddProductsModal(selectedCol)}
+                        className="px-3 py-1 rounded-full bg-[#111111] text-white text-[11px] font-bold hover:bg-black transition"
+                      >
+                        ➕ Associa dal PIM
+                      </button>
+                    )}
+                    <span className="text-xs font-bold bg-[#F5F5F5] px-2.5 py-1 rounded-full text-[#111111]">
+                      {displayedProducts.length} Articoli
+                    </span>
+                  </div>
                 </div>
 
-                {seasonProducts.length === 0 ? (
+                {displayedProducts.length === 0 ? (
                   <div className="text-center py-8 text-xs text-[#707072] bg-[#FAFAFA] rounded-xl border border-dashed border-[#E5E5E5]">
-                    Nessun prodotto PIM attualmente assegnato a questa stagione.
-                    Crea un nuovo prodotto assegnandogli la stagione <strong>{activeSeason.code}</strong>.
+                    {selectedCol ? (
+                      <>
+                        Nessun prodotto PIM associato a <strong>{selectedCol.name}</strong>.
+                        Usa <strong>➕ Associa Prodotti dal PIM</strong> per aggiungerne.
+                      </>
+                    ) : (
+                      <>
+                        Nessun prodotto PIM attualmente assegnato a questa stagione.
+                        Crea un nuovo prodotto assegnandogli la stagione <strong>{activeSeason.code}</strong>.
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -345,7 +465,7 @@ export const SeasonsCollectionsHub: React.FC<SeasonsCollectionsHubProps> = ({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#E5E5E5]">
-                        {seasonProducts.map((p) => (
+                        {displayedProducts.map((p) => (
                           <tr key={p.pim_item_id} className="hover:bg-[#FAFAFA] transition">
                             <td className="py-3 px-3">
                               <div className="font-extrabold text-[#111111]">{p.model_name}</div>
@@ -372,15 +492,28 @@ export const SeasonsCollectionsHub: React.FC<SeasonsCollectionsHubProps> = ({
                               </span>
                             </td>
                             <td className="py-3 px-3 text-right">
-                              {onNavigateToProduct && (
-                                <button
-                                  type="button"
-                                  onClick={() => onNavigateToProduct(p.pim_item_id)}
-                                  className="px-2.5 py-1 rounded bg-[#111111] text-white font-bold text-[11px] hover:bg-black transition"
-                                >
-                                  Apri Scheda →
-                                </button>
-                              )}
+                              <div className="flex items-center justify-end gap-1.5">
+                                {onRemoveProductFromCollection &&
+                                  (p.collection_id || p.collection_name) && (
+                                    <button
+                                      type="button"
+                                      onClick={() => onRemoveProductFromCollection(p.pim_item_id)}
+                                      title="Rimuovi dalla collezione (il prodotto resta nel PIM)"
+                                      className="px-2.5 py-1 rounded border border-[#E5E5E5] text-[#B91C1C] font-bold text-[11px] hover:bg-[#FEF2F2] transition"
+                                    >
+                                      ✕ Rimuovi dalla Collezione
+                                    </button>
+                                  )}
+                                {onNavigateToProduct && (
+                                  <button
+                                    type="button"
+                                    onClick={() => onNavigateToProduct(p.pim_item_id)}
+                                    className="px-2.5 py-1 rounded bg-[#111111] text-white font-bold text-[11px] hover:bg-black transition"
+                                  >
+                                    Apri Scheda →
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -583,6 +716,156 @@ export const SeasonsCollectionsHub: React.FC<SeasonsCollectionsHubProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Associa Prodotti dal PIM alla Collezione (FTL-PROD-014) */}
+      {showAddProductsModal && targetCollection && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-[#E5E5E5] max-w-3xl w-full max-h-[90vh] flex flex-col shadow-xl">
+            <div className="p-6 pb-4 border-b border-[#E5E5E5] flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black text-[#111111]">
+                  Associa Prodotti dal PIM a {targetCollection.name}
+                </h3>
+                <p className="text-xs text-[#707072] mt-0.5">
+                  Seleziona i modelli commerciali PIM (con le relative varianti PLM) da inserire nella collezione{" "}
+                  <strong>{targetCollection.code}</strong>.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddProductsModal(false)}
+                className="w-8 h-8 rounded-full bg-[#F5F5F5] text-[#707072] hover:text-[#111111] flex items-center justify-center font-bold shrink-0"
+                aria-label="Chiudi"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Filters */}
+            <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs border-b border-[#E5E5E5] bg-[#FAFAFA]">
+              <div className="sm:col-span-2 lg:col-span-4">
+                <input
+                  type="text"
+                  value={modalSearch}
+                  onChange={(e) => setModalSearch(e.target.value)}
+                  placeholder="🔍 Cerca per SKU, nome modello o descrizione..."
+                  className="w-full p-2.5 rounded-lg border border-[#E5E5E5] bg-white font-semibold focus:outline-none focus:border-[#111111]"
+                />
+              </div>
+              <select
+                value={modalCategory}
+                onChange={(e) => setModalCategory(e.target.value)}
+                className="p-2.5 rounded-lg border border-[#E5E5E5] bg-white font-semibold focus:outline-none focus:border-[#111111]"
+                aria-label="Categoria"
+              >
+                <option value="ALL">Tutte le categorie</option>
+                <option value="footwear">👟 Calzature</option>
+                <option value="leather_goods">👜 Pelletteria</option>
+                <option value="apparel">🧥 Abbigliamento</option>
+              </select>
+              <select
+                value={modalGender}
+                onChange={(e) => setModalGender(e.target.value)}
+                className="p-2.5 rounded-lg border border-[#E5E5E5] bg-white font-semibold focus:outline-none focus:border-[#111111]"
+                aria-label="Genere"
+              >
+                <option value="ALL">Tutti i generi</option>
+                <option value="donna">♀ Donna</option>
+                <option value="uomo">♂ Uomo</option>
+                <option value="unisex">⚥ Unisex</option>
+                <option value="bambino">🧒 Bambino</option>
+              </select>
+              <select
+                value={modalSeasonScope}
+                onChange={(e) => setModalSeasonScope(e.target.value)}
+                className="p-2.5 rounded-lg border border-[#E5E5E5] bg-white font-semibold focus:outline-none focus:border-[#111111]"
+                aria-label="Stagione"
+              >
+                <option value="CURRENT">Solo stagione {activeSeason?.code}</option>
+                <option value="ALL">Tutte le stagioni</option>
+              </select>
+              <label className="flex items-center gap-2 font-semibold text-[#111111] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={modalOnlyUnassigned}
+                  onChange={(e) => setModalOnlyUnassigned(e.target.checked)}
+                />
+                Solo non assegnati
+              </label>
+            </div>
+
+            {/* Results */}
+            <div className="flex-1 overflow-y-auto px-6 py-3">
+              {filteredPimItemsForModal.length === 0 ? (
+                <div className="text-center py-10 text-xs text-[#707072]">
+                  Nessun prodotto PIM corrisponde ai filtri selezionati.
+                </div>
+              ) : (
+                <div className="divide-y divide-[#E5E5E5]">
+                  {filteredPimItemsForModal.map((p) => {
+                    const alreadyIn = p.collection_id === targetCollection.collection_id;
+                    const checked = selectedPimIdsForAssignment.includes(p.pim_item_id);
+                    return (
+                      <label
+                        key={p.pim_item_id}
+                        className={`flex items-center gap-3 py-2.5 text-xs ${
+                          alreadyIn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-[#FAFAFA]"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          disabled={alreadyIn}
+                          checked={checked || alreadyIn}
+                          onChange={() => handleToggleSelectPim(p.pim_item_id)}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-extrabold text-[#111111] truncate">{p.model_name}</div>
+                          <div className="text-[11px] text-[#707072] font-mono">
+                            {p.sku_code} · {p.season} · {p.plm_variants.length} varianti PLM
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold uppercase bg-[#F5F5F5] px-2 py-0.5 rounded text-[#707072]">
+                          {p.category}
+                        </span>
+                        <span className="text-[10px] font-semibold text-[#707072] w-36 text-right truncate">
+                          {alreadyIn
+                            ? "✓ Già in collezione"
+                            : p.collection_name
+                            ? `In: ${p.collection_name}`
+                            : "Non assegnato"}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-[#E5E5E5] flex items-center justify-between gap-2">
+              <span className="text-[11px] text-[#707072]">
+                {filteredPimItemsForModal.length} risultati · un prodotto già assegnato ad altra collezione verrà spostato.
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddProductsModal(false)}
+                  className="px-4 py-2 rounded-full border border-[#E5E5E5] font-bold text-xs hover:bg-[#F5F5F5] transition"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="button"
+                  disabled={selectedPimIdsForAssignment.length === 0}
+                  onClick={handleConfirmAddProducts}
+                  className="px-4 py-2 rounded-full bg-[#111111] text-white font-bold text-xs hover:bg-black transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  ✓ Associa alla Collezione ({selectedPimIdsForAssignment.length} selezionati)
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

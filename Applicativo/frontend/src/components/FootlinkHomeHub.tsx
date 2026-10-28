@@ -45,80 +45,71 @@ export const FootlinkHomeHub: React.FC<FootlinkHomeHubProps> = ({
   const modules = [
     {
       num: "01",
-      id: "district_paas" as ActiveWorkspaceModule,
-      tag: "DISTRICT PaaS & UTENTI (SPRINT 6)",
-      title: "PIATTAFORMA PaaS DISTRETTUALE A 3 LIVELLI",
-      desc: "Governance federata per il distretto calzaturiero e pellettiero: onboarding guidato per Brand Enterprise, PMI manifatturiere/concerie e Piccoli Laboratori Façonisti a canone 0 € perpetuo.",
-      metric: "3 Tiers · Segregazione L6 · Multi-Company",
-      cta: "Apri Hub PaaS Distrettuale",
-    },
-    {
-      num: "02",
-      id: "products" as ActiveWorkspaceModule,
-      tag: "PLM & INGEGNERIA FABBRICA (FTL-CEO-009)",
-      title: "PRODOTTI PLM & DISTINTE BASE A 3 LIVELLI",
-      desc: "Area tecnica autonoma per la modelleria di fabbrica: griglia avanzata varianti, cartamodelli e forme, inserimento rapido in 60s, albero distinta base BOM integrato ed export Excel istantaneo.",
-      metric: `${totalPlm} Varianti PLM · BOM 3 Livelli`,
-      cta: "Apri Prodotti PLM & BOM",
-    },
-    {
-      num: "03",
-      id: "pim_catalog" as ActiveWorkspaceModule,
-      tag: "PIM CATALOGO & FEED E-COMMERCE (FTL-CEO-010)",
-      title: "PIM CATALOGO COMMERCIALE & FEED MULTI-CANALE",
-      desc: "Gestione commerciale omnicanale: default 1:1 speculare da PLM, composizione look/bundle aggregati 1:N, listini wholesale/retail e syndication feed live per Shopify Plus, NuORDER e JOOR.",
-      metric: `${totalPim} Master SKU · Feed Live Shopify/B2B`,
-      cta: "Apri PIM Catalogo & Feed",
-    },
-    {
-      num: "04",
-      id: "tannery_vault" as ActiveWorkspaceModule,
-      tag: "PELLAMI & CONCERIA ESPR/EUDR (FTL-CEO-012)",
-      title: "VAULT TRACCIABILITÀ PELLAMI & CERTIFICAZIONI",
-      desc: "Tracciabilità della concia e conformità EUDR/ESPR: lotti pelle collegati obbligatoriamente a BOM, upload reale file PDF/immagini con hash SHA-256 e importazione massiva da file Excel con template.",
-      metric: "LWG Gold · Upload PDF Reale · Import Excel",
-      cta: "Esplora Vault Conceria",
-    },
-    {
-      num: "05",
       id: "seasons_collections" as ActiveWorkspaceModule,
-      tag: "CALENDARIO MODA & FASHION",
+      tag: "CALENDARIO MODA & FASHION (FTL-TECH-027)",
       title: "STAGIONI & COLLEZIONI ANNIDATE",
       desc: "Gestione temporale del campionario: 1 Stagione (es. P/E 2026, A/I 2026-27) racchiude N Collezioni (Main Collection, Fashion Runway, Capsule Limited Edition) che governano i prodotti.",
       metric: "P/E 2026 · A/I 2026/27 Attive",
       cta: "Gestisci Calendario Moda",
     },
     {
-      num: "06",
+      num: "02",
+      id: "products" as ActiveWorkspaceModule,
+      tag: "PLM & INGEGNERIA FABBRICA (FTL-TECH-027)",
+      title: "PRODOTTI PLM & MODELLI DI COSTRUZIONE",
+      desc: "Area tecnica unificata per la modelleria: Modelli di costruzione, Prodotti/Stile, Distinta Base BOM a 3 livelli e Colorway Matrix con gate spettrofotometrico ΔE.",
+      metric: `${totalPlm} Varianti PLM · BOM 3 Livelli`,
+      cta: "Apri Prodotti PLM & BOM",
+    },
+    {
+      num: "03",
+      id: "pim_catalog" as ActiveWorkspaceModule,
+      tag: "PIM CATALOGO & FEED E-COMMERCE (FTL-TECH-027)",
+      title: "PIM CATALOGO COMMERCIALE & FEED MULTI-CANALE",
+      desc: "Gestione commerciale omnicanale: catalogo articoli commerciali PIM, look/bundle aggregati 1:N, listini wholesale/retail e syndication feed live per Shopify Plus, NuORDER e JOOR.",
+      metric: `${totalPim} Master SKU · Feed Live Shopify/B2B`,
+      cta: "Apri PIM Catalogo & Feed",
+    },
+    {
+      num: "04",
+      id: "vendor_management" as ActiveWorkspaceModule,
+      tag: "GESTIONE FILIERA 360° (FTL-TECH-027)",
+      title: "GESTIONE FORNITORI, DISTRETTO PaaS & CONCERIE",
+      desc: "Gestionale unificato della filiera: Albo Fornitori e Façonisti a 360°, Onboarding Aziende Distretto PaaS & Utenti di rete, e Vault Conceria LWG con tracciabilità lotti SHA-256.",
+      metric: "Albo Fornitori · Distretto PaaS · Vault LWG",
+      cta: "Apri Gestione Fornitori",
+    },
+    {
+      num: "05",
       id: "domain_registries" as ActiveWorkspaceModule,
-      tag: "TABELLE MASTER CONDIVISE",
+      tag: "TABELLE MASTER CONDIVISE (FTL-TECH-027)",
       title: "ANAGRAFICHE DI DOMINIO PIM & PLM",
-      desc: "Hub centralizzato tabelle di dominio: categorie merceologiche, canali retail, codici doganali HS, fasi di lavorazione, tipi componenti BOM, fornitori e laboratori a 0 € con inline edit.",
+      desc: "Hub tabelle anagrafiche master: categorie merceologiche, canali retail, codici doganali HS, fasi di lavorazione, tipi componenti BOM e Color Intelligence Studio.",
       metric: "Master Registries PIM & PLM",
       cta: "Gestisci Tabelle Anagrafiche",
     },
     {
-      num: "07",
+      num: "06",
       id: "schema_studio" as ActiveWorkspaceModule,
-      tag: "FOUNDER STUDIO & NO-CODE",
+      tag: "FOUNDER STUDIO & NO-CODE (FTL-TECH-027)",
       title: "MODELLO DATI FLESSIBILE & ESTENSIONI",
       desc: "Pannello interattivo per il Founder: ispezione e aggiunta dinamica di attributi personalizzati su PIM, PLM e BOM con riflesso immediato in UI e API senza downtime DDL.",
       metric: "Schema Estensibile Live",
       cta: "Apri Data Model Studio",
     },
     {
-      num: "08",
+      num: "07",
       id: "subcontractor_portal" as ActiveWorkspaceModule,
-      tag: "ZERO-FRICTION NETWORK",
+      tag: "ZERO-FRICTION NETWORK (FTL-TECH-027)",
       title: "PORTALE MOBILE TERZISTI '3 CLIC A 0 €'",
       desc: "Interfaccia smartphone ultra-leggera per tomaifici, suolifici, pelletterie e façonisti: conferma fase produttiva e lotto materiale a costo licenza 0 € per sempre.",
       metric: `${confirmedSubs}/${allSubs.length} Fasi Tracciate a 0 €`,
       cta: "Apri Portale Terzisti 0 €",
     },
     {
-      num: "09",
+      num: "08",
       id: "dpp_passport" as ActiveWorkspaceModule,
-      tag: "REGOLAMENTO UE 2024/1781",
+      tag: "REGOLAMENTO UE 2024/1781 (FTL-TECH-027)",
       title: "PASSAPORTO DIGITALE UE (DPP) & QR LIVE",
       desc: "Generazione istantanea del Passaporto Digitale con cartellino QR SVG navigabile e conformità ESPR: vista pubblica consumatore vs ispettiva doganale.",
       metric: "100% Conformità ESPR · QR Live",
@@ -172,10 +163,10 @@ export const FootlinkHomeHub: React.FC<FootlinkHomeHubProps> = ({
                 DAL LABORATORIO AL PASSAPORTO DIGITALE UE. IN UN UNICO SISTEMA.
               </h2>
               <p className="text-sm sm:text-base text-white/80 max-w-3xl leading-relaxed">
-                Benvenuto nella cabina operativa di <strong>Footlink</strong>. Seleziona uno dei{" "}
-                <strong>6 moduli principali</strong> per governare il catalogo commerciale PIM,
-                le varianti tecniche di fabbrica PLM per Calzature, Pelletteria e Abbigliamento,
-                la distinta base a 3 livelli, i laboratori terzisti a 0 € e il Passaporto Digitale UE.
+                Benvenuto nella cabina operativa di <strong>Footlink</strong>. Seleziona uno degli{" "}
+                <strong>8 moduli operativi</strong> per governare il catalogo commerciale PIM,
+                i modelli e le varianti tecniche di fabbrica PLM per Calzature e Pelletteria,
+                la gestione unificata dei fornitori e della filiera, i laboratori terzisti a 0 € e il Passaporto Digitale UE.
               </p>
             </div>
             <div className="lg:col-span-4 flex flex-wrap lg:justify-end gap-3">
@@ -253,7 +244,7 @@ export const FootlinkHomeHub: React.FC<FootlinkHomeHubProps> = ({
               ARCHITETTURA FUNZIONALE FOOTLINK
             </div>
             <h3 className="display-title text-3xl sm:text-4xl text-[#111111] mt-1">
-              I 6 MODULI PRINCIPALI DEL SISTEMA OPERATIVO
+              GLI 8 MODULI DEL SISTEMA OPERATIVO
             </h3>
           </div>
           <p className="text-xs text-[#707072] max-w-md">

@@ -518,6 +518,134 @@ def test_seasons_and_collections_api():
     assert created_col["code"] == "BEACH-02"
 
 
+def test_sprint8_ftl_prod_014_collection_products_association_and_removal():
+    """FTL-PROD-014: verify adding PIM products to a collection and removing them."""
+    # 1. Fetch seasons and pick a collection
+    seasons_resp = client.get("/api/v1/seasons")
+    assert seasons_resp.status_code == 200
+    seasons = seasons_resp.json()
+    pe26 = next(s for s in seasons if s["code"] == "P/E 2026")
+    main_col = pe26["collections"][0]
+    col_id = main_col["collection_id"]
+
+    # 2. Create a test PIM item with an initial PLM variant
+    test_sku = f"SKU-COL-TEST-{uuid4().hex[:6].upper()}"
+    p_body = {
+        "sku_code": test_sku,
+        "model_name": "Mocassino Collezione Test",
+        "brand_tenant_id": "TENANT-BRAND-ITALIA",
+        "category": "footwear",
+        "season": pe26["code"],
+        "season_id": pe26["season_id"],
+        "wholesale_price_eur": 140.0,
+        "retail_price_eur": 360.0,
+        "commercial_description_it": "Mocassino in vitello per test associazione collezione",
+        "commercial_description_en": "Calfskin loafer for collection association test",
+        "initial_plm_variants": [
+            {
+                "variant_code": f"{test_sku}-V1",
+                "colorway_name": "Test Nero",
+                "last_or_pattern_code": "FORMA-MOC-01",
+                "size_range": "39-46",
+                "lifecycle_status": "prototype",
+            }
+        ],
+    }
+    create_resp = client.post("/api/v1/pim-items", json=p_body)
+    assert create_resp.status_code == 201
+    created_item = create_resp.json()
+    pim_id = created_item["pim_item_id"]
+
+    # 3. Associate PIM product to collection
+    assign_resp = client.post(
+        f"/api/v1/collections/{col_id}/products",
+        json={"pim_item_ids": [pim_id]},
+    )
+    assert assign_resp.status_code == 200
+    assigned_items = assign_resp.json()
+    assert any(item["pim_item_id"] == pim_id for item in assigned_items)
+
+    # Verify via direct GET
+    get_resp = client.get(f"/api/v1/pim-items/{pim_id}")
+    assert get_resp.status_code == 200
+    item_data = get_resp.json()
+    assert item_data["collection_id"] == col_id
+    assert item_data["collection_name"] == main_col["name"]
+
+    # 4. Remove PIM product from collection
+    del_resp = client.delete(f"/api/v1/collections/{col_id}/products/{pim_id}")
+    assert del_resp.status_code == 200
+    assert del_resp.json()["status"] == "removed"
+
+    # Verify removal preserves PIM item and PLM variant
+    get_after_resp = client.get(f"/api/v1/pim-items/{pim_id}")
+    assert get_after_resp.status_code == 200
+    after_data = get_after_resp.json()
+    assert after_data["collection_id"] is None
+    assert len(after_data["plm_variants"]) == 1
+
+
+def test_sprint8_ftl_ceo_028_pim_enrichment_and_encompassing():
+    """FTL-CEO-028: verify PIM enrichment (PATCH) and PLM encompassing."""
+    # 1. Create a PIM item with explicit client IDs
+    c_pid = f"PIM-CLIENT-{uuid4().hex[:6].upper()}"
+    c_vid = f"PLM-CLIENT-{uuid4().hex[:6].upper()}"
+    sku = f"SKU-ENRICH-{uuid4().hex[:6].upper()}"
+    p_body = {
+        "pim_item_id": c_pid,
+        "sku_code": sku,
+        "model_name": "Derby Classic Lusso",
+        "brand_tenant_id": "TENANT-BRAND-ITALIA",
+        "category": "footwear",
+        "season": "P/E 2026",
+        "wholesale_price_eur": 150.0,
+        "retail_price_eur": 380.0,
+        "commercial_description_it": "Derby formale in pelle pieno fiore",
+        "commercial_description_en": "Formal derby in full-grain leather",
+        "initial_plm_variants": [
+            {
+                "plm_variant_id": c_vid,
+                "variant_code": f"{sku}-BLK",
+                "colorway_name": "Black Polished",
+                "last_or_pattern_code": "FORMA-DERBY-02",
+                "size_range": "39-46",
+                "lifecycle_status": "prototype",
+            }
+        ],
+    }
+    create_resp = client.post("/api/v1/pim-items", json=p_body)
+    assert create_resp.status_code == 201
+    created_item = create_resp.json()
+    assert created_item["pim_item_id"] == c_pid
+    assert created_item["plm_variants"][0]["plm_variant_id"] == c_vid
+
+    # 2. Enrich the PIM commercial fields via PATCH
+    patch_body = {
+        "commercial_description_it": "Derby artigianale rifinita a mano nelle Marche, guardolo Goodyear e suola in cuoio.",
+        "commercial_description_en": "Handcrafted artisanal derby from Marche, Goodyear welt and leather sole.",
+        "brand_line": "Signature Capsule",
+        "target_occasion": "evening_gala",
+        "price_tier": "high_luxury",
+        "wholesale_price_eur": 185.0,
+        "retail_price_eur": 490.0,
+        "publishing_status": "READY",
+        "gtin_ean": "8050012026999",
+    }
+    patch_resp = client.patch(f"/api/v1/pim-items/{c_pid}", json=patch_body)
+    assert patch_resp.status_code == 200
+    enriched = patch_resp.json()
+    assert enriched["commercial_description_it"] == patch_body["commercial_description_it"]
+    assert enriched["brand_line"] == "Signature Capsule"
+    assert enriched["target_occasion"] == "evening_gala"
+    assert enriched["price_tier"] == "high_luxury"
+    assert enriched["wholesale_price_eur"] == 185.0
+    assert enriched["retail_price_eur"] == 490.0
+    assert enriched["gtin_ean"] == "8050012026999"
+    # Verify PLM variants remain intact and encompassed
+    assert len(enriched["plm_variants"]) == 1
+    assert enriched["plm_variants"][0]["plm_variant_id"] == c_vid
+
+
 def test_domain_registries_api():
     """Verify Master Data Registries for PLM & PIM (CRUD and categorization)."""
     # 1. Summary of registries

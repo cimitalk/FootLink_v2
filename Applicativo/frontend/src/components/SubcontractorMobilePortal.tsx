@@ -110,7 +110,7 @@ export const SubcontractorMobilePortal: React.FC<
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#707072]">
               <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-              <span>MODULO 05 · RETE VIRALE TERZISTI A COSTO 0 €</span>
+              <span>MODULO 07 · RETE VIRALE TERZISTI A COSTO 0 € (FTL-CEO-027)</span>
             </div>
             <h3 className="display-title text-2xl sm:text-3xl text-[#111111] mt-1">
               PORTALE MOBILE TERZISTA "3 CLIC A 0 €"

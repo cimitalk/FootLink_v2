@@ -51,6 +51,12 @@ Questo file conserva i fatti durevoli, le decisioni architetturali e lo stato ev
   - [`FTL-TECH-023`](./tasks/FTL-TECH-023.json) (`done` — CTO): Sviluppo Full-Stack Verticalizzazione 2 (Albo Fornitori & Terzisti 360°, Scadenziario Certificazioni SHA-256, Rating 40/30/30, Segregazione L6 & Where-Used BOM).
   - [`FTL-PROD-013`](./tasks/FTL-PROD-013.json) (`done` — CPO): Collaudo UX/UI Verticale Sprint 8, Audit Segregazione L6 Fornitori e Certificazione Zero-Training ([`sprint-8-vertical-qa-and-l6-audit-report.md`](./docs/prd/sprint-8-vertical-qa-and-l6-audit-report.md)).
   - **Metriche di Rilascio Sprint 8:** **11/11 Task Done (100%)**, **36/36 Test Pytest Passanti (100%)**, **0 Errori TypeScript/Vite**, **0,00 € Spesa Autonoma (L2)**, Terzisti a **0,00 € Perpetuo (Tier 3)**.
+- **Raffinamento e Consolidamento Post-Collaudo (Direttive Founder FTL-CEO-020 .. FTL-CEO-027 — ADR-012, ADR-013, ADR-014):**
+  - **ADR-012:** Semplificazione UX PLM a 5 Tab Operativi, rimozione ridondanza BOM a fondo pagina, introduzione Modelli di Stile 1:N (`product_models`) e sinergia Albo Fornitori <-> Distretto PaaS (`district_company_id`).
+  - **ADR-013:** Separazione Ontologica e Funzionale Modello (Costruzione) vs Prodotto (Stile). `last_code`, `default_size_range` e costruzione suola risiedono unicamente a livello di Modello e sono lockati/immutabili in create, edit e clone di prodotto.
+  - **ADR-014:** Riorganizzazione Menù a 8 Moduli operativi, creazione del modulo unificato `03 Gestione Fornitori` (`SupplierManagementHub`: Albo Fornitori & Terzisti 360°, Aziende & Utenti Distretto PaaS, Vault Conceria LWG) e riordino tab PLM in `Modelli` -> `Prodotti` -> `Distinta base` -> `Colori`.
+  - **ADR-015 (FTL-TECH-027, FTL-PROD-014, FTL-CEO-028):** Sequenza definitiva dei moduli (`01 Stagioni & Collezioni`, `02 Prodotti`, `03 PIM`, `04 Gestione Fornitori`, `05 Anagrafiche`, `06 Schema Studio`, `07 Terzisti 0 €`, `08 Passaporto DPP`). Associazione e rimozione prodotti PIM nelle collezioni (`POST/DELETE /api/v1/collections/{id}/products`). Sincronizzazione speculare 1:1 e aggregazione 1:N tra PLM e PIM, con modale interattivo di arricchimento commerciale PIM (`PATCH /api/v1/pim-items/{id}`) e protezione delle varianti PLM inglobate.
+  - **Metriche Epoca II Consolidate:** **25/25 Task Done (100%)**, **42/42 Test Pytest Passanti (100%)**, **0 Errori TypeScript/Vite**, **0,00 € Spesa Autonoma (L2)**.
 
 ---
 

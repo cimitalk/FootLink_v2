@@ -35,7 +35,7 @@ export const LiveDppPassportGenerator: React.FC<
         <div>
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#707072]">
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            <span>MODULO 06 · REGOLAMENTO UE 2024/1781 (ESPR) · GENERATORE LIVE</span>
+            <span>MODULO 08 · REGOLAMENTO UE 2024/1781 (ESPR) · GENERATORE LIVE (FTL-CEO-027)</span>
           </div>
           <h2 className="display-title text-3xl sm:text-4xl text-[#111111] mt-1">
             PASSAPORTO DIGITALE DEL PRODOTTO (DPP UE) & QR CODE SVG NAVIGABILE

@@ -340,26 +340,26 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
       )}
 
       {/* Intro Header Strip */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-900 text-white">
-                FTL-CEO-021
+                FTL-CEO-026
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                📐 Ingegneria Modelleria a Monte
+                📐 Il Modello è la Costruzione · Il Prodotto è lo Stile
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-800 border border-slate-200">
-                1 Modello Base : N Prodotti PIM / Varianti PLM
+                Sede Unica per Scala Taglie &amp; Forma (FTL-CEO-025)
               </span>
             </div>
             <h2 className="mt-2 text-xl font-extrabold tracking-tight text-neutral-900">
-              MODELLI DI BASE, FORME &amp; CARTAMODELLI
+              MODELLI DI BASE (FORME, COSTRUZIONE &amp; CARTAMODELLI)
             </h2>
             <p className="text-xs text-slate-600 mt-1 max-w-3xl leading-relaxed">
-              Il punto di partenza dell&apos;artigianato calzaturiero e pellettiero: la <strong>Forma (Last)</strong>, la <strong>Costruzione (Blake, Goodyear, Cassetta)</strong> e il <strong>Cartamodello CAD</strong>.
-              Ogni modello di base può generare molteplici articoli commerciali PIM (pellami, combinazioni, finiture) condividendo la medesima base tecnica.
+              Un <strong>Modello</strong> rappresenta la forma (last) e le caratteristiche tecniche costruttive (costruzione suola, tacco, cartamodello 3D e scala taglie).
+              Il <strong>Prodotto</strong> è la declinazione di stile del modello in materiali, colori e finiture.
             </p>
           </div>
 
@@ -374,6 +374,24 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
               </button>
             </div>
           )}
+        </div>
+
+        {/* Definizione Fondativa di Governance (FTL-CEO-026 & FTL-CEO-025) */}
+        <div className="p-3.5 bg-slate-900 text-white rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-slate-800">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🏛️</span>
+            <div>
+              <span className="text-[10px] font-extrabold tracking-wider text-emerald-400 uppercase block">
+                Regola di Dominio Inderogabile (Founder Directive)
+              </span>
+              <p className="text-[11px] text-slate-300 mt-0.5">
+                &ldquo;Il Modello è la costruzione, il Prodotto è lo stile. Sia la scala taglie che la forma/cartamodello si inseriscono e modificano <strong>soltanto a livello di modello</strong> e non di prodotto.&rdquo;
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950 px-2.5 py-1 rounded-lg border border-emerald-800 shrink-0">
+            Forma &amp; Taglie Locked on Products
+          </span>
         </div>
 
         {/* Filters Strip */}
@@ -1046,16 +1064,23 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Codice Forma / Cartamodello (Last Code)
+                  <label className="font-bold text-slate-700 block mb-1 flex items-center justify-between">
+                    <span>Codice Forma / Cartamodello (Last Code) *</span>
+                    <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-bold border border-emerald-200">
+                      Sede Unica (FTL-CEO-025)
+                    </span>
                   </label>
                   <input
                     type="text"
+                    required
                     value={formLastCode}
                     onChange={(e) => setFormLastCode(e.target.value)}
                     placeholder="es. FORMA-FM-108"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold"
                   />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    Definita qui a livello di modello. Ereditata e bloccata su tutti i prodotti PLM e PIM.
+                  </span>
                 </div>
 
                 <div>
@@ -1092,16 +1117,23 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Scala Taglie Default
+                  <label className="font-bold text-slate-700 block mb-1 flex items-center justify-between">
+                    <span>Scala Taglie Certificata *</span>
+                    <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-bold border border-emerald-200">
+                      Sede Unica (FTL-CEO-025)
+                    </span>
                   </label>
                   <input
                     type="text"
+                    required
                     value={formDefaultSizeRange}
                     onChange={(e) => setFormDefaultSizeRange(e.target.value)}
                     placeholder="es. 38-46 oppure TU"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold"
                   />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    Definita qui a livello di modello. Non modificabile dal singolo prodotto.
+                  </span>
                 </div>
 
                 <div className="sm:col-span-2">

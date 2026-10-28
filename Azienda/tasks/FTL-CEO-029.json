@@ -1,0 +1,30 @@
+{
+  "task_id": "FTL-CEO-029",
+  "title": "Gestione e catalogazione Materiali",
+  "description": "I materiali, prima di poter essere aggiunti in Distinta devono essere creati in anagrafica. Devono essere collegati ad un'azienda \"fornitore\" che lo produce, deve contenere tutto ciò che è richiesto per la tracciabilità. Valutare se è il caso di creare un modulo specifico per i materiali, in cui è possibile gestire tutto il ciclo di vita e certificazione. Per materiali intendo: Pellami, Fodere, Tessuti, Accessori Metalici, Altri accessori, Fondi per calzatura, Bottoni, Cerniere, Fili, Scatole.",
+  "status": "backlog",
+  "priority": "high",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-28T23:19:38+02:00",
+  "updated_at": "2026-10-28T23:19:38+02:00",
+  "due_date": "2026-11-27T23:59:59+02:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": null,
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [],
+  "requires_escalation": true,
+  "escalation_reason": "Direttiva Founder (L4) — Richiede triage e strutturazione C-Suite",
+  "escalation_level": "L4",
+  "decision_record_id": null,
+  "tags": [
+    "governance",
+    "product"
+  ],
+  "acceptance_criteria": [
+    "Nuovo modulo per gestione \"Materiali\". Armonizzazioni di tutte le funzione di inserimento materiali in scheda tecnica."
+  ],
+  "notes": "Valutare lo sviluppo con tutti il team"
+}

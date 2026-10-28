@@ -39,9 +39,16 @@ Task e direttive inseriti direttamente dal Founder via **Founder Control Center*
 | [`FTL-CEO-022`](./FTL-CEO-022.json) | **CEO** | Gestione Albo fornitori | 🟠 `high` | ✅ `done` | — | No (`L2`) |
 | [`FTL-CEO-023`](./FTL-CEO-023.json) | **CEO** | ➕ Nuovo Modello di Base (Forma & Costruzione) | 🟡 `medium` | ✅ `done` | — | No (`L0`) |
 | [`FTL-CEO-024`](./FTL-CEO-024.json) | **CEO** | Coerenza fra prodotti e modelli. | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-CEO-025`](./FTL-CEO-025.json) | **CEO** | Scala taglie e FORMA / CARTAMODELLO a livello di modello | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-CEO-026`](./FTL-CEO-026.json) | **CEO** | Definizione di prodotto e di modello | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-CEO-027`](./FTL-CEO-027.json) | **CEO** | Riorganizzazione menù | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-CEO-028`](./FTL-CEO-028.json) | **CEO** | Ogni prodotto definito nel PLM deve essere presente nel PIM | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-CEO-029`](./FTL-CEO-029.json) | **CEO** | Gestione e catalogazione Materiali | 🟠 `high` | 📥 `backlog` | — | Sì (`L4`) |
+| [`FTL-PROD-014`](./FTL-PROD-014.json) | **CPO** | GESTIONE STAGIONI & COLLEZIONI | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-024`](./FTL-TECH-024.json) | **CTO** | Togliere il tasto "Archivio DAM Adv & Social" dalla Home Launchpad | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-025`](./FTL-TECH-025.json) | **CTO** | + NUOVO PRODOTTO PLM | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-026`](./FTL-TECH-026.json) | **CTO** | Rinominare e riorganizzare i 5 Tab Operativi Ergonomici | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-TECH-027`](./FTL-TECH-027.json) | **CTO** | Ordine definitivo moduli | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 
 ---
 

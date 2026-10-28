@@ -132,7 +132,7 @@ export const DataModelSchemaStudio: React.FC<DataModelSchemaStudioProps> = ({
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9E9E9E]">
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            MODULO 04 · FOUNDER DATA MODEL STUDIO
+            MODULO 06 · FOUNDER DATA MODEL STUDIO (FTL-CEO-027)
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
             Modello Dati Flessibile &amp; Campi Custom

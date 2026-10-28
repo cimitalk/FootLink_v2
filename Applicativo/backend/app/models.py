@@ -569,9 +569,22 @@ class PlmProductionVariant(PlmProductionVariantCreate):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class PimInitialVariantPayload(PlmProductionVariantCreate):
+    """FTL-CEO-028: initial PLM variant sent with a PIM creation request.
+
+    `plm_variant_id` is optional so the SPA can keep the client-generated ID (offline-first),
+    guaranteeing that the same PLM product is addressable in both PLM and PIM after a refresh.
+    """
+
+    plm_variant_id: Optional[str] = Field(default=None, description="Optional client-generated PLM variant ID")
+
+
 class PimCommercialItemCreate(BaseModel):
     """Payload to create a commercial catalog item (the '1' side of the 1 PIM <-> N PLM relationship)."""
 
+    pim_item_id: Optional[str] = Field(
+        default=None, description="FTL-CEO-028: optional client-generated PIM ID (offline-first sync)"
+    )
     model_id: Optional[str] = Field(default=None, description="FK to ProductModel (FTL-CEO-021)")
     sku_code: str = Field(..., min_length=3, description="Master commercial SKU")
     model_name: str = Field(..., min_length=2)
@@ -606,7 +619,7 @@ class PimCommercialItemCreate(BaseModel):
         default_factory=dict,
         description="Dynamic custom attributes configured via Founder Data Model Studio",
     )
-    initial_plm_variants: List[PlmProductionVariantCreate] = Field(
+    initial_plm_variants: List[PimInitialVariantPayload] = Field(
         default_factory=list,
         description="Optional initial N PLM production variants created alongside the PIM item",
     )
@@ -649,6 +662,30 @@ class PimCommercialItem(BaseModel):
     custom_attributes: Dict[str, Any] = Field(default_factory=dict)
     plm_variants: List[PlmProductionVariant] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class PimCommercialItemUpdate(BaseModel):
+    """FTL-CEO-028: PIM enrichment payload (commercial fields only).
+
+    PLM-owned data (variants, BOM, subcontractors, season/collection assignment) is intentionally
+    excluded: PLM remains the industrial source of truth, PIM enriches it commercially.
+    """
+
+    model_name: Optional[str] = Field(default=None, min_length=2)
+    commercial_description_it: Optional[str] = Field(default=None, min_length=5)
+    commercial_description_en: Optional[str] = Field(default=None, min_length=5)
+    retail_channels: Optional[List[str]] = None
+    wholesale_price_eur: Optional[float] = Field(default=None, ge=0.0)
+    retail_price_eur: Optional[float] = Field(default=None, ge=0.0)
+    hs_customs_code: Optional[str] = None
+    gtin_ean: Optional[str] = None
+    publishing_status: Optional[str] = None
+    care_instructions: Optional[str] = None
+    end_of_life_guide: Optional[str] = None
+    brand_line: Optional[str] = None
+    target_occasion: Optional[str] = None
+    price_tier: Optional[str] = None
+    custom_attributes: Optional[Dict[str, Any]] = None
 
 
 class ProductModelWithProducts(ProductModel):

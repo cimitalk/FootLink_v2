@@ -1,0 +1,38 @@
+{
+  "task_id": "FTL-PROD-014",
+  "title": "GESTIONE STAGIONI & COLLEZIONI",
+  "description": "Nel modulo GESTIONE STAGIONI & COLLEZIONI una volta creata una collezione deve essere possibile aggiungerci dentro dei prodotti. Filtrando dai prodotti definiti nel PIM.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-28T22:45:09+02:00",
+  "updated_at": "2026-10-28T22:45:00+02:00",
+  "due_date": "2026-11-27T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "2h",
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/SeasonsCollectionsHub.tsx",
+    "Applicativo/frontend/src/App.tsx",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/app/database.py",
+    "Applicativo/backend/tests/test_main.py",
+    "Azienda/adr/ADR-015-definitive-module-ordering-and-collection-pim-product-association.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": "ADR-015",
+  "tags": [
+    "product",
+    "PLM",
+    "PIM"
+  ],
+  "acceptance_criteria": [
+    "Creo uno collezione posso aggiungerci dei prodotti dal PIM."
+  ],
+  "notes": "Completato e ratificato in ADR-015. Implementato modale di ricerca e filtri avanzati per associare prodotti PIM a una collezione con persistenza atomica SQL e rimozione sicura."
+}
