@@ -222,6 +222,7 @@ export interface BomItem {
   supplier_name: string;
   vendor_id?: string | null;
   master_color_id?: string | null;
+  material_id?: string | null;
   origin_country_iso2: string;
   unit_of_measure: string;
   unit_consumption: number;
@@ -792,3 +793,55 @@ export interface VendorWhereUsedResponse {
     available_qty_sqft: number;
   }>;
 }
+
+// ============================================================================
+// Sprint 9: Centralized Materials Catalog & Bulk Swap (FTL-TECH-031 / ADR-017)
+// ============================================================================
+
+export type MaterialCategory =
+  | "leather"
+  | "lining"
+  | "fabric"
+  | "sole_bottom"
+  | "heel"
+  | "hardware"
+  | "thread"
+  | "packaging"
+  | "other";
+
+export interface MaterialRecord {
+  material_id: string;
+  material_code: string;
+  name: string;
+  category: MaterialCategory | string;
+  vendor_id?: string | null;
+  vendor_name?: string | null;
+  unit_of_measure: string;
+  standard_cost: number;
+  color_shade?: string | null;
+  certifications: string[];
+  technical_specs?: Record<string, any>;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BulkMaterialSwapPayload {
+  source_material_id?: string | null;
+  source_material_name?: string | null;
+  target_material_id: string;
+  target_material_name?: string | null;
+  target_vendor_id?: string | null;
+  target_unit_cost?: number | null;
+  variant_ids?: string[] | null;
+  update_costs?: boolean;
+}
+
+export interface BulkMaterialSwapResult {
+  swapped_items_count: number;
+  impacted_variants: string[];
+  target_material_id: string;
+  target_material_name: string;
+  message: string;
+}
+

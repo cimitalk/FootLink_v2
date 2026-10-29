@@ -17,6 +17,7 @@ import {
   ColorwayExplosionPayload,
   INITIAL_COMPANIES,
   INITIAL_MASTER_COLORS,
+  INITIAL_MATERIALS,
   INITIAL_MEMBERSHIPS,
   INITIAL_PIM_ITEMS,
   INITIAL_PRODUCT_MODELS,
@@ -28,6 +29,7 @@ import {
   INITIAL_USERS,
   INITIAL_VENDORS,
   applyVendorL6SegregationClient,
+  bulkSwapMaterialClient,
   computeLocalColorwayMatrix,
   computeLocalWhereUsed,
   computeVendorRating,
@@ -41,6 +43,8 @@ import {
   AttributeTargetEntity,
   BomItem,
   BomRequirementsCalculationResult,
+  BulkMaterialSwapPayload,
+  BulkMaterialSwapResult,
   Collection,
   CollectionStatus,
   ColorwayMatrixResponse,
@@ -52,6 +56,7 @@ import {
   DistrictUserRole,
   DomainRegistryEntry,
   MasterColor,
+  MaterialRecord,
   OrderSizeBreakdownItem,
   PimCommercialItem,
   PlmLifecycleStatus,
@@ -152,6 +157,12 @@ export const App: React.FC = () => {
   // FTL-PROD-014: collection focused in Module 01 (click again to deselect)
   const [selectedHubCollectionId, setSelectedHubCollectionId] = useState<string | undefined>(undefined);
   const [showBomDrawerInProducts, setShowBomDrawerInProducts] = useState<boolean>(true);
+
+  // Sprint 9 / FTL-TECH-030 / FTL-TECH-031: Materials Catalog & Sub-Tab State
+  const [materials, setMaterials] = useState<MaterialRecord[]>(INITIAL_MATERIALS);
+  const [supplierHubSubTab, setSupplierHubSubTab] = useState<
+    "vendors" | "district" | "tannery" | "materials"
+  >("vendors");
 
   const [dppData, setDppData] = useState<DigitalProductPassport>(() =>
     synthesizeClientDpp(INITIAL_PIM_ITEMS[0])
@@ -299,6 +310,16 @@ export const App: React.FC = () => {
       .then((list: ProductModel[]) => {
         if (Array.isArray(list) && list.length > 0) {
           setProductModels(list);
+        }
+      })
+      .catch(() => {});
+
+    // Sprint 9 Fetch: Materials Catalog
+    fetch(`${API_BASE}/api/v1/materials`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((mList: MaterialRecord[]) => {
+        if (Array.isArray(mList) && mList.length > 0) {
+          setMaterials(mList);
         }
       })
       .catch(() => {});
@@ -2395,15 +2416,134 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleNavigateToProductFromHub = (pimItemId: string) => {
+  const handleNavigateToProductFromHub = (pimItemId: string, variantId?: string) => {
     const target = pimItems.find((p) => p.pim_item_id === pimItemId);
     if (target) {
       setSelectedPimId(target.pim_item_id);
-      if (target.plm_variants.length > 0) {
+      if (variantId) {
+        setSelectedVariantId(variantId);
+      } else if (target.plm_variants.length > 0) {
         setSelectedVariantId(target.plm_variants[0].plm_variant_id);
       }
     }
     setActiveModule("products");
+  };
+
+  const handleNavigateToVendor = (vendorId: string) => {
+    setSupplierHubSubTab("vendors");
+    setActiveModule("vendor_management");
+  };
+
+  // Sprint 9 / FTL-TECH-030 / FTL-TECH-031: Materials Handlers
+  const handleCreateMaterial = async (mat: Partial<MaterialRecord>) => {
+    const newId = mat.material_id || `MAT-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const record: MaterialRecord = {
+      material_id: newId,
+      material_code: mat.material_code || `MAT-COD-${Math.floor(100 + Math.random() * 900)}`,
+      name: mat.name || "Nuovo Materiale",
+      category: mat.category || "leather",
+      vendor_id: mat.vendor_id || null,
+      vendor_name: mat.vendor_name || (vendors.find((v) => v.vendor_id === mat.vendor_id)?.company_name) || null,
+      unit_of_measure: mat.unit_of_measure || "dm2",
+      standard_cost: Number(mat.standard_cost) || 0,
+      color_shade: mat.color_shade || null,
+      certifications: mat.certifications || [],
+      technical_specs: mat.technical_specs || {},
+      is_active: mat.is_active !== false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    setMaterials((prev) => [record, ...prev]);
+
+    if (backendConnected) {
+      try {
+        await fetch(`${API_BASE}/api/v1/materials`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(record),
+        });
+      } catch (err) {
+        console.warn("Backend create material failed:", err);
+      }
+    }
+  };
+
+  const handleUpdateMaterial = async (materialId: string, patch: Partial<MaterialRecord>) => {
+    setMaterials((prev) =>
+      prev.map((m) =>
+        m.material_id === materialId
+          ? {
+              ...m,
+              ...patch,
+              updated_at: new Date().toISOString(),
+            }
+          : m
+      )
+    );
+
+    if (backendConnected) {
+      try {
+        await fetch(`${API_BASE}/api/v1/materials/${materialId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        });
+      } catch (err) {
+        console.warn("Backend update material failed:", err);
+      }
+    }
+  };
+
+  const handleDeleteMaterial = async (materialId: string) => {
+    setMaterials((prev) => prev.filter((m) => m.material_id !== materialId));
+
+    if (backendConnected) {
+      try {
+        await fetch(`${API_BASE}/api/v1/materials/${materialId}`, {
+          method: "DELETE",
+        });
+      } catch (err) {
+        console.warn("Backend delete material failed:", err);
+      }
+    }
+  };
+
+  const handleBulkSwapMaterial = async (payload: BulkMaterialSwapPayload) => {
+    // 1. Client-side update for instant reactivity
+    try {
+      const clientResult = bulkSwapMaterialClient(
+        pimItems,
+        materials,
+        vendors,
+        payload,
+        selectedPimId,
+        selectedVariantId
+      );
+      setPimItems(clientResult.updatedPimItems);
+    } catch (e) {
+      console.warn("Local bulk swap error:", e);
+    }
+
+    // 2. Backend sync if connected
+    if (backendConnected) {
+      try {
+        const endpoint =
+          payload.variant_ids && payload.variant_ids.length > 1
+            ? `${API_BASE}/api/v1/products/${selectedPimId}/bom/bulk-swap`
+            : `${API_BASE}/api/v1/plm-variants/${selectedVariantId}/bom/bulk-swap`;
+
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          refreshPimItems();
+        }
+      } catch (err) {
+        console.warn("Backend bulk swap failed:", err);
+      }
+    }
   };
 
   const availableLeatherBomMaterials = pimItems.flatMap((p) =>
@@ -2590,6 +2730,28 @@ export const App: React.FC = () => {
               </button>
             ))}
           </nav>
+
+          {/* Training & Docs Quick Links */}
+          <div className="flex items-center gap-2">
+            <a
+              href="/training_portal.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 hover:bg-amber-500/20 text-xs font-bold flex items-center gap-1.5 transition shadow-2xs"
+              title="Apri Footlink Training Academy"
+            >
+              <span>🎓</span> Training Academy
+            </a>
+            <a
+              href="/tech_docs.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition shadow-2xs"
+              title="Apri Documentazione Tecnica & API"
+            >
+              <span>📖</span> Docs Tecniche
+            </a>
+          </div>
         </div>
       </header>
 
@@ -2642,6 +2804,9 @@ export const App: React.FC = () => {
             tanneryBatches={tanneryBatches}
             colorwayMatrices={colorwayMatrices}
             models={productModels}
+            materials={materials}
+            onBulkSwapMaterial={handleBulkSwapMaterial}
+            onNavigateToVendor={handleNavigateToVendor}
             onCreateModel={handleCreateModel}
             onUpdateModel={handleUpdateModel}
             onDeleteModel={handleDeleteModel}
@@ -2677,8 +2842,8 @@ export const App: React.FC = () => {
             onSelectPim={handleSelectPim}
             onCreatePimItem={handleCreatePimItem}
             onUpdatePimItem={handleUpdatePimItem}
-            onNavigateToPlm={(pimId) => {
-              handleNavigateToProductFromHub(pimId);
+            onNavigateToPlm={(pimId, variantId) => {
+              handleNavigateToProductFromHub(pimId, variantId);
             }}
             onNavigateToDpp={(pimId) => {
               setSelectedPimId(pimId);
@@ -2703,6 +2868,11 @@ export const App: React.FC = () => {
             onLinkDistrictCompany={handleLinkVendorDistrictCompany}
             onUnlinkDistrictCompany={handleUnlinkVendorDistrictCompany}
             onAutoLinkDistrictCompanies={handleAutoLinkDistrictCompanies}
+            materials={materials}
+            onCreateMaterial={handleCreateMaterial}
+            onUpdateMaterial={handleUpdateMaterial}
+            onDeleteMaterial={handleDeleteMaterial}
+            onNavigateToVendor={handleNavigateToVendor}
             companies={companies}
             selectedCompanyId={selectedCompanyId}
             onSelectCompany={(id) => setSelectedCompanyId(id)}
@@ -2724,7 +2894,7 @@ export const App: React.FC = () => {
                 ? "district"
                 : activeModule === "tannery_vault"
                 ? "tannery"
-                : "vendors"
+                : supplierHubSubTab
             }
           />
         )}

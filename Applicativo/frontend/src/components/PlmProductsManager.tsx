@@ -18,8 +18,10 @@ import {
   ProductCategoryHierarchyNode,
   BomTemplate,
   BulkImportValidationResponse,
+  BulkMaterialSwapPayload,
   ColorwayMatrixResponse,
   MasterColor,
+  MaterialRecord,
   ProductModel,
   TanneryBatch,
   VendorRecord,
@@ -140,6 +142,11 @@ interface PlmProductsManagerProps {
   onMoveBomItem?: (bomItemId: string, newLevel: number, newParentId: string | null) => void;
   onDuplicateBomItem?: (bomItemId: string) => void;
   onRefreshData?: () => void;
+
+  // Sprint 9: Materials Catalog & Bulk Swap
+  materials?: MaterialRecord[];
+  onBulkSwapMaterial?: (payload: BulkMaterialSwapPayload) => Promise<void> | void;
+  onNavigateToVendor?: (vendorId: string) => void;
 }
 
 export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
@@ -152,6 +159,9 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   tanneryBatches = [],
   colorwayMatrices = {},
   models = [],
+  materials = [],
+  onBulkSwapMaterial,
+  onNavigateToVendor,
   onCreateModel,
   onUpdateModel,
   onDeleteModel,
@@ -1565,11 +1575,14 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                   viewerRole={viewerRole}
                   vendors={vendors}
                   colors={colors}
+                  materials={materials}
                   onAddBomItem={onAddBomItem || (() => {})}
                   onUpdateBomItem={onUpdateBomItem}
                   onDeleteBomItem={onDeleteBomItem}
                   onMoveBomItem={onMoveBomItem}
                   onDuplicateBomItem={onDuplicateBomItem}
+                  onBulkSwapMaterial={onBulkSwapMaterial}
+                  onNavigateToVendor={onNavigateToVendor}
                 />
               </div>
             ) : (

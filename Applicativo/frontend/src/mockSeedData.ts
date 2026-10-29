@@ -9,12 +9,15 @@
 import {
   BomItem,
   BomTreeNode,
+  BulkMaterialSwapPayload,
+  BulkMaterialSwapResult,
   Collection,
   ColorwayBomNodeMapping,
   ColorwayMatrixResponse,
   DigitalProductPassport,
   DomainRegistryEntry,
   MasterColor,
+  MaterialRecord,
   PimCommercialItem,
   PimDataQualityReport,
   PlmProductionVariant,
@@ -3400,5 +3403,288 @@ export function explodeColorwaysClient(
 
   return { createdVariants, createdMatrices };
 }
+
+// ============================================================================
+// Sprint 9: Centralized Materials Catalog & Bulk Material Swap (FTL-TECH-031 / ADR-017)
+// ============================================================================
+
+export const INITIAL_MATERIALS: MaterialRecord[] = [
+  {
+    material_id: "MAT-PEL-001",
+    material_code: "ART-CALF-01",
+    name: "Vitello Pieno Fiore Nappa 1.3mm",
+    category: "leather",
+    vendor_id: "VND-CONC-SC-01",
+    vendor_name: "Conceria Santa Croce S.p.A.",
+    unit_of_measure: "dm2",
+    standard_cost: 0.85,
+    color_shade: "Nero Intenso",
+    certifications: ["LWG Gold", "EUDR Deforestation-Free"],
+    technical_specs: { thickness_mm: 1.3, temper: "soft", tannage: "chrome_free" },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-PEL-002",
+    material_code: "ART-SUEDE-02",
+    name: "Camoscio Suede Idrorepellente PFAS-Free 1.2mm",
+    category: "leather",
+    vendor_id: "VND-CONC-SC-01",
+    vendor_name: "Conceria Santa Croce S.p.A.",
+    unit_of_measure: "dm2",
+    standard_cost: 0.75,
+    color_shade: "Tabacco",
+    certifications: ["LWG Gold", "ICEC TS 410"],
+    technical_specs: { thickness_mm: 1.2, water_repellent: true, pfas_free: true },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-PEL-003",
+    material_code: "ART-VEG-03",
+    name: "Vacchetta Toscana Concia Vegetale Naturale",
+    category: "leather",
+    vendor_id: "VND-CONC-SC-01",
+    vendor_name: "Conceria Santa Croce S.p.A.",
+    unit_of_measure: "dm2",
+    standard_cost: 0.90,
+    color_shade: "Cuoio Naturale",
+    certifications: ["Consorzio Vera Pelle Vegetale", "LWG Gold"],
+    technical_specs: { thickness_mm: 1.4, tannage: "vegetable_tanned" },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-FOD-001",
+    material_code: "ART-LIN-CALF-01",
+    name: "Fodera Vitello Traspirante Concia Cromo-Free",
+    category: "lining",
+    vendor_id: "VND-CONC-SC-01",
+    vendor_name: "Conceria Santa Croce S.p.A.",
+    unit_of_measure: "dm2",
+    standard_cost: 0.45,
+    color_shade: "Naturale",
+    certifications: ["REACH SVHC Compliant", "LWG Gold"],
+    technical_specs: { thickness_mm: 0.8, breathable: true },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-FOD-002",
+    material_code: "ART-LIN-MESH-02",
+    name: "Fodera Tecnica Mesh 3D Antibatterica Air-Flow",
+    category: "lining",
+    vendor_id: "VND-SUOL-FM-01",
+    vendor_name: "Suolificio del Tronto S.r.l.",
+    unit_of_measure: "m",
+    standard_cost: 14.50,
+    color_shade: "Nero Tecnico",
+    certifications: ["OEKO-TEX Standard 100", "GRS Recycled"],
+    technical_specs: { mesh_density: "3D spacer", weight_gsm: 220 },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-TES-001",
+    material_code: "ART-CANV-01",
+    name: "Canvas Cotone Organico Spigato 380g",
+    category: "fabric",
+    vendor_id: "VND-SUOL-FM-01",
+    vendor_name: "Suolificio del Tronto S.r.l.",
+    unit_of_measure: "m",
+    standard_cost: 18.20,
+    color_shade: "Ecrù Naturale",
+    certifications: ["GOTS Organic Cotton", "OEKO-TEX"],
+    technical_specs: { composition: "100% Organic Cotton", weight_gsm: 380 },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-FND-001",
+    material_code: "ART-SOLE-CASSETTA-01",
+    name: "Fondo Cassetta Gomma TR Riciclata Bicolore",
+    category: "sole_bottom",
+    vendor_id: "VND-SUOL-FM-01",
+    vendor_name: "Suolificio del Tronto S.r.l.",
+    unit_of_measure: "paia",
+    standard_cost: 9.80,
+    color_shade: "Bianco Latte / Fondo Miele",
+    certifications: ["ISO 9001", "ISO 14001"],
+    technical_specs: { recycled_content_pct: 30.0, hardness_shore_a: 65 },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-FND-002",
+    material_code: "ART-SOLE-CUOIO-02",
+    name: "Suola Cuoio Toscano Lavorazione Blake con Mezza Pianta TPU",
+    category: "sole_bottom",
+    vendor_id: "VND-SUOL-FM-01",
+    vendor_name: "Suolificio del Tronto S.r.l.",
+    unit_of_measure: "paia",
+    standard_cost: 15.50,
+    color_shade: "Nero Rifinito a Mano",
+    certifications: ["Consorzio Cuoio di Toscana", "ISO 9001"],
+    technical_specs: { thickness_mm: 5.0, construction: "blake" },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-TAC-001",
+    material_code: "ART-HEEL-85-01",
+    name: "Tacco Rocchetto 85mm Fasciato Cuoio Rigenerato con Sottotacco TPU",
+    category: "heel",
+    vendor_id: "VND-SUOL-FM-01",
+    vendor_name: "Suolificio del Tronto S.r.l.",
+    unit_of_measure: "paia",
+    standard_cost: 4.80,
+    color_shade: "Cuoio Naturale",
+    certifications: ["FSC Certified Wood Core"],
+    technical_specs: { height_mm: 85, shape: "spool_rocchetto" },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-MET-001",
+    material_code: "ART-HW-EYELET-01",
+    name: "Occhielli Metallici Ottone Trattamento Palladio Anti-Ossidazione",
+    category: "hardware",
+    vendor_id: "VND-GALV-FI-01",
+    vendor_name: "Minuterie Metalliche Fiorenza S.p.A.",
+    unit_of_measure: "pz",
+    standard_cost: 0.12,
+    color_shade: "Palladio Lucido",
+    certifications: ["UNI EN 12472 Nickel-Free", "REACH"],
+    technical_specs: { diameter_mm: 8, finish: "palladium" },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-MET-002",
+    material_code: "ART-HW-ZIP-02",
+    name: "Cerniera Lampo Tranciata Metallo Finitura Oro Chiaro 18cm",
+    category: "hardware",
+    vendor_id: "VND-GALV-FI-01",
+    vendor_name: "Minuterie Metalliche Fiorenza S.p.A.",
+    unit_of_measure: "pz",
+    standard_cost: 2.45,
+    color_shade: "Oro Chiaro Satinato",
+    certifications: ["Nickel-Free", "ISO 9001"],
+    technical_specs: { length_cm: 18, teeth_size: "M5" },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-FIL-001",
+    material_code: "ART-THR-COATS-01",
+    name: "Filato Poliestere Alta Tenacità per Calzatura Titolo 20",
+    category: "thread",
+    vendor_id: "VND-GALV-FI-01",
+    vendor_name: "Minuterie Metalliche Fiorenza S.p.A.",
+    unit_of_measure: "m",
+    standard_cost: 0.04,
+    color_shade: "Nero",
+    certifications: ["OEKO-TEX Standard 100"],
+    technical_specs: { ticket_size: 20, breaking_strength_cn: 9500 },
+    is_active: true,
+  },
+  {
+    material_id: "MAT-PCK-001",
+    material_code: "ART-BOX-LUX-01",
+    name: "Scatola Calzatura Rigida Avana Cartone Riciclato con Logo a Caldo",
+    category: "packaging",
+    vendor_id: "VND-SUOL-FM-01",
+    vendor_name: "Suolificio del Tronto S.r.l.",
+    unit_of_measure: "pz",
+    standard_cost: 3.20,
+    color_shade: "Avana / Nero",
+    certifications: ["FSC Recycled 100%"],
+    technical_specs: { dimensions_cm: "34x22x12", recycled_pct: 100 },
+    is_active: true,
+  },
+];
+
+export function bulkSwapMaterialClient(
+  pimItems: PimCommercialItem[],
+  materials: MaterialRecord[],
+  vendors: VendorRecord[],
+  payload: BulkMaterialSwapPayload,
+  activePimId?: string,
+  activeVariantId?: string
+): { updatedPimItems: PimCommercialItem[]; result: BulkMaterialSwapResult } {
+  const targetMat = materials.find((m) => m.material_id === payload.target_material_id);
+  if (!targetMat) {
+    throw new Error(`Target Material '${payload.target_material_id}' not found.`);
+  }
+
+  const targetName = payload.target_material_name || targetMat.name;
+  const targetVendorId = payload.target_vendor_id || targetMat.vendor_id;
+  const targetCost = payload.target_unit_cost ?? targetMat.standard_cost;
+  const vendorObj = vendors.find((v) => v.vendor_id === targetVendorId);
+  const vendorName = vendorObj ? vendorObj.company_name : targetMat.vendor_name || "";
+
+  let swappedCount = 0;
+  const impactedVariants: string[] = [];
+
+  const targetVariantIds =
+    payload.variant_ids && payload.variant_ids.length > 0 ? new Set(payload.variant_ids) : null;
+
+  const updatedPimItems = pimItems.map((pim) => {
+    if (activePimId && pim.pim_item_id !== activePimId && targetVariantIds === null) {
+      return pim;
+    }
+
+    const updatedVariants = pim.plm_variants.map((variant) => {
+      if (targetVariantIds && !targetVariantIds.has(variant.plm_variant_id)) {
+        return variant;
+      }
+      if (!targetVariantIds && activeVariantId && activePimId && variant.plm_variant_id !== activeVariantId) {
+        // preserve other variant if strictly isolated
+      }
+
+      let variantImpacted = false;
+      const updatedBom = variant.bom_items.map((item) => {
+        let match = false;
+        if (payload.source_material_id && item.material_id === payload.source_material_id) {
+          match = true;
+        } else if (
+          payload.source_material_name &&
+          item.material_name.trim().toLowerCase() === payload.source_material_name.trim().toLowerCase()
+        ) {
+          match = true;
+        }
+
+        if (match) {
+          swappedCount++;
+          variantImpacted = true;
+          return {
+            ...item,
+            material_id: targetMat.material_id,
+            material_name: targetName,
+            vendor_id: targetVendorId,
+            supplier_name: vendorName || item.supplier_name,
+            unit_cost_eur: payload.update_costs !== false ? targetCost : item.unit_cost_eur,
+          };
+        }
+        return item;
+      });
+
+      if (variantImpacted) {
+        impactedVariants.push(variant.plm_variant_id);
+        return {
+          ...variant,
+          bom_items: updatedBom,
+        };
+      }
+      return variant;
+    });
+
+    return {
+      ...pim,
+      plm_variants: updatedVariants,
+    };
+  });
+
+  return {
+    updatedPimItems,
+    result: {
+      swapped_items_count: swappedCount,
+      impacted_variants: Array.from(new Set(impactedVariants)),
+      target_material_id: targetMat.material_id,
+      target_material_name: targetName,
+      message: `Sostituiti con successo ${swappedCount} componenti su ${impactedVariants.length} varianti con '${targetName}'.`,
+    },
+  };
+}
+
 
 

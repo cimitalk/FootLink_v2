@@ -291,6 +291,7 @@ class BomItem(BaseModel):
     supplier_name: str = Field(default="")
     vendor_id: Optional[str] = Field(default=None, description="Optional FK to vendors_registry (Sprint 8)")
     master_color_id: Optional[str] = Field(default=None, description="Optional FK to master_colors (Sprint 8)")
+    material_id: Optional[str] = Field(default=None, description="Optional FK to materials_catalog (Sprint 9)")
     origin_country_iso2: str = Field(..., min_length=2, max_length=2, pattern="^[A-Z]{2}$")
     unit_of_measure: str = Field(..., description="e.g., sqft, m2, pair, pcs, kg")
     unit_consumption: float = Field(..., gt=0, description="Net material consumption per unit/pair")
@@ -893,6 +894,7 @@ class TanneryBatchCreate(BaseModel):
     tannery_name: str = Field(default="")
     vendor_id: Optional[str] = Field(default=None, description="Optional FK to vendors_registry (Sprint 8)")
     master_color_id: Optional[str] = Field(default=None, description="Optional FK to master_colors (Sprint 8)")
+    material_id: Optional[str] = Field(default=None, description="Optional FK to materials_catalog (Sprint 9)")
     district: str = Field(default="Arzignano / Valle del Chiampo")
     leather_type: str = Field(default="Vitello Pieno Fiore")
     tanning_process: TanneryProcess = Field(default=TanneryProcess.METAL_FREE)
@@ -1495,5 +1497,79 @@ class VendorWhereUsedResponse(BaseModel):
     impacted_plm_variants: List[VendorImpactedPlmVariant] = Field(default_factory=list)
     impacted_bom_nodes: List[VendorImpactedBomNode] = Field(default_factory=list)
     impacted_tannery_batches: List[VendorImpactedTanneryBatch] = Field(default_factory=list)
+
+
+# ============================================================================
+# Sprint 9: Centralized Materials Catalog & Bulk Material Swap (FTL-TECH-030 / ADR-017)
+# ============================================================================
+
+
+class MaterialCategory(str, Enum):
+    LEATHER = "leather"
+    LINING = "lining"
+    FABRIC = "fabric"
+    SOLE_BOTTOM = "sole_bottom"
+    HEEL = "heel"
+    HARDWARE = "hardware"
+    THREAD = "thread"
+    PACKAGING = "packaging"
+    OTHER = "other"
+
+
+class MaterialBase(BaseModel):
+    material_code: str = Field(..., min_length=2, max_length=64, description="Supplier or internal material SKU")
+    name: str = Field(..., min_length=2, max_length=128, description="Material technical / commercial name")
+    category: str = Field(default="leather", description="Material category (leather, lining, fabric, sole_bottom, heel, hardware, thread, packaging, other)")
+    vendor_id: Optional[str] = Field(default=None, description="FK to vendors_registry")
+    unit_of_measure: str = Field(default="dm2", description="Unit of measure (dm2, m, kg, pz, paia)")
+    standard_cost: float = Field(default=0.0, ge=0.0, description="Standard purchase cost in EUR (L6 protected)")
+    color_shade: Optional[str] = Field(default=None, description="Color shade or reference finish")
+    certifications: List[str] = Field(default_factory=list, description="Array of certifications (LWG, FSC, EUDR, REACH, OEKO-TEX)")
+    technical_specs: Dict[str, Any] = Field(default_factory=dict, description="Technical specifications (thickness, weight, composition)")
+    is_active: bool = Field(default=True)
+
+
+class MaterialCreate(MaterialBase):
+    material_id: Optional[str] = None
+
+
+class MaterialUpdate(BaseModel):
+    material_code: Optional[str] = None
+    name: Optional[str] = None
+    category: Optional[str] = None
+    vendor_id: Optional[str] = None
+    unit_of_measure: Optional[str] = None
+    standard_cost: Optional[float] = None
+    color_shade: Optional[str] = None
+    certifications: Optional[List[str]] = None
+    technical_specs: Optional[Dict[str, Any]] = None
+    is_active: Optional[bool] = None
+
+
+class MaterialResponse(MaterialBase):
+    material_id: str
+    vendor_name: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class BulkMaterialSwapRequest(BaseModel):
+    source_material_id: Optional[str] = Field(default=None, description="Optional ID of material to be replaced")
+    source_material_name: Optional[str] = Field(default=None, description="Material name to match if material_id not set")
+    target_material_id: str = Field(..., description="ID of replacement material from materials_catalog")
+    target_material_name: Optional[str] = Field(default=None, description="Name of replacement material")
+    target_vendor_id: Optional[str] = Field(default=None, description="Vendor ID of replacement material")
+    target_unit_cost: Optional[float] = Field(default=None, description="Unit cost in EUR for replacement")
+    variant_ids: Optional[List[str]] = Field(default=None, description="Target PLM variants to update (empty/None = all variants of current product/model)")
+    update_costs: bool = Field(default=True, description="Whether to update unit_cost_eur from target_material standard_cost")
+
+
+class BulkMaterialSwapResult(BaseModel):
+    swapped_items_count: int
+    impacted_variants: List[str]
+    target_material_id: str
+    target_material_name: str
+    message: str
+
 
 

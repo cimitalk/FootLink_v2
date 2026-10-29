@@ -4,7 +4,9 @@ import {
   BomComponentType,
   BomItem,
   BomTreeNode,
+  BulkMaterialSwapPayload,
   MasterColor,
+  MaterialRecord,
   PimCommercialItem,
   PlmProductionVariant,
   VendorRecord,
@@ -17,11 +19,14 @@ interface BomThreeLevelTreeProps {
   viewerRole?: ViewerSecurityRole;
   vendors?: VendorRecord[];
   colors?: MasterColor[];
+  materials?: MaterialRecord[];
   onAddBomItem: (bom: BomItem) => void;
   onUpdateBomItem?: (bom: BomItem) => void;
   onDeleteBomItem?: (bomItemId: string) => void;
   onMoveBomItem?: (bomItemId: string, newLevel: number, newParentId: string | null) => void;
   onDuplicateBomItem?: (bomItemId: string) => void;
+  onBulkSwapMaterial?: (payload: BulkMaterialSwapPayload) => Promise<void> | void;
+  onNavigateToVendor?: (vendorId: string) => void;
 }
 
 const LEVEL_TAGS: Record<number, { label: string; desc: string }> = {
@@ -36,11 +41,14 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   viewerRole = "brand",
   vendors = [],
   colors = [],
+  materials = [],
   onAddBomItem,
   onUpdateBomItem,
   onDeleteBomItem,
   onMoveBomItem,
   onDuplicateBomItem,
+  onBulkSwapMaterial,
+  onNavigateToVendor,
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSizeGrading, setShowSizeGrading] = useState(true);
@@ -49,6 +57,8 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
     variant.bom_items[0]?.bom_item_id || ""
   );
   const [materialName, setMaterialName] = useState("");
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string>("");
+  const [selectedMaterialWarning, setSelectedMaterialWarning] = useState<string | null>(null);
   const [supplierName, setSupplierName] = useState("");
   const [selectedVendorId, setSelectedVendorId] = useState<string>("");
   const [selectedMasterColorId, setSelectedMasterColorId] = useState<string>(
@@ -64,9 +74,11 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   const [unitCostEur, setUnitCostEur] = useState<number>(6.5);
   const [certsInput, setCertsInput] = useState("LWG Gold, REACH");
 
-  // FTL-TECH-014: Edit Modal State
+  // FTL-TECH-014 / Sprint 9: Edit Modal State
   const [editingItem, setEditingItem] = useState<BomItem | null>(null);
   const [editMaterialName, setEditMaterialName] = useState("");
+  const [editMaterialId, setEditMaterialId] = useState<string>("");
+  const [editMaterialWarning, setEditMaterialWarning] = useState<string | null>(null);
   const [editSupplierName, setEditSupplierName] = useState("");
   const [editVendorId, setEditVendorId] = useState<string>("");
   const [editMasterColorId, setEditMasterColorId] = useState<string>("");
@@ -78,6 +90,28 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   const [editRecycledPct, setEditRecycledPct] = useState<number>(0);
   const [editUnitCostEur, setEditUnitCostEur] = useState<number>(8.5);
   const [editCertsInput, setEditCertsInput] = useState("");
+
+  // Sprint 9: Bulk Material Swap State (FTL-TECH-031)
+  const [showBulkSwapModal, setShowBulkSwapModal] = useState<boolean>(false);
+  const [swapSourceMat, setSwapSourceMat] = useState<string>("");
+  const [swapTargetMatId, setSwapTargetMatId] = useState<string>("");
+  const [swapScope, setSwapScope] = useState<"variant" | "product">("variant");
+  const [swapUpdateCosts, setSwapUpdateCosts] = useState<boolean>(true);
+  const [swapLoading, setSwapLoading] = useState<boolean>(false);
+
+  // Sprint 9: Flexible Industrial Costing Simulator State (FTL-REV-008)
+  const [customLaborCost, setCustomLaborCost] = useState<number>(
+    variant.standard_labor_cost_eur ?? 29.5
+  );
+  const [overheadPct, setOverheadPct] = useState<number>(10);
+  const [whatIfMaterialDeltaPct, setWhatIfMaterialDeltaPct] = useState<number>(0);
+  const [customWholesaleEur, setCustomWholesaleEur] = useState<number>(
+    pimItem?.wholesale_price_eur ?? 165
+  );
+  const [customRetailEur, setCustomRetailEur] = useState<number>(
+    pimItem?.retail_price_eur ?? 395
+  );
+  const [showSimulatorDetails, setShowSimulatorDetails] = useState<boolean>(false);
 
   // FTL-TECH-014: Move Modal State
   const [movingItem, setMovingItem] = useState<BomItem | null>(null);
@@ -118,6 +152,49 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
       ? Number((((wholesaleEur - totalIndustrialCostEur) / wholesaleEur) * 100).toFixed(1))
       : 0;
 
+  // Sprint 9 / FTL-REV-008: Dynamic Industrial Costing Simulator with What-If sensitivity
+  const adjustedMaterialsCostEur = Number(
+    (materialsCostEur * (1 + whatIfMaterialDeltaPct / 100)).toFixed(2)
+  );
+  const overheadAmountEur = Number(
+    (((adjustedMaterialsCostEur + customLaborCost) * overheadPct) / 100).toFixed(2)
+  );
+  const simTotalIndustrialCostEur = Number(
+    (adjustedMaterialsCostEur + customLaborCost + overheadAmountEur).toFixed(2)
+  );
+  const simWholesaleMarginPct =
+    customWholesaleEur > 0
+      ? Number(
+          (
+            ((customWholesaleEur - simTotalIndustrialCostEur) /
+              customWholesaleEur) *
+            100
+          ).toFixed(1)
+        )
+      : 0;
+  const simWholesaleMarginEur = Number(
+    (customWholesaleEur - simTotalIndustrialCostEur).toFixed(2)
+  );
+  const netRetailEur = customRetailEur / 1.22; // Net of 22% Italian VAT
+  const simRetailMarginPct =
+    netRetailEur > 0
+      ? Number(
+          (((netRetailEur - simTotalIndustrialCostEur) / netRetailEur) * 100).toFixed(1)
+        )
+      : 0;
+  const simRetailMarginEur = Number(
+    (netRetailEur - simTotalIndustrialCostEur).toFixed(2)
+  );
+  const simMarkupFactor =
+    simTotalIndustrialCostEur > 0
+      ? Number((customRetailEur / simTotalIndustrialCostEur).toFixed(2))
+      : 0;
+
+  // Distinct BOM material names for bulk swap
+  const distinctBomMaterials = Array.from(
+    new Set(variant.bom_items.map((b) => b.material_name))
+  );
+
   // Size grading simulation across 5 reference sizes
   const basePrimaryBom = variant.bom_items[0];
   const stepPct = variant.size_grading_step_pct ?? 2.8;
@@ -140,6 +217,83 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
           { size: "EU 46", deltaSteps: 4 },
         ];
 
+  // Guided Material Picker handlers
+  const handleSelectMaterialForAdd = (mId: string) => {
+    setSelectedMaterialId(mId);
+    if (!mId) {
+      setSelectedMaterialWarning(null);
+      return;
+    }
+    const m = materials.find((item) => item.material_id === mId);
+    if (!m) return;
+    setMaterialName(m.name);
+    setUom(m.unit_of_measure || "dm2");
+    if (viewerRole === "brand") {
+      setUnitCostEur(m.standard_cost || 0);
+    }
+    if (m.certifications && m.certifications.length > 0) {
+      setCertsInput(m.certifications.join(", "));
+    }
+    if (m.technical_specs?.recycled_pct) {
+      setRecycledPct(Number(m.technical_specs.recycled_pct) || 0);
+    }
+    if (m.vendor_id) {
+      setSelectedVendorId(m.vendor_id);
+      const v = vendors.find((vnd) => vnd.vendor_id === m.vendor_id);
+      if (v) {
+        setSupplierName(v.company_name);
+        setOriginIso(v.country_iso2 || "IT");
+        if (v.has_expired_critical_certs || v.cert_semaphore_status === "expired") {
+          setSelectedMaterialWarning(
+            `⚠️ Attenzione: Il fornitore associato "${v.company_name}" ha certificazioni LWG/EUDR scadute o non conformi.`
+          );
+        } else {
+          setSelectedMaterialWarning(null);
+        }
+      }
+    } else {
+      setSelectedMaterialWarning(null);
+    }
+  };
+
+  const handleSelectMaterialForEdit = (mId: string) => {
+    setEditMaterialId(mId);
+    if (!mId) {
+      setEditMaterialWarning(null);
+      return;
+    }
+    const m = materials.find((item) => item.material_id === mId);
+    if (!m) return;
+    setEditMaterialName(m.name);
+    setEditUom(m.unit_of_measure || "dm2");
+    if (viewerRole === "brand") {
+      setEditUnitCostEur(m.standard_cost || 0);
+    }
+    if (m.certifications && m.certifications.length > 0) {
+      setEditCertsInput(m.certifications.join(", "));
+    }
+    if (m.technical_specs?.recycled_pct) {
+      setEditRecycledPct(Number(m.technical_specs.recycled_pct) || 0);
+    }
+    if (m.vendor_id) {
+      setEditVendorId(m.vendor_id);
+      const v = vendors.find((vnd) => vnd.vendor_id === m.vendor_id);
+      if (v) {
+        setEditSupplierName(v.company_name);
+        setEditOriginIso(v.country_iso2 || "IT");
+        if (v.has_expired_critical_certs || v.cert_semaphore_status === "expired") {
+          setEditMaterialWarning(
+            `⚠️ Attenzione: Il fornitore associato "${v.company_name}" ha certificazioni LWG/EUDR scadute o non conformi.`
+          );
+        } else {
+          setEditMaterialWarning(null);
+        }
+      }
+    } else {
+      setEditMaterialWarning(null);
+    }
+  };
+
   const handleSelectVendorForAdd = (vId: string) => {
     setSelectedVendorId(vId);
     const v = vendors.find((item) => item.vendor_id === vId);
@@ -158,6 +312,13 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
         typeof v.hourly_or_unit_rate_eur_l6 === "number"
       ) {
         setUnitCostEur(v.hourly_or_unit_rate_eur_l6);
+      }
+      if (v.has_expired_critical_certs || v.cert_semaphore_status === "expired") {
+        setSelectedMaterialWarning(
+          `⚠️ Attenzione: Il fornitore "${v.company_name}" ha certificazioni LWG/EUDR scadute o non conformi.`
+        );
+      } else {
+        setSelectedMaterialWarning(null);
       }
     }
   };
@@ -181,6 +342,13 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
       ) {
         setEditUnitCostEur(v.hourly_or_unit_rate_eur_l6);
       }
+      if (v.has_expired_critical_certs || v.cert_semaphore_status === "expired") {
+        setEditMaterialWarning(
+          `⚠️ Attenzione: Il fornitore "${v.company_name}" ha certificazioni LWG/EUDR scadute o non conformi.`
+        );
+      } else {
+        setEditMaterialWarning(null);
+      }
     }
   };
 
@@ -198,6 +366,7 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
           ? parentId || variant.bom_items[0]?.bom_item_id || null
           : null,
       component_type: componentType,
+      material_id: selectedMaterialId || null,
       material_name: materialName.trim(),
       supplier_name: supplierName.trim(),
       vendor_id: selectedVendorId || null,
@@ -216,6 +385,8 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
     };
     onAddBomItem(newItem);
     setMaterialName("");
+    setSelectedMaterialId("");
+    setSelectedMaterialWarning(null);
     setSupplierName("");
     setSelectedVendorId("");
     setShowAddForm(false);
@@ -225,6 +396,8 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
   const openEditModal = (item: BomItem) => {
     setEditingItem(item);
     setEditMaterialName(item.material_name);
+    setEditMaterialId(item.material_id || "");
+    setEditMaterialWarning(null);
     setEditSupplierName(item.supplier_name);
     setEditVendorId(item.vendor_id || "");
     setEditMasterColorId(item.master_color_id || "");
@@ -243,6 +416,7 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
     if (!editingItem) return;
     const updated: BomItem = {
       ...editingItem,
+      material_id: editMaterialId || editingItem.material_id || null,
       material_name: editMaterialName.trim(),
       supplier_name: editSupplierName.trim(),
       vendor_id: editVendorId || null,
@@ -263,6 +437,53 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
       onUpdateBomItem(updated);
     }
     setEditingItem(null);
+  };
+
+  // Sprint 9: Execute Bulk Material Swap
+  const handleExecuteBulkSwap = async () => {
+    if (!swapTargetMatId) {
+      alert("Seleziona il nuovo materiale dal Catalogo Materiali!");
+      return;
+    }
+    const targetMat = materials.find((m) => m.material_id === swapTargetMatId);
+    if (!targetMat) return;
+
+    setSwapLoading(true);
+    try {
+      const payload: BulkMaterialSwapPayload = {
+        source_material_name: swapSourceMat || null,
+        target_material_id: targetMat.material_id,
+        target_material_name: targetMat.name,
+        target_vendor_id: targetMat.vendor_id || null,
+        target_unit_cost: swapUpdateCosts ? targetMat.standard_cost : null,
+        update_costs: swapUpdateCosts,
+        variant_ids:
+          swapScope === "variant"
+            ? [variant.plm_variant_id]
+            : pimItem?.plm_variants.map((v) => v.plm_variant_id) || [variant.plm_variant_id],
+      };
+
+      if (onBulkSwapMaterial) {
+        await onBulkSwapMaterial(payload);
+      }
+
+      setMoveToast({
+        message: `Sostituzione massiva completata: "${swapSourceMat || "Materiale"}" sostituito con "${targetMat.name}" su ${
+          swapScope === "variant" ? "1 variante" : `${payload.variant_ids?.length || 1} varianti`
+        }!`,
+        type: "success",
+      });
+      setTimeout(() => setMoveToast(null), 4000);
+      setShowBulkSwapModal(false);
+    } catch (err: any) {
+      setMoveToast({
+        message: `Errore durante la sostituzione massiva: ${err.message || err}`,
+        type: "error",
+      });
+      setTimeout(() => setMoveToast(null), 4000);
+    } finally {
+      setSwapLoading(false);
+    }
   };
 
   const openMoveModal = (item: BomItem) => {
@@ -701,6 +922,14 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
               <span className="text-xs font-bold text-[#111111]">
                 {node.material_name}
               </span>
+              {node.material_id && (
+                <span
+                  className="inline-flex items-center gap-1 text-[9px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-semibold"
+                  title={`Collegato a Catalogo Materiali: ${node.material_id}`}
+                >
+                  🌿 Catalogo
+                </span>
+              )}
               {(() => {
                 const nodeColor = findMasterColorById(colors, node.master_color_id);
                 if (!nodeColor) return null;
@@ -734,6 +963,19 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300">
                         🔴 Cert. LWG/EUDR Scaduto
                       </span>
+                    )}
+                    {onNavigateToVendor && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNavigateToVendor(matchedVendor.vendor_id);
+                        }}
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[9px] font-bold border border-indigo-200 transition"
+                        title="Salta direttamente alla scheda fornitore in Modulo 04"
+                      >
+                        🏭 Scheda Fornitore ↗
+                      </button>
                     )}
                   </>
                 );
@@ -821,6 +1063,21 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {viewerRole === "brand" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSwapSourceMat(distinctBomMaterials[0] || "");
+                  setSwapTargetMatId(materials[0]?.material_id || "");
+                  setShowBulkSwapModal(true);
+                }}
+                className="px-4 py-2 rounded-full border border-purple-500 bg-purple-50 text-purple-900 text-xs font-bold hover:bg-purple-100 transition flex items-center gap-1.5"
+                title="Sostituisci un materiale su una o tutte le varianti di prodotto"
+              >
+                <span>🔄</span>
+                <span>Sostituzione Massiva</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setShowSizeGrading(!showSizeGrading)}
@@ -838,61 +1095,253 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
           </div>
         </div>
 
-        {/* L6 Cost Segregation Banner & Industrial Cost Sheet */}
-        <div className="mt-4 bg-[#111111] text-white rounded-2xl p-4">
+        {/* L6 Cost Segregation Banner & Interactive Industrial Cost Simulator (FTL-REV-008 / ADR-006) */}
+        <div className="mt-4 bg-[#111111] text-white rounded-2xl p-5 shadow-lg border border-neutral-800">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/15">
             <span className="text-[11px] font-bold uppercase tracking-wider text-white/80 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-              FOGLIO COSTI INDUSTRIALI & SEGREGAZIONE L6 (ADR-006)
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse" />
+              FOGLIO COSTI INDUSTRIALI &amp; SIMULATORE MARGINI DINAMICO (FTL-REV-008)
             </span>
-            <span className="mono-code text-[11px] bg-white text-[#111111] px-3 py-0.5 rounded-full font-bold">
-              {viewerRole === "brand"
-                ? "RUOLO: BRAND / PMI OWNER (AUTORIZZATO L6)"
-                : "RUOLO: LABORATORIO TERZISTA 0 € (COSTI OSCURATI)"}
-            </span>
+            <div className="flex items-center gap-2">
+              {viewerRole === "brand" && (
+                <button
+                  type="button"
+                  onClick={() => setShowSimulatorDetails(!showSimulatorDetails)}
+                  className="px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 hover:bg-white/20 text-emerald-400 border border-emerald-500/40 transition flex items-center gap-1"
+                >
+                  <span>⚡</span>
+                  <span>{showSimulatorDetails ? "Comprimi Simulatore" : "Espandi Simulatore Dinamico What-If"}</span>
+                </button>
+              )}
+              <span className="mono-code text-[11px] bg-white text-[#111111] px-3 py-0.5 rounded-full font-bold">
+                {viewerRole === "brand"
+                  ? "RUOLO: BRAND / PMI OWNER (AUTORIZZATO L6)"
+                  : "RUOLO: LABORATORIO TERZISTA 0 € (COSTI OSCURATI)"}
+              </span>
+            </div>
           </div>
 
           {viewerRole === "brand" ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3">
-              <div>
-                <div className="text-[10px] uppercase text-white/60 font-semibold">
-                  Costo Materiali BOM
+            <div className="space-y-4 pt-3">
+              {/* Primary 4 KPIs */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                  <div className="text-[10px] uppercase text-white/60 font-semibold flex items-center justify-between">
+                    <span>Costo Materiali BOM</span>
+                    {whatIfMaterialDeltaPct !== 0 && (
+                      <span className={`text-[10px] font-bold ${whatIfMaterialDeltaPct > 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                        {whatIfMaterialDeltaPct > 0 ? `+${whatIfMaterialDeltaPct}%` : `${whatIfMaterialDeltaPct}%`}
+                      </span>
+                    )}
+                  </div>
+                  <div className="display-title text-2xl text-white mt-1">
+                    € {adjustedMaterialsCostEur.toFixed(2)}
+                  </div>
+                  <div className="text-[10px] text-white/50">Base distinta: € {materialsCostEur.toFixed(2)}</div>
                 </div>
-                <div className="display-title text-2xl text-white">
-                  € {materialsCostEur.toFixed(2)}
+
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                  <div className="text-[10px] uppercase text-white/60 font-semibold">
+                    Manodopera / Façon
+                  </div>
+                  <div className="display-title text-2xl text-white mt-1">
+                    € {customLaborCost.toFixed(2)}
+                  </div>
+                  <div className="text-[10px] text-white/50">Lavorazione standard</div>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                  <div className="text-[10px] uppercase text-white/60 font-semibold flex items-center justify-between">
+                    <span>Costo Industriale Tot.</span>
+                    <span className="text-[9px] text-sky-400 font-bold">+{overheadPct}% ovh</span>
+                  </div>
+                  <div className="display-title text-2xl text-emerald-400 mt-1">
+                    € {simTotalIndustrialCostEur.toFixed(2)}
+                  </div>
+                  <div className="text-[10px] text-white/50">Spese gen.: € {overheadAmountEur.toFixed(2)}</div>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                  <div className="text-[10px] uppercase text-white/60 font-semibold flex items-center justify-between">
+                    <span>Margine Lordo B2B</span>
+                    <span className="text-[10px] font-bold text-white/70">€ {simWholesaleMarginEur}</span>
+                  </div>
+                  <div className={`display-title text-2xl mt-1 ${simWholesaleMarginPct >= 50 ? "text-emerald-400" : simWholesaleMarginPct >= 35 ? "text-amber-400" : "text-rose-400"}`}>
+                    {simWholesaleMarginPct}%
+                  </div>
+                  <div className="text-[10px] text-white/50">su Wholesale € {customWholesaleEur}</div>
                 </div>
               </div>
-              <div>
-                <div className="text-[10px] uppercase text-white/60 font-semibold">
-                  Manodopera / Façon
+
+              {/* Expanded Interactive Simulation & What-If Panel */}
+              {showSimulatorDetails && (
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-4 animate-in fade-in">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>🎛️</span>
+                      <span>Parametri di Simulazione Industriale &amp; Stress Test Resilienza Margini</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWhatIfMaterialDeltaPct(0);
+                        setCustomLaborCost(variant.standard_labor_cost_eur ?? 29.5);
+                        setOverheadPct(10);
+                        setCustomWholesaleEur(pimItem?.wholesale_price_eur ?? 165);
+                        setCustomRetailEur(pimItem?.retail_price_eur ?? 395);
+                      }}
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 hover:bg-white/20 text-neutral-300 transition"
+                    >
+                      ↺ Reimposta Valori Base
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Simulator Input 1: Manodopera */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-neutral-300 block">
+                        Costo Manodopera / Façon (€/paio):
+                      </label>
+                      <input
+                        type="number"
+                        step={0.5}
+                        min={0}
+                        value={customLaborCost}
+                        onChange={(e) => setCustomLaborCost(Number(e.target.value) || 0)}
+                        className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+                      />
+                      <p className="text-[10px] text-neutral-400">Tariffa oraria terzista per fase taglio, orlatura e montaggio</p>
+                    </div>
+
+                    {/* Simulator Input 2: Overhead % */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-neutral-300 block">
+                        % Spese Generali / Overhead Industriale:
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        {[0, 8, 10, 12, 15].map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => setOverheadPct(pct)}
+                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${
+                              overheadPct === pct
+                                ? "bg-emerald-500 text-black shadow-sm"
+                                : "bg-white/10 text-neutral-300 hover:bg-white/20"
+                            }`}
+                          >
+                            {pct}%
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-neutral-400">Quota ammortamento stampi, energia e logistica distrettuale</p>
+                    </div>
+
+                    {/* Simulator Input 3: Prezzi Commerciali */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-neutral-300 block">
+                          Wholesale B2B (€):
+                        </label>
+                        <input
+                          type="number"
+                          step={1}
+                          min={0}
+                          value={customWholesaleEur}
+                          onChange={(e) => setCustomWholesaleEur(Number(e.target.value) || 0)}
+                          className="w-full bg-white/10 border border-white/20 rounded-xl px-2.5 py-1 text-xs text-white font-mono font-bold"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-neutral-300 block">
+                          Retail B2C con IVA (€):
+                        </label>
+                        <input
+                          type="number"
+                          step={1}
+                          min={0}
+                          value={customRetailEur}
+                          onChange={(e) => setCustomRetailEur(Number(e.target.value) || 0)}
+                          className="w-full bg-white/10 border border-white/20 rounded-xl px-2.5 py-1 text-xs text-white font-mono font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* What-If Material Sensitivity Slider */}
+                  <div className="bg-black/30 border border-white/10 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-neutral-200 flex items-center gap-1.5">
+                        <span>📈</span>
+                        <span>What-If Stress Test: Sensibilità Inflazione Materie Prime &amp; Pellami</span>
+                      </span>
+                      <span className={`font-mono font-bold px-2 py-0.5 rounded text-xs ${
+                        whatIfMaterialDeltaPct > 0 ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
+                        whatIfMaterialDeltaPct < 0 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
+                        "bg-white/10 text-neutral-300"
+                      }`}>
+                        {whatIfMaterialDeltaPct > 0 ? `+${whatIfMaterialDeltaPct}%` : `${whatIfMaterialDeltaPct}%`} variazione costo materiali
+                      </span>
+                    </div>
+
+                    <input
+                      type="range"
+                      min={-20}
+                      max={30}
+                      step={5}
+                      value={whatIfMaterialDeltaPct}
+                      onChange={(e) => setWhatIfMaterialDeltaPct(Number(e.target.value))}
+                      className="w-full accent-emerald-400 cursor-pointer"
+                    />
+
+                    <div className="flex justify-between text-[10px] text-neutral-400 font-mono">
+                      <span>-20% (Efficienza Acquisti)</span>
+                      <span>0% (Costo Standard Distinta)</span>
+                      <span>+15% (Aumento LWG/Conceria)</span>
+                      <span>+30% (Stress Test Inflazione)</span>
+                    </div>
+                  </div>
+
+                  {/* Summary Comparison Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/10 text-xs">
+                    <div className="bg-white/5 rounded-xl p-2.5">
+                      <div className="text-[10px] text-neutral-400 uppercase font-semibold">Margine B2B Wholesale</div>
+                      <div className="text-base font-bold text-emerald-400 mt-0.5">{simWholesaleMarginPct}%</div>
+                      <div className="text-[10px] text-neutral-400">€ {simWholesaleMarginEur} / paio</div>
+                    </div>
+
+                    <div className="bg-white/5 rounded-xl p-2.5">
+                      <div className="text-[10px] text-neutral-400 uppercase font-semibold">Margine Retail (Netto IVA 22%)</div>
+                      <div className="text-base font-bold text-sky-400 mt-0.5">{simRetailMarginPct}%</div>
+                      <div className="text-[10px] text-neutral-400">€ {simRetailMarginEur} (su € {netRetailEur.toFixed(2)})</div>
+                    </div>
+
+                    <div className="bg-white/5 rounded-xl p-2.5">
+                      <div className="text-[10px] text-neutral-400 uppercase font-semibold">Markup Industriale</div>
+                      <div className="text-base font-bold text-amber-400 mt-0.5">{simMarkupFactor}x</div>
+                      <div className="text-[10px] text-neutral-400">Retail / Costo Industriale</div>
+                    </div>
+
+                    <div className="bg-white/5 rounded-xl p-2.5">
+                      <div className="text-[10px] text-neutral-400 uppercase font-semibold">Soglia Redditività</div>
+                      <div className={`text-base font-bold mt-0.5 ${simWholesaleMarginPct >= 45 ? "text-emerald-400" : "text-rose-400"}`}>
+                        {simWholesaleMarginPct >= 45 ? "✅ Target Raggiunto" : "⚠️ Sotto Target (&lt; 45%)"}
+                      </div>
+                      <div className="text-[10px] text-neutral-400">Standard Footlink Luxury</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="display-title text-2xl text-white">
-                  € {laborCostEur.toFixed(2)}
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase text-white/60 font-semibold">
-                  Costo Industriale Tot.
-                </div>
-                <div className="display-title text-2xl text-white">
-                  € {totalIndustrialCostEur.toFixed(2)}
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase text-white/60 font-semibold">
-                  Margine Lordo B2B
-                </div>
-                <div className="display-title text-2xl text-white">
-                  {wholesaleMarginPct}% (su € {wholesaleEur})
-                </div>
-              </div>
+              )}
             </div>
           ) : (
-            <div className="pt-3 text-xs text-white/85">
-              🔒 <strong>Protezione Riservatezza B2B (Livello L6):</strong> I costi unitari dei
-              materiali, i compensi di lavorazione e i margini del Brand sono oscurati. Il
-              laboratorio terzista visualizza esclusivamente i consumi fisici netti/lordi e i
-              lotti da confermare a 0 €.
+            <div className="pt-3 text-xs text-white/85 flex items-center gap-3">
+              <span className="text-2xl">🔒</span>
+              <div>
+                <strong>Protezione Riservatezza B2B (Livello L6 Inderogabile):</strong> I costi unitari dei
+                materiali, i compensi di lavorazione e i margini wholesale/retail del Brand sono completamente
+                oscurati. Il laboratorio terzista e gli operatori visualizzano esclusivamente i consumi fisici
+                netti/lordi e i codici lotto di tracciabilità.
+              </div>
             </div>
           )}
         </div>
@@ -1041,6 +1490,40 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
                 </select>
                 <p className="text-[10px] text-[#707072] mt-0.5">Classificazione per passaporto DPP</p>
               </div>
+            </div>
+
+            {/* Guided BOM Material Picker (FTL-TECH-031 / PRD-010) */}
+            <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                <label className="text-[11px] font-bold text-emerald-950 flex items-center gap-1.5">
+                  <span>🌿</span>
+                  <span>GUIDED BOM PICKER · SCEGLI DA CATALOGO MATERIALI FOOTLINK</span>
+                </label>
+                <span className="text-[10px] text-emerald-700 font-semibold">
+                  Auto-compilazione istantanea specifiche, fornitore, UoM e costo L6
+                </span>
+              </div>
+              <select
+                value={selectedMaterialId}
+                onChange={(e) => handleSelectMaterialForAdd(e.target.value)}
+                className="w-full bg-white border border-emerald-300 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="">— Seleziona Articolo dal Catalogo Materiali ({materials.length} disponibili) —</option>
+                {materials.map((m) => {
+                  const v = vendors.find((vnd) => vnd.vendor_id === m.vendor_id);
+                  return (
+                    <option key={m.material_id} value={m.material_id}>
+                      [{m.category.toUpperCase()}] {m.material_code} · {m.name} — € {m.standard_cost.toFixed(2)} / {m.unit_of_measure} ({v ? v.company_name : "Nessun fornitore"})
+                    </option>
+                  );
+                })}
+              </select>
+              {selectedMaterialWarning && (
+                <div className="mt-2 text-[11px] bg-rose-100 border border-rose-300 text-rose-900 rounded-lg p-2 font-semibold flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>{selectedMaterialWarning}</span>
+                </div>
+              )}
             </div>
 
             {/* Step 2: Dati Materiale, Fornitore Qualificato da Albo 360° e Tinta Master */}
@@ -1408,6 +1891,40 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
               </div>
 
               <form onSubmit={handleSaveEdit} className="mt-4 space-y-4">
+                {/* Guided BOM Material Picker for Edit (FTL-TECH-031 / PRD-010) */}
+                <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                    <label className="text-[11px] font-bold text-emerald-950 flex items-center gap-1.5">
+                      <span>🌿</span>
+                      <span>AGGIORNA DA CATALOGO MATERIALI FOOTLINK</span>
+                    </label>
+                    <span className="text-[10px] text-emerald-700 font-semibold">
+                      Sincronizza codice, specifiche e costo L6
+                    </span>
+                  </div>
+                  <select
+                    value={editMaterialId}
+                    onChange={(e) => handleSelectMaterialForEdit(e.target.value)}
+                    className="w-full bg-white border border-emerald-300 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="">— Lascia Materiale Personalizzato o Seleziona da Catalogo —</option>
+                    {materials.map((m) => {
+                      const v = vendors.find((vnd) => vnd.vendor_id === m.vendor_id);
+                      return (
+                        <option key={m.material_id} value={m.material_id}>
+                          [{m.category.toUpperCase()}] {m.material_code} · {m.name} — € {m.standard_cost.toFixed(2)} / {m.unit_of_measure} ({v ? v.company_name : "Nessun fornitore"})
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {editMaterialWarning && (
+                    <div className="mt-2 text-[11px] bg-rose-100 border border-rose-300 text-rose-900 rounded-lg p-2 font-semibold flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>{editMaterialWarning}</span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
@@ -1747,6 +2264,175 @@ export const BomThreeLevelTree: React.FC<BomThreeLevelTreeProps> = ({
                   className="px-5 py-2 rounded-full bg-red-600 text-white font-bold text-xs hover:bg-red-700 transition shadow-sm"
                 >
                   Elimina Definitivamente
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sprint 9: Bulk Material Swap Modal (FTL-TECH-031 / ADR-017) */}
+        {showBulkSwapModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-purple-200 animate-in fade-in zoom-in-95 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E5E5E5]">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-purple-700 flex items-center gap-1.5">
+                    <span>🔄</span>
+                    <span>SOSTITUZIONE MASSIVA MATERIALE (BULK SWAP) · ADR-017</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-[#111111] mt-0.5">
+                    Sostituisci Materiale su Distinta Base
+                  </h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBulkSwapModal(false)}
+                  className="w-8 h-8 rounded-full border border-[#CCCCCC] hover:bg-[#F5F5F5] flex items-center justify-center font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="text-xs text-[#707072] leading-relaxed">
+                Questa procedura consente di rimpiazzare in blocco tutte le occorrenze di un materiale
+                nella distinta base di questa variante o di tutte le varianti collegate al modello.
+              </div>
+
+              {/* Step 1: Materiale Sorgente */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#111111] uppercase mb-1">
+                  1. Materiale Attuale da Sostituire *
+                </label>
+                <select
+                  value={swapSourceMat}
+                  onChange={(e) => setSwapSourceMat(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-[#CCCCCC] text-xs font-semibold bg-white"
+                >
+                  <option value="">— Seleziona Materiale Presente in Distinta Base —</option>
+                  {distinctBomMaterials.map((mat) => (
+                    <option key={mat} value={mat}>
+                      {mat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Step 2: Nuovo Materiale dal Catalogo */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#111111] uppercase mb-1">
+                  2. Nuovo Materiale dal Catalogo FootLink *
+                </label>
+                <select
+                  value={swapTargetMatId}
+                  onChange={(e) => setSwapTargetMatId(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-purple-300 text-xs font-semibold bg-purple-50/40"
+                >
+                  <option value="">— Seleziona Materiale di Destinazione ({materials.length} articoli) —</option>
+                  {materials.map((m) => {
+                    const v = vendors.find((vnd) => vnd.vendor_id === m.vendor_id);
+                    return (
+                      <option key={m.material_id} value={m.material_id}>
+                        [{m.category.toUpperCase()}] {m.material_code} · {m.name} — € {m.standard_cost.toFixed(2)} / {m.unit_of_measure} ({v ? v.company_name : "Nessun fornitore"})
+                      </option>
+                    );
+                  })}
+                </select>
+                {(() => {
+                  const targetM = materials.find((m) => m.material_id === swapTargetMatId);
+                  if (!targetM) return null;
+                  const v = vendors.find((vnd) => vnd.vendor_id === targetM.vendor_id);
+                  return (
+                    <div className="mt-2 p-2.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-950 text-xs space-y-1">
+                      <div className="font-bold flex items-center justify-between">
+                        <span>{targetM.name}</span>
+                        <span className="font-mono">€ {targetM.standard_cost.toFixed(2)} / {targetM.unit_of_measure}</span>
+                      </div>
+                      <div className="text-[10px] text-purple-800">
+                        Fornitore: <strong>{v ? v.company_name : "Non associato"}</strong> · Certificazioni: {(targetM.certifications || []).join(", ") || "Nessuna"}
+                      </div>
+                      {v?.has_expired_critical_certs && (
+                        <div className="text-[10px] text-rose-800 font-bold bg-rose-100 p-1 rounded">
+                          ⚠️ Fornitore con certificazioni scadute nell&apos;Albo 360°
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Step 3: Ambito / Scope */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#111111] uppercase mb-1">
+                  3. Ambito di Applicazione della Sostituzione *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSwapScope("variant")}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      swapScope === "variant"
+                        ? "border-purple-600 bg-purple-50 text-purple-950 ring-2 ring-purple-300"
+                        : "border-[#CCCCCC] bg-white text-neutral-700 hover:bg-[#F9F9F9]"
+                    }`}
+                  >
+                    <div className="text-xs font-bold">🎯 Solo Questa Variante</div>
+                    <div className="text-[10px] text-neutral-500 mt-0.5">{variant.variant_code}</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSwapScope("product")}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      swapScope === "product"
+                        ? "border-purple-600 bg-purple-50 text-purple-950 ring-2 ring-purple-300"
+                        : "border-[#CCCCCC] bg-white text-neutral-700 hover:bg-[#F9F9F9]"
+                    }`}
+                  >
+                    <div className="text-xs font-bold">🌐 Tutte le Varianti del Modello</div>
+                    <div className="text-[10px] text-neutral-500 mt-0.5">
+                      {pimItem?.plm_variants?.length || 1} varianti collegate ({pimItem?.model_name || "Modello"})
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Step 4: Opzione Ricalcolo Costi */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="swapCostCheckbox"
+                  checked={swapUpdateCosts}
+                  onChange={(e) => setSwapUpdateCosts(e.target.checked)}
+                  className="rounded text-purple-600 focus:ring-purple-500"
+                />
+                <label htmlFor="swapCostCheckbox" className="text-xs font-semibold text-neutral-800 cursor-pointer">
+                  Ricalcola automaticamente il costo unitario con il costo standard del nuovo materiale
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E5E5]">
+                <button
+                  type="button"
+                  onClick={() => setShowBulkSwapModal(false)}
+                  className="px-4 py-2 rounded-full border border-[#CCCCCC] text-xs font-bold text-[#707072] hover:bg-[#F5F5F5] transition"
+                  disabled={swapLoading}
+                >
+                  Annulla
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExecuteBulkSwap}
+                  disabled={swapLoading || !swapTargetMatId}
+                  className="px-6 py-2 rounded-full bg-purple-700 text-white font-bold text-xs hover:bg-purple-800 transition shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {swapLoading ? (
+                    <span>Elaborazione in corso...</span>
+                  ) : (
+                    <>
+                      <span>🔄</span>
+                      <span>Conferma ed Esegui Sostituzione Massiva</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

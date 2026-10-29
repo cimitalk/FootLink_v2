@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { DistrictPaasManager } from "./DistrictPaasManager";
+import { MaterialsCatalogManager } from "./MaterialsCatalogManager";
 import { TanneryVaultManager, LeatherBomOption } from "./TanneryVaultManager";
 import VendorHub360 from "./VendorHub360";
 import {
@@ -9,6 +10,7 @@ import {
   CompanyBusinessType,
   DistrictUserRole,
   MasterColor,
+  MaterialRecord,
   PimCommercialItem,
   TanneryBatch,
   TanneryProcess,
@@ -21,7 +23,7 @@ import {
   ViewerSecurityRole,
 } from "../types";
 
-export type SupplierHubSubTab = "vendors" | "district" | "tannery";
+export type SupplierHubSubTab = "vendors" | "district" | "tannery" | "materials";
 
 interface SupplierManagementHubProps {
   // Vendors Props
@@ -39,6 +41,13 @@ interface SupplierManagementHubProps {
   onLinkDistrictCompany?: (vendorId: string, companyId: string) => Promise<void> | void;
   onUnlinkDistrictCompany?: (vendorId: string) => Promise<void> | void;
   onAutoLinkDistrictCompanies?: () => Promise<{ matched_count: number; total_vendors: number } | void> | void;
+
+  // Sprint 9: Materials Catalog Props
+  materials?: MaterialRecord[];
+  onCreateMaterial?: (mat: Partial<MaterialRecord>) => Promise<void> | void;
+  onUpdateMaterial?: (materialId: string, patch: Partial<MaterialRecord>) => Promise<void> | void;
+  onDeleteMaterial?: (materialId: string) => Promise<void> | void;
+  onNavigateToVendor?: (vendorId: string) => void;
 
   // District PaaS Props
   companies: Company[];
@@ -120,6 +129,11 @@ export const SupplierManagementHub: React.FC<SupplierManagementHubProps> = ({
   onLinkDistrictCompany,
   onUnlinkDistrictCompany,
   onAutoLinkDistrictCompanies,
+  materials = [],
+  onCreateMaterial,
+  onUpdateMaterial,
+  onDeleteMaterial,
+  onNavigateToVendor,
   companies,
   selectedCompanyId,
   onSelectCompany,
@@ -277,6 +291,26 @@ export const SupplierManagementHub: React.FC<SupplierManagementHubProps> = ({
               {batches.length} lotti
             </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("materials")}
+            className={`px-4 py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition flex items-center gap-2 ${
+              activeSubTab === "materials"
+                ? "bg-[#111111] text-white shadow-sm"
+                : "text-[#555555] hover:bg-[#F5F5F5] hover:text-[#111111]"
+            }`}
+          >
+            <span>🌿</span>
+            <span>CATALOGO MATERIALI &amp; TIRELLE</span>
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                activeSubTab === "materials" ? "bg-neutral-800 text-neutral-200" : "bg-neutral-200 text-neutral-800"
+              }`}
+            >
+              {materials.length} articoli
+            </span>
+          </button>
         </div>
 
         <div className="flex items-center gap-2 px-3 py-1 bg-neutral-100 rounded-xl text-neutral-600 text-xs font-bold">
@@ -330,6 +364,19 @@ export const SupplierManagementHub: React.FC<SupplierManagementHubProps> = ({
           onUploadDocument={onUploadDocument}
           onVerifyDocument={onVerifyDocument}
           onImportBatches={onImportBatches}
+        />
+      )}
+
+      {/* SUB-VIEW 4: CATALOGO MATERIALI & TIRELLE (SPRINT 9 / FTL-TECH-031) */}
+      {activeSubTab === "materials" && (
+        <MaterialsCatalogManager
+          materials={materials}
+          vendors={vendors}
+          viewerRole={viewerRole}
+          onCreateMaterial={onCreateMaterial}
+          onUpdateMaterial={onUpdateMaterial}
+          onDeleteMaterial={onDeleteMaterial}
+          onNavigateToVendor={onNavigateToVendor}
         />
       )}
     </div>

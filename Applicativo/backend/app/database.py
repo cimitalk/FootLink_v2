@@ -34,6 +34,8 @@ from app.models import (
     BulkImportCommitResponse,
     BulkImportValidationResponse,
     BulkImportValidationRow,
+    BulkMaterialSwapRequest,
+    BulkMaterialSwapResult,
     CarryoverStatus,
     Collection,
     CollectionCreate,
@@ -58,6 +60,9 @@ from app.models import (
     MasterColor,
     MasterColorCreate,
     MasterColorUpdate,
+    MaterialCreate,
+    MaterialResponse,
+    MaterialUpdate,
     OrderSizeBreakdownItem,
     PimColorwaysEcommerceResponse,
     PimCommercialItem,
@@ -208,6 +213,7 @@ class FootlinkSQLitePersistence:
                 "ALTER TABLE plm_production_variants ADD COLUMN colorway_rule_preset VARCHAR(64) NOT NULL DEFAULT 'tone_on_tone'",
                 "ALTER TABLE bom_items ADD COLUMN vendor_id VARCHAR(64) NULL",
                 "ALTER TABLE bom_items ADD COLUMN master_color_id VARCHAR(64) NULL",
+                "ALTER TABLE bom_items ADD COLUMN material_id VARCHAR(64) NULL",
                 "ALTER TABLE tannery_batches ADD COLUMN vendor_id VARCHAR(64) NULL",
                 "ALTER TABLE tannery_batches ADD COLUMN master_color_id VARCHAR(64) NULL",
             ):
@@ -270,6 +276,10 @@ class FootlinkSQLitePersistence:
         try:
             try:
                 conn.execute("DELETE FROM variant_colorway_bom_mappings")
+            except sqlite3.OperationalError:
+                pass
+            try:
+                conn.execute("DELETE FROM materials_catalog")
             except sqlite3.OperationalError:
                 pass
             conn.execute("DELETE FROM production_order_phases")
@@ -976,14 +986,15 @@ class FootlinkSQLitePersistence:
                 "lot_certificate_id": bom.lot_certificate_id,
                 "custom_attributes": bom.custom_attributes,
             }
+            resolved_mat = getattr(bom, "material_id", None)
             conn.execute(
                 """
                 INSERT INTO bom_items (
                     bom_item_id, plm_variant_id, level, parent_bom_item_id,
-                    component_type, material_name, supplier_name, vendor_id, master_color_id,
+                    component_type, material_name, supplier_name, vendor_id, master_color_id, material_id,
                     origin_country_iso2, unit_of_measure, unit_consumption, waste_percentage,
                     recycled_content_pct, certifications_json, metadata_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     bom.bom_item_id,
@@ -995,6 +1006,7 @@ class FootlinkSQLitePersistence:
                     resolved_sname,
                     resolved_vid,
                     resolved_mcol,
+                    resolved_mat,
                     bom.origin_country_iso2,
                     bom.unit_of_measure,
                     bom.unit_consumption,
@@ -1138,6 +1150,7 @@ class FootlinkSQLitePersistence:
                         supplier_name=br["supplier_name"],
                         vendor_id=br["vendor_id"] if "vendor_id" in b_keys else None,
                         master_color_id=br["master_color_id"] if "master_color_id" in b_keys else None,
+                        material_id=br["material_id"] if "material_id" in b_keys else None,
                         origin_country_iso2=br["origin_country_iso2"],
                         unit_of_measure=br["unit_of_measure"],
                         unit_consumption=float(br["unit_consumption"]),
@@ -2374,14 +2387,15 @@ class FootlinkSQLitePersistence:
                     "lot_certificate_id": bom.lot_certificate_id,
                     "custom_attributes": bom.custom_attributes,
                 }
+                resolved_mat = getattr(bom, "material_id", None)
                 conn.execute(
                     """
                     INSERT INTO bom_items (
                         bom_item_id, plm_variant_id, level, parent_bom_item_id,
-                        component_type, material_name, supplier_name, vendor_id, master_color_id,
+                        component_type, material_name, supplier_name, vendor_id, master_color_id, material_id,
                         origin_country_iso2, unit_of_measure, unit_consumption, waste_percentage,
                         recycled_content_pct, certifications_json, metadata_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         bom.bom_item_id,
@@ -2393,6 +2407,7 @@ class FootlinkSQLitePersistence:
                         resolved_sname,
                         resolved_vid,
                         bom.master_color_id,
+                        resolved_mat,
                         bom.origin_country_iso2,
                         bom.unit_of_measure,
                         bom.unit_consumption,
@@ -2433,6 +2448,10 @@ class FootlinkSQLitePersistence:
                 cur["master_color_id"] if "master_color_id" in cur_keys else None
             )
             updated_item.master_color_id = resolved_mcol
+            resolved_mat = updated_item.material_id or (
+                cur["material_id"] if "material_id" in cur_keys else None
+            )
+            updated_item.material_id = resolved_mat
             bom_meta = {
                 "unit_cost_eur": updated_item.unit_cost_eur,
                 "lot_certificate_id": updated_item.lot_certificate_id,
@@ -2442,7 +2461,7 @@ class FootlinkSQLitePersistence:
                 """
                 UPDATE bom_items
                 SET level = ?, parent_bom_item_id = ?, component_type = ?,
-                    material_name = ?, supplier_name = ?, vendor_id = ?, master_color_id = ?,
+                    material_name = ?, supplier_name = ?, vendor_id = ?, master_color_id = ?, material_id = ?,
                     origin_country_iso2 = ?, unit_of_measure = ?, unit_consumption = ?,
                     waste_percentage = ?, recycled_content_pct = ?, certifications_json = ?, metadata_json = ?
                 WHERE plm_variant_id = ? AND bom_item_id = ?
@@ -2455,6 +2474,7 @@ class FootlinkSQLitePersistence:
                     resolved_sname,
                     resolved_vid,
                     resolved_mcol,
+                    resolved_mat,
                     updated_item.origin_country_iso2,
                     updated_item.unit_of_measure,
                     updated_item.unit_consumption,
@@ -5188,6 +5208,321 @@ class FootlinkSQLitePersistence:
                 "matched_count": len(linked_pairs),
                 "linked_vendors": linked_pairs,
             }
+        finally:
+            self._close_if_file(conn)
+
+    # ========================================================================
+    # Sprint 9: Centralized Materials Catalog & Bulk Material Swap (FTL-TECH-030 / ADR-017)
+    # ========================================================================
+
+    def list_materials(
+        self,
+        vendor_id: Optional[str] = None,
+        category: Optional[str] = None,
+        is_active: Optional[bool] = None,
+    ) -> List[MaterialResponse]:
+        conn = self.get_connection()
+        try:
+            query = """
+                SELECT m.*, v.company_name AS vendor_name
+                FROM materials_catalog m
+                LEFT JOIN vendors_registry v ON m.vendor_id = v.vendor_id
+                WHERE 1=1
+            """
+            params: List[Any] = []
+            if vendor_id:
+                query += " AND m.vendor_id = ?"
+                params.append(vendor_id)
+            if category:
+                query += " AND LOWER(m.category) = LOWER(?)"
+                params.append(category)
+            if is_active is not None:
+                query += " AND m.is_active = ?"
+                params.append(1 if is_active else 0)
+
+            query += " ORDER BY m.category ASC, m.name ASC"
+            rows = conn.execute(query, params).fetchall()
+
+            results: List[MaterialResponse] = []
+            for r in rows:
+                certs = json.loads(r["certifications"] or "[]")
+                tech_specs = json.loads(r["technical_specs_json"] or "{}")
+                results.append(
+                    MaterialResponse(
+                        material_id=r["material_id"],
+                        material_code=r["material_code"],
+                        name=r["name"],
+                        category=r["category"],
+                        vendor_id=r["vendor_id"],
+                        vendor_name=r["vendor_name"],
+                        unit_of_measure=r["unit_of_measure"] or "dm2",
+                        standard_cost=float(r["standard_cost"] or 0.0),
+                        color_shade=r["color_shade"],
+                        certifications=certs,
+                        technical_specs=tech_specs,
+                        is_active=bool(r["is_active"]),
+                        created_at=self._parse_dt(r["created_at"]) or datetime.now(timezone.utc),
+                        updated_at=self._parse_dt(r["updated_at"]) or datetime.now(timezone.utc),
+                    )
+                )
+            return results
+        finally:
+            self._close_if_file(conn)
+
+    def get_material_by_id(self, material_id: str) -> Optional[MaterialResponse]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute(
+                """
+                SELECT m.*, v.company_name AS vendor_name
+                FROM materials_catalog m
+                LEFT JOIN vendors_registry v ON m.vendor_id = v.vendor_id
+                WHERE m.material_id = ? OR m.material_code = ?
+                """,
+                (material_id, material_id),
+            ).fetchone()
+            if not row:
+                return None
+            certs = json.loads(row["certifications"] or "[]")
+            tech_specs = json.loads(row["technical_specs_json"] or "{}")
+            return MaterialResponse(
+                material_id=row["material_id"],
+                material_code=row["material_code"],
+                name=row["name"],
+                category=row["category"],
+                vendor_id=row["vendor_id"],
+                vendor_name=row["vendor_name"],
+                unit_of_measure=row["unit_of_measure"] or "dm2",
+                standard_cost=float(row["standard_cost"] or 0.0),
+                color_shade=row["color_shade"],
+                certifications=certs,
+                technical_specs=tech_specs,
+                is_active=bool(row["is_active"]),
+                created_at=self._parse_dt(row["created_at"]) or datetime.now(timezone.utc),
+                updated_at=self._parse_dt(row["updated_at"]) or datetime.now(timezone.utc),
+            )
+        finally:
+            self._close_if_file(conn)
+
+    def save_material(self, mat: MaterialCreate, material_id: Optional[str] = None) -> MaterialResponse:
+        conn = self.get_connection()
+        try:
+            m_id = material_id or mat.material_id or f"MAT-{uuid4().hex[:8].upper()}"
+            now_iso = datetime.now(timezone.utc).isoformat()
+            resolved_vid, _ = self._resolve_vendor_link(conn, mat.vendor_id, None)
+
+            conn.execute(
+                """
+                INSERT INTO materials_catalog (
+                    material_id, material_code, name, category, vendor_id,
+                    unit_of_measure, standard_cost, color_shade, certifications,
+                    technical_specs_json, is_active, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(material_id) DO UPDATE SET
+                    material_code = excluded.material_code,
+                    name = excluded.name,
+                    category = excluded.category,
+                    vendor_id = excluded.vendor_id,
+                    unit_of_measure = excluded.unit_of_measure,
+                    standard_cost = excluded.standard_cost,
+                    color_shade = excluded.color_shade,
+                    certifications = excluded.certifications,
+                    technical_specs_json = excluded.technical_specs_json,
+                    is_active = excluded.is_active,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    m_id,
+                    mat.material_code,
+                    mat.name,
+                    mat.category,
+                    resolved_vid,
+                    mat.unit_of_measure,
+                    mat.standard_cost,
+                    mat.color_shade,
+                    json.dumps(mat.certifications or []),
+                    json.dumps(mat.technical_specs or {}),
+                    1 if mat.is_active else 0,
+                    now_iso,
+                    now_iso,
+                ),
+            )
+            conn.commit()
+            saved = self.get_material_by_id(m_id)
+            if not saved:
+                raise ValueError(f"Failed to persist material '{m_id}'")
+            return saved
+        finally:
+            self._close_if_file(conn)
+
+    def update_material(self, material_id: str, patch: MaterialUpdate) -> Optional[MaterialResponse]:
+        conn = self.get_connection()
+        try:
+            row = conn.execute("SELECT * FROM materials_catalog WHERE material_id = ?", (material_id,)).fetchone()
+            if not row:
+                return None
+
+            updates: List[str] = []
+            params: List[Any] = []
+
+            if patch.material_code is not None:
+                updates.append("material_code = ?")
+                params.append(patch.material_code)
+            if patch.name is not None:
+                updates.append("name = ?")
+                params.append(patch.name)
+            if patch.category is not None:
+                updates.append("category = ?")
+                params.append(patch.category)
+            if patch.vendor_id is not None:
+                resolved_vid, _ = self._resolve_vendor_link(conn, patch.vendor_id, None)
+                updates.append("vendor_id = ?")
+                params.append(resolved_vid)
+            if patch.unit_of_measure is not None:
+                updates.append("unit_of_measure = ?")
+                params.append(patch.unit_of_measure)
+            if patch.standard_cost is not None:
+                updates.append("standard_cost = ?")
+                params.append(patch.standard_cost)
+            if patch.color_shade is not None:
+                updates.append("color_shade = ?")
+                params.append(patch.color_shade)
+            if patch.certifications is not None:
+                updates.append("certifications = ?")
+                params.append(json.dumps(patch.certifications))
+            if patch.technical_specs is not None:
+                updates.append("technical_specs_json = ?")
+                params.append(json.dumps(patch.technical_specs))
+            if patch.is_active is not None:
+                updates.append("is_active = ?")
+                params.append(1 if patch.is_active else 0)
+
+            if not updates:
+                return self.get_material_by_id(material_id)
+
+            updates.append("updated_at = ?")
+            params.append(datetime.now(timezone.utc).isoformat())
+            params.append(material_id)
+
+            conn.execute(f"UPDATE materials_catalog SET {', '.join(updates)} WHERE material_id = ?", params)
+            conn.commit()
+            return self.get_material_by_id(material_id)
+        finally:
+            self._close_if_file(conn)
+
+    def delete_material(self, material_id: str) -> bool:
+        conn = self.get_connection()
+        try:
+            ref_count = conn.execute("SELECT COUNT(*) AS c FROM bom_items WHERE material_id = ?", (material_id,)).fetchone()["c"]
+            if ref_count > 0:
+                conn.execute("UPDATE materials_catalog SET is_active = 0 WHERE material_id = ?", (material_id,))
+            else:
+                conn.execute("DELETE FROM materials_catalog WHERE material_id = ?", (material_id,))
+            conn.commit()
+            return True
+        finally:
+            self._close_if_file(conn)
+
+    def bulk_swap_materials(
+        self,
+        plm_variant_id: Optional[str],
+        req: BulkMaterialSwapRequest,
+        product_id: Optional[str] = None,
+    ) -> BulkMaterialSwapResult:
+        """Replace a material across variants with full relational and costing updates."""
+        conn = self.get_connection()
+        try:
+            target_mat = self.get_material_by_id(req.target_material_id)
+            if not target_mat:
+                raise ValueError(f"Target Material '{req.target_material_id}' not found in catalog.")
+
+            target_name = req.target_material_name or target_mat.name
+            target_vendor_id = req.target_vendor_id or target_mat.vendor_id
+            target_cost = req.target_unit_cost if req.target_unit_cost is not None else target_mat.standard_cost
+
+            vendor_name = ""
+            if target_vendor_id:
+                vrow = conn.execute("SELECT company_name FROM vendors_registry WHERE vendor_id = ?", (target_vendor_id,)).fetchone()
+                if vrow:
+                    vendor_name = vrow["company_name"]
+
+            target_variant_ids: List[str] = []
+            if req.variant_ids and len(req.variant_ids) > 0:
+                target_variant_ids = req.variant_ids
+            elif plm_variant_id:
+                prow = conn.execute("SELECT pim_item_id FROM plm_production_variants WHERE plm_variant_id = ?", (plm_variant_id,)).fetchone()
+                if prow:
+                    all_v = conn.execute("SELECT plm_variant_id FROM plm_production_variants WHERE pim_item_id = ?", (prow["pim_item_id"],)).fetchall()
+                    target_variant_ids = [v["plm_variant_id"] for v in all_v]
+                else:
+                    target_variant_ids = [plm_variant_id]
+            elif product_id:
+                all_v = conn.execute("SELECT plm_variant_id FROM plm_production_variants WHERE pim_item_id = ?", (product_id,)).fetchall()
+                target_variant_ids = [v["plm_variant_id"] for v in all_v]
+
+            if not target_variant_ids:
+                return BulkMaterialSwapResult(
+                    swapped_items_count=0,
+                    impacted_variants=[],
+                    target_material_id=req.target_material_id,
+                    target_material_name=target_name,
+                    message="Nessuna variante target trovata.",
+                )
+
+            swapped_count = 0
+            impacted: List[str] = []
+
+            for vid in target_variant_ids:
+                b_rows = conn.execute("SELECT * FROM bom_items WHERE plm_variant_id = ?", (vid,)).fetchall()
+                for br in b_rows:
+                    b_keys = br.keys()
+                    cur_mat_id = br["material_id"] if "material_id" in b_keys else None
+                    cur_mat_name = br["material_name"]
+
+                    match = False
+                    if req.source_material_id and cur_mat_id == req.source_material_id:
+                        match = True
+                    elif req.source_material_name and cur_mat_name.strip().lower() == req.source_material_name.strip().lower():
+                        match = True
+
+                    if match:
+                        meta = json.loads(br["metadata_json"] or "{}")
+                        if req.update_costs:
+                            meta["unit_cost_eur"] = target_cost
+
+                        conn.execute(
+                            """
+                            UPDATE bom_items
+                            SET material_id = ?,
+                                material_name = ?,
+                                vendor_id = ?,
+                                supplier_name = CASE WHEN ? != '' THEN ? ELSE supplier_name END,
+                                metadata_json = ?
+                            WHERE plm_variant_id = ? AND bom_item_id = ?
+                            """,
+                            (
+                                target_mat.material_id,
+                                target_name,
+                                target_vendor_id,
+                                vendor_name,
+                                vendor_name,
+                                json.dumps(meta),
+                                vid,
+                                br["bom_item_id"],
+                            ),
+                        )
+                        swapped_count += 1
+                        if vid not in impacted:
+                            impacted.append(vid)
+
+            conn.commit()
+            return BulkMaterialSwapResult(
+                swapped_items_count=swapped_count,
+                impacted_variants=impacted,
+                target_material_id=target_mat.material_id,
+                target_material_name=target_name,
+                message=f"Sostituiti {swapped_count} componenti su {len(impacted)} varianti con '{target_name}'.",
+            )
         finally:
             self._close_if_file(conn)
 

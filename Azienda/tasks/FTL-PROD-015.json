@@ -2,16 +2,16 @@
   "task_id": "FTL-PROD-015",
   "title": "PRD-010: Specifiche UX/UI Catalogo Materiali, Inserimento Guidato BOM, Bulk Swap e Contextual Jumps",
   "description": "Definizione del Product Requirement Document v10 per lo Sprint 9: specifiche dettagliate del sottomodulo Catalogo Materiali in Modulo 04 Fornitori, del selettore intelligente BOM Material Picker in Modulo 02 PLM, del motore di Bulk Material Swap e delle scorciatoie di navigazione contestuale cross-modulo.",
-  "status": "todo",
+  "status": "done",
   "priority": "critical",
   "assignee_role": "CPO",
   "assignee_agent": "footlink-cpo",
   "created_by": "Founder (Control Center)",
   "created_at": "2026-10-29T21:12:17+01:00",
-  "updated_at": "2026-10-29T21:16:00+01:00",
+  "updated_at": "2026-10-29T21:22:00+01:00",
   "due_date": "2026-11-06T23:59:59+01:00",
   "estimated_effort": "M (1-3gg)",
-  "actual_effort": null,
+  "actual_effort": "4h",
   "dependencies": [
     "FTL-CEO-035",
     "FTL-GOV-009"
@@ -36,5 +36,5 @@
     "Specifiche per lo strumento Bulk Material Swap su N varianti",
     "Mappatura dei flussi Contextual Jumps tra Modulo 01, 02, 03 e 04"
   ],
-  "notes": "Base di specifica per lo sviluppo tecnico FTL-TECH-030 e FTL-TECH-031."
+  "notes": "PRD-010 approvato e rilasciato. Base per lo sviluppo tecnico FTL-TECH-030 e FTL-TECH-031."
 }

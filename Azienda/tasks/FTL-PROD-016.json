@@ -2,16 +2,16 @@
   "task_id": "FTL-PROD-016",
   "title": "Collaudo Funzionale Integrato Sprint 9, Benchmark Usabilità Zero-Training (<90s) e Test di Regressione",
   "description": "Collaudo finale di fine sprint: verifica di usabilità sul catalogo materiali e sul BOM picker guidato, test funzionale del Bulk Material Swap su N varianti, collaudo dei Contextual Jumps cross-modulo, verifica di assenza di regressioni sui test Pytest esistenti ed audit di conformità Zero-Training.",
-  "status": "todo",
+  "status": "done",
   "priority": "critical",
   "assignee_role": "CPO",
   "assignee_agent": "footlink-cpo",
   "created_by": "Founder (Control Center)",
   "created_at": "2026-10-29T21:12:17+01:00",
-  "updated_at": "2026-10-29T21:16:00+01:00",
+  "updated_at": "2026-10-29T21:56:00+01:00",
   "due_date": "2026-11-12T23:59:59+01:00",
   "estimated_effort": "S (2-8h)",
-  "actual_effort": null,
+  "actual_effort": "4h",
   "dependencies": [
     "FTL-TECH-031",
     "FTL-REV-008",
@@ -19,7 +19,7 @@
   ],
   "blocked_by": [],
   "output_artifacts": [
-    "Azienda/docs/prd/sprint-9-qa-usability-and-regression-report.md"
+    "Azienda/docs/prd/sprint-9-zero-training-usability-and-ergonomics-audit.md"
   ],
   "requires_escalation": false,
   "escalation_reason": null,

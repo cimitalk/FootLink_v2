@@ -116,6 +116,11 @@ from app.models import (
     VendorWhereUsedResponse,
     VendorDistrictLinkRequest,
     VendorAutoLinkResult,
+    BulkMaterialSwapRequest,
+    BulkMaterialSwapResult,
+    MaterialCreate,
+    MaterialResponse,
+    MaterialUpdate,
 )
 from app.seed import seed_initial_data
 
@@ -3244,6 +3249,116 @@ def auto_link_vendors_to_district_companies() -> VendorAutoLinkResult:
     """Bulk auto-match Albo vendors with District PaaS companies by VAT number and legal name."""
     result_dict = db_manager.auto_link_vendors_to_district_companies()
     return VendorAutoLinkResult(**result_dict)
+
+
+# ============================================================================
+# Sprint 9: Centralized Materials Catalog & Bulk Material Swap (FTL-TECH-030 / ADR-017)
+# ============================================================================
+
+
+@app.get(
+    "/api/v1/materials",
+    response_model=List[MaterialResponse],
+    tags=["materials", "sprint9"],
+)
+def list_materials(
+    vendor_id: Optional[str] = None,
+    category: Optional[str] = None,
+    is_active: Optional[bool] = None,
+) -> List[MaterialResponse]:
+    """Retrieve materials from the centralized materials catalog with optional vendor, category and active status filters."""
+    return db_manager.list_materials(vendor_id=vendor_id, category=category, is_active=is_active)
+
+
+@app.post(
+    "/api/v1/materials",
+    response_model=MaterialResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["materials", "sprint9"],
+)
+def create_material(mat: MaterialCreate) -> MaterialResponse:
+    """Create or register a new verified supply chain material in the centralized catalog."""
+    return db_manager.save_material(mat)
+
+
+@app.get(
+    "/api/v1/materials/{material_id}",
+    response_model=MaterialResponse,
+    tags=["materials", "sprint9"],
+)
+def get_material(material_id: str) -> MaterialResponse:
+    """Retrieve details of a single material by its unique material_id or material_code."""
+    mat = db_manager.get_material_by_id(material_id)
+    if not mat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Material '{material_id}' not found in catalog.",
+        )
+    return mat
+
+
+@app.patch(
+    "/api/v1/materials/{material_id}",
+    response_model=MaterialResponse,
+    tags=["materials", "sprint9"],
+)
+def update_material(material_id: str, patch: MaterialUpdate) -> MaterialResponse:
+    """Update material specifications, standard cost, certifications, or active status."""
+    updated = db_manager.update_material(material_id, patch)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Material '{material_id}' not found in catalog.",
+        )
+    return updated
+
+
+@app.delete(
+    "/api/v1/materials/{material_id}",
+    tags=["materials", "sprint9"],
+)
+def delete_material(material_id: str) -> Dict[str, Any]:
+    """Delete or soft-deactivate a material from the catalog."""
+    success = db_manager.delete_material(material_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Material '{material_id}' not found in catalog.",
+        )
+    return {"status": "success", "material_id": material_id, "message": "Material deactivated or deleted."}
+
+
+@app.post(
+    "/api/v1/plm-variants/{variant_id}/bom/bulk-swap",
+    response_model=BulkMaterialSwapResult,
+    tags=["bom", "materials", "sprint9"],
+)
+def bulk_swap_material_for_variant(
+    variant_id: str,
+    req: BulkMaterialSwapRequest,
+) -> BulkMaterialSwapResult:
+    """Bulk swap a material across the specified variant (or all sibling variants of its product model)."""
+    try:
+        return db_manager.bulk_swap_materials(plm_variant_id=variant_id, req=req)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@app.post(
+    "/api/v1/products/{product_id}/bom/bulk-swap",
+    response_model=BulkMaterialSwapResult,
+    tags=["bom", "materials", "sprint9"],
+)
+def bulk_swap_material_for_product(
+    product_id: str,
+    req: BulkMaterialSwapRequest,
+) -> BulkMaterialSwapResult:
+    """Bulk swap a material across all PLM variants belonging to a specific PIM product item."""
+    try:
+        return db_manager.bulk_swap_materials(plm_variant_id=None, req=req, product_id=product_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
 
 
 

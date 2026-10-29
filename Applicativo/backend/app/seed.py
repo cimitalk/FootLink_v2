@@ -27,6 +27,7 @@ from app.models import (
     DistrictUserRole,
     DomainRegistryEntryCreate,
     MasterColorCreate,
+    MaterialCreate,
     OrderSizeBreakdownItem,
     PimCommercialItem,
     PlmLifecycleStatus,
@@ -2233,6 +2234,183 @@ def link_sprint8_seed_relations(db: FootlinkSQLitePersistence) -> None:
         db._close_if_file(conn)
 
 
+def seed_sprint9_materials(db: FootlinkSQLitePersistence) -> None:
+    """Sprint 9 (FTL-TECH-030 / ADR-017): Seed Centralized Materials Catalog for Footwear, Leather Goods & Apparel."""
+    materials = [
+        MaterialCreate(
+            material_id="MAT-PEL-001",
+            material_code="ART-CALF-01",
+            name="Vitello Pieno Fiore Nappa 1.3mm",
+            category="leather",
+            vendor_id="VND-CONC-001",
+            unit_of_measure="dm2",
+            standard_cost=0.85,
+            color_shade="Nero Intenso",
+            certifications=["LWG Gold", "EUDR Deforestation-Free"],
+            technical_specs={"thickness_mm": 1.3, "temper": "soft", "tannage": "chrome_free"},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-PEL-002",
+            material_code="ART-SUEDE-02",
+            name="Camoscio Suede Idrorepellente PFAS-Free 1.2mm",
+            category="leather",
+            vendor_id="VND-CONC-002",
+            unit_of_measure="dm2",
+            standard_cost=0.75,
+            color_shade="Tabacco",
+            certifications=["LWG Gold", "ICEC TS 410"],
+            technical_specs={"thickness_mm": 1.2, "water_repellent": True, "pfas_free": True},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-PEL-003",
+            material_code="ART-VEG-03",
+            name="Vacchetta Toscana Concia Vegetale Naturale",
+            category="leather",
+            vendor_id="VND-CONC-002",
+            unit_of_measure="dm2",
+            standard_cost=0.90,
+            color_shade="Cuoio Naturale",
+            certifications=["Consorzio Vera Pelle Vegetale", "LWG Gold"],
+            technical_specs={"thickness_mm": 1.4, "tannage": "vegetable_tanned"},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-FOD-001",
+            material_code="ART-LIN-CALF-01",
+            name="Fodera Vitello Traspirante Concia Cromo-Free",
+            category="lining",
+            vendor_id="VND-CONC-001",
+            unit_of_measure="dm2",
+            standard_cost=0.45,
+            color_shade="Naturale",
+            certifications=["REACH SVHC Compliant", "LWG Gold"],
+            technical_specs={"thickness_mm": 0.8, "breathable": True},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-FOD-002",
+            material_code="ART-LIN-MESH-02",
+            name="Fodera Tecnica Mesh 3D Antibatterica Air-Flow",
+            category="lining",
+            vendor_id="VND-SUOL-003",
+            unit_of_measure="m",
+            standard_cost=14.50,
+            color_shade="Nero Tecnico",
+            certifications=["OEKO-TEX Standard 100", "GRS Recycled"],
+            technical_specs={"mesh_density": "3D spacer", "weight_gsm": 220},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-TES-001",
+            material_code="ART-CANV-01",
+            name="Canvas Cotone Organico Spigato 380g",
+            category="fabric",
+            vendor_id="VND-SUOL-003",
+            unit_of_measure="m",
+            standard_cost=18.20,
+            color_shade="Ecrù Naturale",
+            certifications=["GOTS Organic Cotton", "OEKO-TEX"],
+            technical_specs={"composition": "100% Organic Cotton", "weight_gsm": 380},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-FND-001",
+            material_code="ART-SOLE-CASSETTA-01",
+            name="Fondo Cassetta Gomma TR Riciclata Bicolore",
+            category="sole_bottom",
+            vendor_id="VND-SUOL-003",
+            unit_of_measure="paia",
+            standard_cost=9.80,
+            color_shade="Bianco Latte / Fondo Miele",
+            certifications=["ISO 9001", "ISO 14001"],
+            technical_specs={"recycled_content_pct": 30.0, "hardness_shore_a": 65},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-FND-002",
+            material_code="ART-SOLE-CUOIO-02",
+            name="Suola Cuoio Toscano Lavorazione Blake con Mezza Pianta TPU",
+            category="sole_bottom",
+            vendor_id="VND-SUOL-003",
+            unit_of_measure="paia",
+            standard_cost=15.50,
+            color_shade="Nero Rifinito a Mano",
+            certifications=["Consorzio Cuoio di Toscana", "ISO 9001"],
+            technical_specs={"thickness_mm": 5.0, "construction": "blake"},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-TAC-001",
+            material_code="ART-HEEL-85-01",
+            name="Tacco Rocchetto 85mm Fasciato Cuoio Rigenerato con Sottotacco TPU",
+            category="heel",
+            vendor_id="VND-SUOL-003",
+            unit_of_measure="paia",
+            standard_cost=4.80,
+            color_shade="Cuoio Naturale",
+            certifications=["FSC Certified Wood Core"],
+            technical_specs={"height_mm": 85, "shape": "spool_rocchetto"},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-MET-001",
+            material_code="ART-HW-EYELET-01",
+            name="Occhielli Metallici Ottone Trattamento Palladio Anti-Ossidazione",
+            category="hardware",
+            vendor_id="VND-GALV-004",
+            unit_of_measure="pz",
+            standard_cost=0.12,
+            color_shade="Palladio Lucido",
+            certifications=["UNI EN 12472 Nickel-Free", "REACH"],
+            technical_specs={"diameter_mm": 8, "finish": "palladium"},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-MET-002",
+            material_code="ART-HW-ZIP-02",
+            name="Cerniera Lampo Tranciata Metallo Finitura Oro Chiaro 18cm",
+            category="hardware",
+            vendor_id="VND-GALV-004",
+            unit_of_measure="pz",
+            standard_cost=2.45,
+            color_shade="Oro Chiaro Satinato",
+            certifications=["Nickel-Free", "ISO 9001"],
+            technical_specs={"length_cm": 18, "teeth_size": "M5"},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-FIL-001",
+            material_code="ART-THR-COATS-01",
+            name="Filato Poliestere Alta Tenacità per Calzatura Titolo 20",
+            category="thread",
+            vendor_id="VND-GALV-004",
+            unit_of_measure="m",
+            standard_cost=0.04,
+            color_shade="Nero",
+            certifications=["OEKO-TEX Standard 100"],
+            technical_specs={"ticket_size": 20, "breaking_strength_cn": 9500},
+            is_active=True,
+        ),
+        MaterialCreate(
+            material_id="MAT-PCK-001",
+            material_code="ART-BOX-LUX-01",
+            name="Scatola Calzatura Rigida Avana Cartone Riciclato con Logo a Caldo",
+            category="packaging",
+            vendor_id="VND-SUOL-003",
+            unit_of_measure="pz",
+            standard_cost=3.20,
+            color_shade="Avana / Nero",
+            certifications=["FSC Recycled 100%"],
+            technical_specs={"dimensions_cm": "34x22x12", "recycled_pct": 100},
+            is_active=True,
+        ),
+    ]
+    for mat in materials:
+        db.save_material(mat)
+
+
 def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = False) -> List[PimCommercialItem]:
     """Populate the SQLite/PostgreSQL database with initial Made-in-Italy seed data if empty (or when force=True)."""
     if force:
@@ -2259,6 +2437,10 @@ def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = 
         seed_sprint8_master_colors(db)
     if len(db.list_vendors()) == 0:
         seed_sprint8_vendors_and_certifications(db)
+
+    # Sprint 9 Seeds: Centralized Materials Catalog (FTL-TECH-030 / ADR-017)
+    if len(db.list_materials()) == 0:
+        seed_sprint9_materials(db)
 
     # Sprint 6 Seeds: District Companies, Users, Tannery Batches, Documents & Production Orders
     if len(db.list_companies()) == 0:

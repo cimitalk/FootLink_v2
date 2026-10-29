@@ -63,19 +63,14 @@ Questo file conserva i fatti durevoli, le decisioni architetturali e lo stato ev
   - Deliverable rilasciati al 100%: 2 Motori Verticali (Colori Intelligenti, Albo Fornitori 360°), 6 ADR registrate (ADR-011 .. ADR-016), separazione ontologica Modello/Prodotto, rifiniture UX PLM/PIM, sequenza menù 01-08 e context bar corretta.
   - Piattaforma collaudata e pronta per il rilascio.
 
-### Sprint 9 — "Usabilità, Coerenza e Flessibilità Operativa" (Avviato il 29 Ottobre 2026 — In Corso)
+### Sprint 9 — "Usabilità, Coerenza e Flessibilità Operativa" (Completato il 29 Ottobre 2026 — 9/9 Task Done)
 - **Direttiva Founder:** Focus prioritario su usabilità, coerenza e flessibilità delle funzionalità implementate finora.
-- **Approvazione Strategica, Perimetro e Avvio Operativo:** Deliberata l'integrazione del catalogo materiali nel Modulo 04 Fornitori e nel BOM Picker di Modulo 02 (senza creare moduli orizzontali superflui, nel pieno rispetto di `ADR-011`), formalizzata in [`ADR-017`](./adr/ADR-017-materials-catalog-bom-picker-bulk-swap-and-cross-module-ergonomics.md) e nel Piano di Sviluppo Esecutivo [`Azienda/docs/okr/sprint-9-c-suite-proposals-and-development-plan.md`](./docs/okr/sprint-9-c-suite-proposals-and-development-plan.md).
-- **WBS Sprint 9 (8 Task):**
-  - `FTL-CEO-035` (`done` — CEO): Direttiva Esecutiva Sprint 9.
-  - `FTL-GOV-009` (`done` — CGO): Governance Sprint 9, Triage Esecutivo `FTL-CEO-029` e Registrazione `ADR-017`.
-  - `FTL-PROD-015` (`todo` — CPO): PRD-010 (Catalogo Materiali, Inserimento Guidato BOM, Bulk Swap, Contextual Jumps).
-  - `FTL-TECH-030` (`todo` — CTO): Backend FastAPI & DB (Modello Dati Material, CRUD API, Endpoint Bulk Swap).
-  - `FTL-TECH-031` (`todo` — CTO): Frontend Full-Stack (MaterialsCatalogManager in Fornitori, BOM Picker in PLM, Bulk Swap e Jumps).
-  - `FTL-REV-008` (`todo` — CRO): Costing Industriale Flessibile, Simulatore Margini e Verifica Segregazione L6.
-  - `FTL-MKT-009` (`todo` — CMO): Lessico Calzaturiero di Lusso Unificato, Micro-interazioni d'Atelier e Preset Dimostrativi.
-  - `FTL-PROD-016` (`todo` — CPO): Collaudo Funzionale Integrato, Usabilità Zero-Training (<90s) e Regression Testing.
-- **Stato Baseline di Partenza:** 42/42 Test Pytest Passanti (100%), 0 Errori TypeScript/Vite, Spesa Monetaria Autonoma 0,00 € (L2).
+- **Integrazione Catalogo Materiali & Zero Horizontal Bloat (`ADR-017`):** Catalogo Materiali integrato come 4° sotto-tab ("🌿 Catalogo Materiali & Tirelle") nel Modulo 04 (Gestione Fornitori & Filiera 360°) senza creare moduli orizzontali extra (`ADR-011`).
+- **Guided BOM Material Picker (`FTL-PROD-015`, `FTL-TECH-031`):** Inserimento guidato dei materiali in Distinta Base (Modulo 02) con selezione da anagrafica certificata, auto-compilazione fornitore, costo e UoM, e alert visivo su certificazioni LWG/EUDR fornitore scadute.
+- **Bulk Material Swap & Contextual Jumps (`FTL-TECH-030`, `FTL-TECH-031`):** Sostituzione massiva di un materiale su singola variante o su tutte le varianti collegate al modello con ricalcolo costi opzionale; Contextual Jumps cross-modulo tra BOM e Fornitore, e tra Stagioni/PIM e PLM.
+- **Simulatore Costi Industriali & Margini Flessibili (`FTL-REV-008`):** Pannello interattivo per Brand/PMI con manodopera configurabile, overhead industriale (0-15%), slider What-If (-20% / +30%) e calcolo margini Wholesale/Retail (netto IVA 22%), con rigorosa segregazione L6 verso i terzisti.
+- **Lessico d'Atelier & Presets (`FTL-MKT-009`):** Armonizzazione terminologica calzaturiera e 13 preset di materiali di lusso pre-caricati.
+- **Metriche di Rilascio Sprint 9:** **9/9 Task Done (100%)** (`FTL-CEO-035`, `FTL-GOV-009`, `FTL-PROD-015`, `FTL-TECH-030`, `FTL-TECH-031`, `FTL-REV-008`, `FTL-MKT-009`, `FTL-PROD-016` e chiusura backlog `FTL-CEO-029`), **46/46 Test Pytest Passanti (100%)**, **0 Errori TypeScript/Vite**, **0,00 € Spesa Autonoma (L2)**.
 
 ---
 

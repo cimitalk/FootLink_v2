@@ -43,7 +43,7 @@ Task e direttive inseriti direttamente dal Founder via **Founder Control Center*
 | [`FTL-CEO-026`](./FTL-CEO-026.json) | **CEO** | Definizione di prodotto e di modello | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-CEO-027`](./FTL-CEO-027.json) | **CEO** | Riorganizzazione menù | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-CEO-028`](./FTL-CEO-028.json) | **CEO** | Ogni prodotto definito nel PLM deve essere presente nel PIM | 🟠 `high` | ✅ `done` | — | No (`L0`) |
-| [`FTL-CEO-029`](./FTL-CEO-029.json) | **CEO** | Gestione e catalogazione Materiali | 🟠 `high` | 🔄 `in_progress` | — | No (`L1`) |
+| [`FTL-CEO-029`](./FTL-CEO-029.json) | **CEO** | Gestione e catalogazione Materiali | 🟠 `high` | ✅ `done` | — | No (`L1`) |
 | [`FTL-CEO-030`](./FTL-CEO-030.json) | **CEO** | Associazione taglie a modello | 🟠 `high` | ✅ `done` | — | Sì (`L2`) |
 | [`FTL-CEO-031`](./FTL-CEO-031.json) | **CEO** | Tasti ridondandi | 🟠 `high` | ✅ `done` | — | Sì (`L2`) |
 | [`FTL-CEO-032`](./FTL-CEO-032.json) | **CEO** | Crea nuova variante | 🟠 `high` | ✅ `done` | — | Sì (`L1`) |
@@ -51,19 +51,19 @@ Task e direttive inseriti direttamente dal Founder via **Founder Control Center*
 | [`FTL-CEO-034`](./FTL-CEO-034.json) | **CEO** | Migliorare la Sticky Active Variant Context Bar | 🟠 `high` | ✅ `done` | — | Sì (`L2`) |
 | [`FTL-CEO-035`](./FTL-CEO-035.json) | **CEO** | Direttiva Esecutiva Sprint 9: Usabilità, Coerenza e Flessibilità Operativa | 🔴 `critical` | ✅ `done` | — | No (`L1`) |
 | [`FTL-GOV-009`](./FTL-GOV-009.json) | **CGO** | Governance Sprint 9, Triage Esecutivo FTL-CEO-029 e Registrazione ADR-017 | 🔴 `critical` | ✅ `done` | `FTL-CEO-035` | No (`L1`) |
-| [`FTL-MKT-009`](./FTL-MKT-009.json) | **CMO** | Unificazione Lessico Calzaturiero di Lusso, Micro-interazioni Ergonomiche e Preset Dimostrativi di Fabbrica | 🟠 `high` | 🟢 `todo` | `FTL-PROD-015` | No (`L5`) |
+| [`FTL-MKT-009`](./FTL-MKT-009.json) | **CMO** | Unificazione Lessico Calzaturiero di Lusso, Micro-interazioni Ergonomiche e Preset Dimostrativi di Fabbrica | 🟠 `high` | ✅ `done` | `FTL-PROD-015` | No (`L5`) |
 | [`FTL-PROD-014`](./FTL-PROD-014.json) | **CPO** | GESTIONE STAGIONI & COLLEZIONI | 🟠 `high` | ✅ `done` | — | No (`L0`) |
-| [`FTL-PROD-015`](./FTL-PROD-015.json) | **CPO** | PRD-010: Specifiche UX/UI Catalogo Materiali, Inserimento Guidato BOM, Bulk Swap e Contextual Jumps | 🔴 `critical` | 🟢 `todo` | `FTL-CEO-035`, `FTL-GOV-009` | No (`L1`) |
-| [`FTL-PROD-016`](./FTL-PROD-016.json) | **CPO** | Collaudo Funzionale Integrato Sprint 9, Benchmark Usabilità Zero-Training (<90s) e Test di Regressione | 🔴 `critical` | 🟢 `todo` | `FTL-TECH-031`, `FTL-REV-008`, `FTL-MKT-009` | No (`L1`) |
-| [`FTL-REV-008`](./FTL-REV-008.json) | **CRO** | Motore di Costing Industriale Flessibile (Materiali + Terzisti), Simulatore Margini e Verifica Segregazione L6 | 🟠 `high` | 🟢 `todo` | `FTL-TECH-030` | No (`L4`) |
+| [`FTL-PROD-015`](./FTL-PROD-015.json) | **CPO** | PRD-010: Specifiche UX/UI Catalogo Materiali, Inserimento Guidato BOM, Bulk Swap e Contextual Jumps | 🔴 `critical` | ✅ `done` | `FTL-CEO-035`, `FTL-GOV-009` | No (`L1`) |
+| [`FTL-PROD-016`](./FTL-PROD-016.json) | **CPO** | Collaudo Funzionale Integrato Sprint 9, Benchmark Usabilità Zero-Training (<90s) e Test di Regressione | 🔴 `critical` | ✅ `done` | `FTL-TECH-031`, `FTL-REV-008`, `FTL-MKT-009` | No (`L1`) |
+| [`FTL-REV-008`](./FTL-REV-008.json) | **CRO** | Motore di Costing Industriale Flessibile (Materiali + Terzisti), Simulatore Margini e Verifica Segregazione L6 | 🟠 `high` | ✅ `done` | `FTL-TECH-030` | No (`L4`) |
 | [`FTL-TECH-024`](./FTL-TECH-024.json) | **CTO** | Togliere il tasto "Archivio DAM Adv & Social" dalla Home Launchpad | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-025`](./FTL-TECH-025.json) | **CTO** | + NUOVO PRODOTTO PLM | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-026`](./FTL-TECH-026.json) | **CTO** | Rinominare e riorganizzare i 5 Tab Operativi Ergonomici | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-027`](./FTL-TECH-027.json) | **CTO** | Ordine definitivo moduli | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-028`](./FTL-TECH-028.json) | **CTO** | Togliere banner modello | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-029`](./FTL-TECH-029.json) | **CTO** | Card modello più compatte | 🟠 `high` | ✅ `done` | — | No (`L0`) |
-| [`FTL-TECH-030`](./FTL-TECH-030.json) | **CTO** | Backend FastAPI & DB: Modello Dati Material, API CRUD Materiali, Relazioni Fornitori e Endpoint Bulk Swap | 🔴 `critical` | 🟢 `todo` | `FTL-PROD-015` | No (`L3`) |
-| [`FTL-TECH-031`](./FTL-TECH-031.json) | **CTO** | Frontend Full-Stack: Sotto-tab Catalogo Materiali in Modulo 04, BOM Picker guidato in Modulo 02, Bulk Swap e Jumps | 🔴 `critical` | 🟢 `todo` | `FTL-TECH-030` | No (`L3`) |
+| [`FTL-TECH-030`](./FTL-TECH-030.json) | **CTO** | Backend FastAPI & DB: Modello Dati Material, API CRUD Materiali, Relazioni Fornitori e Endpoint Bulk Swap | 🔴 `critical` | ✅ `done` | `FTL-PROD-015` | No (`L3`) |
+| [`FTL-TECH-031`](./FTL-TECH-031.json) | **CTO** | Frontend Full-Stack: Sotto-tab Catalogo Materiali in Modulo 04, BOM Picker guidato in Modulo 02, Bulk Swap e Jumps | 🔴 `critical` | ✅ `done` | `FTL-TECH-030` | No (`L3`) |
 
 ---
 

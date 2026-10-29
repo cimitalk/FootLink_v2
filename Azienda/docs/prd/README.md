@@ -13,6 +13,14 @@ Passaggio dalla copertura orizzontale dei 9 moduli alla profondità funzionale i
   - **Verticalizzazione 1 — Gestione Colori Intelligente (`FTL-CEO-017`):** Anagrafica Master Colori e Cartelle Stagionali (`HEX`, `Pantone TCX`, `RAL`, finitura, famiglia commerciale B2C/B2B), **Colorway BOM Matrix** per singolo nodo L1/L2/L3 con workflow approvazione Tirella/Lab-Dip ($\Delta E$), generatore automatico **1-Click Colorway Explosion**, controllo coerenza colore Lotto Conceria ↔ BOM e auto-mapping e-commerce nel PIM Hub.
   - **Verticalizzazione 2 — Albo Fornitori & Terzisti Centralizzato a 360° (`FTL-CEO-018`):** Anagrafica unificata fornitori e laboratori façon (`0 €` perpetuo per `Tier 3`), stato qualifica albo, scadenziario attivo certificazioni (`LWG`, `ICEC`, `EUDR`, `REACH`, `ISO`, `DURC`) con semaforo giorni a scadenza, **Vendor Rating multi-parametrico (0–100)** (Qualità 40%, OTD 30%, ESG 30%), listini e parametri operativi segregati L6, guardia fornitore su BOM/Conceria e pannello **"Impatto Fornitore (Where-Used)"** con valore economico aggregato.
 
+- **[`PRD-010` — Sprint 9: Catalogo Materiali di Filiera, BOM Material Picker Guidato, Bulk Swap, Navigazione Contestuale e Costing Industriale Flessibile](PRD-010-sprint-9-materials-catalog-bom-picker-and-cross-module-ergonomics.md)** (`FTL-PROD-015` · Direttive [`FTL-CEO-029`](../../tasks/FTL-CEO-029.json), [`FTL-CEO-035`](../../tasks/FTL-CEO-035.json) · [`ADR-017`](../../adr/ADR-017-materials-catalog-bom-picker-bulk-swap-and-cross-module-ergonomics.md)):
+  - **Catalogo Materiali di Filiera:** Sotto-tab integrato in Modulo 04 (Fornitori) per pellami, fodere, tessuti, fondi, tacchi, minuterie metalliche, fili e packaging con codice fornitore, UOM, costo standard e certificazioni.
+  - **BOM Material Picker Guidato:** Ricerca ad autocompletamento in Modulo 02 (PLM) per sostituire i testi liberi con record certificati e autocompilazione di fornitore, costo e UOM.
+  - **Bulk Material Swap:** Strumento di sostituzione massiva di un materiale su N varianti di prodotto in 1 clic.
+  - **Contextual Jumps:** Deep link contestuali bidirezionali tra Modulo 01 (Collezioni), Modulo 02 (PLM), Modulo 03 (PIM) e Modulo 04 (Fornitori).
+  - **Simulatore Costing Industriale:** Sintesi dinamica Costo Materiali + Lavorazioni Esterne (0 €) + Overhead % e calcolo margini Wholesale/Retail con segregazione L6.
+  - **Audit di Usabilità & QA:** [`sprint-9-zero-training-usability-and-ergonomics-audit.md`](sprint-9-zero-training-usability-and-ergonomics-audit.md) (`FTL-PROD-016`).
+
 ---
 
 ## 📦 Archivio Consolidato Epoca I (Sprint 1–7 — La Fondazione Orizzontale)

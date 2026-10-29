@@ -119,6 +119,7 @@ CREATE TABLE IF NOT EXISTS bom_items (
     supplier_name VARCHAR(255) NOT NULL,
     vendor_id VARCHAR(64) NULL,
     master_color_id VARCHAR(64) NULL,
+    material_id VARCHAR(64) NULL REFERENCES materials_catalog(material_id) ON DELETE SET NULL,
     origin_country_iso2 CHAR(2) NOT NULL,
     unit_of_measure VARCHAR(32) NOT NULL,
     unit_consumption REAL NOT NULL CHECK (unit_consumption > 0),
@@ -236,6 +237,7 @@ CREATE TABLE IF NOT EXISTS tannery_batches (
     tannery_name VARCHAR(255) NOT NULL,
     vendor_id VARCHAR(64) NULL,
     master_color_id VARCHAR(64) NULL,
+    material_id VARCHAR(64) NULL REFERENCES materials_catalog(material_id) ON DELETE SET NULL,
     district VARCHAR(128) NOT NULL,
     leather_type VARCHAR(128) NOT NULL,
     tanning_process VARCHAR(64) NOT NULL DEFAULT 'metal_free'
@@ -502,6 +504,33 @@ CREATE INDEX IF NOT EXISTS idx_tannery_batches_master_color_id ON tannery_batche
 CREATE INDEX IF NOT EXISTS idx_product_models_category ON product_models(category, is_active);
 CREATE INDEX IF NOT EXISTS idx_pim_model_id ON pim_commercial_items(model_id);
 CREATE INDEX IF NOT EXISTS idx_vendors_district_company ON vendors_registry(district_company_id);
+
+-- ============================================================================
+-- Sprint 9: Centralized Materials Catalog & BOM Linking (FTL-TECH-030 / ADR-017)
+-- ============================================================================
+
+-- 21. Materials Catalog Table
+CREATE TABLE IF NOT EXISTS materials_catalog (
+    material_id VARCHAR(64) PRIMARY KEY,
+    material_code VARCHAR(64) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(64) NOT NULL DEFAULT 'leather',
+    vendor_id VARCHAR(64) NULL REFERENCES vendors_registry(vendor_id) ON DELETE SET NULL,
+    unit_of_measure VARCHAR(32) NOT NULL DEFAULT 'dm2',
+    standard_cost REAL NOT NULL DEFAULT 0.0,
+    color_shade VARCHAR(128) NULL,
+    certifications TEXT NOT NULL DEFAULT '[]',
+    technical_specs_json TEXT NOT NULL DEFAULT '{}',
+    is_active BOOLEAN NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_materials_vendor ON materials_catalog(vendor_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_materials_category ON materials_catalog(category, is_active);
+CREATE INDEX IF NOT EXISTS idx_materials_code ON materials_catalog(material_code);
+CREATE INDEX IF NOT EXISTS idx_bom_items_material_id ON bom_items(material_id);
+
 
 
 
