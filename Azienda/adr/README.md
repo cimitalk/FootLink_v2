@@ -22,6 +22,7 @@ A partire dallo **Sprint 8 ("La Ripartenza")**, il registro è strutturato in **
 | [ADR-018](./ADR-018-atelier-process-streamlining-and-plm-navigation-coordination.md) | Semplificazione del Flusso d'Atelier, Stepper di Modelleria & Distinta Base e Dismissione Legacy Workspace | 🟢 Approvata (L1/L4) | Founder + C-Suite | Founder | 2026-10-29 | [`FTL-CEO-036`](../tasks/FTL-CEO-036.json), [`FTL-CEO-037`](../tasks/FTL-CEO-037.json) |
 | [ADR-019](./ADR-019-footlink-public-website-architecture-motion-and-onboarding.md) | Architettura del Sito Web Pubblico Ufficiale, Motori di Computer Motion Vettoriale e Funnel di Onboarding Distrettuale | 🟢 Approvata (L1/L2) | Founder + C-Suite | Founder | 2026-10-29 | [`FTL-CEO-038`](../tasks/FTL-CEO-038.json) |
 | [ADR-020](./ADR-020-ux-ui-anti-redundancy-standards-and-design-lead-mandate.md) | Standard di Coerenza UX/UI, Eliminazione delle Ridondanze di Navigazione (Max 2 Livelli) e Istituzione del Presidio di UX/UI Lead | 🟢 Approvata (L1/L2) | Founder + C-Suite | Founder | 2026-10-29 | [`FTL-CEO-039`](../tasks/FTL-CEO-039.json) |
+| [ADR-021](./ADR-021-model-detail-simplification-and-pim-commercial-delegation.md) | Ottimizzazione Scheda Dettaglio Modello, Rimozione Azioni Duplicate e Delega Commerciale PIM a Modulo 03 | 🟢 Approvata (L1/L2) | Founder + C-Suite | Founder | 2026-10-29 | [`FTL-CEO-040`](../tasks/FTL-CEO-040.json) |
 
 ---
 

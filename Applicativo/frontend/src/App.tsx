@@ -12,8 +12,6 @@ import { SeasonsCollectionsHub } from "./components/SeasonsCollectionsHub";
 import { SubcontractorMobilePortal } from "./components/SubcontractorMobilePortal";
 import { SupplierManagementHub } from "./components/SupplierManagementHub";
 import { TanneryVaultManager } from "./components/TanneryVaultManager";
-import { TechnicalDocsHub } from "./components/TechnicalDocsHub";
-import { TrainingAcademyHub } from "./components/TrainingAcademyHub";
 import {
   ColorwayExplosionPayload,
   INITIAL_COMPANIES,
@@ -2580,8 +2578,6 @@ export const App: React.FC = () => {
     { id: "schema_studio", label: "06 Modello Dati Flessibile" },
     { id: "subcontractor_portal", label: "07 Terzisti 0 €" },
     { id: "dpp_passport", label: "08 Passaporto DPP" },
-    { id: "training_academy", label: "🎓 Training Hub" },
-    { id: "tech_docs", label: "📖 Tech Docs" },
   ];
 
   return (
@@ -2733,32 +2729,26 @@ export const App: React.FC = () => {
             ))}
           </nav>
 
-          {/* Training & Docs Quick Links */}
+          {/* Direct Links to the 2 Dedicated Portals: Training Portal (Business Users) & Tech Docs (IT/Interop) */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveModule("training_academy")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition shadow-2xs ${
-                activeModule === "training_academy"
-                  ? "bg-amber-500 text-[#111111]"
-                  : "bg-amber-500/10 border border-amber-500/30 text-amber-800 hover:bg-amber-500/20"
-              }`}
-              title="Apri Footlink Training Academy nell'app"
+            <a
+              href="/training_portal.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 hover:bg-amber-500/20 text-xs font-bold flex items-center gap-1.5 transition shadow-2xs"
+              title="Portale Formazione & Onboarding (Business Users)"
             >
-              <span>🎓</span> Training Academy
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveModule("tech_docs")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition shadow-2xs ${
-                activeModule === "tech_docs"
-                  ? "bg-[#111111] text-white"
-                  : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-              }`}
-              title="Apri Documentazione Tecnica & API nell'app"
+              <span>🎓</span> Training Portal
+            </a>
+            <a
+              href="/tech_docs.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-black text-white text-xs font-bold flex items-center gap-1.5 transition shadow-2xs"
+              title="Documentazione Tecnica, API & Interoperabilità ERP (IT & Tech)"
             >
-              <span>📖</span> Docs Tecniche
-            </button>
+              <span>📖</span> Tech Docs
+            </a>
           </div>
         </div>
       </header>
@@ -3017,21 +3007,6 @@ export const App: React.FC = () => {
         {/* VIEW 8: MODULE 08 - PASSAPORTO DIGITALE UE (DPP) - FTL-CEO-027 */}
         {activeModule === "dpp_passport" && (
           <LiveDppPassportGenerator pimItem={currentPim} dpp={dppData} />
-        )}
-
-        {/* VIEW 9: TRAINING ACADEMY HUB */}
-        {activeModule === "training_academy" && (
-          <TrainingAcademyHub
-            pimItems={pimItems}
-            productModels={productModels}
-            vendors={vendors}
-            onNavigateModule={(mod) => setActiveModule(mod as ActiveWorkspaceModule)}
-          />
-        )}
-
-        {/* VIEW 10: TECHNICAL DOCS & API REFERENCE */}
-        {activeModule === "tech_docs" && (
-          <TechnicalDocsHub backendConnected={backendConnected} />
         )}
       </main>
     </div>

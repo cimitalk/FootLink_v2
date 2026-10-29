@@ -1315,6 +1315,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
             onSelectPim(pim);
             setActiveOperationalTab("catalogo");
           }}
+          onNavigateModule={onNavigateModule}
         />
       )}
 

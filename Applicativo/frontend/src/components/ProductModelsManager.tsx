@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import {
+  ActiveWorkspaceModule,
   ProductModel,
   PimCommercialItem,
   PlmProductionVariant,
@@ -23,8 +24,8 @@ export interface ProductModelsManagerProps {
     model: Partial<ProductModel>
   ) => Promise<void> | void;
   onDeleteModel: (modelId: string) => Promise<void> | void;
-  onAttachProduct: (modelId: string, pimItemId: string) => Promise<void> | void;
-  onDetachProduct: (modelId: string, pimItemId: string) => Promise<void> | void;
+  onAttachProduct?: (modelId: string, pimItemId: string) => Promise<void> | void;
+  onDetachProduct?: (modelId: string, pimItemId: string) => Promise<void> | void;
   onCreateProductFromModel?: (model: ProductModel) => void;
   onCreatePimFromModel?: (model: ProductModel) => void;
   onSelectModel?: (model: ProductModel) => void;
@@ -34,6 +35,7 @@ export interface ProductModelsManagerProps {
     parentPim: PimCommercialItem,
     targetTab?: "catalogo" | "bom_tree"
   ) => void;
+  onNavigateModule?: (mod: ActiveWorkspaceModule) => void;
 }
 
 export const CERTIFIED_SIZE_SCALES = [
@@ -79,6 +81,7 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
   onSelectModel,
   onSelectPimItem,
   onSelectVariantItem,
+  onNavigateModule,
 }) => {
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -111,9 +114,6 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
     dataUrl?: string;
   } | null>(null);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
-
-  // Two Distinct Areas Active Tab State (FTL-CEO-024)
-  const [activeAreaTab, setActiveAreaTab] = useState<"all" | "plm" | "pim">("all");
 
   // Quick Action Feedback Banner
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
@@ -369,23 +369,6 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
     }
   };
 
-  const handleDetachProduct = async (pimItemId: string, skuCode: string) => {
-    if (!selectedModel) return;
-    if (
-      !window.confirm(
-        `Sei sicuro di voler sganciare l'articolo "${skuCode}" dal modello ${selectedModel.model_code}?`
-      )
-    ) {
-      return;
-    }
-    try {
-      await onDetachProduct(selectedModel.model_id, pimItemId);
-      showFeedback(`Articolo ${skuCode} sganciato dal modello.`);
-    } catch (err: any) {
-      alert("Errore nello sgancio: " + (err.message || err));
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Toast Feedback */}
@@ -541,7 +524,7 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
 
                     <span
                       className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                        attachedPims.length > 0
+                        totalVariants > 0
                           ? isSelected
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                             : "bg-emerald-50 text-emerald-800 border border-emerald-200"
@@ -550,7 +533,7 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                           : "bg-slate-100 text-slate-500"
                       }`}
                     >
-                      📦 {attachedPims.length} PIM · {totalVariants} PLM
+                      🏭 {totalVariants} {totalVariants === 1 ? "Variante PLM" : "Varianti PLM"}
                     </span>
                   </div>
 
@@ -563,7 +546,7 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                     {model.name}
                   </h3>
 
-                  {/* Row 3: Compact Specs Strip & Actions (FTL-TECH-029) */}
+                  {/* Row 3: Compact Specs Strip (Single source of action on detail view) */}
                   <div
                     className={`mt-1.5 pt-1.5 flex items-center justify-between text-[10.5px] border-t gap-1 ${
                       isSelected ? "border-slate-800 text-slate-300" : "border-slate-100 text-slate-600"
@@ -575,37 +558,18 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                       <span>Taglie: <strong>{model.default_size_range || "—"}</strong></span>
                     </div>
 
-                    {isBrand && (
-                      <div
-                        className="flex items-center gap-1 shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditModel(model)}
-                          title="Modifica modello"
-                          className={`px-1.5 py-0.5 rounded text-[9.5px] font-medium transition ${
-                            isSelected
-                              ? "bg-slate-800 hover:bg-slate-700 text-slate-200"
-                              : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                          }`}
-                        >
-                          ✏️ Modifica
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteModel(model)}
-                          title="Elimina modello"
-                          className={`px-1.5 py-0.5 rounded text-[9.5px] font-medium transition ${
-                            isSelected
-                              ? "bg-rose-950/60 hover:bg-rose-900 text-rose-300"
-                              : "bg-rose-50 hover:bg-rose-100 text-rose-700"
-                          }`}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
+                    <div className="shrink-0 flex items-center">
+                      {isSelected ? (
+                        <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                          <span>Selezionato</span>
+                          <span>●</span>
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-semibold group-hover:text-slate-600 transition">
+                          Ispeziona →
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -642,18 +606,24 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                     )}
                   </div>
 
-                  {/* FTL-CEO-031: Elimina ridondanza tasti duplicati nel modello.
-                      L'azione sul modello è la modifica anagrafica; le creazioni di varianti PLM e articoli PIM 
-                      avvengono nelle rispettive sezioni dedicate sotto. */}
+                  {/* Modifica ed eliminazione del modello selezionato */}
                   {isBrand && (
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => handleOpenEditModel(selectedModel)}
-                        className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition shadow-xs flex items-center justify-center gap-1.5"
-                        title="Modifica anagrafica modello, geometria forma e costruzione"
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition shadow-xs flex items-center justify-center gap-1.5"
+                        title="Modifica anagrafica modello, geometria forma, cartamodello e costruzione"
                       >
                         <span>✏️ Modifica Modello</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteModel(selectedModel)}
+                        className="px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition shadow-xs flex items-center justify-center gap-1"
+                        title="Elimina questo modello di base"
+                      >
+                        <span>🗑️ Elimina</span>
                       </button>
                     </div>
                   )}
@@ -748,298 +718,156 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                 </div>
               </div>
 
-              {/* FTL-CEO-024: Two Distinct Areas Navigation Sub-Bar */}
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3 flex-wrap gap-2">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setActiveAreaTab("all")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                      activeAreaTab === "all"
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                    }`}
-                  >
-                    <span>📑 Vista Completa (Entrambe)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveAreaTab("plm")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                      activeAreaTab === "plm"
-                        ? "bg-emerald-600 text-white shadow-xs"
-                        : "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200"
-                    }`}
-                  >
-                    <span>🏭 1. Varianti Tecniche PLM ({attachedPlmVariants.length})</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveAreaTab("pim")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                      activeAreaTab === "pim"
-                        ? "bg-indigo-600 text-white shadow-xs"
-                        : "bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200"
-                    }`}
-                  >
-                    <span>🏷️ 2. Articoli Commerciali PIM ({attachedProducts.length})</span>
-                  </button>
-                </div>
-
-                <div className="text-[11px] text-slate-500 font-medium">
-                  {attachedPlmVariants.length} varianti PLM · {attachedProducts.length} articoli PIM
-                </div>
-              </div>
-
-              {/* ========================================================================= */}
-              {/* AREA 1: Varianti Tecniche PLM Ingegnerizzate (Manovia & Fabbrica)        */}
-              {/* ========================================================================= */}
-              {(activeAreaTab === "all" || activeAreaTab === "plm") && (
-                <div className="space-y-3 bg-slate-50/70 border border-slate-200 rounded-2xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-600 text-white tracking-widest">
-                          AREA 1 · INGEGNERIA PLM
-                        </span>
-                        <h3 className="text-sm font-extrabold text-neutral-900">
-                          Varianti Tecniche di Produzione &amp; Distinte Base ({attachedPlmVariants.length})
-                        </h3>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Schede tecniche di fabbrica e manovia che condividono la geometria e la costruzione di questo modello base.
-                      </p>
+              {/* Livello 2: Varianti Tecniche PLM di Produzione & Distinte Base */}
+              <div className="space-y-3 bg-slate-50/70 border border-slate-200 rounded-2xl p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-600 text-white tracking-widest">
+                        INGEGNERIA PLM &amp; MANOVIA
+                      </span>
+                      <h3 className="text-sm font-extrabold text-neutral-900">
+                        Varianti Tecniche di Produzione &amp; Distinte Base ({attachedPlmVariants.length})
+                      </h3>
                     </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Schede tecniche di fabbrica e manovia che condividono la geometria e la costruzione di questo modello base.
+                    </p>
+                  </div>
 
-                    {onCreateProductFromModel && (
+                  {onCreateProductFromModel && isBrand && (
+                    <button
+                      type="button"
+                      onClick={() => onCreateProductFromModel(selectedModel)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1 shrink-0 shadow-xs"
+                    >
+                      <span>➕ Nuova Variante PLM</span>
+                    </button>
+                  )}
+                </div>
+
+                {attachedPlmVariants.length === 0 ? (
+                  <div className="p-6 text-center bg-white border border-dashed border-slate-300 rounded-xl space-y-2">
+                    <p className="text-xs text-slate-600 font-medium">
+                      Nessuna variante tecnica PLM è attualmente creata per questo modello.
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      Regola di governance: un prodotto PLM può esistere solo se agganciato ad un Modello base.
+                    </p>
+                    {onCreateProductFromModel && isBrand && (
                       <button
                         type="button"
                         onClick={() => onCreateProductFromModel(selectedModel)}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1 shrink-0"
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-neutral-900 text-white hover:bg-neutral-800 transition"
                       >
-                        <span>➕ Nuova Variante PLM</span>
+                        ➕ Crea Primo Prodotto PLM da questo Modello
                       </button>
                     )}
                   </div>
-
-                  {attachedPlmVariants.length === 0 ? (
-                    <div className="p-6 text-center bg-white border border-dashed border-slate-300 rounded-xl space-y-2">
-                      <p className="text-xs text-slate-600 font-medium">
-                        Nessuna variante tecnica PLM è attualmente creata per questo modello.
-                      </p>
-                      <p className="text-[11px] text-slate-500">
-                        Regola di governance: un prodotto PLM può esistere solo se agganciato ad un Modello base.
-                      </p>
-                      {onCreateProductFromModel && (
-                        <button
-                          type="button"
-                          onClick={() => onCreateProductFromModel(selectedModel)}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-neutral-900 text-white hover:bg-neutral-800 transition"
-                        >
-                          ➕ Crea Primo Prodotto PLM da questo Modello
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-2.5">
-                      {attachedPlmVariants.map((v) => (
-                        <div
-                          key={v.plm_variant_id}
-                          className="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 shadow-xs transition"
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-mono text-xs font-extrabold px-2 py-0.5 rounded bg-slate-900 text-white">
-                                  {v.variant_code}
-                                </span>
-                                <span className="text-xs font-bold text-slate-900">
-                                  {v.colorway_name}
-                                </span>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                  {v.lifecycle_status.replace("_", " ")}
-                                </span>
-                                <span className="text-[10px] text-slate-500">
-                                  Padre PIM: <strong>{v.parentPim.sku_code}</strong> ({v.parentPim.model_name})
-                                </span>
-                              </div>
-
-                              <div className="mt-2 flex items-center gap-3 text-xs text-slate-600 flex-wrap">
-                                <span>📐 Forma: <strong>{v.last_or_pattern_code || selectedModel.last_code}</strong></span>
-                                <span>⚙️ Scala: <strong>{v.size_range}</strong></span>
-                                <span>🧩 Distinta Base: <strong>{v.bom_items?.length || 0} comp.</strong></span>
-                                {v.subcontractor_assignments && v.subcontractor_assignments.length > 0 && (
-                                  <span>🏭 Terzisti: <strong>{v.subcontractor_assignments.length} fasi</strong></span>
-                                )}
-                                {isBrand && v.standard_labor_cost_eur != null && (
-                                  <span className="font-mono text-slate-800 font-bold">
-                                    Manodopera L6: € {v.standard_labor_cost_eur.toFixed(2)}
-                                  </span>
-                                )}
-                              </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {attachedPlmVariants.map((v) => (
+                      <div
+                        key={v.plm_variant_id}
+                        className="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 shadow-xs transition"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-xs font-extrabold px-2 py-0.5 rounded bg-slate-900 text-white">
+                                {v.variant_code}
+                              </span>
+                              <span className="text-xs font-bold text-slate-900">
+                                {v.colorway_name}
+                              </span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                {v.lifecycle_status.replace("_", " ")}
+                              </span>
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0">
-                              {onSelectVariantItem ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => onSelectVariantItem(v, v.parentPim, "bom_tree")}
-                                    className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1 shadow-xs"
-                                    title="Ingegnerizza o visualizza la distinta base a 3 livelli per questa variante"
-                                  >
-                                    <span>🌿 BOM</span>
-                                    <span>→</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => onSelectVariantItem(v, v.parentPim, "catalogo")}
-                                    className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1 shadow-xs"
-                                    title="Visualizza questa variante nella tabella Prodotti PLM"
-                                  >
-                                    <span>📦 Prodotti</span>
-                                    <span>→</span>
-                                  </button>
-                                </>
-                              ) : (
-                                onSelectPimItem && (
-                                  <button
-                                    type="button"
-                                    onClick={() => onSelectPimItem(v.parentPim)}
-                                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1 shadow-xs"
-                                  >
-                                    <span>Apri nel Catalogo / BOM</span>
-                                    <span>→</span>
-                                  </button>
-                                )
+                            <div className="mt-2 flex items-center gap-3 text-xs text-slate-600 flex-wrap">
+                              <span>📐 Forma: <strong>{v.last_or_pattern_code || selectedModel.last_code}</strong></span>
+                              <span>⚙️ Scala: <strong>{v.size_range}</strong></span>
+                              <span>🧩 Distinta Base: <strong>{v.bom_items?.length || 0} comp.</strong></span>
+                              {v.subcontractor_assignments && v.subcontractor_assignments.length > 0 && (
+                                <span>🏭 Terzisti: <strong>{v.subcontractor_assignments.length} fasi</strong></span>
+                              )}
+                              {isBrand && v.standard_labor_cost_eur != null && (
+                                <span className="font-mono text-slate-800 font-bold">
+                                  Manodopera L6: € {v.standard_labor_cost_eur.toFixed(2)}
+                                </span>
                               )}
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
 
-              {/* ========================================================================= */}
-              {/* AREA 2: Articoli Commerciali PIM (Vendita & Showroom)                    */}
-              {/* ========================================================================= */}
-              {(activeAreaTab === "all" || activeAreaTab === "pim") && (
-                <div className="space-y-3 bg-slate-50/70 border border-slate-200 rounded-2xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-indigo-600 text-white tracking-widest">
-                          AREA 2 · COMMERCIALE PIM
-                        </span>
-                        <h3 className="text-sm font-extrabold text-neutral-900">
-                          Articoli Master Commerciali PIM ({attachedProducts.length})
-                        </h3>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {onSelectVariantItem ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => onSelectVariantItem(v, v.parentPim, "bom_tree")}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5 shadow-xs"
+                                  title="Ingegnerizza o visualizza la distinta base a 3 livelli per questa variante"
+                                >
+                                  <span>🌿 BOM</span>
+                                  <span>→</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => onSelectVariantItem(v, v.parentPim, "catalogo")}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1.5 shadow-xs"
+                                  title="Visualizza questa variante nella scheda tecnica di produzione"
+                                >
+                                  <span>📦 Scheda Tecnica</span>
+                                  <span>→</span>
+                                </button>
+                              </>
+                            ) : (
+                              onSelectPimItem && (
+                                <button
+                                  type="button"
+                                  onClick={() => onSelectPimItem(v.parentPim)}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1 shadow-xs"
+                                >
+                                  <span>Apri nel Catalogo / BOM</span>
+                                  <span>→</span>
+                                </button>
+                              )
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Articoli per showroom, listini wholesale/retail e canali commerciali derivati da questo modello base.
-                      </p>
-                    </div>
-
-                    {/* FTL-CEO-033: Apertura form dedicato di creazione prodotto PIM */}
-                    {(onCreatePimFromModel || onCreateProductFromModel) && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onCreatePimFromModel
-                            ? onCreatePimFromModel(selectedModel)
-                            : onCreateProductFromModel?.(selectedModel)
-                        }
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1 shrink-0"
-                      >
-                        <span>➕ Nuovo Articolo PIM</span>
-                      </button>
-                    )}
+                    ))}
                   </div>
+                )}
+              </div>
 
-                  {attachedProducts.length === 0 ? (
-                    <div className="p-6 text-center bg-white border border-dashed border-slate-300 rounded-xl space-y-2">
-                      <p className="text-xs text-slate-600 font-medium">
-                        Nessun articolo commerciale PIM è attualmente collegato a questo modello.
-                      </p>
-                      {(onCreatePimFromModel || onCreateProductFromModel) && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onCreatePimFromModel
-                              ? onCreatePimFromModel(selectedModel)
-                              : onCreateProductFromModel?.(selectedModel)
-                          }
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition"
-                        >
-                          ➕ Crea Articolo Commerciale da Modello
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-2.5">
-                      {attachedProducts.map((pim) => (
-                        <div
-                          key={pim.pim_item_id}
-                          className="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 shadow-xs transition"
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-900">
-                                  {pim.sku_code}
-                                </span>
-                                <span className="text-xs font-bold text-slate-900">
-                                  {pim.model_name}
-                                </span>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
-                                  {pim.season} {pim.collection_name ? `· ${pim.collection_name}` : ""}
-                                </span>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
-                                  {pim.plm_variants?.length || 0} Varianti PLM
-                                </span>
-                              </div>
-
-                              <div className="mt-2 flex items-center gap-3 text-xs text-slate-600 flex-wrap">
-                                {isBrand && (
-                                  <span className="font-mono text-slate-800">
-                                    Wholesale: <strong>€ {pim.wholesale_price_eur != null ? pim.wholesale_price_eur.toFixed(2) : "—"}</strong> · Retail: <strong>€ {pim.retail_price_eur != null ? pim.retail_price_eur.toFixed(2) : "—"}</strong>
-                                  </span>
-                                )}
-                                <span>Canali: <strong>{pim.retail_channels?.join(", ") || "Tutti i Canali"}</strong></span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              {onSelectPimItem && (
-                                <button
-                                  type="button"
-                                  onClick={() => onSelectPimItem(pim)}
-                                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition"
-                                >
-                                  Apri nel Catalogo PIM →
-                                </button>
-                              )}
-
-                              {isBrand && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDetachProduct(pim.pim_item_id, pim.sku_code)}
-                                  title="Sgancia questo prodotto dal modello"
-                                  className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition"
-                                >
-                                  ✕ Sgancia
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              {/* Raccordo Ontologico Modulo 03 PIM: Governance Commerciale demandata */}
+              <div className="p-4 bg-gradient-to-r from-slate-50 via-indigo-50/30 to-purple-50/20 border border-indigo-100 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-base shrink-0 shadow-2xs">
+                    🏷️
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-slate-900">
+                      Governance Commerciale PIM &amp; Listini di Vendita
+                    </h4>
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      L&apos;aggancio commerciale 1:N con articoli di vendita, listini wholesale/retail, canali e-commerce e showroom è interamente governato nel modulo dedicato.
+                    </p>
+                  </div>
                 </div>
-              )}
+                {onNavigateModule && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigateModule("pim_catalog")}
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition shrink-0 flex items-center gap-1.5 shadow-xs"
+                  >
+                    <span>Vai a 03 PIM (Catalogo Commerciale)</span>
+                    <span>↗</span>
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 text-xs">

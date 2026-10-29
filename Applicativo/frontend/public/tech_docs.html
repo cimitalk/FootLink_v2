@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Footlink Technical Documentation & REST API Reference</title>
+  <title>Footlink Tech Docs — Architettura, Integrazione ERP, Interoperabilità & REST API</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -21,8 +21,8 @@
               600: '#0284c7',
               700: '#0369a1',
               800: '#075985',
-              900: '#0c4a6e',
-              950: '#082f49'
+              900: '#0f172a',
+              950: '#020617'
             }
           }
         }
@@ -30,7 +30,7 @@
     }
   </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
     }
@@ -41,15 +41,15 @@
       width: 5px;
     }
     .custom-scroll::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: #334155;
       border-radius: 4px;
     }
   </style>
 </head>
-<body class="bg-white text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="bg-slate-950 text-slate-100 antialiased min-h-screen flex flex-col">
 
   <!-- TOP HEADER -->
-  <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-md">
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <a href="/" class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-sm">
@@ -57,341 +57,351 @@
         </a>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-extrabold text-base tracking-tight">FOOTLINK</span>
-            <span class="text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Tech Docs</span>
-            <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800">v2.0 REST</span>
+            <span class="font-extrabold text-base tracking-tight text-white">FOOTLINK</span>
+            <span class="text-[10px] uppercase tracking-widest font-extrabold px-2 py-0.5 rounded-full bg-sky-950 text-sky-300 border border-sky-800">
+              PORTALE 2 DI 2 • TECH & IT
+            </span>
+            <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800">
+              OpenAPI 3.1 & ERP Hub
+            </span>
           </div>
+          <p class="text-[11px] text-slate-400 font-medium">Interoperabilità, Scambio Dati ERP/eCommerce, Webhook & API</p>
         </div>
       </div>
 
-      <!-- SEARCH BAR -->
+      <!-- SEARCH INPUT -->
       <div class="flex-1 max-w-md hidden md:block relative">
         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-        <input type="text" id="doc-search" oninput="filterDocs()" placeholder="Cerca endpoint, modello o parametro (es. /api/bom, L6, ESPR)..." class="w-full bg-slate-800 border border-slate-700 text-slate-200 pl-9 pr-4 py-1.5 rounded-xl text-xs focus:outline-hidden focus:ring-2 focus:ring-sky-500 focus:border-transparent placeholder-slate-400">
+        <input type="text" id="tech-search" oninput="filterTechDocs()" placeholder="Cerca endpoint, webhook o schema (es. SAP, Shopify, /api/bom, L6)..." class="w-full bg-slate-800/80 border border-slate-700 text-slate-200 pl-9 pr-4 py-1.5 rounded-xl text-xs focus:outline-hidden focus:ring-2 focus:ring-sky-500 focus:border-transparent placeholder-slate-400">
       </div>
 
-      <!-- RIGHT ACTIONS -->
       <div class="flex items-center gap-3">
-        <a href="./training_portal.html" class="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 text-xs font-bold flex items-center gap-1.5 transition-colors">
-          <i data-lucide="graduation-cap" class="w-4 h-4"></i> Training Academy
+        <a href="./training_portal.html" class="px-3.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 text-xs font-bold flex items-center gap-1.5 transition-colors">
+          <i data-lucide="compass" class="w-4 h-4"></i> Sei un Business User? Vai al <strong>Training Portal</strong>
         </a>
-        <a href="/" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors">
-          <i data-lucide="layout-grid" class="w-4 h-4"></i> Apri Piattaforma
+        <a href="/" class="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors">
+          <i data-lucide="layout-grid" class="w-4 h-4"></i> Apri App
         </a>
       </div>
     </div>
   </header>
 
-  <!-- BODY WITH FIXED SIDEBAR -->
+  <!-- BODY WITH TWO-COLUMN SIDEBAR & CONTENT -->
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 w-full flex">
     
-    <!-- SIDEBAR NAVIGATION -->
-    <aside class="w-64 shrink-0 border-r border-slate-200 py-6 pr-6 hidden md:block sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto custom-scroll text-xs">
+    <!-- SIDEBAR -->
+    <aside class="w-64 shrink-0 border-r border-slate-800 py-6 pr-6 hidden md:block sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto custom-scroll text-xs">
       <div class="space-y-6">
         <div>
-          <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-2">1. Architettura & Governance</span>
+          <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-2">1. Interoperabilità & Scambio Dati</span>
           <ul class="space-y-1">
-            <li><a href="#arch-overview" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Panoramica dei 3 Pilastri</a></li>
-            <li><a href="#arch-stack" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Stack Tecnologico</a></li>
-            <li><a href="#arch-l6" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Sicurezza & Segregazione L6</a></li>
+            <li><a href="#erp-sync" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Integrazione ERP (SAP, Stealth, AS400)</a></li>
+            <li><a href="#webhooks-lifecycle" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Eventi Webhook Outbound</a></li>
+            <li><a href="#ecommerce-connectors" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Connettori E-Commerce (Shopify, Joor)</a></li>
+            <li><a href="#edi-batch" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">EDIFACT & Import/Export Batch</a></li>
           </ul>
         </div>
 
         <div>
-          <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-2">2. Modello Dati Calzaturiero</span>
+          <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-2">2. Modelli Dati & Schemi JSON</span>
           <ul class="space-y-1">
-            <li><a href="#model-bridge" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Il Ponte 1 PIM : N PLM</a></li>
-            <li><a href="#model-bom" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Distinta Base a 3 Livelli</a></li>
-            <li><a href="#model-tannery" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Tannery Vault & Lotti LWG</a></li>
-            <li><a href="#model-dpp" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Passaporto DPP ESPR UE</a></li>
+            <li><a href="#schema-bridge" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Schema Ponte 1 PIM : N PLM</a></li>
+            <li><a href="#schema-bom" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Schema BOM Tree a 3 Livelli</a></li>
+            <li><a href="#schema-dpp" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Schema ESPR DPP (UE 2024/1781)</a></li>
           </ul>
         </div>
 
         <div>
-          <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-2">3. Specifiche API REST</span>
+          <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-2">3. REST API Reference</span>
           <ul class="space-y-1">
-            <li><a href="#api-auth" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Headers & Contesto Tenant</a></li>
-            <li><a href="#api-plm" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">PLM Varianti & Modelli</a></li>
-            <li><a href="#api-bom" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">BOM Tree & Costing</a></li>
-            <li><a href="#api-color" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Color Intelligence</a></li>
-            <li><a href="#api-pim" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">PIM Commerciale & Bridge</a></li>
-            <li><a href="#api-subcontractor" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Portale Terzisti L6</a></li>
-            <li><a href="#api-dpp" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">DPP Generation & GS1 QR</a></li>
+            <li><a href="#api-headers" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Auth & Tenant Context Headers</a></li>
+            <li><a href="#api-plm" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">PLM Varianti & Modelli</a></li>
+            <li><a href="#api-bom" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">BOM Tree & Costing Engine</a></li>
+            <li><a href="#api-bridge" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Bridge Mappings (1:N)</a></li>
+            <li><a href="#api-subcontractors" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Avanzamento Fasi Terzisti (L6)</a></li>
+            <li><a href="#api-dpp" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Generazione Passaporto DPP & QR</a></li>
           </ul>
         </div>
 
         <div>
-          <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-2">4. Integrazione & Deployment</span>
+          <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-2">4. Sicurezza, L6 & DevOps</span>
           <ul class="space-y-1">
-            <li><a href="#int-erp" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">ERP Sync (SAP, Stealth)</a></li>
-            <li><a href="#int-ecommerce" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">E-commerce (Shopify)</a></li>
-            <li><a href="#deploy-finops" class="block py-1 text-slate-600 hover:text-sky-600 font-medium">Deploy Docker & FinOps</a></li>
+            <li><a href="#security-l6" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Protocollo Segregazione L6</a></li>
+            <li><a href="#devops-docker" class="block py-1 text-slate-300 hover:text-sky-400 font-medium">Container Docker & FinOps</a></li>
           </ul>
         </div>
       </div>
     </aside>
 
-    <!-- MAIN DOCUMENTATION CONTENT -->
+    <!-- MAIN CONTENT -->
     <main class="flex-1 py-8 md:pl-8 max-w-4xl custom-scroll space-y-12">
 
-      <!-- SECTION 1: ARCHITECTURE OVERVIEW -->
-      <section id="arch-overview" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-4">
-          <span class="text-xs font-bold uppercase tracking-wider text-sky-700">Architettura di Riferimento</span>
-          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mt-1">La Struttura a 3 Pilastri di Footlink</h1>
+      <!-- SECTION: ERP INTEGRATION -->
+      <section id="erp-sync" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-sky-400">Interoperabilità di Sistema</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-1">
+            Integrazione ERP Aziendali (SAP, Stealth 3000, AS400)
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">
+            Linee guida per connettere Footlink ai sistemi informativi gestionali di fabbrica e contabilità industriale.
+          </p>
         </div>
-        <p class="text-sm text-slate-600 leading-relaxed">
-          Footlink è progettata conformemente ad <strong>ADR-005</strong> secondo una separazione rigorosa in 3 pilastri di root. Questa modularità garantisce che la governance aziendale, il codice applicativo e il portale di controllo del Founder siano totalmente disaccoppiati e versionati in modo indipendente.
+
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          Nelle manifatture moda calzaturiere, <strong>Footlink opera da Single Source of Truth per l'ingegnerizzazione del prodotto (PLM) e la catalogazione commerciale (PIM)</strong>. I sistemi ERP rimangono i master per la contabilità generale, la gestione magazzino fisica e gli ordini di acquisto fornitori.
         </p>
 
-        <!-- SVG ARCHITECTURE DIAGRAM -->
-        <div class="p-6 rounded-2xl bg-slate-900 text-white shadow-md border border-slate-800">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4 text-xs font-mono text-slate-400">
-            <span>REPOSITORY HIGH-LEVEL ARCHITECTURE</span>
-            <span class="text-emerald-400">ADR-005 COMPLIANT</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-xs">
-            <div class="p-4 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
-              <span class="text-amber-400 font-bold block text-sm">🏢 1. Azienda/</span>
-              <p class="text-slate-400 text-[11px]">Manifesto di Fondazione, Specifiche Ruoli C-Suite, Registri ADR e Task Object JSON.</p>
+        <!-- ARCHITECTURE FLOW DIAGRAM -->
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+          <span class="text-xs font-mono font-bold text-slate-400 uppercase block">DIAGRAMMA DI SCAMBIO DATI BI-DIREZIONALE</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center text-xs">
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="font-bold text-sky-400 block mb-1">FOOTLINK CORE</span>
+              <p class="text-slate-400 text-[11px]">Modelli, Distinte Base a 3 Livelli, Quote Last, DPP Passport e Portale Terzisti.</p>
             </div>
-            <div class="p-4 rounded-xl bg-slate-800 border border-sky-500/40 space-y-2">
-              <span class="text-sky-400 font-bold block text-sm">💻 2. Applicativo/</span>
-              <p class="text-slate-400 text-[11px]">FastAPI Backend, SPA React 18, PostgreSQL DDL e Motore di Calcolo BOM.</p>
+            <div class="flex flex-col items-center justify-center text-slate-400 text-[11px]">
+              <span class="text-amber-400 font-mono font-bold">Webhook JSON ➔</span>
+              <span class="text-slate-500 my-1">bom.locked / phase.done</span>
+              <span class="text-emerald-400 font-mono font-bold">⬅ REST API</span>
+              <span class="text-slate-500">PO Status / Inventory</span>
             </div>
-            <div class="p-4 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
-              <span class="text-indigo-400 font-bold block text-sm">🎛️ 3. Portale Control/</span>
-              <p class="text-slate-400 text-[11px]">Dashboard di comando locale del Founder, triage approvazioni L1-L6 e controllo spesa.</p>
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="font-bold text-indigo-400 block mb-1">ERP AZIENDALE</span>
+              <p class="text-slate-400 text-[11px]">SAP S/4HANA, Stealth 3000 o AS400 / IBM i per acquisti, contabilità e magazzino.</p>
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- SECTION: SECURITY & L6 SEGREGATION -->
-      <section id="arch-l6" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-3">
-          <h2 class="text-xl font-bold text-slate-900">Sicurezza & Segregazione Multi-Tenant L6</h2>
-        </div>
-        <p class="text-sm text-slate-600 leading-relaxed">
-          Nei distretti calzaturieri, i brand concorrenti condividono spesso gli stessi laboratori terzisti (es. giunterie o trancerie). Il protocollo <strong>L6 Segregation Guard</strong> impedisce fughe di dati sulle distinte base e sui costi:
-        </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-950">
-            <h4 class="font-bold flex items-center gap-1.5 text-rose-800 mb-1">
-              <i data-lucide="shield-alert" class="w-4 h-4"></i> Cosa è Rigidamente Nascosto ai Terzisti:
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+            <h4 class="font-bold text-sky-300 flex items-center gap-1.5">
+              <i data-lucide="arrow-up-right" class="w-4 h-4 text-sky-400"></i> Dati Trasmessi da Footlink all'ERP:
             </h4>
-            <ul class="list-disc list-inside space-y-1 text-[11px] text-rose-900">
-              <li>Prezzo retail e margini commerciali dell'articolo PIM</li>
-              <li>Costi orari e tariffe degli altri laboratori della filiera</li>
-              <li>Dati anagrafici e quantità assegnate ad altri terzisti</li>
-              <li>Codici sorgente e ricette chimiche riservate dei pellami</li>
+            <ul class="list-disc list-inside space-y-1 text-slate-300 text-[11px]">
+              <li>Distinta base congelata (`bom.locked`) con fabbisogni netti e scarti tranciatura</li>
+              <li>Anagrafica modelli, codici varianti industriali e cartelle colori approvate</li>
+              <li>Avanzamento delle fasi di lavorazione inviate dai terzisti a costo zero</li>
+              <li>Metadati di conformità pelli LWG per la certificazione Dogane / EUDR</li>
             </ul>
           </div>
-          <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950">
-            <h4 class="font-bold flex items-center gap-1.5 text-emerald-800 mb-1">
-              <i data-lucide="shield-check" class="w-4 h-4"></i> Cosa Vede il Terzista (Solo la sua fase):
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+            <h4 class="font-bold text-emerald-300 flex items-center gap-1.5">
+              <i data-lucide="arrow-down-left" class="w-4 h-4 text-emerald-400"></i> Dati Ricevuti dall'ERP in Footlink:
             </h4>
-            <ul class="list-disc list-inside space-y-1 text-[11px] text-emerald-900">
-              <li>Numero di paia assegnate e data di consegna richiesta</li>
-              <li>Scheda tecnica dei soli componenti della sua lavorazione</li>
-              <li>Tasti rapidi "Avvia Lavorazione" e "Completato"</li>
-              <li>Pulsante rapido per scattare e inviare foto difetti pelli</li>
+            <ul class="list-disc list-inside space-y-1 text-slate-300 text-[11px]">
+              <li>Stato di emissione degli ordini di acquisto materie prime (PO Number)</li>
+              <li>Giacenza fisica lotti pelli ricevuti in magazzino centrale</li>
+              <li>Costi consuntivi reali di manodopera per la taratura del costing BOM</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <!-- SECTION 2: DATA MODELS -->
-      <section id="model-bridge" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-3">
-          <span class="text-xs font-bold uppercase tracking-wider text-sky-700">Modello di Dominio</span>
-          <h2 class="text-xl font-bold text-slate-900 mt-1">Il Ponte 1 PIM : N PLM (Multi-Sourcing)</h2>
+      <!-- SECTION: WEBHOOKS -->
+      <section id="webhooks-lifecycle" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-3">
+          <h2 class="text-xl font-extrabold text-white">Eventi Webhook Outbound</h2>
+          <p class="text-xs text-slate-400">Notifiche HTTP POST asincrone con firma HMAC-SHA256 inviate verso i middleware aziendali.</p>
         </div>
-        <p class="text-sm text-slate-600 leading-relaxed">
-          Tradizionalmente, i sistemi software falliscono forzando una relazione 1:1 tra prodotto di vendita e scheda tecnica. Footlink introduce il <strong>Bridge Associativo</strong>:
-        </p>
 
-        <!-- CODE EXAMPLE BOX WITH TABS -->
-        <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950 text-slate-200">
+        <div class="overflow-x-auto border border-slate-800 rounded-xl text-xs">
+          <table class="w-full text-left text-slate-300">
+            <thead class="bg-slate-900 text-slate-200 border-b border-slate-800 font-bold font-mono">
+              <tr>
+                <th class="p-3">Evento</th>
+                <th class="p-3">Trigger di Business</th>
+                <th class="p-3">Destinatario Tipico</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/80 font-mono text-[11px]">
+              <tr>
+                <td class="p-3 text-sky-400 font-bold">collection.approved</td>
+                <td class="p-3 font-sans text-slate-300">La collezione passa da 'Bozza' ad 'Approvata'.</td>
+                <td class="p-3 font-sans text-slate-400">ERP (Creazione articoli modello)</td>
+              </tr>
+              <tr>
+                <td class="p-3 text-amber-400 font-bold">bom.locked</td>
+                <td class="p-3 font-sans text-slate-300">Distinta base validata per la produzione in serie.</td>
+                <td class="p-3 font-sans text-slate-400">ERP Acquisti (Generazione Ordini Materie)</td>
+              </tr>
+              <tr>
+                <td class="p-3 text-emerald-400 font-bold">subcontractor.phase_completed</td>
+                <td class="p-3 font-sans text-slate-300">Il terzista completa la fase (es. Giunteria 400 paia).</td>
+                <td class="p-3 font-sans text-slate-400">WMS & Logistica (Prelievo e Spedizione)</td>
+              </tr>
+              <tr>
+                <td class="p-3 text-indigo-400 font-bold">dpp.passport_published</td>
+                <td class="p-3 font-sans text-slate-300">Generato e firmato il passaporto conformità ESPR.</td>
+                <td class="p-3 font-sans text-slate-400">Shopify / E-Commerce (Metafields QR)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SAMPLE WEBHOOK PAYLOAD -->
+        <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
           <div class="bg-slate-900 px-4 py-2 flex items-center justify-between text-xs border-b border-slate-800">
-            <div class="flex items-center gap-2">
-              <span class="font-mono text-slate-400">PimPlmBridgeMapping Schema</span>
-            </div>
-            <button onclick="copyCode('code-schema-bridge')" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
+            <span class="text-slate-400 font-mono text-[11px]">Payload Esempio: <strong class="text-sky-300">bom.locked</strong></span>
+            <button onclick="copyTechCode('code-webhook-bom')" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
               <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copia JSON
             </button>
           </div>
-          <pre id="code-schema-bridge" class="p-4 text-xs font-mono text-sky-300 overflow-x-auto"><code>{
-  "bridge_id": "MAP-2026-081",
-  "pim_item_id": "PIM-SKU-1002",
-  "commercial_name": "Venezia Sneaker Cognac",
-  "plm_mappings": [
-    {
-      "plm_variant_id": "PLM-SNK-042-IT",
-      "plant_location": "Civitanova Marche (IT)",
-      "is_primary": true,
-      "allocation_percent": 70,
-      "lead_time_days": 21
-    },
-    {
-      "plm_variant_id": "PLM-SNK-042-PT",
-      "plant_location": "Porto Footwear Hub (PT)",
-      "is_primary": false,
-      "allocation_percent": 30,
-      "lead_time_days": 35
-    }
-  ]
+          <pre id="code-webhook-bom" class="p-4 text-xs font-mono text-emerald-400 overflow-x-auto"><code>{
+  "event_id": "evt_998124_ftl",
+  "event_type": "bom.locked",
+  "timestamp": "2026-10-29T21:45:00Z",
+  "tenant_id": "ten_marche_01",
+  "payload": {
+    "variant_id": "PLM-SNK-042-IT",
+    "model_code": "MOD-SNK-042",
+    "target_factory": "Civitanova Marche Plant 1",
+    "total_materials_cost": 28.45,
+    "currency": "EUR",
+    "components_count": 14,
+    "requirements_summary": [
+      {
+        "component_id": "BOM-001",
+        "level": 1,
+        "material_name": "Vitello Pieno Fiore 1.2-1.4mm",
+        "supplier_code": "VEN-TAN-01",
+        "lwg_certificate": "Gold",
+        "net_consumption_dm2": 16.5,
+        "scrap_percentage": 18.0,
+        "gross_consumption_dm2": 19.47
+      }
+    ]
+  }
 }</code></pre>
         </div>
       </section>
 
-      <!-- SECTION: BOM 3 LEVELS -->
-      <section id="model-bom" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-3">
-          <h2 class="text-xl font-bold text-slate-900">La Distinta Base Calzaturiera a 3 Livelli</h2>
+      <!-- SECTION: E-COMMERCE -->
+      <section id="ecommerce-connectors" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-3">
+          <h2 class="text-xl font-extrabold text-white">Connettori E-Commerce (Shopify, Joor, Farfetch)</h2>
+          <p class="text-xs text-slate-400">Sincronizzazione del catalogo commerciale PIM e arricchimento schede prodotto con passaporto DPP.</p>
         </div>
-        <p class="text-sm text-slate-600 leading-relaxed">
-          I componenti sono categorizzati gerarchicamente nei 3 livelli fisici di assemblaggio. Il motore di costing ricalcola i consumi netti moltiplicandoli per il coefficiente di sfrido di tranciatura $(1 + \text{scrap}/100)$.
-        </p>
 
-        <div class="overflow-x-auto border border-slate-200 rounded-xl">
-          <table class="w-full text-left text-xs text-slate-600">
-            <thead class="bg-slate-50 text-slate-900 border-b border-slate-200 font-bold">
-              <tr>
-                <th class="p-3">Livello</th>
-                <th class="p-3">Nome Calzaturiero</th>
-                <th class="p-3">Componenti Tipici</th>
-                <th class="p-3">Unità di Misura</th>
-                <th class="p-3">Range Scarto Medio</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 font-medium">
-              <tr>
-                <td class="p-3 font-mono font-bold text-sky-700">Level 1</td>
-                <td class="p-3 font-bold text-slate-900">Tomaia (Upper)</td>
-                <td class="p-3">Vitello, camoscio, puntale, contrafforte, cerniere</td>
-                <td class="p-3 font-mono">dm² / paia</td>
-                <td class="p-3 font-mono">16% – 22%</td>
-              </tr>
-              <tr>
-                <td class="p-3 font-mono font-bold text-amber-700">Level 2</td>
-                <td class="p-3 font-bold text-slate-900">Fodera & Accessori (Lining)</td>
-                <td class="p-3">Fodera vitello naturale, microfibra, stringhe, imbottitura</td>
-                <td class="p-3 font-mono">dm² / metri / paia</td>
-                <td class="p-3 font-mono">10% – 14%</td>
-              </tr>
-              <tr>
-                <td class="p-3 font-mono font-bold text-emerald-700">Level 3</td>
-                <td class="p-3 font-bold text-slate-900">Fondo & Suola (Sole)</td>
-                <td class="p-3">Sottopiede montaggio, cambrione acciaio, cassetta gomma, tacco</td>
-                <td class="p-3 font-mono">paia / set</td>
-                <td class="p-3 font-mono">0% – 3%</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-2">
+          <h4 class="font-bold text-white flex items-center gap-1.5">
+            <i data-lucide="shopping-bag" class="w-4 h-4 text-amber-400"></i> Shopify GraphQL Integration Pattern
+          </h4>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Footlink invia l'articolo PIM tramite la mutation GraphQL <code class="text-sky-300">productCreate</code> o <code class="text-sky-300">productUpdate</code>, popolando i metafields dedicati alla sostenibilità per mostrare il badge di ecodesign e il QR code scansionabile direttamente nella pagina prodotto:
+          </p>
+          <pre class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-sky-300 font-mono text-[11px] overflow-x-auto"><code>mutation CreateProductWithDPP($input: ProductInput!) {
+  productCreate(input: $input) {
+    product {
+      id
+      title
+      metafields(first: 3) {
+        edges {
+          node {
+            key
+            value
+          }
+        }
+      }
+    }
+  }
+}</code></pre>
         </div>
       </section>
 
-      <!-- SECTION 3: REST API REFERENCE -->
-      <section id="api-auth" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-3">
-          <span class="text-xs font-bold uppercase tracking-wider text-sky-700">REST API Specifications</span>
-          <h2 class="text-xl font-bold text-slate-900 mt-1">Autenticazione e Headers di Contesto</h2>
+      <!-- SECTION: REST API REFERENCE -->
+      <section id="api-headers" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-sky-400">OpenAPI 3.1 Contract</span>
+          <h2 class="text-xl font-extrabold text-white mt-1">REST API Reference & Header di Sicurezza</h2>
         </div>
-        <p class="text-sm text-slate-600 leading-relaxed">
-          Tutte le chiamate API devono includere gli header di identificazione del tenant e del ruolo per consentire la segregazione e l'audit trail L0-L6.
-        </p>
 
-        <div class="overflow-x-auto border border-slate-200 rounded-xl text-xs">
-          <table class="w-full text-left text-slate-600">
-            <thead class="bg-slate-50 text-slate-900 border-b border-slate-200 font-bold">
+        <div class="overflow-x-auto border border-slate-800 rounded-xl text-xs">
+          <table class="w-full text-left text-slate-300">
+            <thead class="bg-slate-900 text-slate-200 border-b border-slate-800 font-bold font-mono">
               <tr>
-                <th class="p-3">Header</th>
+                <th class="p-3">Header HTTP</th>
                 <th class="p-3">Tipo</th>
                 <th class="p-3">Obbligatorio</th>
-                <th class="p-3">Descrizione</th>
+                <th class="p-3">Scopo</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 font-mono">
+            <tbody class="divide-y divide-slate-800/80 font-mono text-[11px]">
               <tr>
-                <td class="p-3 text-slate-900 font-bold">X-Tenant-Id</td>
-                <td class="p-3 text-sky-700">String (UUID)</td>
-                <td class="p-3 text-rose-600 font-sans font-bold">Sì</td>
-                <td class="p-3 font-sans">Identificativo dell'azienda / brand proprietario dei dati.</td>
+                <td class="p-3 text-white font-bold">X-Tenant-Id</td>
+                <td class="p-3 text-sky-400">String (UUID)</td>
+                <td class="p-3 text-rose-400 font-sans font-bold">Sì</td>
+                <td class="p-3 font-sans text-slate-300">Identifica il brand o l'azienda del distretto proprietaria della risorsa.</td>
               </tr>
               <tr>
-                <td class="p-3 text-slate-900 font-bold">X-User-Role</td>
-                <td class="p-3 text-sky-700">Enum</td>
-                <td class="p-3 text-rose-600 font-sans font-bold">Sì</td>
-                <td class="p-3 font-sans"><code class="text-xs">admin</code>, <code class="text-xs">product_dev</code>, <code class="text-xs">commercial</code>, <code class="text-xs">subcontractor</code></td>
+                <td class="p-3 text-white font-bold">X-User-Role</td>
+                <td class="p-3 text-sky-400">Enum</td>
+                <td class="p-3 text-rose-400 font-sans font-bold">Sì</td>
+                <td class="p-3 font-sans text-slate-300"><code class="text-amber-300">admin</code>, <code class="text-amber-300">product_dev</code>, <code class="text-amber-300">commercial</code>, <code class="text-amber-300">subcontractor</code></td>
               </tr>
               <tr>
-                <td class="p-3 text-slate-900 font-bold">X-Vendor-Id</td>
-                <td class="p-3 text-sky-700">String</td>
-                <td class="p-3 text-slate-500 font-sans">Se Terzista</td>
-                <td class="p-3 font-sans">Se valorizzato, attiva la segregazione automatica dei dati L6.</td>
+                <td class="p-3 text-white font-bold">X-Vendor-Id</td>
+                <td class="p-3 text-sky-400">String</td>
+                <td class="p-3 text-slate-400 font-sans">Se Terzista</td>
+                <td class="p-3 font-sans text-slate-300">Attiva la segregazione L6: restituisce solo le commesse del laboratorio.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <!-- ENDPOINT: GET BOM TREE -->
-      <section id="api-bom" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-2 flex items-center justify-between">
+      <!-- ENDPOINT: BOM TREE -->
+      <section id="api-bom" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-2 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 font-mono font-bold text-xs">GET</span>
-            <span class="font-mono text-sm font-bold text-slate-900">/api/bom/tree/{variant_id}</span>
+            <span class="px-2 py-0.5 rounded-md bg-sky-950 text-sky-300 font-mono font-bold text-xs border border-sky-800">GET</span>
+            <span class="font-mono text-sm font-bold text-white">/api/v1/bom/tree/{variant_id}</span>
           </div>
-          <span class="text-xs text-slate-500">Recupera distinta base completa</span>
+          <span class="text-xs text-slate-400">Distinta base calzaturiera a 3 livelli</span>
         </div>
 
-        <p class="text-xs text-slate-600">Restituisce l'albero della distinta base a 3 livelli, con costing aggregato e semaforo di conformità LWG.</p>
-
-        <!-- CODE SWITCHER -->
-        <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950 text-slate-200">
+        <!-- CODE SWITCHER TABS -->
+        <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
           <div class="bg-slate-900 px-4 py-2 flex items-center justify-between text-xs border-b border-slate-800">
             <div class="flex gap-2">
-              <button onclick="setLang('bom-code', 'curl')" class="lang-btn-bom px-2 py-1 rounded bg-slate-800 text-white font-mono text-[11px]">cURL</button>
-              <button onclick="setLang('bom-code', 'py')" class="lang-btn-bom px-2 py-1 rounded text-slate-400 hover:text-white font-mono text-[11px]">Python</button>
-              <button onclick="setLang('bom-code', 'ts')" class="lang-btn-bom px-2 py-1 rounded text-slate-400 hover:text-white font-mono text-[11px]">TypeScript</button>
+              <button onclick="setTechLang('curl')" id="btn-lang-curl" class="px-2.5 py-1 rounded bg-slate-800 text-white font-mono text-[11px]">cURL</button>
+              <button onclick="setTechLang('python')" id="btn-lang-python" class="px-2.5 py-1 rounded text-slate-400 hover:text-white font-mono text-[11px]">Python (httpx)</button>
+              <button onclick="setTechLang('typescript')" id="btn-lang-typescript" class="px-2.5 py-1 rounded text-slate-400 hover:text-white font-mono text-[11px]">TypeScript</button>
             </div>
-            <button onclick="copyCode('bom-code-snippet')" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
+            <button onclick="copyTechCode('code-bom-snippet')" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
               <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copia
             </button>
           </div>
-          <pre id="bom-code-snippet" class="p-4 text-xs font-mono text-emerald-400 overflow-x-auto"><code>curl -X GET "https://api.footlink.it/api/bom/tree/PLM-SNK-042-IT" \
+          <pre id="code-bom-snippet" class="p-4 text-xs font-mono text-sky-300 overflow-x-auto"><code>curl -X GET "https://api.footlink.it/api/v1/bom/tree/PLM-SNK-042-IT" \
   -H "X-Tenant-Id: ten_marche_01" \
   -H "X-User-Role: product_dev" \
   -H "Accept: application/json"</code></pre>
         </div>
       </section>
 
-      <!-- ENDPOINT: ADVANCE WORK ORDER (SUBCONTRACTOR) -->
-      <section id="api-subcontractor" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-2 flex items-center justify-between">
+      <!-- ENDPOINT: SUBCONTRACTORS ADVANCE -->
+      <section id="api-subcontractors" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-2 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-mono font-bold text-xs">POST</span>
-            <span class="font-mono text-sm font-bold text-slate-900">/api/subcontractors/advance-phase</span>
+            <span class="px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 font-mono font-bold text-xs border border-emerald-800">POST</span>
+            <span class="font-mono text-sm font-bold text-white">/api/v1/subcontractors/advance-phase</span>
           </div>
-          <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Costo 0 € Terzista</span>
+          <span class="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">L6 Segregated</span>
         </div>
 
-        <p class="text-xs text-slate-600">Permette al laboratorio artigiano di registrare la lavorazione o avanzare una fase di commessa senza costi di licenza.</p>
-
-        <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950 text-slate-200">
+        <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
           <div class="bg-slate-900 px-4 py-2 flex items-center justify-between text-xs border-b border-slate-800">
-            <span class="text-slate-400 font-mono text-[11px]">Payload Esempio (JSON)</span>
-            <button onclick="copyCode('code-sub-advance')" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
+            <span class="text-slate-400 font-mono text-[11px]">Payload Richiesta JSON</span>
+            <button onclick="copyTechCode('code-sub-advance')" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
               <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copia
             </button>
           </div>
-          <pre id="code-sub-advance" class="p-4 text-xs font-mono text-sky-300 overflow-x-auto"><code>{
+          <pre id="code-sub-advance" class="p-4 text-xs font-mono text-amber-300 overflow-x-auto"><code>{
   "order_id": "PO-2026-881",
   "assignment_id": "SUB-ASS-042",
   "phase": "giunteria",
   "new_status": "completed",
-  "completed_pairs": 500,
+  "completed_pairs": 400,
   "anomaly_flag": false,
   "anomaly_photo_url": null,
   "artisan_note": "Fase ultimata con successo. Banco pronto per il ritiro."
@@ -399,93 +409,37 @@
         </div>
       </section>
 
-      <!-- ENDPOINT: DPP GENERATOR -->
-      <section id="api-dpp" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-2 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 font-mono font-bold text-xs">POST</span>
-            <span class="font-mono text-sm font-bold text-slate-900">/api/dpp/generate</span>
-          </div>
-          <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">ESPR 2024/1781</span>
+      <!-- SECTION: SECURITY & L6 -->
+      <section id="security-l6" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-3">
+          <h2 class="text-xl font-extrabold text-white">Sicurezza e Segregazione Multi-Tenant L6</h2>
         </div>
-
-        <p class="text-xs text-slate-600">Sintetizza in tempo reale il Passaporto Digitale di Prodotto conforme alle normative UE di tracciabilità calzaturiera e genera il codice QR GS1 Digital Link.</p>
-
-        <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950 text-slate-200">
-          <div class="bg-slate-900 px-4 py-2 flex items-center justify-between text-xs border-b border-slate-800">
-            <span class="text-slate-400 font-mono text-[11px]">Risposta HTTP 201 Created</span>
-            <button onclick="copyCode('code-dpp-res')" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
-              <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copia
-            </button>
-          </div>
-          <pre id="code-dpp-res" class="p-4 text-xs font-mono text-amber-300 overflow-x-auto"><code>{
-  "status": "success",
-  "passport_id": "DPP-8841-FTL",
-  "gs1_digital_link": "https://footlink.id/dpp/DPP-8841-FTL",
-  "traceability_score": 94.5,
-  "reparability_rating": "A",
-  "recycled_content_percent": 30.0,
-  "lwg_certified_leather": true,
-  "cryptographic_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "qr_svg_endpoint": "/api/dpp/qr/DPP-8841-FTL.svg"
-}</code></pre>
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          Il protocollo <strong>L6 Segregation Guard</strong> intercetta ogni query SQL a livello middleware. Se l'utente è autenticato con il ruolo di laboratorio terzista (<code class="text-sky-300">subcontractor</code>):
+        </p>
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-2 text-slate-300">
+          <div class="font-bold text-rose-400">Regole di Mascheramento Dati L6:</div>
+          <ul class="list-disc list-inside space-y-1 text-slate-400 text-[11px]">
+            <li>I campi <code class="text-slate-200">cost_per_pair</code> e <code class="text-slate-200">total_materials_cost</code> vengono mascherati con <code class="text-slate-200">null</code>.</li>
+            <li>Le righe di tabella relative ad altre lavorazioni (es. montaggio) sono escluse dalla query.</li>
+            <li>Qualsiasi tentativo di bypass ID genera un evento di sicurezza registrato nell'audit log con codice HTTP 403 Forbidden.</li>
+          </ul>
         </div>
       </section>
 
-      <!-- SECTION 4: INTEGRATION & DEPLOYMENT -->
-      <section id="int-erp" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-3">
-          <span class="text-xs font-bold uppercase tracking-wider text-sky-700">Enterprise Integrations</span>
-          <h2 class="text-xl font-bold text-slate-900 mt-1">Connessione ERP & E-Commerce</h2>
+      <!-- SECTION: DEVOPS & FINOPS -->
+      <section id="devops-docker" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-3">
+          <h2 class="text-xl font-extrabold text-white">DevOps, Containerizzazione & FinOps Playbook</h2>
         </div>
-        <p class="text-sm text-slate-600 leading-relaxed">
-          Footlink espone webhook asincroni per dialogare con i sistemi contabili e gestionali di fabbrica (SAP, Stealth, AS400) e con le piattaforme commerciali (Shopify, Joor, Farfetch).
-        </p>
-
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          <div class="border border-slate-200 rounded-xl p-4 bg-white shadow-2xs">
-            <h4 class="font-bold text-slate-900 mb-1 flex items-center gap-1.5">
-              <i data-lucide="server" class="w-4 h-4 text-indigo-600"></i> Flusso ERP (Stealth / SAP)
-            </h4>
-            <p class="text-slate-600 text-[11px] leading-relaxed">
-              Al momento dello sblocco del campionario (`collection_status: approved`), Footlink invia l'evento webhook <code class="bg-slate-100 p-0.5 rounded">bom.locked</code> con l'esplosione dei fabbisogni per taglia, consentendo all'ERP di emettere gli ordini di acquisto pellami e suole.
-            </p>
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
+            <span class="font-bold text-white block">Specifiche Container Docker</span>
+            <p class="text-slate-400 text-[11px]">Base: Linux Alpine 3.19 + Python 3.11-slim. Dimensione immagine: &lt; 180 MB. RAM Idle: ~85 MB. Startup time: &lt; 400 ms.</p>
           </div>
-          <div class="border border-slate-200 rounded-xl p-4 bg-white shadow-2xs">
-            <h4 class="font-bold text-slate-900 mb-1 flex items-center gap-1.5">
-              <i data-lucide="shopping-cart" class="w-4 h-4 text-emerald-600"></i> Flusso E-Commerce (Shopify)
-            </h4>
-            <p class="text-slate-600 text-[11px] leading-relaxed">
-              I canali digitali ricevono l'articolo PIM commerciale corredato da composizioni tessili certificate UE, foto modellate e il link univoco del passaporto DPP per visualizzare il badge di sostenibilità direttamente nella scheda prodotto.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- SECTION: DEPLOYMENT & FINOPS -->
-      <section id="deploy-finops" class="doc-section space-y-4">
-        <div class="border-b border-slate-200 pb-3">
-          <h2 class="text-xl font-bold text-slate-900">Deployment & FinOps Playbook</h2>
-        </div>
-        <p class="text-sm text-slate-600 leading-relaxed">
-          In conformità alle direttive CRO/CTO, Footlink è progettata per un'impronta computazionale minima (Cost-to-Serve < 0.05 € per modello/mese).
-        </p>
-        <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl text-xs space-y-2">
-          <div class="flex justify-between items-center text-slate-700 font-semibold">
-            <span>Container Docker Linux Alpine:</span>
-            <span class="font-mono text-slate-900">&lt; 180 MB</span>
-          </div>
-          <div class="flex justify-between items-center text-slate-700 font-semibold">
-            <span>Consumo RAM Backend (FastAPI):</span>
-            <span class="font-mono text-slate-900">~85 MB idle</span>
-          </div>
-          <div class="flex justify-between items-center text-slate-700 font-semibold">
-            <span>Database Relazionale:</span>
-            <span class="font-mono text-slate-900">PostgreSQL 16+ con indici GIN</span>
-          </div>
-          <div class="flex justify-between items-center text-slate-700 font-semibold">
-            <span>Circuit Breaker FinOps:</span>
-            <span class="font-mono text-emerald-600 font-bold">Attivo (Pause on limit)</span>
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
+            <span class="font-bold text-white block">Metrica FinOps Cost-to-Serve</span>
+            <p class="text-slate-400 text-[11px]">Costo computazionale medio per modello attivo &lt; 0,05 €/mese. Margine lordo SaaS costantemente mantenuto &gt; 75%.</p>
           </div>
         </div>
       </section>
@@ -493,41 +447,58 @@
     </main>
   </div>
 
-  <!-- JAVASCRIPT CONTROLLERS -->
+  <!-- FOOTER -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-500 mt-12">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div>
+        <strong class="text-white">Footlink Tech Docs</strong> — Portale Tecnico, Architettura & Interoperabilità ERP.
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="./training_portal.html" class="hover:text-amber-400 font-bold text-slate-400">Sei un Business User? Apri Training Portal</a>
+        <span>•</span>
+        <a href="/" class="hover:text-white font-semibold">Applicativo Footlink</a>
+      </div>
+    </div>
+  </footer>
+
   <script>
-    // Copy code helper
-    function copyCode(elementId) {
+    function copyTechCode(elementId) {
       const code = document.getElementById(elementId).innerText;
       navigator.clipboard.writeText(code).then(() => {
         alert('Codice copiato negli appunti!');
       });
     }
 
-    // Code Switcher for BOM API
-    function setLang(group, lang) {
-      const snippet = document.getElementById('bom-code-snippet');
-      document.querySelectorAll('.lang-btn-bom').forEach(btn => {
-        btn.className = "lang-btn-bom px-2 py-1 rounded text-slate-400 hover:text-white font-mono text-[11px]";
+    function setTechLang(lang) {
+      const snippet = document.getElementById('code-bom-snippet');
+      ['curl', 'python', 'typescript'].forEach(l => {
+        const btn = document.getElementById(`btn-lang-${l}`);
+        if (btn) {
+          if (l === lang) {
+            btn.className = "px-2.5 py-1 rounded bg-slate-800 text-white font-mono text-[11px]";
+          } else {
+            btn.className = "px-2.5 py-1 rounded text-slate-400 hover:text-white font-mono text-[11px]";
+          }
+        }
       });
-      event.target.className = "lang-btn-bom px-2 py-1 rounded bg-slate-800 text-white font-mono text-[11px]";
 
       if (lang === 'curl') {
-        snippet.innerText = `curl -X GET "https://api.footlink.it/api/bom/tree/PLM-SNK-042-IT" \\
+        snippet.innerText = `curl -X GET "https://api.footlink.it/api/v1/bom/tree/PLM-SNK-042-IT" \\
   -H "X-Tenant-Id: ten_marche_01" \\
   -H "X-User-Role: product_dev" \\
   -H "Accept: application/json"`;
-      } else if (lang === 'py') {
+      } else if (lang === 'python') {
         snippet.innerText = `import httpx
 
 headers = {
     "X-Tenant-Id": "ten_marche_01",
     "X-User-Role": "product_dev"
 }
-response = httpx.get("https://api.footlink.it/api/bom/tree/PLM-SNK-042-IT", headers=headers)
-bom_data = response.json()
-print("Costo Materiali:", bom_data["total_materials_cost"])`;
-      } else if (lang === 'ts') {
-        snippet.innerText = `const res = await fetch("https://api.footlink.it/api/bom/tree/PLM-SNK-042-IT", {
+response = httpx.get("https://api.footlink.it/api/v1/bom/tree/PLM-SNK-042-IT", headers=headers)
+bom = response.json()
+print("Costo Materiali:", bom["total_materials_cost"])`;
+      } else if (lang === 'typescript') {
+        snippet.innerText = `const res = await fetch("https://api.footlink.it/api/v1/bom/tree/PLM-SNK-042-IT", {
   headers: {
     "X-Tenant-Id": "ten_marche_01",
     "X-User-Role": "product_dev"
@@ -538,15 +509,13 @@ console.log("Upper components:", bom.levels.level_1_upper);`;
       }
     }
 
-    // Live search filter across doc sections
-    function filterDocs() {
-      const query = document.getElementById('doc-search').value.toLowerCase();
-      document.querySelectorAll('.doc-section').forEach(sec => {
-        const text = sec.innerText.toLowerCase();
-        if (text.includes(query)) {
-          sec.style.display = 'block';
+    function filterTechDocs() {
+      const q = document.getElementById('tech-search').value.toLowerCase();
+      document.querySelectorAll('.tech-card').forEach(c => {
+        if (c.innerText.toLowerCase().includes(q)) {
+          c.style.display = 'block';
         } else {
-          sec.style.display = 'none';
+          c.style.display = 'none';
         }
       });
     }
