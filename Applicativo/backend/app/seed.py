@@ -2443,8 +2443,7 @@ def seed_initial_data(db: FootlinkSQLitePersistence = db_manager, force: bool = 
         seed_sprint9_materials(db)
 
     # Sprint 6 Seeds: District Companies, Users, Tannery Batches, Documents & Production Orders
-    if len(db.list_companies()) == 0:
-        seed_district_companies_and_users(db)
+    seed_district_companies_and_users(db)
     if len(db.list_tannery_batches()) == 0:
         seed_tannery_batches_and_documents(db)
 

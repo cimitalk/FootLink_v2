@@ -113,13 +113,17 @@ export type ActiveWorkspaceModule =
   | "schema_studio"        // Modulo 06 (FTL-TECH-027)
   | "subcontractor_portal" // Modulo 07 (FTL-TECH-027)
   | "dpp_passport"         // Modulo 08 (FTL-TECH-027)
+  | "training_academy"     // Modulo Formazione & Onboarding Hub
+  | "tech_docs"            // Modulo Documentazione Tecnica & API
   // Backwards compatibility aliases
   | "district_paas"
   | "tannery_vault"
   | "production_orders"
   | "all"
   | "bridge_vertical_specs"
-  | "bom_costing";
+  | "bom_costing"
+  | "training_academy"
+  | "tech_docs";
 
 // ============================================================================
 // Sprint 5: Seasons & Collections Types (ADR-007)

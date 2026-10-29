@@ -27,6 +27,7 @@ export interface ProductModelsManagerProps {
   onDetachProduct: (modelId: string, pimItemId: string) => Promise<void> | void;
   onCreateProductFromModel?: (model: ProductModel) => void;
   onCreatePimFromModel?: (model: ProductModel) => void;
+  onSelectModel?: (model: ProductModel) => void;
   onSelectPimItem?: (item: PimCommercialItem) => void;
   onSelectVariantItem?: (
     variant: PlmProductionVariant,
@@ -75,6 +76,7 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
   onDetachProduct,
   onCreateProductFromModel,
   onCreatePimFromModel,
+  onSelectModel,
   onSelectPimItem,
   onSelectVariantItem,
 }) => {
@@ -504,7 +506,10 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
               return (
                 <div
                   key={model.model_id}
-                  onClick={() => setSelectedModelId(model.model_id)}
+                  onClick={() => {
+                    setSelectedModelId(model.model_id);
+                    onSelectModel?.(model);
+                  }}
                   className={`p-3 rounded-xl border transition-all cursor-pointer shadow-xs ${
                     isSelected
                       ? "bg-slate-900 text-white border-slate-900 ring-2 ring-slate-900/20"

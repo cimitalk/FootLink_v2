@@ -1015,224 +1015,6 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* ATELIER PROCESS STEPPER (FTL-CEO-037 & PRD-011)                           */}
-      {/* Flusso Logico Modelleria & Sviluppo Prodotto Calzature / Pelletteria      */}
-      {/* ========================================================================= */}
-      <div className="bg-white border border-[#E5E5E5] rounded-3xl p-5 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 pb-3 border-b border-neutral-100">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#707072]">
-                FLUSSO LOGICO UFFICIO PRODOTTO &amp; DISTINTA BASE
-              </span>
-            </div>
-            <h2 className="text-base font-extrabold text-[#111111] mt-0.5">
-              Atelier Stepper: Il ciclo continuo di ingegnerizzazione della calzatura
-            </h2>
-          </div>
-          <div className="text-xs text-[#707072]">
-            Dalla pianificazione della stagione alla distinta base e al Passaporto Digitale UE
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
-          {/* Step 1: Stagioni & Collezioni */}
-          <button
-            type="button"
-            onClick={() => onNavigateModule?.("seasons_collections")}
-            className="group relative p-3 rounded-2xl border text-left transition-all bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
-          >
-            <div className="flex items-center justify-between text-[10px] font-bold text-neutral-500 mb-1">
-              <span>FASE 01</span>
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-200 text-neutral-700">Mod. 01 ↗</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900">
-              <span>📅</span>
-              <span className="truncate">Stagioni &amp; Collezioni</span>
-            </div>
-            <p className="text-[10px] text-neutral-500 mt-1 line-clamp-1">
-              {seasons.length > 0 ? `${seasons.length} stagioni attive` : "Pianificazione moda"}
-            </p>
-          </button>
-
-          {/* Step 2: Modelli Base */}
-          <button
-            type="button"
-            onClick={() => setActiveOperationalTab("modelli")}
-            className={`group relative p-3 rounded-2xl border text-left transition-all ${
-              activeOperationalTab === "modelli"
-                ? "bg-[#111111] text-white border-[#111111] shadow-md ring-2 ring-emerald-400/40"
-                : "bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
-            }`}
-          >
-            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
-              <span className={activeOperationalTab === "modelli" ? "text-emerald-400" : "text-neutral-500"}>
-                FASE 02
-              </span>
-              <span
-                className={`text-[9px] px-1.5 py-0.2 rounded ${
-                  activeOperationalTab === "modelli"
-                    ? "bg-emerald-500/30 text-emerald-300 font-extrabold"
-                    : "bg-amber-100 text-amber-900"
-                }`}
-              >
-                {models.length} Modelli
-              </span>
-            </div>
-            <div
-              className={`flex items-center gap-1.5 text-xs font-bold ${
-                activeOperationalTab === "modelli" ? "text-white" : "text-neutral-900"
-              }`}
-            >
-              <span>📐</span>
-              <span className="truncate">Modelli di Base</span>
-            </div>
-            <p
-              className={`text-[10px] mt-1 line-clamp-1 ${
-                activeOperationalTab === "modelli" ? "text-neutral-300" : "text-neutral-500"
-              }`}
-            >
-              Forma, fondo, dima &amp; taglie
-            </p>
-          </button>
-
-          {/* Step 3: Varianti Prodotto */}
-          <button
-            type="button"
-            onClick={() => setActiveOperationalTab("catalogo")}
-            className={`group relative p-3 rounded-2xl border text-left transition-all ${
-              activeOperationalTab === "catalogo"
-                ? "bg-[#111111] text-white border-[#111111] shadow-md ring-2 ring-emerald-400/40"
-                : "bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
-            }`}
-          >
-            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
-              <span className={activeOperationalTab === "catalogo" ? "text-emerald-400" : "text-neutral-500"}>
-                FASE 03
-              </span>
-              <span
-                className={`text-[9px] px-1.5 py-0.2 rounded ${
-                  activeOperationalTab === "catalogo"
-                    ? "bg-emerald-500/30 text-emerald-300 font-extrabold"
-                    : "bg-neutral-200 text-neutral-800"
-                }`}
-              >
-                {allVariantsWithParent.length} Varianti
-              </span>
-            </div>
-            <div
-              className={`flex items-center gap-1.5 text-xs font-bold ${
-                activeOperationalTab === "catalogo" ? "text-white" : "text-neutral-900"
-              }`}
-            >
-              <span>📦</span>
-              <span className="truncate">Varianti Prodotto</span>
-            </div>
-            <p
-              className={`text-[10px] mt-1 line-clamp-1 ${
-                activeOperationalTab === "catalogo" ? "text-neutral-300" : "text-neutral-500"
-              }`}
-            >
-              Colori master &amp; codici PLM
-            </p>
-          </button>
-
-          {/* Step 4: Distinta Base (BOM) */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveOperationalTab("bom_tree");
-              setBomSubTab("tree");
-            }}
-            className={`group relative p-3 rounded-2xl border text-left transition-all ${
-              activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
-                ? "bg-[#111111] text-white border-[#111111] shadow-md ring-2 ring-emerald-400/40"
-                : "bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
-            }`}
-          >
-            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
-              <span
-                className={
-                  activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
-                    ? "text-emerald-400"
-                    : "text-neutral-500"
-                }
-              >
-                FASE 04
-              </span>
-              <span
-                className={`text-[9px] px-1.5 py-0.2 rounded ${
-                  activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
-                    ? "bg-emerald-500/30 text-emerald-300 font-extrabold"
-                    : "bg-emerald-100 text-emerald-900"
-                }`}
-              >
-                3 Livelli BOM
-              </span>
-            </div>
-            <div
-              className={`flex items-center gap-1.5 text-xs font-bold ${
-                activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
-                  ? "text-white"
-                  : "text-neutral-900"
-              }`}
-            >
-              <span>🌿</span>
-              <span className="truncate">Distinta Base (BOM)</span>
-            </div>
-            <p
-              className={`text-[10px] mt-1 line-clamp-1 ${
-                activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
-                  ? "text-neutral-300"
-                  : "text-neutral-500"
-              }`}
-            >
-              Copia da modello &amp; materiali
-            </p>
-          </button>
-
-          {/* Step 5: Assegnazione Fornitori & Terzisti */}
-          <button
-            type="button"
-            onClick={() => onNavigateModule?.("vendor_management")}
-            className="group relative p-3 rounded-2xl border text-left transition-all bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
-          >
-            <div className="flex items-center justify-between text-[10px] font-bold text-neutral-500 mb-1">
-              <span>FASE 05</span>
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-200 text-neutral-700">Mod. 04 ↗</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900">
-              <span>🏭</span>
-              <span className="truncate">Fornitori &amp; Fasi</span>
-            </div>
-            <p className="text-[10px] text-neutral-500 mt-1 line-clamp-1">
-              {vendors.length > 0 ? `${vendors.length} fornitori qualificati` : "Filiera & Terzisti 0 €"}
-            </p>
-          </button>
-
-          {/* Step 6: Tracciabilità & Passaporto DPP */}
-          <button
-            type="button"
-            onClick={() => onNavigateModule?.("dpp_passport")}
-            className="group relative p-3 rounded-2xl border text-left transition-all bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
-          >
-            <div className="flex items-center justify-between text-[10px] font-bold text-neutral-500 mb-1">
-              <span>FASE 06</span>
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-200 text-neutral-700">Mod. 08 ↗</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900">
-              <span>🛡️</span>
-              <span className="truncate">Passaporto DPP</span>
-            </div>
-            <p className="text-[10px] text-neutral-500 mt-1 line-clamp-1">
-              Tracciabilità ESPR &amp; Dogane
-            </p>
-          </button>
-        </div>
-      </div>
-
       {lifecycleGateError && (
         <div className="bg-rose-50 border-2 border-rose-500 text-rose-950 rounded-2xl p-4 shadow-md flex items-center justify-between gap-4 text-xs font-bold">
           <span>{lifecycleGateError}</span>
@@ -1246,80 +1028,146 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
         </div>
       )}
 
-      {/* Sprint 8 / FTL-CEO-027: Operational Navigation Tabs Reorganized: Modelli, Prodotti, Distinta Base, Colori */}
-      <div className="flex items-center gap-2 border-b border-neutral-200 pb-2 overflow-x-auto">
-        <button
-          type="button"
-          onClick={() => setActiveOperationalTab("modelli")}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
-            activeOperationalTab === "modelli"
-              ? "bg-[#111111] text-white shadow-sm"
-              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-          }`}
-        >
-          <span>📐</span>
-          <span>Modelli</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-200 text-amber-950 font-extrabold">
-            {models?.length || 0}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveOperationalTab("catalogo")}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
-            activeOperationalTab === "catalogo"
-              ? "bg-[#111111] text-white shadow-sm"
-              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-          }`}
-        >
-          <span>📦</span>
-          <span>Prodotti</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-neutral-800 text-neutral-300">
-            {filteredVariants.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setActiveOperationalTab("bom_tree");
-            setBomSubTab("tree");
-          }}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
-            activeOperationalTab === "bom_tree"
-              ? "bg-[#111111] text-white shadow-sm"
-              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-          }`}
-        >
-          <span>🌿</span>
-          <span>Distinta Base</span>
-          {currentVariant && (
-            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900">
-              {currentVariant.variant_code}
+      {/* ========================================================================= */}
+      {/* UNIFIED ATELIER LEVEL-2 NAVIGATION BAR (ADR-020 & FTL-CEO-039)            */}
+      {/* Elimina la triplice sovrapposizione visiva segnalata dal Founder:        */}
+      {/* sostituisce lo stepper a 6 box con una barra Level-2 snella e discreta   */}
+      {/* ========================================================================= */}
+      <div className="bg-white border border-[#E5E5E5] rounded-2xl p-3 shadow-xs space-y-2.5">
+        {/* Subtle Process Contextual Breadcrumb (Zero-Redundancy) */}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-neutral-500 border-b border-neutral-100 pb-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="font-extrabold uppercase tracking-widest text-[#707072] text-[9.5px]">
+              CICLO PROCESSO ATELIER:
             </span>
-          )}
-        </button>
+            <button
+              type="button"
+              onClick={() => onNavigateModule?.("seasons_collections")}
+              className="hover:text-neutral-900 font-semibold text-neutral-600 transition flex items-center gap-0.5 hover:underline"
+              title="Passa a Modulo 01: Stagioni & Collezioni"
+            >
+              <span>01 Stagioni</span>
+              <span className="text-[9px] text-neutral-400">↗</span>
+            </button>
+            <span className="text-neutral-300">➔</span>
+            <span className="font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200">
+              02 Ingegneria PLM (Modelli → Varianti → Distinta Base)
+            </span>
+            <span className="text-neutral-300">➔</span>
+            <button
+              type="button"
+              onClick={() => onNavigateModule?.("vendor_management")}
+              className="hover:text-neutral-900 font-semibold text-neutral-600 transition flex items-center gap-0.5 hover:underline"
+              title="Passa a Modulo 04: Gestione Fornitori & Terzisti"
+            >
+              <span>04 Fornitori &amp; Fasi</span>
+              <span className="text-[9px] text-neutral-400">↗</span>
+            </button>
+            <span className="text-neutral-300">➔</span>
+            <button
+              type="button"
+              onClick={() => onNavigateModule?.("dpp_passport")}
+              className="hover:text-neutral-900 font-semibold text-neutral-600 transition flex items-center gap-0.5 hover:underline"
+              title="Passa a Modulo 08: Passaporto Digitale UE"
+            >
+              <span>08 Passaporto DPP</span>
+              <span className="text-[9px] text-neutral-400">↗</span>
+            </button>
+          </div>
+          <div className="text-[10.5px] text-neutral-400 hidden sm:block">
+            {models?.length || 0} Modelli · {allVariantsWithParent.length} Varianti · {allVariantsWithParent.filter(v => v.bom_items.length > 0).length} con BOM
+          </div>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => setActiveOperationalTab("colorway")}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
-            activeOperationalTab === "colorway"
-              ? "bg-[#111111] text-white shadow-sm"
-              : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-          }`}
-        >
-          <span>🎨</span>
-          <span>Colori</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-sky-200 text-sky-950 font-bold">
-            ΔE ≤ 2.5
-          </span>
-        </button>
+        {/* 4 Clean Operational Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setActiveOperationalTab("modelli")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+              activeOperationalTab === "modelli"
+                ? "bg-[#111111] text-white shadow-sm"
+                : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+            }`}
+          >
+            <span>📐</span>
+            <span>1. Modelli di Base</span>
+            <span
+              className={`px-2 py-0.2 rounded-full text-[10px] font-extrabold ${
+                activeOperationalTab === "modelli"
+                  ? "bg-amber-400 text-neutral-950"
+                  : "bg-amber-100 text-amber-900"
+              }`}
+            >
+              {models?.length || 0}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveOperationalTab("catalogo")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+              activeOperationalTab === "catalogo"
+                ? "bg-[#111111] text-white shadow-sm"
+                : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+            }`}
+          >
+            <span>📦</span>
+            <span>2. Varianti &amp; Stile</span>
+            <span
+              className={`px-2 py-0.2 rounded-full text-[10px] font-extrabold ${
+                activeOperationalTab === "catalogo"
+                  ? "bg-emerald-400 text-neutral-950"
+                  : "bg-neutral-200 text-neutral-800"
+              }`}
+            >
+              {filteredVariants.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveOperationalTab("bom_tree");
+              setBomSubTab("tree");
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+              activeOperationalTab === "bom_tree"
+                ? "bg-[#111111] text-white shadow-sm"
+                : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+            }`}
+          >
+            <span>🌿</span>
+            <span>3. Distinta Base (BOM)</span>
+            {currentVariant && (
+              <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-bold">
+                {currentVariant.variant_code}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveOperationalTab("colorway")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+              activeOperationalTab === "colorway"
+                ? "bg-[#111111] text-white shadow-sm"
+                : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+            }`}
+          >
+            <span>🎨</span>
+            <span>4. Colori &amp; Lab-Dip</span>
+            <span className="px-2 py-0.2 rounded-full text-[10px] bg-sky-100 text-sky-900 font-bold">
+              ΔE ≤ 2.5
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* Sticky Active Variant Context Bar (FTL-CEO-020 & FTL-CEO-034: Ancoraggio Corretto & Distinzione Modello vs Variante) */}
-      {currentVariant && (
+      {/* Sticky Active Variant Context Bar (ADR-020 / FTL-CEO-039)
+          ESCLUSIVO per le viste di Variante (Prodotti, Distinta Base, Colori).
+          NASCOSTO nel tab Modelli per evitare sovrapposizioni e confusione di scope! */}
+      {activeOperationalTab !== "modelli" && currentVariant && (
         <div className="sticky top-[73px] z-30 bg-neutral-900/95 backdrop-blur-md text-white rounded-2xl p-3 shadow-xl border border-neutral-700/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-inner">
@@ -1440,6 +1288,17 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           onDetachProduct={onDetachProductFromModel || (() => {})}
           onCreateProductFromModel={handleCreateProductFromModel}
           onCreatePimFromModel={handleOpenCreatePimModal}
+          onSelectModel={(model) => {
+            const matchingPim = pimItems.find((p) => p.model_id === model.model_id);
+            if (matchingPim) {
+              setSelectedPimId(matchingPim.pim_item_id);
+              onSelectPim(matchingPim);
+              if (matchingPim.plm_variants && matchingPim.plm_variants.length > 0) {
+                setSelectedVariantId(matchingPim.plm_variants[0].plm_variant_id);
+                onSelectVariant(matchingPim.plm_variants[0]);
+              }
+            }
+          }}
           onSelectVariantItem={(variant, parentPim, targetTab = "bom_tree") => {
             setSelectedPimId(parentPim.pim_item_id);
             setSelectedVariantId(variant.plm_variant_id);

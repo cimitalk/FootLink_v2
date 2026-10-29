@@ -14,3 +14,11 @@ Tutti i ruoli della C-Suite di **Footlink** sono approvati dal Founder e configu
 | **CPO** | [Role_CPO_Footlink.md](./Role_CPO_Footlink.md) | `footlink-cpo` | `inherit` / `pro` | Modello dati **1 PIM (Vendita) ↔ N PLM (Produzione)**, BOM, tracciabilità terzisti, DPP UE e scoring RICE. | [`FTL-PROD-001`](../../tasks/FTL-PROD-001.json) |
 | **CRO** | [Role_CRO_Footlink.md](./Role_CRO_Footlink.md) | `footlink-cro` | `inherit` / `pro` | Modello commerciale a rete (Terzisti a 0 €, PMI SaaS, Brand Enterprise), FinOps (Margine > 75%), pipeline B2B. | [`FTL-REV-001`](../../tasks/FTL-REV-001.json) |
 | **CMO** | [Role_CMO_Footlink.md](./Role_CMO_Footlink.md) | `footlink-cmo` | `inherit` / `flash` | Brand identity, acquisizione organica nei distretti (LinkedIn, SEO, fiere), zero paid ads e controllo uscite L5. | [`FTL-MKT-001`](../../tasks/FTL-MKT-001.json) |
+
+---
+
+## 🎨 Presidi Specialistici di Governance
+
+| Ruolo | File di Specifica | Riporta a | Focus Primario | Riferimento ADR |
+|---|---|:---:|---|:---:|
+| **Lead UX/UI Designer & Ergonomics Officer** | [Role_UX_Lead_Footlink.md](./Role_UX_Lead_Footlink.md) | **CPO** & **CMO** | Regola anti-ridondanza navigazione (max 2 livelli), isolamento dello scope contestuale, audit ergonomico continuo e rispetto del Design System `MKT-BRAND-002`. | [`ADR-020`](../../adr/ADR-020-ux-ui-anti-redundancy-standards-and-design-lead-mandate.md) |

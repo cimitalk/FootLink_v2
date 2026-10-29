@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FOOTLINK — Il Sistema Operativo PLM + PIM per la Moda Italiana</title>
+  <meta name="description" content="Piattaforma PLM+PIM per la manifattura calzaturiera e pelletteria Made in Italy. 1 PIM ↔ N PLM, Distinta Base a 3 livelli, Passaporto Digitale UE (DPP) e Terzisti sempre a 0 €." />
+  
+  <!-- Open Graph & Social Cards -->
+  <meta property="og:title" content="FOOTLINK — Il Sistema Operativo per la Moda Italiana" />
+  <meta property="og:description" content="Connetti Stile e Fabbrica. Distinta base gerarchica, Passaporto Digitale UE e Terzisti sempre a 0 €." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts (Barlow Condensed, Inter, JetBrains Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Main Website Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ================= SITE HEADER & NAVIGATION ================= -->
+  <header class="site-header">
+    <div class="container nav-inner">
+      <a href="#hero" class="brand-lockup">
+        <!-- SVG Mark from DAM Suite -->
+        <svg class="brand-logo-mark" viewBox="0 0 46 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 20L8 2H16L8 20H0Z" fill="#00FF87"/>
+          <path d="M10 20L16 6H24L17 20H10Z" fill="#00FF87" fill-opacity="0.8"/>
+          <path d="M0 22H22L20.5 24H-1L0 22Z" fill="#00FF87"/>
+        </svg>
+        <span class="brand-text">FOOTLINK</span>
+        <span class="brand-tag">PAAS DISTRETTUALE</span>
+      </a>
+
+      <!-- Desktop Nav Menu -->
+      <ul class="nav-links" id="navMenu">
+        <li><a href="#piattaforma" class="nav-link">Piattaforma</a></li>
+        <li><a href="#spaccato-tecnico" class="nav-link">Spaccato 3D BOM</a></li>
+        <li><a href="#filiera-radar" class="nav-link">Distretti & Filiera</a></li>
+        <li><a href="#pricing" class="nav-link">Pricing & ROI</a></li>
+        <li><a href="#contatti" class="nav-link">Contatti</a></li>
+      </ul>
+
+      <!-- Action Buttons -->
+      <div class="nav-actions">
+        <button class="btn btn-ghost" data-open-modal="demoModal">Richiedi Demo</button>
+        <button class="btn btn-primary" data-open-modal="signupModal" data-signup-tier="pmi">Iscriviti</button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu di Navigazione">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= HERO SECTION (WITH COMPUTER MOTION CANVAS) ================= -->
+  <section class="hero-section" id="hero">
+    <!-- Mathematical Canvas Motion Engine -->
+    <canvas id="heroMotionCanvas" class="hero-canvas"></canvas>
+
+    <div class="container hero-content">
+      <div class="hero-telemetry-badge">
+        <span class="status-dot"></span>
+        <span class="text-white">LIVE DISTRETTI IT</span>
+        <span class="text-muted">·</span>
+        <span class="text-emerald">DPP ESPR READY</span>
+        <span class="text-muted">·</span>
+        <span class="mono text-muted">[60 FPS MATH ENGINE]</span>
+      </div>
+
+      <h1 class="display-title hero-title">
+        IL SISTEMA OPERATIVO PER LA CALZATURA E PELLETTERIA ITALIANA
+      </h1>
+
+      <p class="hero-subtitle">
+        Unifica Stile e Fabbrica: <strong class="text-white">1 Articolo Commerciale PIM ↔ N Varianti Industriali PLM</strong>.
+        Distinta Base gerarchica a 3 livelli, Passaporto Digitale del Prodotto (DPP UE) conforme ESPR 2024/1781
+        e <strong class="text-emerald">Terzisti sempre a Costo Zero (0,00 €)</strong>.
+      </p>
+
+      <div class="hero-cta-group">
+        <button class="btn btn-primary btn-lg" data-open-modal="demoModal">
+          <span>Richiedi Demo Guidata</span>
+          <span class="mono">→</span>
+        </button>
+        <button class="btn btn-white btn-lg" data-open-modal="signupModal" data-signup-tier="terzista">
+          <span>Inizia Subito (Terzisti a 0 €)</span>
+        </button>
+        <a href="#spaccato-tecnico" class="btn btn-ghost btn-lg">
+          <span>Esplora lo Spaccato Tecnico</span>
+        </a>
+      </div>
+
+      <!-- Quick Telemetry Metrics Bar -->
+      <div class="hero-metrics-bar">
+        <div class="metric-item">
+          <div class="metric-value text-emerald">1 : N</div>
+          <div class="metric-label">MODELLO PIM ↔ PLM CORE</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value">3 LIVELLI</div>
+          <div class="metric-label">DISTINTA BASE ATELIER</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value text-emerald">0,00 €</div>
+          <div class="metric-label">CANONE TERZISTI PERPETUO</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value text-ruby">ESPR 2024</div>
+          <div class="metric-label">PASSAPORTO DPP UE READY</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4 PILLARS CORE PLATFORM ================= -->
+  <section class="section-padding" id="piattaforma">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Architettura di Filiera · I 4 Pilastri</div>
+        <h2 class="display-title section-title">COSTRUITO PER LE SPECIFICITÀ DELLA MANIFATTURA D'ECCELLENZA</h2>
+        <p class="section-desc">
+          I tradizionali software generici falliscono perché ignorano la realtà della filiera italiana.
+          Footlink è stato progettato fin dalle fondamenta attorno al flusso reale tra uffici stile, laboratori di modelleria e terzisti.
+        </p>
+      </div>
+
+      <div class="pillars-grid">
+        <!-- Pillar 1 -->
+        <div class="pillar-card">
+          <div class="pillar-card-num">
+            <span>01 / DOMINIO CENTRALE</span>
+            <span class="mono text-emerald">[1:N PIM↔PLM]</span>
+          </div>
+          <div class="pillar-icon-box">👞</div>
+          <h3 class="pillar-card-title">1 Articolo PIM ↔ N Varianti PLM</h3>
+          <p class="pillar-card-desc">
+            Lo Stile definisce il modello commerciale una sola volta. L'Industrializzazione genera tutte le varianti di colore,
+            pellame e suola con calcolo automatico dei fabbisogni e sincronizzazione istantanea dei feed e-commerce.
+          </p>
+        </div>
+
+        <!-- Pillar 2 -->
+        <div class="pillar-card">
+          <div class="pillar-card-num">
+            <span>02 / INDUSTRIALIZZAZIONE</span>
+            <span class="mono text-emerald">[ISO BOM 3-LEVELS]</span>
+          </div>
+          <div class="pillar-icon-box">📐</div>
+          <h3 class="pillar-card-title">Distinta Base a 3 Livelli Reale</h3>
+          <p class="pillar-card-desc">
+            Organizzazione gerarchica L1 (Gruppi Costruttivi), L2 (Sotto-Assiemi di tomaificio e suolificio) e L3 (Materie Prime e Minuterie).
+            Duplicazione ricorsiva dei rami e sostituzione massiva (Bulk Swap) con controllo automatico delle tolleranze.
+          </p>
+        </div>
+
+        <!-- Pillar 3 -->
+        <div class="pillar-card">
+          <div class="pillar-card-num">
+            <span>03 / NETWORK COLLABORATIVO</span>
+            <span class="mono text-emerald">[0,00 € TERZISTI]</span>
+          </div>
+          <div class="pillar-icon-box">🤝</div>
+          <h3 class="pillar-card-title">Terzisti e Façonisti a Costo Zero</h3>
+          <p class="pillar-card-desc">
+            Elimina le barriere all'adozione: orlatori, tomaifici e montatori accedono gratis per sempre tramite portale mobile semplificato.
+            Avanzamento lotti in 3 clic senza formazione o licenze aggiuntive per il committente.
+          </p>
+        </div>
+
+        <!-- Pillar 4 -->
+        <div class="pillar-card">
+          <div class="pillar-card-num">
+            <span>04 / CONFORMITÀ NORMATIVA</span>
+            <span class="mono text-ruby">[EUDR & ESPR 2024]</span>
+          </div>
+          <div class="pillar-icon-box">🛡️</div>
+          <h3 class="pillar-card-title">Passaporto Digitale UE & Vault LWG</h3>
+          <p class="pillar-card-desc">
+            Generatore istantaneo di QR Code Passaporto DPP conforme ai regolamenti UE ESPR 2024/1781.
+            Vault crittografico con hash SHA-256 per certificazioni conceria LWG, ICEC e documentazione deforestazione EUDR.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INTERACTIVE 3D EXPLODED BLUEPRINT ================= -->
+  <section class="section-padding" id="spaccato-tecnico" style="background: #08080A;">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Simulatore Interattivo · Computer Motion</div>
+        <h2 class="display-title section-title">SPACCATO TECNICO AD ESPLOSO DISTINTA BASE 3D</h2>
+        <p class="section-desc">
+          Ispeziona la decomposizione gerarchica di una calzatura d'alta gamma Made in Italy.
+          Muovi lo slider o clicca su ciascun layer per visualizzare fornitore distrettuale, scheda materiale e certificazioni ESG.
+        </p>
+      </div>
+
+      <div class="blueprint-wrapper">
+        <!-- Interactive Canvas Column -->
+        <div class="blueprint-canvas-col">
+          <canvas id="shoeBlueprintCanvas" class="shoe-canvas"></canvas>
+
+          <!-- Explosion Slider Controls -->
+          <div class="blueprint-controls">
+            <span class="slider-label">ESPLOSIONE DISTINTA BASE:</span>
+            <input type="range" id="explosionRangeSlider" class="blueprint-slider" min="0" max="1" step="0.01" value="0.5" />
+            <span class="mono text-emerald" id="explosionValLabel" style="min-width: 45px; font-weight: bold;">50%</span>
+            <button class="btn btn-ghost" id="autoPlayBlueprintBtn" style="padding: 6px 14px; font-size: 11px;">
+              ▶ Avvia Auto-Esplosione
+            </button>
+          </div>
+        </div>
+
+        <!-- Real-Time BOM Inspector Card -->
+        <div class="inspector-col">
+          <div>
+            <span class="inspector-badge" id="inspectLayerBadge">L1-UPPER · L1 GRUPPO TOMAIA</span>
+            <h3 class="inspector-title" id="inspectLayerTitle">Tomaia in Vitello Pieno Fiore & Linguetta</h3>
+
+            <div class="inspector-detail-row">
+              <span class="detail-label">Materiale & Spessore</span>
+              <span class="detail-value" id="inspectLayerMaterial">Pelle Bovina Pieno Fiore Bottalata 1.4-1.6mm</span>
+            </div>
+
+            <div class="inspector-detail-row">
+              <span class="detail-label">Fornitore Qualificato</span>
+              <span class="detail-value" id="inspectLayerSupplier">Conceria Montebello SpA (Santa Croce sull’Arno)</span>
+            </div>
+
+            <div class="inspector-detail-row">
+              <span class="detail-label">Distretto di Origine</span>
+              <span class="detail-value" id="inspectLayerDistrict">Distretto Conciario Toscano</span>
+            </div>
+
+            <div class="inspector-detail-row">
+              <span class="detail-label">Stima Costo Industriale (L6 Segregato)</span>
+              <span class="detail-value text-emerald" id="inspectLayerCost">€ 24.50 / paio</span>
+            </div>
+
+            <div class="inspector-detail-row">
+              <span class="detail-label">Certificazioni di Filiera</span>
+              <div class="cert-tags-container" id="inspectLayerCerts">
+                <span class="cert-tag">LWG Gold Rated</span>
+                <span class="cert-tag">EUDR Traceable (SHA-256)</span>
+                <span class="cert-tag">REACH Compliant</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--color-border-subtle);">
+            <button class="btn btn-primary" style="width: 100%;" data-open-modal="demoModal">
+              Richiedi Demo per il tuo Distretto →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DISTRICTS RADAR & FILIERA ================= -->
+  <section class="section-padding" id="filiera-radar">
+    <div class="container">
+      <div class="radar-layout">
+        <!-- Radar Box -->
+        <div class="radar-box">
+          <canvas id="districtsRadarCanvas" class="radar-canvas"></canvas>
+          <div style="margin-top: 16px; text-align: center;">
+            <div class="mono text-emerald" style="font-size: 11px; font-weight: 700;">
+              TELEMETRIA ATTIVA SUI 5 DISTRETTI NAZIONALI
+            </div>
+            <div class="text-muted" style="font-size: 10px; margin-top: 4px;">
+              Copertura integrata Fermo, Brenta, Santa Croce, Scandicci, Caserta e Barletta.
+            </div>
+          </div>
+        </div>
+
+        <!-- Districts Narrative -->
+        <div class="districts-content-box">
+          <div class="section-eyebrow">PaaS Distrettuale & Viralità di Rete</div>
+          <h2 class="display-title" style="font-size: clamp(32px, 4vw, 48px); margin-bottom: 20px;">
+            LA RETE DEI DISTRETTI ITALIANI CONNESSA IN TEMPO REALE
+          </h2>
+          <p>
+            In Italia la produzione di calzature di alta gamma e pelletteria non avviene all'interno di una singola fabbrica chiusa,
+            ma attraverso centinaia di laboratori altamente specializzati distribuiti nei distretti storici.
+          </p>
+
+          <ul class="districts-checklist">
+            <li>
+              <span class="check-icon">✓</span>
+              <span><strong>Avanzamento Lavorazioni Senza Attriti:</strong> Il Brand o la PMI assegna le fasi di tranciatura, orlatura o montaggio; il terzista riceve la scheda di lavorazione protetta (con costi L6 oscurati).</span>
+            </li>
+            <li>
+              <span class="check-icon">✓</span>
+              <span><strong>Tracciabilità Conceria EUDR e LWG:</strong> Controllo automatico dei certificati ambientali, scadenze DURC e rating di affidabilità qualità/puntualità (0-100).</span>
+            </li>
+            <li>
+              <span class="check-icon">✓</span>
+              <span><strong>Viralità a Costo Zero (ADR-004):</strong> I façonisti non pagano alcuna licenza (0,00 € perpetuo), garantendo un tasso di adesione di filiera prossimo al 100%.</span>
+            </li>
+          </ul>
+
+          <div style="margin-top: 32px;">
+            <button class="btn btn-white" data-open-modal="signupModal" data-signup-tier="terzista">
+              Accedi come Laboratorio / Terzista (0 €) →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRICING & INTERACTIVE ROI CALCULATOR ================= -->
+  <section class="section-padding" id="pricing">
+    <div class="container">
+      <div class="pricing-header">
+        <div class="section-eyebrow">Piani Trasparenti & Zero Sorprese</div>
+        <h2 class="display-title section-title">UN MODELLO ECONOMICO CHE PREMIA LA CRESCITA DELLA FILIERA</h2>
+        <p class="section-desc">
+          Nessun costo per postazione per i tuoi fornitori esterni. Scegli il piano adatto alle dimensioni della tua azienda.
+        </p>
+
+        <!-- Monthly / Annual Toggle -->
+        <div class="pricing-switch-wrapper">
+          <span style="color: #fff;">Fatturazione Mensile</span>
+          <label class="switch">
+            <input type="checkbox" id="billingToggle" checked />
+            <span class="slider-toggle"></span>
+          </label>
+          <span style="color: #fff;">Fatturazione Annuale</span>
+          <span class="discount-badge">-20% RISPARMIO</span>
+        </div>
+      </div>
+
+      <!-- Pricing Cards 3 Tiers -->
+      <div class="pricing-grid">
+        <!-- Tier 3: Subcontractors -->
+        <div class="pricing-card">
+          <h3 class="tier-name">Terzisti & Laboratori</h3>
+          <p class="tier-desc">Per orlatori, tomaifici, trancerie e montatori che lavorano su commessa.</p>
+
+          <div class="tier-price-box">
+            <span class="currency">€</span>
+            <span class="amount text-emerald">0</span>
+            <span class="period">/ per sempre</span>
+          </div>
+
+          <ul class="tier-features">
+            <li><span class="check-icon">✓</span> Canone 0,00 € perpetuo (nessun costo fisso)</li>
+            <li><span class="check-icon">✓</span> Ricezione schede tecniche e ordini in digitale</li>
+            <li><span class="check-icon">✓</span> Avanzamento fasi da smartphone in 3 clic</li>
+            <li><span class="check-icon">✓</span> Connessione con infiniti Brand committenti</li>
+            <li><span class="check-icon">✓</span> Supporto via WhatsApp e Web prioritario</li>
+          </ul>
+
+          <button class="btn btn-ghost" data-open-modal="signupModal" data-signup-tier="terzista">
+            Attiva Account 0 €
+          </button>
+        </div>
+
+        <!-- Tier 2: Manufacturing SMEs (Featured) -->
+        <div class="pricing-card featured">
+          <div class="card-top-tag">PIÙ SCELTO DAI CALZATURIFICI</div>
+          <h3 class="tier-name">PMI Manifatturiere</h3>
+          <p class="tier-desc">Per calzaturifici e pelletterie che sviluppano collezioni proprie e per conto terzi.</p>
+
+          <div class="tier-price-box">
+            <span class="currency">€</span>
+            <span class="amount text-emerald" id="pricePmi">119</span>
+            <span class="period" id="periodPmi">€ / mese (fatturato annualmente)</span>
+          </div>
+
+          <ul class="tier-features">
+            <li><span class="check-icon">✓</span> <strong>Modelli e Varianti PLM illimitati</strong></li>
+            <li><span class="check-icon">✓</span> <strong>Distinta Base a 3 Livelli gerarchica</strong></li>
+            <li><span class="check-icon">✓</span> <strong>Fino a 15 Utenti Interni aziendali</strong></li>
+            <li><span class="check-icon">✓</span> <strong>Terzisti di filiera illimitati a 0,00 €</strong></li>
+            <li><span class="check-icon">✓</span> Albo Fornitori 360° & Vault Conceria LWG</li>
+            <li><span class="check-icon">✓</span> Simulatore Costi Industriali & Margini</li>
+            <li><span class="check-icon">✓</span> Generatore Passaporto DPP UE illimitato</li>
+          </ul>
+
+          <button class="btn btn-primary" data-open-modal="signupModal" data-signup-tier="pmi">
+            Inizia Prova Gratuita 30 Giorni
+          </button>
+        </div>
+
+        <!-- Tier 1: Luxury Fashion Brands -->
+        <div class="pricing-card">
+          <h3 class="tier-name">Fashion Brand & Gruppi</h3>
+          <p class="tier-desc">Per maison del lusso, multi-brand e gruppi industriali con filiere estese.</p>
+
+          <div class="tier-price-box">
+            <span class="amount" style="font-size: 38px;">Personalizzato</span>
+          </div>
+
+          <ul class="tier-features">
+            <li><span class="check-icon">✓</span> Tutte le funzionalità del piano PMI</li>
+            <li><span class="check-icon">✓</span> Multi-Brand, Multi-Season e Multi-Tenant L6</li>
+            <li><span class="check-icon">✓</span> Integrazioni ERP (SAP, Stealth, AS400)</li>
+            <li><span class="check-icon">✓</span> API REST dedicate e Webhook in tempo reale</li>
+            <li><span class="check-icon">✓</span> Audit ESG & Supporto Notarile Digitale EUDR</li>
+            <li><span class="check-icon">✓</span> SLA garantito 99.9% e Customer Success dedicato</li>
+          </ul>
+
+          <button class="btn btn-ghost" data-open-modal="demoModal">
+            Parla con un Nostro Esperto
+          </button>
+        </div>
+      </div>
+
+      <!-- Interactive ROI & Savings Calculator -->
+      <div class="roi-card">
+        <div class="roi-grid">
+          <div>
+            <div class="section-eyebrow">Calcolatore Dinamico FinOps</div>
+            <h3 style="font-size: 24px; font-weight: 800; margin-bottom: 12px;">
+              CALCOLA IL TUO RISPARMIO CON FOOTLINK
+            </h3>
+            <p style="font-size: 14px; color: var(--color-muted-text); margin-bottom: 24px;">
+              I vecchi software PLM applicano costi di licenza nascosti per ogni terzista esterno (€ 600 - € 1.200/anno)
+              e richiedono centinaia di ore per la gestione manuale di schede tecniche e distinte base.
+            </p>
+
+            <!-- Sliders -->
+            <div class="slider-group">
+              <div class="slider-group-header">
+                <span>Volume di Produzione Annuo:</span>
+                <span class="mono text-emerald" id="valPairs">50.000 paia/anno</span>
+              </div>
+              <input type="range" class="slider-ui" id="sliderPairs" min="10000" max="300000" step="5000" value="50000" />
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-group-header">
+                <span>Modelli / Varianti per Stagione:</span>
+                <span class="mono text-emerald" id="valModels">80 modelli/stagione</span>
+              </div>
+              <input type="range" class="slider-ui" id="sliderModels" min="20" max="250" step="5" value="80" />
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-group-header">
+                <span>Laboratori Terzisti Coinvolti:</span>
+                <span class="mono text-emerald" id="valTerzisti">12 laboratori terzisti</span>
+              </div>
+              <input type="range" class="slider-ui" id="sliderTerzisti" min="3" max="50" step="1" value="12" />
+            </div>
+          </div>
+
+          <!-- Dynamic Results Box -->
+          <div class="roi-results-box">
+            <div class="roi-metric-lg">
+              <span class="detail-label">Risparmio Economico Stimato / Anno</span>
+              <div class="val" id="roiSavingsEur">€ 32.100</div>
+              <span class="text-muted" style="font-size: 12px;">Risparmio diretto su canoni terzisti ed eliminazione errori BOM</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+              <div>
+                <span class="detail-label">Ore di Lavoro Recuperate</span>
+                <div class="mono text-white" style="font-size: 20px; font-weight: 700;" id="roiHoursSaved">750 ore</div>
+              </div>
+              <div>
+                <span class="detail-label">Costo Licenze Tradizionali Terzisti</span>
+                <div class="mono text-ruby" style="font-size: 20px; font-weight: 700;" id="roiCompetitorCost">€ 25.200</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+              <button class="btn btn-white" style="width: 100%;" data-open-modal="demoModal">
+                Richiedi Business Case Dettagliato →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTACT US SECTION ================= -->
+  <section class="section-padding" id="contatti">
+    <div class="container">
+      <div class="contact-layout">
+        <!-- Contact Meta Info -->
+        <div class="contact-info-box">
+          <div class="section-eyebrow">Canali Diretti · Headquarters & Distretti</div>
+          <h2 class="display-title" style="font-size: clamp(32px, 4vw, 48px); margin-bottom: 16px;">
+            PARLA CON IL NOSTRO TEAM DI SPECIALISTI DELLA FILIERA
+          </h2>
+          <p style="color: var(--color-muted-text); line-height: 1.6;">
+            Hai domande sulle modalità di integrazione con il tuo gestionale aziendale, sui test del Passaporto DPP UE
+            o sulle convenzioni per i consorzi di distretto? Siamo a tua completa disposizione.
+          </p>
+
+          <ul class="contact-meta-list">
+            <li>
+              <span class="meta-title">UFFICIO COMMERCIALE & DISTRETTI</span>
+              <span class="meta-desc">distretti@footlink.eu · +39 02 8900 1200</span>
+            </li>
+            <li>
+              <span class="meta-title">PRESIDIO TECNICO CIVITANOVA MARCHE</span>
+              <span class="meta-desc">Via dell'Artigianato, Polo Calzaturiero delle Marche</span>
+            </li>
+            <li>
+              <span class="meta-title">PRESIDIO TECNICO SANTA CROCE SULL'ARNO</span>
+              <span class="meta-desc">Polo Tecnologico Conciario Toscano</span>
+            </li>
+            <li>
+              <span class="meta-title">TEMPO DI RISPOSTA MEDIO</span>
+              <span class="meta-desc text-emerald">< 4 ore lavorative</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Interactive Form -->
+        <div class="form-box">
+          <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 20px;">Invia un Messaggio Diretto</h3>
+          <form id="contactForm">
+            <div class="form-group">
+              <label class="form-label" for="contactName">Nome e Cognome *</label>
+              <input type="text" id="contactName" class="form-input" placeholder="es. Marco Rossi" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="contactCompany">Ragione Sociale Azienda *</label>
+              <input type="text" id="contactCompany" class="form-input" placeholder="es. Calzaturificio Marchigiano SpA" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="contactEmail">Indirizzo Email Aziendale *</label>
+              <input type="email" id="contactEmail" class="form-input" placeholder="es. m.rossi@calzaturificio.it" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="contactDept">Dipartimento di Interesse *</label>
+              <select id="contactDept" class="form-select" required>
+                <option value="commerciale">Ufficio Commerciale (Valutazione Piattaforma)</option>
+                <option value="distretti">Partnership Distretti & Consorzi</option>
+                <option value="tecnico">Supporto Tecnico & Integrazioni ERP</option>
+                <option value="dpp">Conformità Normativa Passaporto DPP UE</option>
+                <option value="press">Ufficio Stampa & Comunicazione</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="contactMessage">Messaggio / Note Operative</label>
+              <textarea id="contactMessage" class="form-textarea" rows="4" placeholder="Descrivi brevemente le tue esigenze..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              Invia Richiesta al Dipartimento →
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-col">
+          <div class="brand-lockup" style="margin-bottom: 16px;">
+            <svg class="brand-logo-mark" viewBox="0 0 46 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 20L8 2H16L8 20H0Z" fill="#00FF87"/>
+              <path d="M10 20L16 6H24L17 20H10Z" fill="#00FF87" fill-opacity="0.8"/>
+              <path d="M0 22H22L20.5 24H-1L0 22Z" fill="#00FF87"/>
+            </svg>
+            <span class="brand-text">FOOTLINK</span>
+          </div>
+          <p style="font-size: 13px; line-height: 1.6; max-width: 320px; color: var(--color-telemetry-grey);">
+            La prima infrastruttura software PLM + PIM concepita per salvaguardare, connettere e valorizzare l'eccellenza della filiera calzaturiera e pellettiera italiana.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Piattaforma</h4>
+          <ul class="footer-links">
+            <li><a href="#piattaforma">Dominio 1 PIM ↔ N PLM</a></li>
+            <li><a href="#spaccato-tecnico">Distinta Base a 3 Livelli</a></li>
+            <li><a href="#filiera-radar">Albo Fornitori 360°</a></li>
+            <li><a href="#filiera-radar">Vault Conceria LWG</a></li>
+            <li><a href="#spaccato-tecnico">Passaporto Digitale DPP UE</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Distretti</h4>
+          <ul class="footer-links">
+            <li><a href="#filiera-radar">Fermo - Macerata (Marche)</a></li>
+            <li><a href="#filiera-radar">Riviera del Brenta (Veneto)</a></li>
+            <li><a href="#filiera-radar">Santa Croce sull'Arno (Toscana)</a></li>
+            <li><a href="#filiera-radar">Scandicci - Valdarno (Toscana)</a></li>
+            <li><a href="#filiera-radar">Caserta - Napoli (Campania)</a></li>
+            <li><a href="#filiera-radar">Barletta - Trani (Puglia)</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Governance & FinOps</h4>
+          <ul class="footer-links">
+            <li><a href="#pricing">Canone 0 € Terzisti (ADR-004)</a></li>
+            <li><a href="#pricing">Margine Lordo SaaS > 75%</a></li>
+            <li><a href="#contatti">Conformità GDPR & DPA L6</a></li>
+            <li><a href="#contatti">Certificazioni SHA-256</a></li>
+            <li><a href="#hero">Manifesto di Fondazione</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 FOOTLINK TECH SRL · TUTTI I DIRITTI RISERVATI · MADE WITH INTEGRITY IN ITALY</div>
+        <div class="mono text-emerald">[STATUS: ALL SYSTEMS OPERATIONAL · 60 FPS MOTION]</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= MODAL: RICHIEDI DEMO ================= -->
+  <div class="modal-overlay" id="demoModal">
+    <div class="modal-container">
+      <button class="modal-close" aria-label="Chiudi Modale">✕</button>
+      <div class="section-eyebrow">Dimostrazione Personalizzata</div>
+      <h3 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Prenota una Demo Guidata di Footlink</h3>
+      <p style="font-size: 13px; color: var(--color-muted-text); margin-bottom: 22px;">
+        Scopri come semplificare lo sviluppo collezioni, automatizzare la distinta base e connettere i tuoi terzisti in 30 minuti.
+      </p>
+
+      <form id="demoForm">
+        <div class="form-group">
+          <label class="form-label" for="demoCompany">Ragione Sociale Azienda *</label>
+          <input type="text" id="demoCompany" class="form-input" placeholder="es. Calzaturificio Bellini Srl" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="demoEmail">Email Aziendale *</label>
+          <input type="email" id="demoEmail" class="form-input" placeholder="es. direzione@bellinishoes.it" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="demoTopic">Focus Prioritario della Demo *</label>
+          <select id="demoTopic" class="form-select" required>
+            <option value="plm_bom">PLM & Distinta Base a 3 Livelli (Sostituzione Excel)</option>
+            <option value="dpp_espr">Passaporto Digitale del Prodotto (DPP UE ESPR 2024/1781)</option>
+            <option value="subcontractors_0eur">Digitalizzazione dei Terzisti a Costo Zero (0,00 €)</option>
+            <option value="tannery_vault">Vault Tracciabilità Pellami & Concerie LWG/EUDR</option>
+            <option value="complete">Panoramica Completa End-to-End</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="demoDate">Preferenza Temporale *</label>
+          <select id="demoDate" class="form-select" required>
+            <option value="asap">Il prima possibile (Entro 48 ore)</option>
+            <option value="next_week">La prossima settimana</option>
+            <option value="morning">Fascia oraria Mattina (09:30 - 12:30)</option>
+            <option value="afternoon">Fascia oraria Pomeriggio (14:30 - 18:00)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Conferma Prenotazione Demo [VIP Pass] →
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ISCRIVITI / ONBOARDING ================= -->
+  <div class="modal-overlay" id="signupModal">
+    <div class="modal-container">
+      <button class="modal-close" aria-label="Chiudi Modale">✕</button>
+      <div class="section-eyebrow">Attivazione Account Immediata</div>
+      <h3 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Crea il Tuo Spazio di Lavoro Footlink</h3>
+      <p style="font-size: 13px; color: var(--color-muted-text); margin-bottom: 20px;">
+        Seleziona il tuo ruolo di filiera per accedere con la corretta configurazione di permessi e listini.
+      </p>
+
+      <form id="signupForm">
+        <label class="form-label">Seleziona il Tuo Profilo di Filiera *</label>
+        <div class="role-radio-group">
+          <label class="role-radio-card">
+            <input type="radio" name="signupRole" value="pmi" checked />
+            <div class="role-card-label">
+              <strong>🏭 Manifattura / PMI</strong>
+              <div style="font-size: 11px; color: #888;">Calzaturifici & Pelletterie</div>
+            </div>
+          </label>
+
+          <label class="role-radio-card">
+            <input type="radio" name="signupRole" value="terzista" />
+            <div class="role-card-label">
+              <strong>🤝 Laboratorio (0 €)</strong>
+              <div style="font-size: 11px; color: #00FF87;">Canone Gratuito 100%</div>
+            </div>
+          </label>
+
+          <label class="role-radio-card">
+            <input type="radio" name="signupRole" value="brand" />
+            <div class="role-card-label">
+              <strong>👑 Fashion Brand</strong>
+              <div style="font-size: 11px; color: #888;">Maison & Gruppi Lusso</div>
+            </div>
+          </label>
+
+          <label class="role-radio-card">
+            <input type="radio" name="signupRole" value="fornitore" />
+            <div class="role-card-label">
+              <strong>🌿 Conceria / Fornitore</strong>
+              <div style="font-size: 11px; color: #888;">Pellami, Suole & Accessori</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signupName">Nome Completo Referente *</label>
+          <input type="text" id="signupName" class="form-input" placeholder="es. Ing. Roberto Silvestri" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signupCompany">Nome Azienda *</label>
+          <input type="text" id="signupCompany" class="form-input" placeholder="es. Manifatture Adriatiche Srl" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signupDistrict">Distretto Manifatturiero *</label>
+          <select id="signupDistrict" class="form-select" required>
+            <option value="marche">Marche (Fermo, Civitanova, Montegranaro)</option>
+            <option value="veneto">Veneto (Riviera del Brenta, Verona)</option>
+            <option value="toscana">Toscana (Santa Croce, Scandicci, Valdarno)</option>
+            <option value="campania">Campania (Caserta, Napoli, Aversa)</option>
+            <option value="puglia">Puglia (Barletta, Trani, Casarano)</option>
+            <option value="lombardia">Lombardia (Parabiago, Vigevano)</option>
+            <option value="altro">Altro Distretto / Estero</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signupEmail">Email di Accesso *</label>
+          <input type="email" id="signupEmail" class="form-input" placeholder="es. r.silvestri@adriatiche.it" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Completa Attivazione Account →
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Website JavaScript Scripts -->
+  <script src="js/motion-engine.js"></script>
+  <script src="js/footwear-blueprint.js"></script>
+  <script src="js/network-radar.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

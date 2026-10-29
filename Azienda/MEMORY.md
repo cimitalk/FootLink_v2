@@ -63,14 +63,24 @@ Questo file conserva i fatti durevoli, le decisioni architetturali e lo stato ev
   - Deliverable rilasciati al 100%: 2 Motori Verticali (Colori Intelligenti, Albo Fornitori 360°), 6 ADR registrate (ADR-011 .. ADR-016), separazione ontologica Modello/Prodotto, rifiniture UX PLM/PIM, sequenza menù 01-08 e context bar corretta.
   - Piattaforma collaudata e pronta per il rilascio.
 
-### Sprint 9 — "Usabilità, Coerenza e Flessibilità Operativa" (Completato il 29 Ottobre 2026 — 9/9 Task Done)
-- **Direttiva Founder:** Focus prioritario su usabilità, coerenza e flessibilità delle funzionalità implementate finora.
+### Sprint 9 — "Usabilità, Coerenza e Flessibilità Operativa" & "Sito Web Pubblico" (Completato il 29 Ottobre 2026)
+- **Direttiva Founder:** Focus prioritario su usabilità, coerenza e flessibilità delle funzionalità implementate finora, seguito dalla direttiva esecutiva per coordinare e realizzare il **Sito Web Pubblico Ufficiale di Footlink** (`Applicativo/website/`).
 - **Integrazione Catalogo Materiali & Zero Horizontal Bloat (`ADR-017`):** Catalogo Materiali integrato come 4° sotto-tab ("🌿 Catalogo Materiali & Tirelle") nel Modulo 04 (Gestione Fornitori & Filiera 360°) senza creare moduli orizzontali extra (`ADR-011`).
 - **Guided BOM Material Picker (`FTL-PROD-015`, `FTL-TECH-031`):** Inserimento guidato dei materiali in Distinta Base (Modulo 02) con selezione da anagrafica certificata, auto-compilazione fornitore, costo e UoM, e alert visivo su certificazioni LWG/EUDR fornitore scadute.
 - **Bulk Material Swap & Contextual Jumps (`FTL-TECH-030`, `FTL-TECH-031`):** Sostituzione massiva di un materiale su singola variante o su tutte le varianti collegate al modello con ricalcolo costi opzionale; Contextual Jumps cross-modulo tra BOM e Fornitore, e tra Stagioni/PIM e PLM.
 - **Simulatore Costi Industriali & Margini Flessibili (`FTL-REV-008`):** Pannello interattivo per Brand/PMI con manodopera configurabile, overhead industriale (0-15%), slider What-If (-20% / +30%) e calcolo margini Wholesale/Retail (netto IVA 22%), con rigorosa segregazione L6 verso i terzisti.
 - **Lessico d'Atelier & Presets (`FTL-MKT-009`):** Armonizzazione terminologica calzaturiera e 13 preset di materiali di lusso pre-caricati.
-- **Metriche di Rilascio Sprint 9:** **9/9 Task Done (100%)** (`FTL-CEO-035`, `FTL-GOV-009`, `FTL-PROD-015`, `FTL-TECH-030`, `FTL-TECH-031`, `FTL-REV-008`, `FTL-MKT-009`, `FTL-PROD-016` e chiusura backlog `FTL-CEO-029`), **46/46 Test Pytest Passanti (100%)**, **0 Errori TypeScript/Vite**, **0,00 € Spesa Autonoma (L2)**.
+- **Sito Web Pubblico Ufficiale & Computer Motion Avanzato (`ADR-019`, `FTL-CEO-038`):**
+  - **Architettura Statica a Zero Bloat:** Sito web statico puro (HTML5 semantico, CSS3 Moderno, Vanilla JS ES6+) collocato nel secondo pilastro (`Applicativo/website/` e mirror in `Applicativo/frontend/public/website/`).
+  - **Motori di Computer Motion Matematico (60 FPS):**
+    - `motion-engine.js`: Onde armoniche sinusoidali composite, HUD orbitale con calcolo dell'angolo $\theta$, coordinate proiettate $[X, Y]$ e interazione cursore con fisica di molle smorzate (Spring physics solver).
+    - `footwear-blueprint.js`: Spaccato tecnico calzaturiero ad alta precisione vettoriale con decomposizione ad esploso 3D (0% compatta $\to$ 100% esplosa) e ispezione in tempo reale dei 6 layer ISO-BOM (Tomaia vitello LWG Gold, Fodera capretto, Sottopiede con cambrione, Intersuola/Guardolo, Battistrada scolpito e Tag DPP UE).
+    - `network-radar.js`: Radar a scansione rotante sui 5 distretti storici italiani (Marche, Veneto, Toscana, Campania, Puglia) con blip di rete e propagazione pulse ripple.
+  - **Funnel di Conversione & FinOps:**
+    - Sezione Pricing trasparente con switch Mensile/Annuale (-20%) e 3 Tier: Terzisti a **0,00 € perpetuo**, PMI Manifatturiere a **€ 149/mese** e Brand Enterprise personalizzato.
+    - Calcolatore dinamico di ROI che quantifica il risparmio sui canoni terzisti rispetto ai vecchi PLM concorrenti e le ore recuperate.
+    - Modali interattivi per **Richiedi Demo Guidata** a 3 step con rilascio del VIP Pass, **Iscriviti / Onboarding** con pre-configurazione ruolo di filiera, e modulo reattivo **Contact Us** con alert toast neon.
+- **Metriche di Rilascio Sprint 9:** **10/10 Task Done (100%)** (`FTL-CEO-035`, `FTL-GOV-009`, `FTL-PROD-015`, `FTL-TECH-030`, `FTL-TECH-031`, `FTL-REV-008`, `FTL-MKT-009`, `FTL-PROD-016`, `FTL-CEO-029`, `FTL-CEO-038`), **0 Errori TypeScript/Vite**, **0,00 € Spesa Autonoma (L2)**.
 
 ---
 

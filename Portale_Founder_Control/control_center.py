@@ -1524,215 +1524,585 @@ INDEX_HTML = r"""<!DOCTYPE html>
     gap: 12px;
     flex-wrap: wrap;
   }
+
+  /* Executive Command Deck Navigation & Views */
+  header {
+    background: linear-gradient(180deg, #0f172a 0%, #131b2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 25;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  }
+  .header-main {
+    padding: 14px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .executive-nav-bar {
+    padding: 6px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: rgba(11, 15, 25, 0.7);
+    backdrop-filter: blur(8px);
+  }
+  .nav-tabs-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .nav-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .nav-tab:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .nav-tab.active {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.38);
+  }
+  .nav-badge {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(239, 68, 68, 0.25);
+    color: #f87171;
+    font-weight: 700;
+  }
+  .nav-epoch-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(30, 41, 59, 0.65);
+    padding: 3px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .nav-epoch-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .nav-epoch-buttons {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .btn-epoch {
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94a3b8;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.12s ease;
+  }
+  .btn-epoch:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .btn-epoch.active {
+    background: linear-gradient(135deg, #0284c7, #6366f1);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.45);
+  }
+  .view-section {
+    display: none;
+    animation: fadeInView 0.18s ease-out;
+  }
+  .view-section.active {
+    display: block;
+  }
+  @keyframes fadeInView {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .epoch-sub-banner {
+    background: linear-gradient(90deg, rgba(16,185,129,0.12) 0%, rgba(56,189,248,0.12) 50%, rgba(168,85,247,0.12) 100%);
+    border: 1px solid rgba(56,189,248,0.4);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .entities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 16px;
+  }
+  .entity-card {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .entity-card:hover {
+    border-color: rgba(56, 189, 248, 0.55);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  }
+  .entity-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .entity-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+  .entity-path {
+    font-size: 11px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    color: #38bdf8;
+    margin-top: 3px;
+  }
+  .entity-desc {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    flex: 1;
+  }
+  .entity-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 12px;
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="brand">
-    <div class="brand-logo">👞</div>
-    <div>
-      <h1>Footlink — Founder Control Center</h1>
-      <p>Autonomous C-Suite Governance • Google Antigravity + GitHub (OpenClaw: Suspended)</p>
+  <div class="header-main">
+    <div class="brand">
+      <div class="brand-logo">👞</div>
+      <div>
+        <h1>Footlink — Founder Control Center</h1>
+        <p>Autonomous C-Suite Governance • Google Antigravity + GitHub (OpenClaw: Suspended)</p>
+      </div>
+    </div>
+    <div class="top-controls">
+      <button class="btn btn-create-task" onclick="openCreateTaskModal()" title="Crea un nuovo task da assegnare alla C-Suite">
+        <span>✨ Crea Task Founder</span>
+      </button>
+      <a href="http://localhost:5173" target="_blank" rel="noopener noreferrer" class="btn btn-platform" title="Apri l'applicazione Web React Vite su http://localhost:5173">
+        <span>👟 Piattaforma Footlink</span>
+        <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Frontend :5173 ↗</span>
+      </a>
+      <a href="http://localhost:5173/dam/index.html" target="_blank" rel="noopener noreferrer" class="btn" style="background:#14231b;border-color:#166534;color:#4ade80;" title="Archivio DAM Asset Pubblicitari, Social e Newsletter">
+        <span>📁 Archivio DAM</span>
+        <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Adv &amp; Social ↗</span>
+      </a>
+      <a href="/codebase-dashboard" target="_blank" rel="noopener noreferrer" class="btn" style="background:#1e1b4b;border-color:#4338ca;color:#a5b4fc;" title="Dashboard Analitica sulla Codebase (FTL-TECH-017)">
+        <span>📊 Codebase Analytics</span>
+        <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Real-Time ↗</span>
+      </a>
+      <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noopener noreferrer" class="btn" style="background:#1e293b;border-color:#334155;color:#38bdf8;" title="Documentazione interattiva API FastAPI Swagger su http://127.0.0.1:8000/docs">
+        <span>📖 API Docs</span>
+        <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">:8000/docs ↗</span>
+      </a>
+      <span class="pill green" id="quota-pill">⚡ AI Quota: ACTIVE</span>
+      <span class="pill amber">🛡️ Spend Policy: €0 Autonomous (L2 Lock)</span>
+      <button class="btn btn-warn" onclick="toggleQuotaPause()">⏸️ Toggle Standby</button>
+      <button class="btn" onclick="fetchState()">🔄 Aggiorna Ora</button>
     </div>
   </div>
-  <div class="top-controls">
-    <button class="btn btn-create-task" onclick="openCreateTaskModal()" title="Crea un nuovo task da assegnare alla C-Suite">
-      <span>✨ Crea Task Founder</span>
-    </button>
-    <a href="http://localhost:5173" target="_blank" rel="noopener noreferrer" class="btn btn-platform" title="Apri l'applicazione Web React Vite su http://localhost:5173">
-      <span>👟 Piattaforma Footlink</span>
-      <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Frontend :5173 ↗</span>
-    </a>
-    <a href="http://localhost:5173/dam/index.html" target="_blank" rel="noopener noreferrer" class="btn" style="background:#14231b;border-color:#166534;color:#4ade80;" title="Archivio DAM Asset Pubblicitari, Social e Newsletter">
-      <span>📁 Archivio DAM</span>
-      <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Adv &amp; Social ↗</span>
-    </a>
-    <a href="/codebase-dashboard" target="_blank" rel="noopener noreferrer" class="btn" style="background:#1e1b4b;border-color:#4338ca;color:#a5b4fc;" title="Dashboard Analitica sulla Codebase (FTL-TECH-017)">
-      <span>📊 Codebase Analytics</span>
-      <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Real-Time ↗</span>
-    </a>
-    <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noopener noreferrer" class="btn" style="background:#1e293b;border-color:#334155;color:#38bdf8;" title="Documentazione interattiva API FastAPI Swagger su http://127.0.0.1:8000/docs">
-      <span>📖 API Docs</span>
-      <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">:8000/docs ↗</span>
-    </a>
-    <span class="pill green" id="quota-pill">⚡ AI Quota: ACTIVE (€21.99 Pro + €30 Credits)</span>
-    <span class="pill amber">🛡️ Spend Policy: €0 Autonomous (L2 Founder Lock)</span>
-    <button class="btn btn-warn" onclick="toggleQuotaPause()">⏸️ Toggle Standby (paused_ai_quota)</button>
-    <button class="btn" onclick="fetchState()">🔄 Aggiorna Ora</button>
+
+  <div class="executive-nav-bar">
+    <div class="nav-tabs-group">
+      <button class="nav-tab active" id="tab-csuite" onclick="switchExecutiveView('csuite')">
+        <span>📊 C-Suite Task Board</span>
+        <span class="nav-badge" id="nav-badge-review" style="display:none;">0</span>
+      </button>
+      <button class="nav-tab" id="tab-knowledge" onclick="switchExecutiveView('knowledge')">
+        <span>📚 Knowledge Hub &amp; Archivio</span>
+        <span class="nav-badge" id="nav-badge-docs" style="background:rgba(56,189,248,0.2);color:#38bdf8;">0 docs</span>
+      </button>
+      <button class="nav-tab" id="tab-entities" onclick="switchExecutiveView('entities')">
+        <span>🏛️ Entità di Dominio (PLM+PIM)</span>
+        <span class="nav-badge" style="background:rgba(168,85,247,0.2);color:#c084fc;">8 spec</span>
+      </button>
+      <button class="nav-tab" id="tab-ecosystem" onclick="switchExecutiveView('ecosystem')">
+        <span>🎛️ Ecosistema &amp; 3 Pilastri</span>
+      </button>
+      <button class="nav-tab" id="tab-all" onclick="switchExecutiveView('all')" title="Mostra tutte le sezioni contemporaneamente a scorrimento continuo">
+        <span>🌐 Vista Completa</span>
+      </button>
+    </div>
+
+    <div class="nav-epoch-selector">
+      <span class="nav-epoch-label">🏛️ Epoca:</span>
+      <div class="nav-epoch-buttons">
+        <button class="btn-epoch active" id="btn-epoch-2" onclick="setEpochFilter('EPOCH_2')" title="Epoca II: Verticalizzazione (Sprint 8+ • Attiva)">🚀 Epoca II</button>
+        <button class="btn-epoch" id="btn-epoch-1" onclick="setEpochFilter('EPOCH_1')" title="Epoca I: Fondazione (Sprint 1–7 • 67 Done 👑👑)">📦 Epoca I</button>
+        <button class="btn-epoch" id="btn-epoch-3" onclick="setEpochFilter('EPOCH_3')" title="Nuova Epoca III: Tabula Rasa a Default Vuoto">✨ Nuova Epoca</button>
+        <button class="btn-epoch" id="btn-epoch-core" onclick="setEpochFilter('CORE')" title="Patrimonio Costituzionale &amp; Core">🏛️ Core</button>
+        <button class="btn-epoch" id="btn-epoch-all" onclick="setEpochFilter('ALL')" title="Tutte le Epoche e Documenti">🌐 Tutte</button>
+      </div>
+    </div>
   </div>
 </header>
 
 <div class="container">
-  <div class="kpi-grid" id="kpi-grid"></div>
+  <!-- ========================================== -->
+  <!-- VISTA 1: C-SUITE TASK BOARD               -->
+  <!-- ========================================== -->
+  <div id="view-csuite" class="view-section active">
+    <div id="approval-queue-container"></div>
 
-  <div class="kpi-grid" style="margin-bottom:20px;">
-    <div class="kpi-card" style="border-left:4px solid #38bdf8;">
-      <div class="label">🏢 Pilastro 1 — Azienda/</div>
-      <div class="value" style="font-size:18px;">Governance &amp; C-Suite</div>
-      <div class="sub"><code>Manifesto</code> • <code>adr/</code> • <code>tasks/</code> • <code>docs/</code></div>
-    </div>
-    <div class="kpi-card" style="border-left:4px solid #22c55e;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div class="label">💻 Pilastro 2 — Applicativo/</div>
-        <span class="pill green" style="font-size:10px;padding:2px 8px;">Frontend &amp; Backend</span>
+    <!-- Multi-Epoch Governance Switcher Banner (ADR-011) -->
+    <div class="epoch-sub-banner" id="epoch-banner-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="pill green" style="font-size:11px;">🏛️ GOVERNANCE MULTI-EPOCA (ADR-011)</span>
+            <strong style="font-size:15px;color:#f8fafc;" id="epoch-banner-title">🚀 EPOCA II: LA VERTICALIZZAZIONE (Da Sprint 8 — "La Ripartenza")</strong>
+          </div>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:4px;" id="epoch-banner-desc">
+            Focus su profondità funzionale verticale per modulo (Zero Horizontal Bloat) • Epoca I (Sprint 1–7, 67/67 Task Done 👑👑) consolidata e archiviata.
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" style="background:rgba(56,189,248,0.22);border-color:#38bdf8;color:#7dd3fc;font-weight:700;" onclick="switchExecutiveView('entities')" title="Apri Anagrafe Entità di Dominio">
+            🏛️ Entità di Dominio ↗
+          </button>
+          <button class="btn btn-sm" style="background:linear-gradient(135deg,rgba(245,158,11,0.25),rgba(234,179,8,0.35));border-color:#f59e0b;color:#fef08a;font-weight:700;" onclick="openDoc('Azienda/ARCHIVIO_EPOCHE.md', 'preview')" title="Apri il Registro Ufficiale dell'Archivio per Epoche">
+            🏛️ Registro Epoche
+          </button>
+          <button class="btn btn-sm btn-approve" onclick="openDoc('Azienda/docs/governance/epoch-1-historical-consolidation-sprints-1-7.md', 'preview')" title="Apri il Compendio Storico Ufficiale dell'Epoca I">
+            📜 Compendio Epoca I
+          </button>
+          <button class="btn btn-sm" style="background:rgba(168,85,247,0.18);border-color:#a855f7;color:#d8b4fe;" onclick="openDoc('Azienda/docs/okr/epoch-2-masterplan-and-sprint-8-kickoff.md', 'preview')" title="Apri il Master Plan Epoca II e Definizione Sprint 8">
+            🎯 Master Plan Sprint 8
+          </button>
+        </div>
       </div>
-      <div class="value" style="font-size:18px;margin-top:4px;">Piattaforma PLM + PIM</div>
-      <div class="sub"><code>backend/</code> (FastAPI :8000) • <code>frontend/</code> (React :5173)</div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="http://localhost:5173" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-approve" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-          🚀 Apri Frontend (:5173) ↗
-        </a>
-        <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-          📖 Documentazione API (:8000/docs) ↗
-        </a>
-        <button class="btn btn-sm" onclick="openDoc('Applicativo/frontend/app-live-preview.html')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;display:inline-flex;align-items:center;gap:4px;">
-          👁️ Live Preview Standalone
-        </button>
-        <a href="http://localhost:5173/dam/index.html" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:rgba(16,185,129,0.15);border-color:#10b981;color:#6ee7b7;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-          📁 Archivio DAM Adv &amp; Social ↗
-        </a>
-      </div>
     </div>
-    <div class="kpi-card" style="border-left:4px solid #a855f7;">
-      <div class="label">🎛️ Pilastro 3 — Portale Founder Control/</div>
-      <div class="value" style="font-size:18px;">Cabina di Regia L1–L6</div>
-      <div class="sub"><code>control_center.py</code> • Gatekeeper &amp; Real-Time Sync</div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="/codebase-dashboard" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:rgba(168,85,247,0.15);border-color:#a855f7;color:#d8b4fe;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-          📊 Dashboard Codebase (SLOC &amp; Git) ↗
-        </a>
+
+    <div class="section-title">
+      <span id="kanban-section-title">📊 C-Suite Task Board — Epoca II: La Verticalizzazione (Sprint 8 • Real-Time Sync con <code>Azienda/tasks/*.json</code>)</span>
+      <span style="font-size:12px;color:var(--muted)" id="last-sync"></span>
+    </div>
+    <div class="kanban" id="kanban-board"></div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- VISTA 2: KNOWLEDGE HUB & ARCHIVIO         -->
+  <!-- ========================================== -->
+  <div id="view-knowledge" class="view-section" style="display:none;">
+    <div class="knowledge-hub" id="knowledge-hub">
+      <div class="hub-header">
+        <div class="hub-title-box">
+          <h2>📚 Archivio Documentale &amp; Deliverable C-Suite</h2>
+          <p>Consultazione rapida per ruolo C-Level, ricerca in tempo reale tollerante (es. ADR-013), anteprima e modifica interattiva su disco</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div id="hub-epoch-active-desc" style="font-size:12px;color:#38bdf8;font-weight:600;">
+            Mostrando: Epoca II (Sprint 8+ • Attiva)
+          </div>
+          <div class="hub-stats" id="hub-doc-count">0 Documenti</div>
+        </div>
+      </div>
+
+      <!-- Quick Domain Entities Shelf in Knowledge Hub -->
+      <div style="background:linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.75));border:1px solid rgba(56,189,248,0.35);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🏛️</span>
+            <strong style="font-size:13px;color:#f8fafc;letter-spacing:-0.2px;">ANAGRAFE ENTITÀ DI DOMINIO (LIVING SPECS PLM + PIM)</strong>
+            <button class="btn btn-sm" onclick="switchExecutiveView('entities')" style="font-size:11px;padding:2px 8px;background:rgba(56,189,248,0.18);color:#38bdf8;border-color:rgba(56,189,248,0.4);">
+              Apri Schede Dettagliate ↗
+            </button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);">
+            File Markdown in <code>Azienda/entita/</code> • Regolano lo sviluppo software e guidano CPO e CTO
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-sm" onclick="openDoc('Azienda/entita/MODELLI.md', 'preview')" style="background:rgba(56,189,248,0.12);border-color:#0284c7;color:#bae6fd;" title="Forma calzatura, costruzione suola, linee CAD">🏷️ Modelli</button>
+          <button class="btn btn-sm" onclick="openDoc('Azienda/entita/PRODOTTI.md', 'preview')" style="background:rgba(34,197,94,0.12);border-color:#16a34a;color:#bbf7d0;" title="Ponte 1 Articolo Commerciale PIM : N Varianti PLM">📦 Prodotti (PIM/PLM)</button>
+          <button class="btn btn-sm" onclick="openDoc('Azienda/entita/STAGIONI.md', 'preview')" style="background:rgba(234,179,8,0.12);border-color:#ca8a04;color:#fef08a;" title="Calendario moda P/E, A/I e Continuativo">🗓️ Stagioni</button>
+          <button class="btn btn-sm" onclick="openDoc('Azienda/entita/COLLEZIONI.md', 'preview')" style="background:rgba(168,85,247,0.12);border-color:#9333ea;color:#e9d5ff;" title="Main Collection, Runway, Capsule e canali">🎨 Collezioni</button>
+          <button class="btn btn-sm" onclick="openDoc('Azienda/entita/DISTINTE_BASI.md', 'preview')" style="background:rgba(236,72,153,0.12);border-color:#db2777;color:#fbcfe8;" title="Distinta base multi-livello a 3 livelli e template">🌲 Distinte Basi (BOM)</button>
+          <button class="btn btn-sm" onclick="openDoc('Azienda/entita/FORNITORI.md', 'preview')" style="background:rgba(249,115,22,0.12);border-color:#ea580c;color:#fed7aa;" title="Concerie, terzisti a 0 € e albo 360°">🏭 Fornitori &amp; Vendor Hub</button>
+          <button class="btn btn-sm" onclick="openDoc('Azienda/entita/README.md', 'preview')" style="background:rgba(148,163,184,0.15);border-color:#64748b;color:#e2e8f0;" title="Catalogo Ontologico e Regole di Allineamento">📖 Catalogo &amp; Regole</button>
+          <button class="btn btn-sm" onclick="openDoc('Azienda/entita/TEMPLATE_ENTITA.md', 'preview')" style="background:rgba(148,163,184,0.1);border-color:#475569;color:#94a3b8;" title="Template standard per nuove entità">📋 Template Standard</button>
+        </div>
+      </div>
+
+      <!-- C-Level Role Filter Tabs -->
+      <div class="role-tabs" id="role-tabs-container"></div>
+
+      <!-- Search & Format Filters Toolbar -->
+      <div class="hub-toolbar">
+        <div class="hub-search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="doc-search-input" placeholder="Cerca per titolo, percorso file (es. ADR-013), parola chiave o deliverable..." oninput="onSearchInput(this.value)" />
+          <button class="clear-search-btn" id="clear-search-btn" onclick="clearSearch()" style="display:none;" title="Cancella ricerca">✕</button>
+        </div>
+        
+        <div class="hub-format-filters" id="format-filter-group">
+          <button class="filter-chip active" data-ext="all" onclick="setDocFilterExt('all')">Tutti i formati</button>
+          <button class="filter-chip" id="chip-entities-filter" onclick="toggleDomainEntitiesFilter()" style="border-color:#38bdf8;color:#7dd3fc;">🏛️ Solo Entità di Dominio</button>
+          <button class="filter-chip" data-ext=".md" onclick="setDocFilterExt('.md')">📝 Markdown (.md)</button>
+          <button class="filter-chip" data-ext=".html" onclick="setDocFilterExt('.html')">🌐 HTML / Preview (.html)</button>
+          <button class="filter-chip" data-ext=".json" onclick="setDocFilterExt('.json')">⚙️ JSON Task</button>
+          <button class="filter-chip" data-ext=".py" onclick="setDocFilterExt('.py')">🐍 Codice (.py / .tsx)</button>
+          <button class="filter-chip" id="chip-founder-directives" onclick="toggleFounderDirectivesFilter()" style="border-color:#f59e0b;color:#fbbf24;">👑 Direttive Founder</button>
+        </div>
+      </div>
+
+      <div class="hub-results-meta" id="hub-results-meta"></div>
+      <div class="hub-docs-grid" id="hub-docs-grid"></div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- VISTA 3: ENTITÀ DI DOMINIO (PLM + PIM)    -->
+  <!-- ========================================== -->
+  <div id="view-entities" class="view-section" style="display:none;">
+    <div style="background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,41,59,0.85));border:1px solid rgba(56,189,248,0.4);border-radius:14px;padding:24px;margin-bottom:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:20px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:26px;">🏛️</span>
+            <div>
+              <h2 style="font-size:18px;color:#f8fafc;letter-spacing:-0.2px;">ANAGRAFE ENTITÀ DI DOMINIO (LIVING SPECS PLM + PIM)</h2>
+              <p style="font-size:13px;color:var(--muted);margin-top:2px;">
+                Documenti testuali costitutivi in <code>Azienda/entita/</code> che guidano l'architettura tecnica del CTO e i requisiti di prodotto del CPO.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-approve" onclick="openDoc('Azienda/entita/README.md', 'preview')">📖 Catalogo &amp; Regole di Allineamento</button>
+          <button class="btn btn-sm" onclick="openDoc('Azienda/entita/TEMPLATE_ENTITA.md', 'preview')" style="border-color:#64748b;color:#e2e8f0;">📋 Template Nuova Entità</button>
+        </div>
+      </div>
+
+      <!-- 6 Primary Domain Entities Cards Grid + 2 Catalog Cards -->
+      <div class="entities-grid">
+        <!-- 1. MODELLI -->
+        <div class="entity-card">
+          <div class="entity-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:22px;">🏷️</span>
+              <div>
+                <div class="entity-title">Modelli</div>
+                <div class="entity-path">Azienda/entita/MODELLI.md</div>
+              </div>
+            </div>
+            <span class="pill" style="font-size:10px;background:rgba(56,189,248,0.15);color:#38bdf8;border-color:rgba(56,189,248,0.3);">Living Spec</span>
+          </div>
+          <p class="entity-desc">
+            Forma calzatura, costruzione suola, linee CAD, codifica e nesting taglie. Archetipo geometrico e tecnico di base per qualsiasi calzatura.
+          </p>
+          <div class="entity-actions">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/MODELLI.md', 'preview')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;">👁️ Leggi Specifica</button>
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/MODELLI.md', 'edit')" style="background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;">✏️ Modifica Live</button>
+          </div>
+        </div>
+
+        <!-- 2. PRODOTTI -->
+        <div class="entity-card">
+          <div class="entity-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:22px;">📦</span>
+              <div>
+                <div class="entity-title">Prodotti (PIM/PLM)</div>
+                <div class="entity-path">Azienda/entita/PRODOTTI.md</div>
+              </div>
+            </div>
+            <span class="pill" style="font-size:10px;background:rgba(34,197,94,0.15);color:#4ade80;border-color:rgba(34,197,94,0.3);">Living Spec</span>
+          </div>
+          <p class="entity-desc">
+            Ponte critico 1 Articolo Commerciale PIM : N Varianti Tecniche PLM. SKU padre/figlio, pricing B2B/B2C, canali e lifecycle del prodotto.
+          </p>
+          <div class="entity-actions">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/PRODOTTI.md', 'preview')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;">👁️ Leggi Specifica</button>
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/PRODOTTI.md', 'edit')" style="background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;">✏️ Modifica Live</button>
+          </div>
+        </div>
+
+        <!-- 3. STAGIONI -->
+        <div class="entity-card">
+          <div class="entity-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:22px;">🗓️</span>
+              <div>
+                <div class="entity-title">Stagioni</div>
+                <div class="entity-path">Azienda/entita/STAGIONI.md</div>
+              </div>
+            </div>
+            <span class="pill" style="font-size:10px;background:rgba(234,179,8,0.15);color:#facc15;border-color:rgba(234,179,8,0.3);">Living Spec</span>
+          </div>
+          <p class="entity-desc">
+            Calendario moda (P/E Primavera-Estate, A/I Autunno-Inverno e Continuativo). Milestone di campionario e finestre di drop commerciale.
+          </p>
+          <div class="entity-actions">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/STAGIONI.md', 'preview')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;">👁️ Leggi Specifica</button>
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/STAGIONI.md', 'edit')" style="background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;">✏️ Modifica Live</button>
+          </div>
+        </div>
+
+        <!-- 4. COLLEZIONI -->
+        <div class="entity-card">
+          <div class="entity-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:22px;">🎨</span>
+              <div>
+                <div class="entity-title">Collezioni</div>
+                <div class="entity-path">Azienda/entita/COLLEZIONI.md</div>
+              </div>
+            </div>
+            <span class="pill" style="font-size:10px;background:rgba(168,85,247,0.15);color:#c084fc;border-color:rgba(168,85,247,0.3);">Living Spec</span>
+          </div>
+          <p class="entity-desc">
+            Raggruppamenti stilistici e commerciali (Main Collection, Capsule, Runway, Special Edition). Mood board, target retail e palette cromatiche.
+          </p>
+          <div class="entity-actions">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/COLLEZIONI.md', 'preview')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;">👁️ Leggi Specifica</button>
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/COLLEZIONI.md', 'edit')" style="background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;">✏️ Modifica Live</button>
+          </div>
+        </div>
+
+        <!-- 5. DISTINTE BASI -->
+        <div class="entity-card">
+          <div class="entity-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:22px;">🌲</span>
+              <div>
+                <div class="entity-title">Distinte Basi (BOM)</div>
+                <div class="entity-path">Azienda/entita/DISTINTE_BASI.md</div>
+              </div>
+            </div>
+            <span class="pill" style="font-size:10px;background:rgba(236,72,153,0.15);color:#f472b6;border-color:rgba(236,72,153,0.3);">Living Spec</span>
+          </div>
+          <p class="entity-desc">
+            BOM calzatura a 3 livelli (Tomaia, Fondo/Suola, Minuteria &amp; Packaging). Coefficienti di sfrido, consumi netti e cost breakdown.
+          </p>
+          <div class="entity-actions">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/DISTINTE_BASI.md', 'preview')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;">👁️ Leggi Specifica</button>
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/DISTINTE_BASI.md', 'edit')" style="background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;">✏️ Modifica Live</button>
+          </div>
+        </div>
+
+        <!-- 6. FORNITORI -->
+        <div class="entity-card">
+          <div class="entity-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:22px;">🏭</span>
+              <div>
+                <div class="entity-title">Fornitori &amp; Vendor Hub</div>
+                <div class="entity-path">Azienda/entita/FORNITORI.md</div>
+              </div>
+            </div>
+            <span class="pill" style="font-size:10px;background:rgba(249,115,22,0.15);color:#fb923c;border-color:rgba(249,115,22,0.3);">Living Spec</span>
+          </div>
+          <p class="entity-desc">
+            Concerie, suolifici, solettifici e terzisti. Albo fornitori 360°, conformità REACH/LWG, rating qualità e politica Zero Spese Esterne (€0 Autonomous).
+          </p>
+          <div class="entity-actions">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/FORNITORI.md', 'preview')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;">👁️ Leggi Specifica</button>
+            <button class="btn btn-sm" onclick="openDoc('Azienda/entita/FORNITORI.md', 'edit')" style="background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;">✏️ Modifica Live</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div id="approval-queue-container"></div>
+  <!-- ========================================== -->
+  <!-- VISTA 4: ECOSISTEMA & 3 PILASTRI          -->
+  <!-- ========================================== -->
+  <div id="view-ecosystem" class="view-section" style="display:none;">
+    <div class="kpi-grid" id="kpi-grid"></div>
 
-  <!-- Multi-Epoch Governance Switcher Banner (ADR-011) -->
-  <div style="background:linear-gradient(90deg, rgba(16,185,129,0.12) 0%, rgba(56,189,248,0.12) 50%, rgba(168,85,247,0.12) 100%);border:1px solid rgba(56,189,248,0.4);border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
-    <div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span class="pill green" style="font-size:11px;">🏛️ GOVERNANCE MULTI-EPOCA (ADR-011)</span>
-        <strong style="font-size:15px;color:#f8fafc;" id="epoch-banner-title">🚀 EPOCA II: LA VERTICALIZZAZIONE (Da Sprint 8 — "La Ripartenza")</strong>
-      </div>
-      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;" id="epoch-banner-desc">
-        Focus su profondità funzionale verticale per modulo (Zero Horizontal Bloat) • Epoca I (Sprint 1–7, 67/67 Task Done 👑👑) consolidata e archiviata.
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-sm" id="btn-epoch-2" onclick="setEpochFilter('EPOCH_2')" style="background:linear-gradient(135deg,#0284c7,#6366f1);color:#fff;border-color:transparent;">
-        🚀 Epoca II: Sprint 8+ (Attiva)
-      </button>
-      <button class="btn btn-sm" id="btn-epoch-1" onclick="setEpochFilter('EPOCH_1')">
-        📦 Archivio Epoca I (S1–S7 • 67 Done 👑👑)
-      </button>
-      <button class="btn btn-sm" id="btn-epoch-3" onclick="setEpochFilter('EPOCH_3')" style="border-color:#38bdf8;color:#38bdf8;">
-        ✨ Nuova Epoca (Default Vuoto)
-      </button>
-      <button class="btn btn-sm" id="btn-epoch-core" onclick="setEpochFilter('CORE')">
-        🏛️ Costituzionali &amp; Core
-      </button>
-      <button class="btn btn-sm" id="btn-epoch-all" onclick="setEpochFilter('ALL')">
-        🌐 Tutte le Epoche
-      </button>
-      <button class="btn btn-sm" style="background:rgba(56,189,248,0.22);border-color:#38bdf8;color:#7dd3fc;font-weight:700;" onclick="openDoc('Azienda/entita/README.md', 'preview')" title="Apri il Catalogo Master delle Entità di Dominio">
-        🏛️ Entità di Dominio
-      </button>
-      <button class="btn btn-sm" style="background:linear-gradient(135deg,rgba(245,158,11,0.25),rgba(234,179,8,0.35));border-color:#f59e0b;color:#fef08a;font-weight:700;" onclick="openDoc('Azienda/ARCHIVIO_EPOCHE.md', 'preview')" title="Apri il Registro Ufficiale dell'Archivio per Epoche">
-        🏛️ Registro Epoche
-      </button>
-      <button class="btn btn-sm btn-approve" onclick="openDoc('Azienda/docs/governance/epoch-1-historical-consolidation-sprints-1-7.md', 'preview')" title="Apri il Compendio Storico Ufficiale dell'Epoca I">
-        📜 Compendio Epoca I
-      </button>
-      <button class="btn btn-sm" style="background:rgba(168,85,247,0.18);border-color:#a855f7;color:#d8b4fe;" onclick="openDoc('Azienda/docs/okr/epoch-2-masterplan-and-sprint-8-kickoff.md', 'preview')" title="Apri il Master Plan Epoca II e Definizione Sprint 8">
-        🎯 Master Plan Sprint 8
-      </button>
-    </div>
-  </div>
-
-  <div class="section-title">
-    <span id="kanban-section-title">📊 C-Suite Task Board — Epoca II: La Verticalizzazione (Sprint 8 • Real-Time Sync con <code>Azienda/tasks/*.json</code>)</span>
-    <span style="font-size:12px;color:var(--muted)" id="last-sync"></span>
-  </div>
-  <div class="kanban" id="kanban-board"></div>
-
-  <!-- C-Suite Knowledge Hub & Document Explorer -->
-  <div class="knowledge-hub" id="knowledge-hub">
-    <div class="hub-header">
-      <div class="hub-title-box">
-        <h2>📚 Archivio Documentale &amp; Deliverable C-Suite</h2>
-        <p>Consultazione rapida per ruolo C-Level, ricerca in tempo reale, visualizzazione e modifica interattiva di file e schede entità</p>
-      </div>
-      <div class="hub-stats" id="hub-doc-count">0 Documenti</div>
-    </div>
-
-    <!-- Dedicated Epoch Selector Bar in Knowledge Hub -->
-    <div style="background:rgba(15,23,42,0.65);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span style="font-size:12px;font-weight:700;color:#94a3b8;letter-spacing:0.3px;display:flex;align-items:center;gap:6px;">
-          <span>🏛️</span> ARCHIVIO EPOCA:
-        </span>
-        <div class="epoch-chips-group" id="hub-epoch-chips" style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="filter-chip active" id="chip-epoch-2" onclick="setEpochFilter('EPOCH_2')">🚀 Epoca II: Verticalizzazione (Attiva)</button>
-          <button class="filter-chip" id="chip-epoch-1" onclick="setEpochFilter('EPOCH_1')">📦 Epoca I: Fondazione (S1–S7)</button>
-          <button class="filter-chip" id="chip-epoch-3" onclick="setEpochFilter('EPOCH_3')" style="border-color:#38bdf8;color:#38bdf8;">✨ Nuova Epoca (Default Vuoto)</button>
-          <button class="filter-chip" id="chip-epoch-core" onclick="setEpochFilter('CORE')">🏛️ Costituzionali &amp; Core</button>
-          <button class="filter-chip" id="chip-epoch-all" onclick="setEpochFilter('ALL')">🌐 Tutte le Epoche</button>
+    <div class="kpi-grid" style="margin-bottom:20px;">
+      <div class="kpi-card" style="border-left:4px solid #38bdf8;">
+        <div class="label">🏢 Pilastro 1 — Azienda/</div>
+        <div class="value" style="font-size:18px;">Governance &amp; C-Suite</div>
+        <div class="sub"><code>Manifesto</code> • <code>adr/</code> • <code>tasks/</code> • <code>docs/</code> • <code>entita/</code></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" onclick="openDoc('Azienda/Manifesto_Fondazione_Footlink.md', 'preview')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;">
+            📜 Manifesto di Fondazione
+          </button>
+          <button class="btn btn-sm" onclick="switchExecutiveView('knowledge')" style="background:rgba(255,255,255,0.06);">
+            📚 Archivio Documentale ↗
+          </button>
+          <button class="btn btn-sm" onclick="switchExecutiveView('entities')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;">
+            🏛️ 6 Entità di Dominio ↗
+          </button>
         </div>
       </div>
-      <div id="hub-epoch-active-desc" style="font-size:12px;color:#38bdf8;font-weight:600;">
-        Mostrando: Epoca II (Sprint 8+ • Attiva)
-      </div>
-    </div>
 
-    <!-- Dedicated Domain Entities Quick Shelf -->
-    <div style="background:linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.75));border:1px solid rgba(56,189,248,0.35);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:16px;">🏛️</span>
-          <strong style="font-size:13px;color:#f8fafc;letter-spacing:-0.2px;">ANAGRAFE ENTITÀ DI DOMINIO (LIVING SPECS PLM + PIM)</strong>
-          <span class="pill" style="font-size:10px;background:rgba(56,189,248,0.18);color:#38bdf8;border:1px solid rgba(56,189,248,0.4);">Visualizzabili &amp; Modificabili</span>
+      <div class="kpi-card" style="border-left:4px solid #22c55e;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="label">💻 Pilastro 2 — Applicativo/</div>
+          <span class="pill green" style="font-size:10px;padding:2px 8px;">Frontend &amp; Backend</span>
         </div>
-        <div style="font-size:11px;color:var(--muted);">
-          File Markdown in <code>Azienda/entita/</code> • Regolano lo sviluppo software e guidano CPO e CTO
+        <div class="value" style="font-size:18px;margin-top:4px;">Piattaforma PLM + PIM</div>
+        <div class="sub"><code>backend/</code> (FastAPI :8000) • <code>frontend/</code> (React :5173)</div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <a href="http://localhost:5173" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-approve" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+            🚀 Apri Frontend (:5173) ↗
+          </a>
+          <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+            📖 Documentazione API (:8000/docs) ↗
+          </a>
+          <button class="btn btn-sm" onclick="openDoc('Applicativo/frontend/app-live-preview.html')" style="background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;display:inline-flex;align-items:center;gap:4px;">
+            👁️ Live Preview Standalone
+          </button>
+          <a href="http://localhost:5173/dam/index.html" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:rgba(16,185,129,0.15);border-color:#10b981;color:#6ee7b7;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+            📁 Archivio DAM Adv &amp; Social ↗
+          </a>
         </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/MODELLI.md', 'preview')" style="background:rgba(56,189,248,0.12);border-color:#0284c7;color:#bae6fd;" title="Forma calzatura, costruzione suola, linee CAD">🏷️ Modelli</button>
-        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/PRODOTTI.md', 'preview')" style="background:rgba(34,197,94,0.12);border-color:#16a34a;color:#bbf7d0;" title="Ponte 1 Articolo Commerciale PIM : N Varianti PLM">📦 Prodotti (PIM/PLM)</button>
-        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/STAGIONI.md', 'preview')" style="background:rgba(234,179,8,0.12);border-color:#ca8a04;color:#fef08a;" title="Calendario moda P/E, A/I e Continuativo">🗓️ Stagioni</button>
-        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/COLLEZIONI.md', 'preview')" style="background:rgba(168,85,247,0.12);border-color:#9333ea;color:#e9d5ff;" title="Main Collection, Runway, Capsule e canali">🎨 Collezioni</button>
-        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/DISTINTE_BASI.md', 'preview')" style="background:rgba(236,72,153,0.12);border-color:#db2777;color:#fbcfe8;" title="Distinta base multi-livello a 3 livelli e template">🌲 Distinte Basi (BOM)</button>
-        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/FORNITORI.md', 'preview')" style="background:rgba(249,115,22,0.12);border-color:#ea580c;color:#fed7aa;" title="Concerie, terzisti a 0 € e albo 360°">🏭 Fornitori &amp; Vendor Hub</button>
-        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/README.md', 'preview')" style="background:rgba(148,163,184,0.15);border-color:#64748b;color:#e2e8f0;" title="Catalogo Ontologico e Regole di Allineamento">📖 Catalogo &amp; Regole</button>
-        <button class="btn btn-sm" onclick="openDoc('Azienda/entita/TEMPLATE_ENTITA.md', 'preview')" style="background:rgba(148,163,184,0.1);border-color:#475569;color:#94a3b8;" title="Template standard per nuove entità">📋 Template Standard</button>
+
+      <div class="kpi-card" style="border-left:4px solid #a855f7;">
+        <div class="label">🎛️ Pilastro 3 — Portale Founder Control/</div>
+        <div class="value" style="font-size:18px;">Cabina di Regia L1–L6</div>
+        <div class="sub"><code>control_center.py</code> • Gatekeeper &amp; Real-Time Sync</div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <a href="/codebase-dashboard" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:rgba(168,85,247,0.15);border-color:#a855f7;color:#d8b4fe;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+            📊 Dashboard Codebase (SLOC &amp; Git) ↗
+          </a>
+        </div>
       </div>
     </div>
-
-    <!-- C-Level Role Filter Tabs -->
-    <div class="role-tabs" id="role-tabs-container"></div>
-
-    <!-- Search & Format Filters Toolbar -->
-    <div class="hub-toolbar">
-      <div class="hub-search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="doc-search-input" placeholder="Cerca per titolo, percorso file, parola chiave o deliverable..." oninput="onSearchInput(this.value)" />
-        <button class="clear-search-btn" id="clear-search-btn" onclick="clearSearch()" style="display:none;" title="Cancella ricerca">✕</button>
-      </div>
-      
-      <div class="hub-format-filters" id="format-filter-group">
-        <button class="filter-chip active" data-ext="all" onclick="setDocFilterExt('all')">Tutti i formati</button>
-        <button class="filter-chip" id="chip-entities-filter" onclick="toggleDomainEntitiesFilter()" style="border-color:#38bdf8;color:#7dd3fc;">🏛️ Solo Entità di Dominio</button>
-        <button class="filter-chip" data-ext=".md" onclick="setDocFilterExt('.md')">📝 Markdown (.md)</button>
-        <button class="filter-chip" data-ext=".html" onclick="setDocFilterExt('.html')">🌐 HTML / Preview (.html)</button>
-        <button class="filter-chip" data-ext=".json" onclick="setDocFilterExt('.json')">⚙️ JSON Task</button>
-        <button class="filter-chip" data-ext=".py" onclick="setDocFilterExt('.py')">🐍 Codice (.py / .tsx)</button>
-        <button class="filter-chip" id="chip-founder-directives" onclick="toggleFounderDirectivesFilter()" style="border-color:#f59e0b;color:#fbbf24;">👑 Direttive Founder</button>
-      </div>
-    </div>
-
-    <div class="hub-results-meta" id="hub-results-meta"></div>
-    <div class="hub-docs-grid" id="hub-docs-grid"></div>
   </div>
 </div>
 
@@ -2157,6 +2527,50 @@ async function fetchState() {
 }
 
 let activeEpochFilter = 'EPOCH_2';
+try {
+  const savedEpoch = localStorage.getItem('fcc_epoch');
+  if (savedEpoch) activeEpochFilter = savedEpoch;
+} catch(e){}
+
+let currentExecutiveView = 'csuite';
+try {
+  const savedView = localStorage.getItem('fcc_active_view');
+  if (savedView) currentExecutiveView = savedView;
+} catch(e){}
+
+function switchExecutiveView(viewKey, persist = true) {
+  if (persist) {
+    currentExecutiveView = viewKey;
+    try { localStorage.setItem('fcc_active_view', viewKey); } catch(e){}
+  }
+
+  const tabKeys = ['csuite', 'knowledge', 'entities', 'ecosystem', 'all'];
+  tabKeys.forEach(k => {
+    const tab = document.getElementById('tab-' + k);
+    if (tab) tab.classList.toggle('active', k === viewKey);
+  });
+
+  const sections = {
+    'csuite': document.getElementById('view-csuite'),
+    'knowledge': document.getElementById('view-knowledge'),
+    'entities': document.getElementById('view-entities'),
+    'ecosystem': document.getElementById('view-ecosystem')
+  };
+
+  if (viewKey === 'all') {
+    Object.values(sections).forEach(sec => {
+      if (sec) sec.style.display = 'block';
+    });
+  } else {
+    Object.entries(sections).forEach(([k, sec]) => {
+      if (sec) sec.style.display = (k === viewKey) ? 'block' : 'none';
+    });
+  }
+
+  if (persist) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
 
 const SPRINT_MAP = {
   // EPOCA I - Sprint 1
@@ -2192,20 +2606,21 @@ function getTaskEpoch(taskId) {
 
 function setEpochFilter(epochKey) {
   activeEpochFilter = epochKey;
-  const b2 = document.getElementById('btn-epoch-2');
-  const b1 = document.getElementById('btn-epoch-1');
-  const b3 = document.getElementById('btn-epoch-3');
-  const bcore = document.getElementById('btn-epoch-core');
-  const ball = document.getElementById('btn-epoch-all');
-  const activeStyle = 'background:linear-gradient(135deg,#0284c7,#6366f1);color:#fff;border-color:transparent;';
-  const inactiveStyle = '';
-  if (b2) b2.style.cssText = epochKey === 'EPOCH_2' ? activeStyle : inactiveStyle;
-  if (b1) b1.style.cssText = epochKey === 'EPOCH_1' ? activeStyle : inactiveStyle;
-  if (b3) b3.style.cssText = epochKey === 'EPOCH_3' ? activeStyle : 'border-color:#38bdf8;color:#38bdf8;';
-  if (bcore) bcore.style.cssText = epochKey === 'CORE' ? activeStyle : inactiveStyle;
-  if (ball) ball.style.cssText = epochKey === 'ALL' ? activeStyle : inactiveStyle;
+  try { localStorage.setItem('fcc_epoch', epochKey); } catch(e){}
 
-  // Sync Hub chips
+  const btnMap = {
+    'EPOCH_2': 'btn-epoch-2',
+    'EPOCH_1': 'btn-epoch-1',
+    'EPOCH_3': 'btn-epoch-3',
+    'CORE': 'btn-epoch-core',
+    'ALL': 'btn-epoch-all'
+  };
+  Object.entries(btnMap).forEach(([k, id]) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.toggle('active', k === epochKey);
+  });
+
+  // Sync Hub chips if present
   const chipMap = {
     'EPOCH_2': 'chip-epoch-2',
     'EPOCH_1': 'chip-epoch-1',
@@ -2306,6 +2721,25 @@ function renderAll() {
 
   // Render Founder Approval Queue
   const reviewTasks = allTasks.filter(t => t.status === 'review');
+
+  // Update Navigation Badges & Active View
+  const badgeRev = document.getElementById('nav-badge-review');
+  if (badgeRev) {
+    if (reviewTasks.length > 0) {
+      badgeRev.style.display = 'inline-block';
+      badgeRev.textContent = `🔔 ${reviewTasks.length}`;
+    } else {
+      badgeRev.style.display = 'none';
+    }
+  }
+
+  const badgeDocs = document.getElementById('nav-badge-docs');
+  if (badgeDocs) {
+    const totalDocs = (currentState.docs || []).length;
+    badgeDocs.textContent = `${totalDocs} docs`;
+  }
+
+  switchExecutiveView(currentExecutiveView, false);
   const aq = document.getElementById('approval-queue-container');
   if (reviewTasks.length === 0) {
     aq.innerHTML = '';

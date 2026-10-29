@@ -50,8 +50,10 @@ Task e direttive inseriti direttamente dal Founder via **Founder Control Center*
 | [`FTL-CEO-033`](./FTL-CEO-033.json) | **CEO** | Problema creazione nuovo Articolo PIM da 02 Prodotti (PLM & BOM) | 🟠 `high` | ✅ `done` | — | Sì (`L2`) |
 | [`FTL-CEO-034`](./FTL-CEO-034.json) | **CEO** | Migliorare la Sticky Active Variant Context Bar | 🟠 `high` | ✅ `done` | — | Sì (`L2`) |
 | [`FTL-CEO-035`](./FTL-CEO-035.json) | **CEO** | Direttiva Esecutiva Sprint 9: Usabilità, Coerenza e Flessibilità Operativa | 🔴 `critical` | ✅ `done` | — | No (`L1`) |
-| [`FTL-CEO-036`](./FTL-CEO-036.json) | **CEO** | Home Launchpad --> "Apri Workspace Integrato Completo →" | 🟠 `high` | ✅ `done` | — | No (`L1`) |
-| [`FTL-CEO-037`](./FTL-CEO-037.json) | **CEO** | 02 Prodotti (PLM & BOM) --> Pagina non intuitiva | 🟠 `high` | ✅ `done` | `FTL-CEO-036` | No (`L1`) |
+| [`FTL-CEO-036`](./FTL-CEO-036.json) | **CEO** | Home Launchpad --> "Apri Workspace Integrato Completo →" | 🟠 `high` | ✅ `done` | — | No (`None`) |
+| [`FTL-CEO-037`](./FTL-CEO-037.json) | **CEO** | 02 Prodotti (PLM & BOM) --> Pagina non intuitiva | 🟠 `high` | ✅ `done` | `FTL-CEO-036` | No (`None`) |
+| [`FTL-CEO-038`](./FTL-CEO-038.json) | **CEO** | Sito Web Pubblico Footlink: Divulgazione, Pricing, Onboarding, Spaccato Tecnico 3D & Computer Motion | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-CEO-039`](./FTL-CEO-039.json) | **CEO** | Risoluzione Sovrapposizioni UX/UI (Segnalazione Rossa & Viola) e Istituzione Presidio UX/UI Lead | 🔴 `critical` | ✅ `done` | `FTL-CEO-037` | No (`None`) |
 | [`FTL-GOV-009`](./FTL-GOV-009.json) | **CGO** | Governance Sprint 9, Triage Esecutivo FTL-CEO-029 e Registrazione ADR-017 | 🔴 `critical` | ✅ `done` | `FTL-CEO-035` | No (`L1`) |
 | [`FTL-MKT-009`](./FTL-MKT-009.json) | **CMO** | Unificazione Lessico Calzaturiero di Lusso, Micro-interazioni Ergonomiche e Preset Dimostrativi di Fabbrica | 🟠 `high` | ✅ `done` | `FTL-PROD-015` | No (`L5`) |
 | [`FTL-PROD-014`](./FTL-PROD-014.json) | **CPO** | GESTIONE STAGIONI & COLLEZIONI | 🟠 `high` | ✅ `done` | — | No (`L0`) |

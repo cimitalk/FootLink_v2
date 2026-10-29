@@ -1,0 +1,44 @@
+{
+  "task_id": "FTL-CEO-039",
+  "title": "Risoluzione Sovrapposizioni UX/UI (Segnalazione Rossa & Viola) e Istituzione Presidio UX/UI Lead",
+  "description": "Risoluzione della tripla sovrapposizione funzionale di navigazione in Modulo 02 (segnalazione rossa 1, 2, 3: barra globale moduli, stepper a 6 box e tab operativi) e dell'incoerenza/sovraffollamento nella selezione modelli con sticky variant bar disallineata (segnalazione viola 1, 2). Definizione dello standard UX/UI a 2 livelli massimi (ADR-020) e formalizzazione del presidio di UX/UI Lead.",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T22:57:00+01:00",
+  "updated_at": "2026-10-29T23:05:00+01:00",
+  "due_date": "2026-11-28T23:59:59+01:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": "0.5g",
+  "dependencies": [
+    "FTL-CEO-037"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/adr/ADR-020-ux-ui-anti-redundancy-standards-and-design-lead-mandate.md",
+    "Azienda/docs/roles/Role_UX_Lead_Footlink.md",
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Applicativo/frontend/src/components/ProductModelsManager.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": null,
+  "decision_record_id": "ADR-020",
+  "tags": [
+    "governance",
+    "product",
+    "UX",
+    "UI",
+    "PLM",
+    "design-system"
+  ],
+  "acceptance_criteria": [
+    "Eliminare la triplice sovrapposizione visiva e funzionale unificando lo stepper a 6 box e i tab operativi in una singola barra Level-2 pulita con breadcrumb discreta (Segnalazione Rossa)",
+    "Risolvere l'incoerenza e il sovraffollamento nella selezione dei modelli isolando lo scope: la sticky variant bar deve essere nascosta nel tab Modelli e sincronizzata con il modello selezionato (Segnalazione Viola)",
+    "Formalizzare l'ADR-020 con lo standard di non-proliferazione dei livelli di navigazione (max 2) e di isolamento dello scope contestuale",
+    "Istituire e formalizzare il ruolo/presidio di Lead UX/UI Designer & Ergonomics Officer a supporto del CPO/CMO per prevenire future regressioni"
+  ],
+  "notes": "Task formalizzato e completato su direttiva del Founder a seguito di screenshot annotato con due criticità (rossa 1-2-3 e viola 1-2). Rimossa la triplice sovrapposizione in Modulo 02 e isolato lo scope della sticky bar di variante unicamente ai tab pertinenti."
+}
