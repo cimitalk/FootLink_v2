@@ -47,6 +47,7 @@ AGENT_ROLE_MAP = {
     "CPO": "footlink-cpo",
     "CRO": "footlink-cro",
     "CMO": "footlink-cmo",
+    "UX_LEAD": "footlink-ux-lead",
 }
 
 PREFIX_MAP = {
@@ -56,6 +57,7 @@ PREFIX_MAP = {
     "CPO": "FTL-PROD",
     "CRO": "FTL-REV",
     "CMO": "FTL-MKT",
+    "UX_LEAD": "FTL-UX",
 }
 
 VALID_PRIORITIES = {"critical", "high", "medium", "low"}
@@ -608,6 +610,8 @@ def list_all_docs():
             return "CRO"
         if "role_cmo" in low or "/marketing/" in low or "/dam/" in low or "ftl-mkt" in low:
             return "CMO"
+        if "role_ux_lead" in low or "/ux/" in low or "ftl-ux" in low or "ergonomics" in low:
+            return "UX_LEAD"
         if "manifesto" in low:
             return "CEO"
         return "TUTTI"
@@ -1723,6 +1727,18 @@ INDEX_HTML = r"""<!DOCTYPE html>
         <span>👟 Piattaforma Footlink</span>
         <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Frontend :5173 ↗</span>
       </a>
+      <a href="http://localhost:5173/website/index.html" target="_blank" rel="noopener noreferrer" class="btn" style="background:#0f172a;border-color:#38bdf8;color:#38bdf8;" title="Sito Web Pubblico Ufficiale di Footlink (Motion &amp; Onboarding Distrettuale)">
+        <span>🌐 Sito Web Pubblico</span>
+        <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Official Site ↗</span>
+      </a>
+      <a href="http://localhost:5173/training_portal.html" target="_blank" rel="noopener noreferrer" class="btn" style="background:#1c1917;border-color:#d97706;color:#f59e0b;" title="Training Portal — Portale Formazione per Business Users della Piattaforma">
+        <span>🎓 Training Portal</span>
+        <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Academy ↗</span>
+      </a>
+      <a href="http://localhost:5173/tech_docs.html" target="_blank" rel="noopener noreferrer" class="btn" style="background:#020617;border-color:#0284c7;color:#38bdf8;" title="Tech Docs — Architettura, Integrazione ERP, Interoperabilità &amp; REST API">
+        <span>📘 Tech Docs</span>
+        <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">API &amp; ERP ↗</span>
+      </a>
       <a href="http://localhost:5173/dam/index.html" target="_blank" rel="noopener noreferrer" class="btn" style="background:#14231b;border-color:#166534;color:#4ade80;" title="Archivio DAM Asset Pubblicitari, Social e Newsletter">
         <span>📁 Archivio DAM</span>
         <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;">Adv &amp; Social ↗</span>
@@ -2193,6 +2209,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
           <option value="CPO">📦 CPO (footlink-cpo) — Specifiche Prodotto PLM/PIM, UX/UI &amp; Scheda Tecnica</option>
           <option value="CRO">💰 CRO (footlink-cro) — FinOps, Pricing di Filiera &amp; Sostenibilità</option>
           <option value="CMO">📣 CMO (footlink-cmo) — Marketing, Posizionamento &amp; Go-To-Market Distretti</option>
+          <option value="UX_LEAD">🎨 UX_LEAD (footlink-ux-lead) — Ergonomia, UX/UI, Coerenza Visiva &amp; Anti-Ridondanza</option>
         </select>
       </div>
 
@@ -2369,6 +2386,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
             <option value="CPO">📦 CPO (footlink-cpo)</option>
             <option value="CRO">💰 CRO (footlink-cro)</option>
             <option value="CMO">📣 CMO (footlink-cmo)</option>
+            <option value="UX_LEAD">🎨 UX_LEAD (footlink-ux-lead)</option>
           </select>
         </div>
 
@@ -3292,7 +3310,8 @@ function renderKnowledgeHub() {
     { key: 'CTO', label: '💻 CTO' },
     { key: 'CPO', label: '🎯 CPO' },
     { key: 'CRO', label: '💰 CRO' },
-    { key: 'CMO', label: '📢 CMO' }
+    { key: 'CMO', label: '📢 CMO' },
+    { key: 'UX_LEAD', label: '🎨 UX Lead' }
   ];
 
   const roleCounts = { TUTTI: allDocs.length };
@@ -3923,6 +3942,54 @@ class ControlCenterHandler(BaseHTTPRequestHandler):
             else:
                 self.send_response(302)
                 self.send_header("Location", "http://localhost:5173")
+                self.end_headers()
+                return
+        elif parsed.path in ("/website", "/website/"):
+            site_html = os.path.join(APPLICATIVO_DIR, "frontend", "public", "website", "index.html")
+            if os.path.isfile(site_html):
+                with open(site_html, "rb") as f:
+                    body = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            else:
+                self.send_response(302)
+                self.send_header("Location", "http://localhost:5173/website/index.html")
+                self.end_headers()
+                return
+        elif parsed.path in ("/training", "/training_portal", "/training_portal.html"):
+            train_html = os.path.join(APPLICATIVO_DIR, "frontend", "public", "training_portal.html")
+            if os.path.isfile(train_html):
+                with open(train_html, "rb") as f:
+                    body = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            else:
+                self.send_response(302)
+                self.send_header("Location", "http://localhost:5173/training_portal.html")
+                self.end_headers()
+                return
+        elif parsed.path in ("/tech-docs", "/tech_docs", "/tech_docs.html"):
+            tech_html = os.path.join(APPLICATIVO_DIR, "frontend", "public", "tech_docs.html")
+            if os.path.isfile(tech_html):
+                with open(tech_html, "rb") as f:
+                    body = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            else:
+                self.send_response(302)
+                self.send_header("Location", "http://localhost:5173/tech_docs.html")
                 self.end_headers()
                 return
         elif parsed.path in ("/codebase", "/codebase-dashboard"):

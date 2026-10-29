@@ -156,12 +156,38 @@
 
     <!-- SECTION 1: I 6 FLUSSI OPERATIVI (WORKFLOWS) -->
     <div id="section-workflows" class="space-y-6">
-      <div class="border-b border-stone-200 pb-4">
-        <span class="text-xs font-extrabold uppercase tracking-wider text-amber-700">Guida ai Processi di Business</span>
-        <h2 class="text-2xl font-black text-stone-900 tracking-tight mt-1">I 6 Flussi di Lavoro Fondamentali</h2>
-        <p class="text-xs sm:text-sm text-stone-600 mt-1">
-          Come si muovono le informazioni in Footlink: dal disegno del modello al cartellino finale con QR code.
-        </p>
+      <div class="border-b border-stone-200 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-3">
+        <div>
+          <span class="text-xs font-extrabold uppercase tracking-wider text-amber-700">Guida ai Processi di Business</span>
+          <h2 class="text-2xl font-black text-stone-900 tracking-tight mt-1">I 6 Flussi di Lavoro Fondamentali</h2>
+          <p class="text-xs sm:text-sm text-stone-600 mt-1">
+            Come si muovono le informazioni in Footlink: dal disegno del modello al cartellino finale con QR code.
+          </p>
+        </div>
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shrink-0">
+          <span>🎨 Sprint 9 Certified: Max 2 Livelli &amp; Zero Ridondanze UX</span>
+        </div>
+      </div>
+
+      <!-- SPRINT 9 UX HIGHLIGHT BANNER -->
+      <div class="p-4 rounded-2xl bg-gradient-to-r from-stone-900 to-stone-800 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-bold text-lg shrink-0">
+            📐
+          </div>
+          <div>
+            <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+              <span>Novità Sprint 9: Standard di Usabilità del Lead UX/UI Designer</span>
+              <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30">ADR-020 &amp; ADR-021</span>
+            </h4>
+            <p class="text-xs text-stone-300 mt-0.5">
+              Introdotta la regola dei <strong>Massimi 2 Livelli di Navigazione</strong> (Suite Nav + Tab Operativo), eliminazione dei tasti duplicati (Single Source of Action nel Dettaglio Modello), isolamento contestuale della Sticky Bar e gestione commerciale 1:N centralizzata in Modulo 03 PIM.
+            </p>
+          </div>
+        </div>
+        <a href="#flussi" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs transition shrink-0 text-center">
+          Processi Certificati ↓
+        </a>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -171,12 +197,12 @@
             <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 font-extrabold text-sm flex items-center justify-center">01</span>
             <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded-full">Modelleria</span>
           </div>
-          <h3 class="text-base font-extrabold text-stone-900">Dall'Idea alla Forma (Product Model)</h3>
+          <h3 class="text-base font-extrabold text-stone-900">Dall'Idea alla Forma (Product Model a 2 Livelli)</h3>
           <p class="text-xs text-stone-600 leading-relaxed">
-            Inserisci il codice modello, il nome stile, il numero di forma (Last), l'altezza tacco/drop e la scala taglie (Paris Point 35–46 o UK). Questo archetipo governerà tutte le varianti di colore e materiale senza duplicare le geometrie.
+            Inserisci codice modello, nome silhouette, numero di forma (Last), tipo costruzione (Blake, Goodyear, Cassetta) e scala taglie certificata. La nuova architettura a <strong>2 soli livelli</strong> separa l'ingegneria della sagoma e del cartamodello CAD 3D dalle varianti tecniche PLM collegate, con single-source di modifica.
           </p>
           <div class="pt-3 border-t border-stone-100 text-[11px] text-amber-900 font-semibold flex items-center gap-1.5">
-            <i data-lucide="check" class="w-3.5 h-3.5 text-amber-600"></i> Modulo: <em>02 Prodotti (Product Models)</em>
+            <i data-lucide="check" class="w-3.5 h-3.5 text-amber-600"></i> Modulo: <em>02 Prodotti (Modelli di Base)</em>
           </div>
         </div>
 
@@ -186,12 +212,12 @@
             <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 font-extrabold text-sm flex items-center justify-center">02</span>
             <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded-full">Industrializzazione</span>
           </div>
-          <h3 class="text-base font-extrabold text-stone-900">La Distinta Base a 3 Livelli (BOM)</h3>
+          <h3 class="text-base font-extrabold text-stone-900">BOM a 3 Livelli &amp; Catalogo Materiali di Filiera</h3>
           <p class="text-xs text-stone-600 leading-relaxed">
-            Scomponi la scarpa nei 3 livelli fisici: <strong>Livello 1 Tomaia</strong> (pellami, puntale, contrafforte), <strong>Livello 2 Fodera</strong> (vitello naturale, imbottiture) e <strong>Livello 3 Fondo</strong> (soletta con cambrione, suola gomma o cuoio). Imposta i consumi ($dm^2$) e la percentuale di sfrido di tranciatura.
+            Scomponi la scarpa nei 3 livelli fisici: <strong>Tomaia</strong>, <strong>Fodera</strong> e <strong>Fondo</strong>. Nello Sprint 9 l'inserimento componenti è velocizzato dal <strong>BOM Picker Guidato</strong> collegato all'anagrafica materiali (Modulo 04) e dal <strong>Bulk Material Swap</strong> per sostituzioni massive con un clic.
           </p>
           <div class="pt-3 border-t border-stone-100 text-[11px] text-amber-900 font-semibold flex items-center gap-1.5">
-            <i data-lucide="check" class="w-3.5 h-3.5 text-amber-600"></i> Modulo: <em>02 Prodotti (BOM 3-Level Tree)</em>
+            <i data-lucide="check" class="w-3.5 h-3.5 text-amber-600"></i> Moduli: <em>02 Distinta Base + 04 Catalogo Materiali</em>
           </div>
         </div>
 
@@ -216,12 +242,12 @@
             <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 font-extrabold text-sm flex items-center justify-center">04</span>
             <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded-full">Vendite & Omnicanalità</span>
           </div>
-          <h3 class="text-base font-extrabold text-stone-900">Il Ponte 1 PIM : N PLM (Multi-Sourcing)</h3>
+          <h3 class="text-base font-extrabold text-stone-900">Ponte Commerciale 1 PIM : N PLM in Modulo 03</h3>
           <p class="text-xs text-stone-600 leading-relaxed">
-            Il cliente finale compra <strong>un articolo commerciale</strong> (PIM) con una foto e un prezzo retail. Con Footlink puoi collegare questo articolo a <strong>più distinte base di produzione</strong> (PLM), ad esempio una per lo stabilimento principale nelle Marche e una per il laboratorio partner all'estero.
+            L'articolo commerciale (prezzi wholesale/retail, listini canali, cataloghi showroom) è interamente governato nel <strong>Modulo 03 PIM</strong>. Esso aggancia in modo flessibile molteplici schede tecniche PLM (es. stabilimento Marche vs laboratorio partner estero) senza interferire con l'ufficio modelleria.
           </p>
           <div class="pt-3 border-t border-stone-100 text-[11px] text-amber-900 font-semibold flex items-center gap-1.5">
-            <i data-lucide="check" class="w-3.5 h-3.5 text-amber-600"></i> Modulo: <em>03 PIM Catalogo & Ponte 1:N</em>
+            <i data-lucide="check" class="w-3.5 h-3.5 text-amber-600"></i> Modulo: <em>03 PIM (Catalogo &amp; Feed Commerciale)</em>
           </div>
         </div>
 

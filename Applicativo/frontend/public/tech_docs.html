@@ -409,6 +409,50 @@
         </div>
       </section>
 
+      <!-- ENDPOINT SPRINT 9: MATERIALS CATALOG & BULK SWAP -->
+      <section id="api-materials-sprint9" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-2 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-md bg-purple-950 text-purple-300 font-mono font-bold text-xs border border-purple-800">POST</span>
+            <span class="font-mono text-sm font-bold text-white">/api/v1/materials/bulk-swap</span>
+          </div>
+          <span class="text-xs font-mono text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded border border-purple-800">Sprint 9 API</span>
+        </div>
+        <p class="text-xs text-slate-300">
+          Sostituzione massiva di un materiale all'interno delle distinte base BOM a 3 livelli per singola variante o intero prodotto PIM.
+        </p>
+
+        <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
+          <div class="bg-slate-900 px-4 py-2 flex items-center justify-between text-xs border-b border-slate-800">
+            <span class="text-slate-400 font-mono text-[11px]">Payload Bulk Material Swap</span>
+            <button onclick="copyTechCode('code-bulk-swap')" class="text-slate-400 hover:text-white flex items-center gap-1 text-[11px]">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copia
+            </button>
+          </div>
+          <pre id="code-bulk-swap" class="p-4 text-xs font-mono text-purple-300 overflow-x-auto"><code>{
+  "target_type": "variant",
+  "target_id": "VAR-LOAFER-01-NERO",
+  "old_material_id": "MAT-LEA-001",
+  "new_material_id": "MAT-LEA-008",
+  "reason": "Sostituzione vitello spazzolato con pellame conciato al vegetale certificato LWG Gold"
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: DOMAIN ARCHITECTURE SPRINT 9 -->
+      <section id="arch-model-plm-pim" class="tech-card space-y-4">
+        <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-mono text-sky-400 uppercase font-bold tracking-wider">ADR-020 &amp; ADR-021</span>
+            <h2 class="text-xl font-extrabold text-white mt-1">Architettura Modelli PLM (Costruzione) &amp; PIM (Stile 1:N)</h2>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-950 text-sky-300 border border-sky-800">Sprint 9 Standard</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          I <strong>Modelli di Base</strong> definiscono rigidamente la geometria della forma calzaturiera (<em>Last Code</em>), il tipo di costruzione suola (<em>Blake, Goodyear, Cassetta</em>), l'altezza tacco e la scala taglie certificata. La nuova architettura a <strong>2 livelli di visualizzazione</strong> isola la gestione dei modelli base senza interferenze commerciali, demandando integralmente l'associazione 1:N con i canali e-commerce e listini retail al <strong>Modulo 03 PIM</strong>.
+        </p>
+      </section>
+
       <!-- SECTION: SECURITY & L6 -->
       <section id="security-l6" class="tech-card space-y-4">
         <div class="border-b border-slate-800 pb-3">

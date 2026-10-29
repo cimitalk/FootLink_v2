@@ -21,6 +21,10 @@ Directory ufficiale dedicata ai deliverable strategici del **CEO** ([`Role_CEO_F
   [`sprint-9-c-suite-proposals-and-development-plan.md`](./sprint-9-c-suite-proposals-and-development-plan.md) — `FTL-CEO-035`, `FTL-GOV-009`, `FTL-PROD-015`, `FTL-TECH-030`, `FTL-TECH-031`, `FTL-REV-008`, `FTL-MKT-009`, `FTL-PROD-016`  
   *Definizione dello Sprint 9 su Direttiva Founder: focus su usabilità, coerenza e flessibilità. Integrazione anagrafica Materiali (`FTL-CEO-029`) con BOM Picker guidato, Bulk Material Swap, Costing Industriale flessibile e Contextual Jumps cross-modulo.*
 
+- **Verbale Esecutivo C-Suite: Chiusura Finale Sprint 9 ("Usabilità, Coerenza e Flessibilità Operativa"):**  
+  [`sprint-9-final-review-and-closure.md`](./sprint-9-final-review-and-closure.md) — `FTL-CEO-029` .. `FTL-CEO-040`, `FTL-GOV-009`, `FTL-TECH-030`, `FTL-TECH-031`, `FTL-PROD-015`, `FTL-PROD-016`, `FTL-REV-008`, `FTL-MKT-009`  
+  *Chiusura formale dello Sprint 9: Catalogo Materiali, Sito Web Pubblico con Motore Motion a 60 FPS, Risoluzione Inconsistenze UX/UI con regola Max-2-Levels, Istituzione Lead UX/UI Designer, Ristrutturazione Dettaglio Modello a 2 Livelli, Aggiornamento Training Portals e istituzione SOP-GOV-003 di Chiusura Sprint.*
+
 ---
 
 ## 📦 Archivio Consolidato Epoca I — Fondazione Orizzontale (Sprint 1 – Sprint 7)
