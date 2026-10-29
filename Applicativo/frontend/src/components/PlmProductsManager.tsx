@@ -5,6 +5,7 @@ import {
   findMasterColorById,
 } from "../mockSeedData";
 import {
+  ActiveWorkspaceModule,
   PimCommercialItem,
   PlmProductionVariant,
   PlmLifecycleStatus,
@@ -143,6 +144,9 @@ interface PlmProductsManagerProps {
   onDuplicateBomItem?: (bomItemId: string) => void;
   onRefreshData?: () => void;
 
+  // Sprint 9: Atelier Process Stepper & Inter-Module Navigation (FTL-CEO-037)
+  onNavigateModule?: (mod: ActiveWorkspaceModule) => void;
+
   // Sprint 9: Materials Catalog & Bulk Swap
   materials?: MaterialRecord[];
   onBulkSwapMaterial?: (payload: BulkMaterialSwapPayload) => Promise<void> | void;
@@ -160,6 +164,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   colorwayMatrices = {},
   models = [],
   materials = [],
+  onNavigateModule,
   onBulkSwapMaterial,
   onNavigateToVendor,
   onCreateModel,
@@ -199,6 +204,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   const [showColorStudioModal, setShowColorStudioModal] = useState<boolean>(false);
   const [triggerExplosionCounter, setTriggerExplosionCounter] = useState<number>(0);
   const [lifecycleGateError, setLifecycleGateError] = useState<string | null>(null);
+  const [showToolsDropdown, setShowToolsDropdown] = useState<boolean>(false);
 
   const handleSafeLifecycleChange = (
     variantItem: PlmProductionVariant,
@@ -890,48 +896,91 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setShowColorStudioModal(true)}
-              className="px-4 py-2.5 rounded-full border border-amber-400/50 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
-            >
-              <span>🎨 Cartella Colori Master</span>
-            </button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Primary Creation Actions */}
             <button
               type="button"
               onClick={() => {
-                setShowColorMatrixPanel(true);
-                setTriggerExplosionCounter((c) => c + 1);
+                setActiveOperationalTab("modelli");
               }}
-              className="px-4 py-2.5 rounded-full border border-sky-400/50 bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
+              className="px-4 py-2.5 rounded-full border border-amber-400/50 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
+              title="Passa all'anagrafica Modelli per definire una nuova forma, dima o scala taglie"
             >
-              <span>⚡ 1-Click Colorway Explosion</span>
+              <span>📐 + Nuovo Modello</span>
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setBulkImportTab("template");
-                setShowBulkImportModal(true);
-              }}
-              className="px-4 py-2.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
-            >
-              <span>📥 Import Massivo CSV</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleExportCsv}
-              className="px-4 py-2.5 rounded-full border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
-            >
-              <span>📊 Esporta Excel / CSV</span>
-            </button>
+
             <button
               type="button"
               onClick={() => setShowCreateModal(true)}
               className="px-5 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-[#111111] font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+              title="Crea una nuova variante di prodotto PLM"
             >
-              <span>+ Nuovo Prodotto PLM</span>
+              <span>+ Nuova Variante PLM</span>
             </button>
+
+            {/* Utility Tools Menu */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowToolsDropdown(!showToolsDropdown)}
+                className="px-4 py-2.5 rounded-full border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 text-neutral-200 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
+                title="Strumenti avanzati di modelleria, colori ed importazione"
+              >
+                <span>⚙️ Strumenti Avanzati</span>
+                <span className="text-[10px]">{showToolsDropdown ? "▲" : "▼"}</span>
+              </button>
+
+              {showToolsDropdown && (
+                <div className="absolute right-0 mt-2 w-64 bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl p-2 z-40 space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsDropdown(false);
+                      setShowColorStudioModal(true);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-amber-300 hover:bg-neutral-800 flex items-center gap-2.5 transition"
+                  >
+                    <span>🎨</span>
+                    <span>Cartella Colori Master</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsDropdown(false);
+                      setShowColorMatrixPanel(true);
+                      setTriggerExplosionCounter((c) => c + 1);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-sky-300 hover:bg-neutral-800 flex items-center gap-2.5 transition"
+                  >
+                    <span>⚡</span>
+                    <span>1-Click Colorway Explosion</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsDropdown(false);
+                      setBulkImportTab("template");
+                      setShowBulkImportModal(true);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-emerald-400 hover:bg-neutral-800 flex items-center gap-2.5 transition"
+                  >
+                    <span>📥</span>
+                    <span>Import Massivo CSV</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsDropdown(false);
+                      handleExportCsv();
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-neutral-200 hover:bg-neutral-800 flex items-center gap-2.5 transition"
+                  >
+                    <span>📊</span>
+                    <span>Esporta Excel / CSV</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -963,6 +1012,224 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
             </div>
             <span className="text-[10px] text-neutral-400">Segregazione automatica</span>
           </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* ATELIER PROCESS STEPPER (FTL-CEO-037 & PRD-011)                           */}
+      {/* Flusso Logico Modelleria & Sviluppo Prodotto Calzature / Pelletteria      */}
+      {/* ========================================================================= */}
+      <div className="bg-white border border-[#E5E5E5] rounded-3xl p-5 shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 pb-3 border-b border-neutral-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#707072]">
+                FLUSSO LOGICO UFFICIO PRODOTTO &amp; DISTINTA BASE
+              </span>
+            </div>
+            <h2 className="text-base font-extrabold text-[#111111] mt-0.5">
+              Atelier Stepper: Il ciclo continuo di ingegnerizzazione della calzatura
+            </h2>
+          </div>
+          <div className="text-xs text-[#707072]">
+            Dalla pianificazione della stagione alla distinta base e al Passaporto Digitale UE
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          {/* Step 1: Stagioni & Collezioni */}
+          <button
+            type="button"
+            onClick={() => onNavigateModule?.("seasons_collections")}
+            className="group relative p-3 rounded-2xl border text-left transition-all bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
+          >
+            <div className="flex items-center justify-between text-[10px] font-bold text-neutral-500 mb-1">
+              <span>FASE 01</span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-200 text-neutral-700">Mod. 01 ↗</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900">
+              <span>📅</span>
+              <span className="truncate">Stagioni &amp; Collezioni</span>
+            </div>
+            <p className="text-[10px] text-neutral-500 mt-1 line-clamp-1">
+              {seasons.length > 0 ? `${seasons.length} stagioni attive` : "Pianificazione moda"}
+            </p>
+          </button>
+
+          {/* Step 2: Modelli Base */}
+          <button
+            type="button"
+            onClick={() => setActiveOperationalTab("modelli")}
+            className={`group relative p-3 rounded-2xl border text-left transition-all ${
+              activeOperationalTab === "modelli"
+                ? "bg-[#111111] text-white border-[#111111] shadow-md ring-2 ring-emerald-400/40"
+                : "bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
+            }`}
+          >
+            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+              <span className={activeOperationalTab === "modelli" ? "text-emerald-400" : "text-neutral-500"}>
+                FASE 02
+              </span>
+              <span
+                className={`text-[9px] px-1.5 py-0.2 rounded ${
+                  activeOperationalTab === "modelli"
+                    ? "bg-emerald-500/30 text-emerald-300 font-extrabold"
+                    : "bg-amber-100 text-amber-900"
+                }`}
+              >
+                {models.length} Modelli
+              </span>
+            </div>
+            <div
+              className={`flex items-center gap-1.5 text-xs font-bold ${
+                activeOperationalTab === "modelli" ? "text-white" : "text-neutral-900"
+              }`}
+            >
+              <span>📐</span>
+              <span className="truncate">Modelli di Base</span>
+            </div>
+            <p
+              className={`text-[10px] mt-1 line-clamp-1 ${
+                activeOperationalTab === "modelli" ? "text-neutral-300" : "text-neutral-500"
+              }`}
+            >
+              Forma, fondo, dima &amp; taglie
+            </p>
+          </button>
+
+          {/* Step 3: Varianti Prodotto */}
+          <button
+            type="button"
+            onClick={() => setActiveOperationalTab("catalogo")}
+            className={`group relative p-3 rounded-2xl border text-left transition-all ${
+              activeOperationalTab === "catalogo"
+                ? "bg-[#111111] text-white border-[#111111] shadow-md ring-2 ring-emerald-400/40"
+                : "bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
+            }`}
+          >
+            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+              <span className={activeOperationalTab === "catalogo" ? "text-emerald-400" : "text-neutral-500"}>
+                FASE 03
+              </span>
+              <span
+                className={`text-[9px] px-1.5 py-0.2 rounded ${
+                  activeOperationalTab === "catalogo"
+                    ? "bg-emerald-500/30 text-emerald-300 font-extrabold"
+                    : "bg-neutral-200 text-neutral-800"
+                }`}
+              >
+                {allVariantsWithParent.length} Varianti
+              </span>
+            </div>
+            <div
+              className={`flex items-center gap-1.5 text-xs font-bold ${
+                activeOperationalTab === "catalogo" ? "text-white" : "text-neutral-900"
+              }`}
+            >
+              <span>📦</span>
+              <span className="truncate">Varianti Prodotto</span>
+            </div>
+            <p
+              className={`text-[10px] mt-1 line-clamp-1 ${
+                activeOperationalTab === "catalogo" ? "text-neutral-300" : "text-neutral-500"
+              }`}
+            >
+              Colori master &amp; codici PLM
+            </p>
+          </button>
+
+          {/* Step 4: Distinta Base (BOM) */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveOperationalTab("bom_tree");
+              setBomSubTab("tree");
+            }}
+            className={`group relative p-3 rounded-2xl border text-left transition-all ${
+              activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
+                ? "bg-[#111111] text-white border-[#111111] shadow-md ring-2 ring-emerald-400/40"
+                : "bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
+            }`}
+          >
+            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+              <span
+                className={
+                  activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
+                    ? "text-emerald-400"
+                    : "text-neutral-500"
+                }
+              >
+                FASE 04
+              </span>
+              <span
+                className={`text-[9px] px-1.5 py-0.2 rounded ${
+                  activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
+                    ? "bg-emerald-500/30 text-emerald-300 font-extrabold"
+                    : "bg-emerald-100 text-emerald-900"
+                }`}
+              >
+                3 Livelli BOM
+              </span>
+            </div>
+            <div
+              className={`flex items-center gap-1.5 text-xs font-bold ${
+                activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
+                  ? "text-white"
+                  : "text-neutral-900"
+              }`}
+            >
+              <span>🌿</span>
+              <span className="truncate">Distinta Base (BOM)</span>
+            </div>
+            <p
+              className={`text-[10px] mt-1 line-clamp-1 ${
+                activeOperationalTab === "bom_tree" || activeOperationalTab === "colorway"
+                  ? "text-neutral-300"
+                  : "text-neutral-500"
+              }`}
+            >
+              Copia da modello &amp; materiali
+            </p>
+          </button>
+
+          {/* Step 5: Assegnazione Fornitori & Terzisti */}
+          <button
+            type="button"
+            onClick={() => onNavigateModule?.("vendor_management")}
+            className="group relative p-3 rounded-2xl border text-left transition-all bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
+          >
+            <div className="flex items-center justify-between text-[10px] font-bold text-neutral-500 mb-1">
+              <span>FASE 05</span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-200 text-neutral-700">Mod. 04 ↗</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900">
+              <span>🏭</span>
+              <span className="truncate">Fornitori &amp; Fasi</span>
+            </div>
+            <p className="text-[10px] text-neutral-500 mt-1 line-clamp-1">
+              {vendors.length > 0 ? `${vendors.length} fornitori qualificati` : "Filiera & Terzisti 0 €"}
+            </p>
+          </button>
+
+          {/* Step 6: Tracciabilità & Passaporto DPP */}
+          <button
+            type="button"
+            onClick={() => onNavigateModule?.("dpp_passport")}
+            className="group relative p-3 rounded-2xl border text-left transition-all bg-neutral-50/70 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-100/80"
+          >
+            <div className="flex items-center justify-between text-[10px] font-bold text-neutral-500 mb-1">
+              <span>FASE 06</span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-200 text-neutral-700">Mod. 08 ↗</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900">
+              <span>🛡️</span>
+              <span className="truncate">Passaporto DPP</span>
+            </div>
+            <p className="text-[10px] text-neutral-500 mt-1 line-clamp-1">
+              Tracciabilità ESPR &amp; Dogane
+            </p>
+          </button>
         </div>
       </div>
 
@@ -1173,6 +1440,13 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           onDetachProduct={onDetachProductFromModel || (() => {})}
           onCreateProductFromModel={handleCreateProductFromModel}
           onCreatePimFromModel={handleOpenCreatePimModal}
+          onSelectVariantItem={(variant, parentPim, targetTab = "bom_tree") => {
+            setSelectedPimId(parentPim.pim_item_id);
+            setSelectedVariantId(variant.plm_variant_id);
+            onSelectPim(parentPim);
+            onSelectVariant(variant);
+            setActiveOperationalTab(targetTab);
+          }}
           onSelectPimItem={(pim) => {
             setSelectedPimId(pim.pim_item_id);
             if (pim.plm_variants && pim.plm_variants.length > 0) {
@@ -1568,6 +1842,99 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                     </h3>
                   </div>
                 </div>
+
+                {/* Atelier Derivation Banner: Model Connection & Actions (FTL-CEO-037 & PRD-011) */}
+                {(() => {
+                  const parentModel = (models || []).find((m) => m.model_id === currentPim?.model_id);
+                  const isBomEmpty = currentVariant.bom_items.length === 0;
+                  return (
+                    <div className="space-y-3">
+                      <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-center text-lg shrink-0">
+                            📐
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[10px] uppercase font-bold tracking-wider text-[#707072]">
+                                FASE 04 · DERIVAZIONE BOM DA MODELLO
+                              </span>
+                              {parentModel ? (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                                  Modello Base: {parentModel.model_code} · {parentModel.name}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600">
+                                  Nessun Modello associato
+                                </span>
+                              )}
+                              <span className="text-[10px] font-semibold text-neutral-500">
+                                Forma: <strong className="text-neutral-800">{currentVariant.last_or_pattern_code || parentModel?.last_code || "FORMA-STD"}</strong> · Scala: <strong className="text-neutral-800">{currentVariant.size_range}</strong>
+                              </span>
+                            </div>
+                            <div className="text-xs text-[#111111] font-semibold mt-0.5 flex items-center gap-2 flex-wrap">
+                              <span>Variante:</span>
+                              <span className="font-mono text-emerald-700 font-extrabold">{currentVariant.variant_code}</span>
+                              <span>—</span>
+                              <span>{currentVariant.colorway_name}</span>
+                              <span className="text-neutral-400">({currentVariant.bom_items.length} componenti in distinta)</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTemplateTargetItem({ ...currentVariant, parentPim: currentPim });
+                              setTemplateModalTab("apply");
+                              setShowTemplateModal(true);
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl border border-purple-300 bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-xs transition flex items-center gap-1.5 shadow-xs"
+                            title="Applica o copia la distinta base da un template predefinito o da modello"
+                          >
+                            <span>📋 Copia da Template BOM</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDeepClone({ ...currentVariant, parentPim: currentPim })}
+                            className="px-3.5 py-1.5 rounded-xl border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-100 font-bold text-xs transition flex items-center gap-1.5 shadow-xs"
+                            title="Clona l'intera variante con la sua distinta base"
+                          >
+                            <span>📑 Clona con BOM</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {isBomEmpty && (
+                        <div className="p-4 bg-amber-50/90 border border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-xl">🌿</span>
+                            <div>
+                              <strong className="text-amber-950 font-bold block">
+                                Distinta base attualmente vuota
+                              </strong>
+                              <span className="text-amber-800 text-[11px]">
+                                Per accelerare l'ingegnerizzazione, puoi copiare la distinta base dal Template Modello certificato oppure aggiungere i componenti dal catalogo materiali.
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTemplateTargetItem({ ...currentVariant, parentPim: currentPim });
+                              setTemplateModalTab("apply");
+                              setShowTemplateModal(true);
+                            }}
+                            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold text-xs transition shrink-0 shadow-sm"
+                          >
+                            📋 Applica Template di Modello →
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <BomThreeLevelTree
                   variant={currentVariant}

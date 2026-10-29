@@ -21,6 +21,11 @@ Passaggio dalla copertura orizzontale dei 9 moduli alla profondità funzionale i
   - **Simulatore Costing Industriale:** Sintesi dinamica Costo Materiali + Lavorazioni Esterne (0 €) + Overhead % e calcolo margini Wholesale/Retail con segregazione L6.
   - **Audit di Usabilità & QA:** [`sprint-9-zero-training-usability-and-ergonomics-audit.md`](sprint-9-zero-training-usability-and-ergonomics-audit.md) (`FTL-PROD-016`).
 
+- **[`PRD-011` — Semplificazione e Flusso Logico Ufficio Prodotto/BOM: Atelier Process Stepper, Razionalizzazione delle 6 Zone di Modulo 02 e Pulizia Workspace Storico](PRD-011-plm-bom-process-flow-simplification-and-atelier-stepper.md)** (`FTL-PROD-017` · Direttive [`FTL-CEO-036`](../../tasks/FTL-CEO-036.json), [`FTL-CEO-037`](../../tasks/FTL-CEO-037.json) · [`ADR-018`](../../adr/ADR-018-atelier-process-streamlining-and-plm-navigation-coordination.md)):
+  - **Dismissione Workspace Storico Monolitico (`FTL-CEO-036`):** Eliminazione dell'ambiguo CTA `"Apri Workspace Integrato Completo →"` e della vecchia view `activeModule === "all"` in favore del flusso lineare guidato con avvio da Modulo 01 (`seasons_collections`).
+  - **Atelier Process Stepper a 6 Fasi (`FTL-CEO-037`):** Guida visiva e interattiva in testata di Modulo 02 che mappa il processo reale dell'Ufficio Stile/Sviluppo Calzature: 1. Stagione/Collezione → 2. Modello Base (Forma/Fondo/Taglie) → 3. Varianti Prodotto → 4. Distinta Base BOM (copia da modello/template) → 5. Assegnazione Fornitori & Terzisti → 6. Tracciabilità & Passaporto DPP.
+  - **Razionalizzazione delle 6 Zone Omogenee:** Riorganizzazione della testata di Modulo 02 (pulsanti primari di creazione separati dal menu a tendina "Strumenti Avanzati"), coordinamento bidirezionale Modello ➔ Variante ➔ BOM, e banner di derivazione BOM da Modello con applicazione template in 1 clic.
+
 ---
 
 ## 📦 Archivio Consolidato Epoca I (Sprint 1–7 — La Fondazione Orizzontale)

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import {
   ProductModel,
   PimCommercialItem,
+  PlmProductionVariant,
   ProductCategory,
   ViewerSecurityRole,
   Season,
@@ -27,6 +28,11 @@ export interface ProductModelsManagerProps {
   onCreateProductFromModel?: (model: ProductModel) => void;
   onCreatePimFromModel?: (model: ProductModel) => void;
   onSelectPimItem?: (item: PimCommercialItem) => void;
+  onSelectVariantItem?: (
+    variant: PlmProductionVariant,
+    parentPim: PimCommercialItem,
+    targetTab?: "catalogo" | "bom_tree"
+  ) => void;
 }
 
 export const CERTIFIED_SIZE_SCALES = [
@@ -70,6 +76,7 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
   onCreateProductFromModel,
   onCreatePimFromModel,
   onSelectPimItem,
+  onSelectVariantItem,
 }) => {
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -868,15 +875,38 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
-                              {onSelectPimItem && (
-                                <button
-                                  type="button"
-                                  onClick={() => onSelectPimItem(v.parentPim)}
-                                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1 shadow-xs"
-                                >
-                                  <span>Apri nel Catalogo / BOM</span>
-                                  <span>→</span>
-                                </button>
+                              {onSelectVariantItem ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => onSelectVariantItem(v, v.parentPim, "bom_tree")}
+                                    className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1 shadow-xs"
+                                    title="Ingegnerizza o visualizza la distinta base a 3 livelli per questa variante"
+                                  >
+                                    <span>🌿 BOM</span>
+                                    <span>→</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onSelectVariantItem(v, v.parentPim, "catalogo")}
+                                    className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1 shadow-xs"
+                                    title="Visualizza questa variante nella tabella Prodotti PLM"
+                                  >
+                                    <span>📦 Prodotti</span>
+                                    <span>→</span>
+                                  </button>
+                                </>
+                              ) : (
+                                onSelectPimItem && (
+                                  <button
+                                    type="button"
+                                    onClick={() => onSelectPimItem(v.parentPim)}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1 shadow-xs"
+                                  >
+                                    <span>Apri nel Catalogo / BOM</span>
+                                    <span>→</span>
+                                  </button>
+                                )
                               )}
                             </div>
                           </div>

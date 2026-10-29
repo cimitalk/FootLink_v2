@@ -6,7 +6,6 @@ import { DomainRegistriesManager } from "./components/DomainRegistriesManager";
 import { FootlinkHomeHub } from "./components/FootlinkHomeHub";
 import { LiveDppPassportGenerator } from "./components/LiveDppPassportGenerator";
 import { PimCatalogManager } from "./components/PimCatalogManager";
-import { PimToPlmBridge } from "./components/PimToPlmBridge";
 import { PlmProductsManager } from "./components/PlmProductsManager";
 import { ProductionOrdersManager } from "./components/ProductionOrdersManager";
 import { SeasonsCollectionsHub } from "./components/SeasonsCollectionsHub";
@@ -156,7 +155,6 @@ export const App: React.FC = () => {
   const [selectedSeasonFilter, setSelectedSeasonFilter] = useState<string>("ALL");
   // FTL-PROD-014: collection focused in Module 01 (click again to deselect)
   const [selectedHubCollectionId, setSelectedHubCollectionId] = useState<string | undefined>(undefined);
-  const [showBomDrawerInProducts, setShowBomDrawerInProducts] = useState<boolean>(true);
 
   // Sprint 9 / FTL-TECH-030 / FTL-TECH-031: Materials Catalog & Sub-Tab State
   const [materials, setMaterials] = useState<MaterialRecord[]>(INITIAL_MATERIALS);
@@ -2805,6 +2803,7 @@ export const App: React.FC = () => {
             colorwayMatrices={colorwayMatrices}
             models={productModels}
             materials={materials}
+            onNavigateModule={(mod) => setActiveModule(mod)}
             onBulkSwapMaterial={handleBulkSwapMaterial}
             onNavigateToVendor={handleNavigateToVendor}
             onCreateModel={handleCreateModel}
@@ -2929,63 +2928,6 @@ export const App: React.FC = () => {
               >
                 Vai a Catalogo Commerciale (PIM) →
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* LEGACY BRIDGE / SPECIFICHE VERTICALI / BOM COSTING */}
-        {(activeModule === "all" ||
-          activeModule === "bridge_vertical_specs" ||
-          activeModule === "bom_costing") && (
-          <div className="space-y-6">
-            <PimToPlmBridge
-              pimItems={activePimList}
-              selectedPim={currentPim}
-              selectedVariant={currentVariant}
-              onSelectPim={handleSelectPim}
-              onSelectVariant={handleSelectVariant}
-              onAddVariant={handleAddVariant}
-              onCreatePimItem={handleCreatePimItem}
-              onUpdateVariantLifecycle={handleUpdateVariantLifecycle}
-              viewerRole={viewerRole}
-              seasons={seasons}
-              schemaAttributes={schemaAttributes}
-            />
-
-            {/* Ingegneria BOM 3 Livelli & Costing L6 Integrato */}
-            <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-2xl p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#707072]">
-                    INGEGNERIA DI PRODUZIONE & COSTI INDUSTRIALI L6
-                  </div>
-                  <h3 className="display-title text-2xl text-[#111111]">
-                    DISTINTA BASE (BOM) A 3 LIVELLI & CONSUMI ({currentVariant.variant_code})
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowBomDrawerInProducts(!showBomDrawerInProducts)}
-                  className="px-4 py-2 rounded-full border border-[#111111] bg-white text-[#111111] text-xs font-semibold hover:bg-[#F5F5F5]"
-                >
-                  {showBomDrawerInProducts ? "Comprimi Distinta Base ▲" : "Espandi Distinta Base ▼"}
-                </button>
-              </div>
-
-              {showBomDrawerInProducts && (
-                <BomThreeLevelTree
-                  variant={currentVariant}
-                  pimItem={currentPim}
-                  viewerRole={viewerRole}
-                  vendors={vendors}
-                  colors={masterColors}
-                  onAddBomItem={handleAddBomItem}
-                  onUpdateBomItem={handleUpdateBomItem}
-                  onDeleteBomItem={handleDeleteBomItem}
-                  onMoveBomItem={handleMoveBomItem}
-                  onDuplicateBomItem={handleDuplicateBomItem}
-                />
-              )}
             </div>
           </div>
         )}

@@ -172,10 +172,12 @@ export const FootlinkHomeHub: React.FC<FootlinkHomeHubProps> = ({
             <div className="lg:col-span-4 flex flex-wrap lg:justify-end gap-3">
               <button
                 type="button"
-                onClick={() => onNavigateModule("all")}
-                className="px-6 py-3.5 rounded-full bg-white text-[#111111] font-semibold text-sm hover:bg-[#F5F5F5] transition shadow-lg hover:shadow-xl"
+                onClick={() => onNavigateModule("seasons_collections")}
+                className="px-6 py-3.5 rounded-full bg-white text-[#111111] font-semibold text-sm hover:bg-[#F5F5F5] transition shadow-lg hover:shadow-xl flex items-center gap-2"
+                title="Avvia il flusso operativo guidato dall'apertura della nuova Stagione e Collezioni"
               >
-                Apri Workspace Integrato Completo →
+                <span>Avvia Flusso: 01 Stagioni & Collezioni</span>
+                <span>→</span>
               </button>
             </div>
           </div>
