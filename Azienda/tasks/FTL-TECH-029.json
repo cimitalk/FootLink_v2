@@ -1,0 +1,33 @@
+{
+  "task_id": "FTL-TECH-029",
+  "title": "Card modello più compatte",
+  "description": "Rendere più compatte verticalmente le card del modello listate nella colonna sinistra del modulo 02 Prodotti (PLM & BOM)",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T19:26:09+02:00",
+  "updated_at": "2026-10-29T20:25:00+02:00",
+  "due_date": "2026-11-28T23:59:59+02:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": null,
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/ProductModelsManager.tsx",
+    "Azienda/adr/ADR-016-plm-pim-model-ux-refinement-and-context-bar-redesign.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": "ADR-016",
+  "tags": [
+    "product",
+    "PLM"
+  ],
+  "acceptance_criteria": [
+    "Le card sono più compatte in verticale così da mostrarne di più nello stesso spazio diminuendo lo scroll."
+  ],
+  "notes": "Iniziativa inserita dal Founder nel Control Center per triage e strutturazione CTO."
+}

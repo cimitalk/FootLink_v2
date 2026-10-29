@@ -525,6 +525,9 @@ export const App: React.FC = () => {
       pim_item_id: newPimId,
       variant_code: vCode,
       colorway_name: cName,
+      primary_color_id:
+        (payload.initialVariant as any)?.primary_color_id ||
+        payload.initialVariant?.custom_attributes?.primary_color_id,
       size_range: sRange,
       last_or_pattern_code: lCode,
       target_gender: payload.target_gender || foundModel?.target_gender || "unisex",

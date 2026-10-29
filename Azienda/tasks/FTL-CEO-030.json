@@ -1,0 +1,34 @@
+{
+  "task_id": "FTL-CEO-030",
+  "title": "Associazione taglie a modello",
+  "description": "Se vado in modifica o creazione di un modello, il campo \"Scala Taglie Certificata *\" sembra essere un campo di testo libero. Come vengono gestite le tagli ed agganciate con quelle deifnite in anagrafica tabelle di base ? Mi sarei aspettato che vi fosse un menù di scelta.",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T19:05:49+02:00",
+  "updated_at": "2026-10-29T20:25:00+02:00",
+  "due_date": "2026-11-28T23:59:59+02:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": null,
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/ProductModelsManager.tsx",
+    "Azienda/adr/ADR-016-plm-pim-model-ux-refinement-and-context-bar-redesign.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Direttiva Founder (L2) — Richiede triage e strutturazione C-Suite",
+  "escalation_level": "L2",
+  "decision_record_id": "ADR-016",
+  "tags": [
+    "governance",
+    "product",
+    "PLM"
+  ],
+  "acceptance_criteria": [
+    "In un modello posso associare solo le taglie definite a sistema."
+  ],
+  "notes": "Iniziativa inserita dal Founder nel Control Center per triage e strutturazione CEO."
+}

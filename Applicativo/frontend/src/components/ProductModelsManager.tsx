@@ -5,12 +5,14 @@ import {
   ProductCategory,
   ViewerSecurityRole,
   Season,
+  DomainRegistryEntry,
 } from "../types";
 
 export interface ProductModelsManagerProps {
   models: ProductModel[];
   pimItems: PimCommercialItem[];
   seasons?: Season[];
+  registries?: DomainRegistryEntry[];
   viewerRole: ViewerSecurityRole;
   onCreateModel: (
     model: Omit<ProductModel, "model_id" | "products_count" | "created_at">
@@ -23,8 +25,21 @@ export interface ProductModelsManagerProps {
   onAttachProduct: (modelId: string, pimItemId: string) => Promise<void> | void;
   onDetachProduct: (modelId: string, pimItemId: string) => Promise<void> | void;
   onCreateProductFromModel?: (model: ProductModel) => void;
+  onCreatePimFromModel?: (model: ProductModel) => void;
   onSelectPimItem?: (item: PimCommercialItem) => void;
 }
+
+export const CERTIFIED_SIZE_SCALES = [
+  { code: "35-42", label: "Calzature Donna EU 35-42", category: "footwear", gender: "donna", sizes: "35, 36, 37, 38, 39, 40, 41, 42" },
+  { code: "38-46", label: "Calzature Uomo EU 38-46", category: "footwear", gender: "uomo", sizes: "38, 39, 40, 41, 42, 43, 44, 45, 46" },
+  { code: "39-46", label: "Calzature Uomo Standard EU 39-46", category: "footwear", gender: "uomo", sizes: "39, 40, 41, 42, 43, 44, 45, 46" },
+  { code: "36-41", label: "Calzature Donna Comfort EU 36-41", category: "footwear", gender: "donna", sizes: "36, 37, 38, 39, 40, 41" },
+  { code: "40-45", label: "Calzature Uomo Core EU 40-45", category: "footwear", gender: "uomo", sizes: "40, 41, 42, 43, 44, 45" },
+  { code: "24-34", label: "Calzature Bambino EU 24-34", category: "footwear", gender: "bambino", sizes: "24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34" },
+  { code: "IT 44-56", label: "Abbigliamento IT 44-56", category: "apparel", gender: "unisex", sizes: "IT 44, IT 46, IT 48, IT 50, IT 52, IT 54, IT 56" },
+  { code: "IT 38-48", label: "Abbigliamento Donna IT 38-48", category: "apparel", gender: "donna", sizes: "IT 38, IT 40, IT 42, IT 44, IT 46, IT 48" },
+  { code: "TU", label: "Pelletteria Taglia Unica (TU)", category: "leather_goods", gender: "unisex", sizes: "Taglia Unica" },
+];
 
 const CATEGORY_LABELS: Record<string, string> = {
   footwear: "Calzature (Forme & Suole)",
@@ -45,6 +60,7 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
   models,
   pimItems,
   seasons = [],
+  registries = [],
   viewerRole,
   onCreateModel,
   onUpdateModel,
@@ -52,6 +68,7 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
   onAttachProduct,
   onDetachProduct,
   onCreateProductFromModel,
+  onCreatePimFromModel,
   onSelectPimItem,
 }) => {
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
@@ -119,6 +136,43 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
       return true;
     });
   }, [models, categoryFilter, searchQuery]);
+
+  // FTL-CEO-030: Unified Certified Size Scales from Domain Registries & Presets
+  const availableSizeScales = useMemo(() => {
+    const registryScales = (registries || [])
+      .filter((r) => r.registry_name === "size_scales" && r.is_active !== false)
+      .map((r) => {
+        const meta = r.metadata || r.meta || {};
+        const code = meta.code || (meta.min && meta.max ? `${meta.min}-${meta.max}` : r.entry_code);
+        return {
+          code: code,
+          label: r.label_it || r.label_en || r.entry_code,
+          category: meta.category || meta.main_category || "footwear",
+          gender: meta.target_gender || "unisex",
+          sizes: meta.sizes
+            ? Array.isArray(meta.sizes)
+              ? meta.sizes.join(", ")
+              : String(meta.sizes)
+            : meta.min && meta.max
+            ? `${meta.min} .. ${meta.max}`
+            : "",
+        };
+      });
+
+    const combined = [...CERTIFIED_SIZE_SCALES];
+    registryScales.forEach((rs) => {
+      if (
+        !combined.some(
+          (c) =>
+            c.code.toLowerCase() === rs.code.toLowerCase() ||
+            c.label.toLowerCase() === rs.label.toLowerCase()
+        )
+      ) {
+        combined.push(rs);
+      }
+    });
+    return combined;
+  }, [registries]);
 
   // Selected Model Object
   const selectedModel = useMemo(() => {
@@ -376,24 +430,6 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
           )}
         </div>
 
-        {/* Definizione Fondativa di Governance (FTL-CEO-026 & FTL-CEO-025) */}
-        <div className="p-3.5 bg-slate-900 text-white rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-slate-800">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🏛️</span>
-            <div>
-              <span className="text-[10px] font-extrabold tracking-wider text-emerald-400 uppercase block">
-                Regola di Dominio Inderogabile (Founder Directive)
-              </span>
-              <p className="text-[11px] text-slate-300 mt-0.5">
-                &ldquo;Il Modello è la costruzione, il Prodotto è lo stile. Sia la scala taglie che la forma/cartamodello si inseriscono e modificano <strong>soltanto a livello di modello</strong> e non di prodotto.&rdquo;
-              </p>
-            </div>
-          </div>
-          <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950 px-2.5 py-1 rounded-lg border border-emerald-800 shrink-0">
-            Forma &amp; Taglie Locked on Products
-          </span>
-        </div>
-
         {/* Filters Strip */}
         <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
@@ -462,45 +498,37 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                 <div
                   key={model.model_id}
                   onClick={() => setSelectedModelId(model.model_id)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-xs ${
+                  className={`p-3 rounded-xl border transition-all cursor-pointer shadow-xs ${
                     isSelected
                       ? "bg-slate-900 text-white border-slate-900 ring-2 ring-slate-900/20"
-                      : "bg-white text-slate-800 border-slate-200 hover:border-slate-400 hover:shadow-md"
+                      : "bg-white text-slate-800 border-slate-200 hover:border-slate-400 hover:shadow-sm"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span
-                          className={`font-mono font-bold text-xs px-2 py-0.5 rounded ${
-                            isSelected
-                              ? "bg-slate-800 text-emerald-300 border border-slate-700"
-                              : "bg-slate-100 text-slate-900 border border-slate-200"
-                          }`}
-                        >
-                          {model.model_code}
-                        </span>
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                            isSelected
-                              ? "bg-slate-800 text-slate-200"
-                              : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {CATEGORY_LABELS[model.category] || model.category}
-                        </span>
-                      </div>
-                      <h3
-                        className={`text-sm font-extrabold mt-1.5 ${
-                          isSelected ? "text-white" : "text-neutral-900"
+                  {/* Row 1: Code, Category & Count Pill */}
+                  <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span
+                        className={`font-mono font-bold text-[11px] px-1.5 py-0.5 rounded shrink-0 ${
+                          isSelected
+                            ? "bg-slate-800 text-emerald-300 border border-slate-700"
+                            : "bg-slate-100 text-slate-900 border border-slate-200"
                         }`}
                       >
-                        {model.name}
-                      </h3>
+                        {model.model_code}
+                      </span>
+                      <span
+                        className={`text-[9.5px] font-semibold px-1.5 py-0.5 rounded-full truncate ${
+                          isSelected
+                            ? "bg-slate-800 text-slate-300"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {CATEGORY_LABELS[model.category]?.split(" ")[0] || model.category}
+                      </span>
                     </div>
 
                     <span
-                      className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${
+                      className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
                         attachedPims.length > 0
                           ? isSelected
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
@@ -514,45 +542,37 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                     </span>
                   </div>
 
-                  {/* Technical Specs Snippet */}
+                  {/* Row 2: Model Name */}
+                  <h3
+                    className={`text-xs sm:text-sm font-extrabold mt-1 truncate ${
+                      isSelected ? "text-white" : "text-neutral-900"
+                    }`}
+                  >
+                    {model.name}
+                  </h3>
+
+                  {/* Row 3: Compact Specs Strip & Actions (FTL-TECH-029) */}
                   <div
-                    className={`mt-3 pt-2.5 grid grid-cols-2 gap-2 text-[11px] border-t ${
+                    className={`mt-1.5 pt-1.5 flex items-center justify-between text-[10.5px] border-t gap-1 ${
                       isSelected ? "border-slate-800 text-slate-300" : "border-slate-100 text-slate-600"
                     }`}
                   >
-                    <div>
-                      <span className="text-[10px] opacity-70 block">Forma / Last:</span>
-                      <strong className="font-mono">{model.last_code || "—"}</strong>
+                    <div className="truncate">
+                      <span>Forma: <strong className="font-mono">{model.last_code || "—"}</strong></span>
+                      <span className="mx-1 opacity-40">·</span>
+                      <span>Taglie: <strong>{model.default_size_range || "—"}</strong></span>
                     </div>
-                    <div>
-                      <span className="text-[10px] opacity-70 block">Costruzione:</span>
-                      <strong>{CONSTRUCTION_LABELS[model.sole_construction || ""] || model.sole_construction || "—"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-[10px] opacity-70 block">Tacco:</span>
-                      <strong>{model.heel_height_mm != null ? `${model.heel_height_mm} mm` : "—"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-[10px] opacity-70 block">Scala Taglie:</span>
-                      <strong>{model.default_size_range || "—"}</strong>
-                    </div>
-                  </div>
-
-                  {/* Quick Card Action Footer */}
-                  <div className="mt-3 pt-2 flex items-center justify-between text-[11px]">
-                    <span className={isSelected ? "text-slate-400" : "text-slate-400"}>
-                      Rif CAD: <code className="text-[10px] font-mono">{model.cad_drawing_ref || "Nessuno"}</code>
-                    </span>
 
                     {isBrand && (
                       <div
-                        className="flex items-center gap-1.5"
+                        className="flex items-center gap-1 shrink-0"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <button
                           type="button"
                           onClick={() => handleOpenEditModel(model)}
-                          className={`px-2 py-0.5 rounded text-[10px] font-medium transition ${
+                          title="Modifica modello"
+                          className={`px-1.5 py-0.5 rounded text-[9.5px] font-medium transition ${
                             isSelected
                               ? "bg-slate-800 hover:bg-slate-700 text-slate-200"
                               : "bg-slate-100 hover:bg-slate-200 text-slate-700"
@@ -563,7 +583,8 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                         <button
                           type="button"
                           onClick={() => handleDeleteModel(model)}
-                          className={`px-2 py-0.5 rounded text-[10px] font-medium transition ${
+                          title="Elimina modello"
+                          className={`px-1.5 py-0.5 rounded text-[9.5px] font-medium transition ${
                             isSelected
                               ? "bg-rose-950/60 hover:bg-rose-900 text-rose-300"
                               : "bg-rose-50 hover:bg-rose-100 text-rose-700"
@@ -609,14 +630,18 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                     )}
                   </div>
 
-                  {isBrand && onCreateProductFromModel && (
+                  {/* FTL-CEO-031: Elimina ridondanza tasti duplicati nel modello.
+                      L'azione sul modello è la modifica anagrafica; le creazioni di varianti PLM e articoli PIM 
+                      avvengono nelle rispettive sezioni dedicate sotto. */}
+                  {isBrand && (
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
-                        onClick={() => onCreateProductFromModel(selectedModel)}
-                        className="px-4 py-2 rounded-xl text-xs font-bold bg-neutral-900 hover:bg-neutral-800 text-white transition shadow-sm flex items-center justify-center gap-1.5"
+                        onClick={() => handleOpenEditModel(selectedModel)}
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition shadow-xs flex items-center justify-center gap-1.5"
+                        title="Modifica anagrafica modello, geometria forma e costruzione"
                       >
-                        <span>➕ Crea Nuovo Prodotto da Modello</span>
+                        <span>✏️ Modifica Modello</span>
                       </button>
                     </div>
                   )}
@@ -882,10 +907,15 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                       </p>
                     </div>
 
-                    {onCreateProductFromModel && (
+                    {/* FTL-CEO-033: Apertura form dedicato di creazione prodotto PIM */}
+                    {(onCreatePimFromModel || onCreateProductFromModel) && (
                       <button
                         type="button"
-                        onClick={() => onCreateProductFromModel(selectedModel)}
+                        onClick={() =>
+                          onCreatePimFromModel
+                            ? onCreatePimFromModel(selectedModel)
+                            : onCreateProductFromModel?.(selectedModel)
+                        }
                         className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1 shrink-0"
                       >
                         <span>➕ Nuovo Articolo PIM</span>
@@ -898,11 +928,15 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                       <p className="text-xs text-slate-600 font-medium">
                         Nessun articolo commerciale PIM è attualmente collegato a questo modello.
                       </p>
-                      {onCreateProductFromModel && (
+                      {(onCreatePimFromModel || onCreateProductFromModel) && (
                         <button
                           type="button"
-                          onClick={() => onCreateProductFromModel(selectedModel)}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-neutral-900 text-white hover:bg-neutral-800 transition"
+                          onClick={() =>
+                            onCreatePimFromModel
+                              ? onCreatePimFromModel(selectedModel)
+                              : onCreateProductFromModel?.(selectedModel)
+                          }
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition"
                         >
                           ➕ Crea Articolo Commerciale da Modello
                         </button>
@@ -1116,24 +1150,47 @@ export const ProductModelsManager: React.FC<ProductModelsManagerProps> = ({
                   />
                 </div>
 
+                {/* FTL-CEO-030: Sostituzione casella testo con select anagrafiche di dominio certificate */}
                 <div>
                   <label className="font-bold text-slate-700 block mb-1 flex items-center justify-between">
                     <span>Scala Taglie Certificata *</span>
                     <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-bold border border-emerald-200">
-                      Sede Unica (FTL-CEO-025)
+                      Sede Unica (FTL-CEO-025 &amp; 030)
                     </span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     required
                     value={formDefaultSizeRange}
                     onChange={(e) => setFormDefaultSizeRange(e.target.value)}
-                    placeholder="es. 38-46 oppure TU"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold"
-                  />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">
-                    Definita qui a livello di modello. Non modificabile dal singolo prodotto.
-                  </span>
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono font-bold text-xs"
+                  >
+                    <option value="">-- Seleziona Scala Taglie Certificata --</option>
+                    {availableSizeScales.map((s) => (
+                      <option key={`${s.code}-${s.label}`} value={s.code}>
+                        {s.code} · {s.label} ({s.gender})
+                      </option>
+                    ))}
+                    {formDefaultSizeRange &&
+                      !availableSizeScales.some((s) => s.code === formDefaultSizeRange) && (
+                        <option value={formDefaultSizeRange}>
+                          {formDefaultSizeRange} (Valore Precedente)
+                        </option>
+                      )}
+                  </select>
+                  {(() => {
+                    const matched = availableSizeScales.find(
+                      (s) => s.code === formDefaultSizeRange
+                    );
+                    return matched?.sizes ? (
+                      <div className="mt-1 text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
+                        <strong>Taglie incluse:</strong> {matched.sizes}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">
+                        Definita qui a livello di modello. Ereditata e bloccata su tutti i prodotti PLM e PIM.
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <div className="sm:col-span-2">

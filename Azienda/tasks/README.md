@@ -10,7 +10,9 @@ Questa directory contiene i **Task Object JSON** della C-Suite di **Footlink**, 
 
 # 🚀 EPOCA II — LA VERTICALIZZAZIONE (Da Sprint 8)
 
-## 🎯 Sprint 8 — "La Ripartenza": Governance Multi-Epoca, Gestione Colori Intelligente & Albo Fornitori 360°
+> 📌 **Verbale Ufficiale di Chiusura:** Consulta il [Verbale Esecutivo C-Suite: Chiusura Finale Sprint 8 ("La Ripartenza")](../docs/okr/sprint-8-final-review-and-closure.md) per l'analisi dettagliata, il censimento dei 32 Task `done` e la ratifica della C-Suite.
+
+## 🎯 Sprint 8 — "La Ripartenza": Governance Multi-Epoca, Gestione Colori Intelligente & Albo Fornitori 360° (STATO: ✅ CHIUSO & RILASCIATO AL 100%)
 
 | Task ID | Ruolo | Titolo | Priorità | Stato | Dipendenze | Escalation Founder |
 |---|:---:|---|:---:|:---:|---|:---:|
@@ -44,11 +46,18 @@ Task e direttive inseriti direttamente dal Founder via **Founder Control Center*
 | [`FTL-CEO-027`](./FTL-CEO-027.json) | **CEO** | Riorganizzazione menù | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-CEO-028`](./FTL-CEO-028.json) | **CEO** | Ogni prodotto definito nel PLM deve essere presente nel PIM | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-CEO-029`](./FTL-CEO-029.json) | **CEO** | Gestione e catalogazione Materiali | 🟠 `high` | 📥 `backlog` | — | Sì (`L4`) |
+| [`FTL-CEO-030`](./FTL-CEO-030.json) | **CEO** | Associazione taglie a modello | 🟠 `high` | ✅ `done` | — | Sì (`L2`) |
+| [`FTL-CEO-031`](./FTL-CEO-031.json) | **CEO** | Tasti ridondandi | 🟠 `high` | ✅ `done` | — | Sì (`L2`) |
+| [`FTL-CEO-032`](./FTL-CEO-032.json) | **CEO** | Crea nuova variante | 🟠 `high` | ✅ `done` | — | Sì (`L1`) |
+| [`FTL-CEO-033`](./FTL-CEO-033.json) | **CEO** | Problema creazione nuovo Articolo PIM da 02 Prodotti (PLM & BOM) | 🟠 `high` | ✅ `done` | — | Sì (`L2`) |
+| [`FTL-CEO-034`](./FTL-CEO-034.json) | **CEO** | Migliorare la Sticky Active Variant Context Bar | 🟠 `high` | ✅ `done` | — | Sì (`L2`) |
 | [`FTL-PROD-014`](./FTL-PROD-014.json) | **CPO** | GESTIONE STAGIONI & COLLEZIONI | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-024`](./FTL-TECH-024.json) | **CTO** | Togliere il tasto "Archivio DAM Adv & Social" dalla Home Launchpad | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-025`](./FTL-TECH-025.json) | **CTO** | + NUOVO PRODOTTO PLM | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-026`](./FTL-TECH-026.json) | **CTO** | Rinominare e riorganizzare i 5 Tab Operativi Ergonomici | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 | [`FTL-TECH-027`](./FTL-TECH-027.json) | **CTO** | Ordine definitivo moduli | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-TECH-028`](./FTL-TECH-028.json) | **CTO** | Togliere banner modello | 🟠 `high` | ✅ `done` | — | No (`L0`) |
+| [`FTL-TECH-029`](./FTL-TECH-029.json) | **CTO** | Card modello più compatte | 🟠 `high` | ✅ `done` | — | No (`L0`) |
 
 ---
 

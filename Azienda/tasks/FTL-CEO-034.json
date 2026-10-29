@@ -1,0 +1,34 @@
+{
+  "task_id": "FTL-CEO-034",
+  "title": "Migliorare la Sticky Active Variant Context Bar",
+  "description": "La Sticky Active Variant Context Bar non rimane ancorata bene nella parte anta, ma è come se si ancorasse a metà e ne scompare una parte. I contenuti al suo interno sono organizzati male e risultano poco chiari e confusionari. Non è chiaro che la barra è riferita al modello selezionato. Le funzionalità 📐 Modelli; 📦 Prodotti; 🌿 Distinta ; 🎨 Colorway; sembrano in sovrapposizione con: 📐Modelli 4: 📦 Prodotti 10; 🌿 Distinta Base FTL-LOAFER-01-VIT-NERO; 🎨 Colori ΔE ≤ 2.5",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CEO",
+  "assignee_agent": "footlink-ceo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T19:33:42+02:00",
+  "updated_at": "2026-10-29T20:25:00+02:00",
+  "due_date": "2026-11-28T23:59:59+02:00",
+  "estimated_effort": "L (3-10gg)",
+  "actual_effort": null,
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/PlmProductsManager.tsx",
+    "Azienda/adr/ADR-016-plm-pim-model-ux-refinement-and-context-bar-redesign.md"
+  ],
+  "requires_escalation": true,
+  "escalation_reason": "Direttiva Founder (L2) — Richiede triage e strutturazione C-Suite",
+  "escalation_level": "L2",
+  "decision_record_id": "ADR-016",
+  "tags": [
+    "governance",
+    "product",
+    "PLM"
+  ],
+  "acceptance_criteria": [
+    "La pagina risulta fluida e senza ripetizioni funzionali"
+  ],
+  "notes": "Iniziativa inserita dal Founder nel Control Center per triage e strutturazione CEO."
+}

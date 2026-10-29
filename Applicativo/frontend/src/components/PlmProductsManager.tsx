@@ -108,6 +108,7 @@ interface PlmProductsManagerProps {
       construction_type?: string;
       carryover_status?: string;
       lifecycle_status?: PlmLifecycleStatus;
+      primary_color_id?: string;
       custom_attributes?: Record<string, any>;
     };
   }) => void;
@@ -302,6 +303,72 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
   const [newSeasonId, setNewSeasonId] = useState(seasons[0]?.season_id || "");
   const [newConstructionType, setNewConstructionType] = useState<string>("cassetta_cucita");
   const [newCarryoverStatus, setNewCarryoverStatus] = useState<string>("seasonal_core");
+  // FTL-CEO-032: Selected Master Color for New PLM Variant
+  const [newPrimaryColorId, setNewPrimaryColorId] = useState<string>("");
+
+  // FTL-CEO-033: Dedicated PIM Product Creation Modal from Model
+  const [showCreatePimModal, setShowCreatePimModal] = useState(false);
+  const [pimModalModel, setPimModalModel] = useState<ProductModel | null>(null);
+  const [pimModalSku, setPimModalSku] = useState("");
+  const [pimModalName, setPimModalName] = useState("");
+  const [pimModalSeasonId, setPimModalSeasonId] = useState(seasons[0]?.season_id || "");
+  const [pimModalWholesaleEur, setPimModalWholesaleEur] = useState<number>(145.0);
+  const [pimModalRetailEur, setPimModalRetailEur] = useState<number>(380.0);
+  const [pimModalDescIt, setPimModalDescIt] = useState("");
+  const [pimModalDescEn, setPimModalDescEn] = useState("");
+  const [pimModalSelectedVariantIds, setPimModalSelectedVariantIds] = useState<string[]>([]);
+
+  const handleOpenCreatePimModal = (model: ProductModel) => {
+    setPimModalModel(model);
+    const cleanCode = model.model_code.replace("MDL-", "");
+    setPimModalSku(`SKU-${cleanCode}-${Math.floor(100 + Math.random() * 900)}`);
+    setPimModalName(`${model.name} Commercial Line`);
+    setPimModalSeasonId(model.season_id || seasons[0]?.season_id || "");
+    setPimModalWholesaleEur(145.0);
+    setPimModalRetailEur(380.0);
+    setPimModalDescIt(`Articolo commerciale su base modello ${model.name}. Forma certificata ${model.last_code || "FM-108"}.`);
+    setPimModalDescEn(`Commercial article based on model ${model.name}. Certified last ${model.last_code || "FM-108"}.`);
+    const variantsForModel = allVariantsWithParent
+      .filter((v) => v.parentPim.model_id === model.model_id || v.last_or_pattern_code === model.last_code)
+      .map((v) => v.plm_variant_id);
+    setPimModalSelectedVariantIds(variantsForModel);
+    setShowCreatePimModal(true);
+  };
+
+  const handleCreatePimSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pimModalModel || !pimModalSku.trim() || !pimModalName.trim()) return;
+
+    const targetSeason = seasons.find((s) => s.season_id === pimModalSeasonId) || seasons[0];
+    onCreatePimItem({
+      sku_code: pimModalSku.trim().toUpperCase(),
+      model_name: pimModalName.trim(),
+      model_id: pimModalModel.model_id,
+      category: (pimModalModel.category as ProductCategory) || "footwear",
+      target_gender: pimModalModel.target_gender?.toLowerCase() || "unisex",
+      season: targetSeason?.code || "PE26",
+      season_id: targetSeason?.season_id,
+      wholesale_price_eur: pimModalWholesaleEur,
+      retail_price_eur: pimModalRetailEur,
+      commercial_description_it: pimModalDescIt,
+      commercial_description_en: pimModalDescEn,
+      carryover_status: "seasonal_core",
+      brand_line: "Main Line",
+      target_occasion: "smart_casual",
+      price_tier: "core_luxury",
+      initialVariant: {
+        variant_code: `PLM-${pimModalSku.trim().toUpperCase()}-V1`,
+        colorway_name: "Edizione Lancio Master",
+        size_range: pimModalModel.default_size_range || "38-46",
+        last_or_pattern_code: pimModalModel.last_code || "FORMA-FM-108",
+        construction_type: pimModalModel.sole_construction || "cassetta_cucita",
+        carryover_status: "seasonal_core",
+        lifecycle_status: "prototype",
+      },
+    });
+
+    setShowCreatePimModal(false);
+  };
 
   const handleSelectModelForNewProduct = (modelId: string) => {
     setNewSelectedModelId(modelId);
@@ -701,6 +768,10 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
       initialVariant: {
         variant_code: newVariantCode.trim().toUpperCase(),
         colorway_name: newColorway.trim(),
+        primary_color_id:
+          newPrimaryColorId && newPrimaryColorId !== "custom"
+            ? newPrimaryColorId
+            : undefined,
         size_range: newSizeRange.trim(),
         last_or_pattern_code: newLastCode.trim().toUpperCase(),
         construction_type: newConstructionType,
@@ -708,6 +779,13 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
         lifecycle_status: "prototype",
         custom_attributes: {
           cloned_bom_source: cloneBomFromId || null,
+          primary_color_id:
+            newPrimaryColorId && newPrimaryColorId !== "custom"
+              ? newPrimaryColorId
+              : undefined,
+          hex_code: colors?.find(
+            (c) => c.id === newPrimaryColorId || c.color_id === newPrimaryColorId
+          )?.hex_code,
         },
       },
     });
@@ -716,6 +794,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
     setNewSelectedModelId("");
     setNewModelName("");
     setNewVariantCode("");
+    setNewPrimaryColorId("");
     setShowCreateModal(false);
   };
 
@@ -962,9 +1041,9 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
         </button>
       </div>
 
-      {/* Sticky Active Variant Context Bar (FTL-CEO-020) */}
+      {/* Sticky Active Variant Context Bar (FTL-CEO-020 & FTL-CEO-034: Ancoraggio Corretto & Distinzione Modello vs Variante) */}
       {currentVariant && (
-        <div className="sticky top-2 z-20 bg-neutral-900/95 backdrop-blur-md text-white rounded-2xl p-3.5 shadow-xl border border-neutral-700 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="sticky top-[73px] z-30 bg-neutral-900/95 backdrop-blur-md text-white rounded-2xl p-3 shadow-xl border border-neutral-700/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-inner">
               {(() => {
@@ -981,27 +1060,36 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
               })()}
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-xs font-bold text-emerald-300">
+                <span className="font-mono text-xs font-black text-emerald-400">
                   {currentVariant.variant_code}
                 </span>
-                <span className="text-xs font-semibold text-neutral-200 truncate">
+                <span className="text-xs font-bold text-white truncate">
                   {currentVariant.colorway_name}
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-300 border border-neutral-700">
-                  {currentPim?.model_name} ({currentPim?.sku_code})
+                  PIM: {currentPim?.sku_code} ({currentPim?.model_name})
                 </span>
-                {currentPim?.model_id && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    📐 Modello: {currentPim.model_id}
-                  </span>
-                )}
+                {(() => {
+                  const modelObj = (models || []).find((m) => m.model_id === currentPim?.model_id);
+                  return modelObj ? (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold">
+                      📐 Modello: {modelObj.model_code} · {modelObj.name}
+                    </span>
+                  ) : currentPim?.model_id ? (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold">
+                      📐 Modello: {currentPim.model_id}
+                    </span>
+                  ) : null;
+                })()}
               </div>
-              <div className="text-[11px] text-neutral-400 flex items-center gap-2 mt-0.5 flex-wrap">
+              <div className="text-[11px] text-neutral-400 flex items-center gap-2 flex-wrap">
                 <span>Forma: <strong className="text-neutral-200 font-mono">{currentVariant.last_or_pattern_code}</strong></span>
                 <span>·</span>
                 <span>Scala: <strong className="text-neutral-200 font-mono">{currentVariant.size_range}</strong></span>
+                <span>·</span>
+                <span>Costruzione: <strong className="text-neutral-200">{currentVariant.construction_type || "Standard"}</strong></span>
                 <span>·</span>
                 <span>{currentVariant.bom_items.length} componenti BOM</span>
               </div>
@@ -1009,54 +1097,6 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {/* Quick Tab Jumpers */}
-            <div className="flex items-center gap-1 bg-neutral-800 p-1 rounded-xl border border-neutral-700">
-              <button
-                type="button"
-                onClick={() => setActiveOperationalTab("modelli")}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
-                  activeOperationalTab === "modelli"
-                    ? "bg-amber-400 text-neutral-950 font-black shadow-xs"
-                    : "text-neutral-300 hover:text-white"
-                }`}
-              >
-                📐 Modelli
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveOperationalTab("catalogo")}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
-                  activeOperationalTab === "catalogo"
-                    ? "bg-neutral-700 text-white shadow-xs"
-                    : "text-neutral-300 hover:text-white"
-                }`}
-              >
-                📦 Prodotti
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveOperationalTab("bom_tree")}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
-                  activeOperationalTab === "bom_tree"
-                    ? "bg-emerald-500 text-neutral-950 font-black shadow-xs"
-                    : "text-neutral-300 hover:text-white"
-                }`}
-              >
-                🌿 Distinta
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveOperationalTab("colorway")}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
-                  activeOperationalTab === "colorway"
-                    ? "bg-sky-400 text-neutral-950 font-black shadow-xs"
-                    : "text-neutral-300 hover:text-white"
-                }`}
-              >
-                🎨 Colorway
-              </button>
-            </div>
-
             {/* Quick Variant Switcher Dropdown */}
             <select
               value={currentVariant.plm_variant_id}
@@ -1072,6 +1112,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 }
               }}
               className="px-3 py-1.5 rounded-xl text-xs font-bold bg-neutral-800 text-white border border-neutral-700 hover:border-neutral-500 focus:outline-hidden focus:ring-1 focus:ring-emerald-400"
+              title="Passa rapidamente ad un'altra variante PLM attiva"
             >
               {pimItems.map((pim) => (
                 <optgroup key={pim.pim_item_id} label={`${pim.sku_code} - ${pim.model_name}`}>
@@ -1094,6 +1135,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 )
               }
               className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-neutral-800 text-amber-300 border border-neutral-700"
+              title="Avanzamento Gate Ciclo di Vita PLM"
             >
               <option value="new_from_pim">🏷️ Nuovo da PIM</option>
               <option value="prototype">Prototipo</option>
@@ -1112,6 +1154,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           models={models}
           pimItems={pimItems}
           seasons={seasons}
+          registries={registries}
           viewerRole={viewerRole}
           onCreateModel={onCreateModel || (() => {})}
           onUpdateModel={onUpdateModel || (() => {})}
@@ -1119,6 +1162,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           onAttachProduct={onAttachProductToModel || (() => {})}
           onDetachProduct={onDetachProductFromModel || (() => {})}
           onCreateProductFromModel={handleCreateProductFromModel}
+          onCreatePimFromModel={handleOpenCreatePimModal}
           onSelectPimItem={(pim) => {
             setSelectedPimId(pim.pim_item_id);
             if (pim.plm_variants && pim.plm_variants.length > 0) {
@@ -1773,7 +1817,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Codice Variante PLM *</label>
                   <input
@@ -1782,19 +1826,84 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                     placeholder="PLM-DUCA-ROSSO"
                     value={newVariantCode}
                     onChange={(e) => setNewVariantCode(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono uppercase font-bold"
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono uppercase font-bold text-xs"
                   />
                 </div>
+
+                {/* FTL-CEO-032: Selezione Colore / Variante collegata a Master Colors */}
                 <div>
-                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">Colore / Variante *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Bordeaux Spazzolato"
-                    value={newColorway}
-                    onChange={(e) => setNewColorway(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
-                  />
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1 flex items-center justify-between">
+                    <span>Colore Master / Variante *</span>
+                    <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-bold border border-emerald-200">
+                      Cartella Colori (FTL-CEO-032)
+                    </span>
+                  </label>
+                  {colors && colors.length > 0 ? (
+                    <div className="space-y-1.5">
+                      <select
+                        value={newPrimaryColorId}
+                        onChange={(e) => {
+                          const cid = e.target.value;
+                          setNewPrimaryColorId(cid);
+                          const chosen = colors.find((c) => c.id === cid || c.color_id === cid);
+                          if (chosen) {
+                            setNewColorway(chosen.technical_name_it);
+                            if (newSelectedModelId) {
+                              const foundModel = (models || []).find((m) => m.model_id === newSelectedModelId);
+                              const cleanCode = (foundModel?.model_code || "PRD").replace("MDL-", "");
+                              const cleanColor = chosen.color_code.replace(/[^A-Za-z0-9]/g, "");
+                              setNewVariantCode(`PLM-${cleanCode}-${cleanColor}`);
+                            }
+                          }
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold text-xs"
+                      >
+                        <option value="">-- Seleziona Colore Master di Sistema --</option>
+                        {colors
+                          .filter((c) => c.is_active !== false)
+                          .map((col) => (
+                            <option key={col.id || col.color_id} value={col.id || col.color_id}>
+                              {col.color_code} · {col.technical_name_it} ({col.commercial_family} · {col.pantone_tcx_code || col.hex_code})
+                            </option>
+                          ))}
+                        <option value="custom">✏️ Altro / Nome Personalizzato</option>
+                      </select>
+
+                      {/* Preview swatch & details */}
+                      {(() => {
+                        const chosen = colors.find((c) => c.id === newPrimaryColorId || c.color_id === newPrimaryColorId);
+                        return chosen ? (
+                          <div className="flex items-center gap-2 p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px]">
+                            <span
+                              className="w-4 h-4 rounded-full border border-slate-300 shadow-xs shrink-0"
+                              style={{ backgroundColor: chosen.hex_code }}
+                            />
+                            <span className="font-bold text-slate-800">{chosen.technical_name_it}</span>
+                            <span className="font-mono text-slate-500">({chosen.color_code})</span>
+                            <span className="text-slate-400">· Pantone {chosen.pantone_tcx_code || "—"}</span>
+                          </div>
+                        ) : newPrimaryColorId === "custom" || !newPrimaryColorId ? (
+                          <input
+                            type="text"
+                            required
+                            placeholder="es. Bordeaux Spazzolato"
+                            value={newColorway}
+                            onChange={(e) => setNewColorway(e.target.value)}
+                            className="w-full p-2 rounded-xl border border-[#D5D5D5] bg-white font-semibold text-xs"
+                          />
+                        ) : null;
+                      })()}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Bordeaux Spazzolato"
+                      value={newColorway}
+                      onChange={(e) => setNewColorway(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -1932,6 +2041,254 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
                     Salva e Ingegnerizza BOM
                   </button>
                 </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Nuovo Articolo Commerciale PIM da Modello (FTL-CEO-033) */}
+      {showCreatePimModal && pimModalModel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 animate-scaleUp my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EAEAEA]">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    Sede Commerciale 1:N (FTL-CEO-033)
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-500">
+                    Modello: {pimModalModel.model_code}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-[#111111] mt-1">
+                  + Nuovo Articolo Commerciale PIM
+                </h3>
+                <p className="text-xs text-[#707072]">
+                  Crea la scheda commerciale PIM collegata al modello base e alle sue varianti PLM.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreatePimModal(false)}
+                className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-500 hover:text-black flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreatePimSubmit} className="space-y-4 text-xs">
+              {/* Box Modello Ereditato */}
+              <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-indigo-800 tracking-wider block">
+                    Modello di Riferimento Ereditato
+                  </span>
+                  <strong className="text-neutral-900 font-extrabold text-sm">
+                    {pimModalModel.name} ({pimModalModel.model_code})
+                  </strong>
+                  <div className="text-[11px] text-indigo-700 mt-0.5">
+                    Forma: <strong className="font-mono">{pimModalModel.last_code}</strong> · Costruzione: <strong>{pimModalModel.sole_construction}</strong> · Scala: <strong>{pimModalModel.default_size_range}</strong>
+                  </div>
+                </div>
+                <span className="text-2xl">📐</span>
+              </div>
+
+              {/* SKU & Nome Commerciale */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Codice SKU PIM *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={pimModalSku}
+                    onChange={(e) => setPimModalSku(e.target.value)}
+                    placeholder="es. SKU-FM108-01"
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono uppercase font-bold text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Nome Commerciale Articolo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={pimModalName}
+                    onChange={(e) => setPimModalName(e.target.value)}
+                    placeholder="es. Sneaker Urban Runner Heritage"
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Stagione & Genere */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Stagione di Riferimento *
+                  </label>
+                  <select
+                    value={pimModalSeasonId}
+                    onChange={(e) => setPimModalSeasonId(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-semibold text-xs"
+                  >
+                    {seasons.map((s) => (
+                      <option key={s.season_id} value={s.season_id}>
+                        {s.code} · {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Categoria &amp; Genere (Ereditati da Modello)
+                  </label>
+                  <input
+                    type="text"
+                    disabled
+                    readOnly
+                    value={`${pimModalModel.category} · ${pimModalModel.target_gender || "Unisex"}`}
+                    className="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 font-semibold text-neutral-600 cursor-not-allowed text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Prezzi Wholesale & Retail */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Prezzo Wholesale B2B (€) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    required
+                    value={pimModalWholesaleEur}
+                    onChange={(e) => setPimModalWholesaleEur(Number(e.target.value))}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono font-bold text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                    Prezzo Retail Consigliato (€) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    required
+                    value={pimModalRetailEur}
+                    onChange={(e) => setPimModalRetailEur(Number(e.target.value))}
+                    className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white font-mono font-bold text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Descrizione Commerciale */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#707072] uppercase mb-1">
+                  Descrizione Commerciale Showroom &amp; E-Commerce (IT)
+                </label>
+                <textarea
+                  rows={2}
+                  value={pimModalDescIt}
+                  onChange={(e) => setPimModalDescIt(e.target.value)}
+                  placeholder="Descrizione storytelling per buyer e clienti..."
+                  className="w-full p-2.5 rounded-xl border border-[#D5D5D5] bg-white text-xs"
+                />
+              </div>
+
+              {/* Selezione Varianti PLM associate */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-slate-700 tracking-wider">
+                    Varianti Tecniche PLM Collegate
+                  </span>
+                  <span className="text-[10px] text-slate-500">
+                    Modello: {pimModalModel.model_code}
+                  </span>
+                </div>
+                {allVariantsWithParent.filter(
+                  (v) =>
+                    v.parentPim.model_id === pimModalModel.model_id ||
+                    v.last_or_pattern_code === pimModalModel.last_code
+                ).length > 0 ? (
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                    {allVariantsWithParent
+                      .filter(
+                        (v) =>
+                          v.parentPim.model_id === pimModalModel.model_id ||
+                          v.last_or_pattern_code === pimModalModel.last_code
+                      )
+                      .map((v) => {
+                        const isChecked = pimModalSelectedVariantIds.includes(v.plm_variant_id);
+                        return (
+                          <label
+                            key={v.plm_variant_id}
+                            className={`flex items-center justify-between p-2 rounded-xl border text-xs cursor-pointer transition ${
+                              isChecked
+                                ? "bg-indigo-50 border-indigo-300 text-indigo-950"
+                                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setPimModalSelectedVariantIds([
+                                      ...pimModalSelectedVariantIds,
+                                      v.plm_variant_id,
+                                    ]);
+                                  } else {
+                                    setPimModalSelectedVariantIds(
+                                      pimModalSelectedVariantIds.filter(
+                                        (id) => id !== v.plm_variant_id
+                                      )
+                                    );
+                                  }
+                                }}
+                                className="rounded text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="font-mono font-bold">{v.variant_code}</span>
+                              <span>·</span>
+                              <span>{v.colorway_name}</span>
+                            </div>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                              {v.lifecycle_status}
+                            </span>
+                          </label>
+                        );
+                      })}
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-slate-500 italic bg-white p-2.5 rounded-xl border border-slate-200">
+                    ℹ️ Nessuna variante PLM pre-esistente per questo modello. Verrà creata una variante di lancio iniziale predefinita agganciata alla forma e alla scala taglie certificate del modello.
+                  </div>
+                )}
+              </div>
+
+              {/* Bottoni submit / cancel */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EAEAEA]">
+                <button
+                  type="button"
+                  onClick={() => setShowCreatePimModal(false)}
+                  className="px-4 py-2 rounded-full border border-neutral-300 text-neutral-700 font-bold hover:bg-neutral-50"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  disabled={!pimModalSku.trim() || !pimModalName.trim()}
+                  className="px-6 py-2 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
+                >
+                  Crea Articolo Commerciale PIM
+                </button>
               </div>
             </form>
           </div>
@@ -2249,6 +2606,7 @@ export const PlmProductsManager: React.FC<PlmProductsManagerProps> = ({
           </div>
         </div>
       )}
+
       {/* Modal: Duplicazione Variante & Clonazione Ricorsiva Distinta Base (BOM) */}
       {showDeepCloneModal && cloneTargetItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">

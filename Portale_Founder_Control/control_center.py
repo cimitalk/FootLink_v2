@@ -618,32 +618,60 @@ def list_all_docs():
             return "EPOCH_3"
         if "archive_epoch_1/" in low or "memory/archive/" in low or "epoch-1" in low or "epoca-1" in low or "epoca_1" in low:
             return "EPOCH_1"
-        if any(k in low for k in (
-            "piano_prosecuzione_strategico_epoca_2",
-            "epoch-2", "epoca-2", "epoca_2",
-            "sprint-8", "sprint-9", "sprint-10", "sprint-11", "sprint-12",
-            "prd-009", "adr-011", "2026-10-26.md"
-        )):
-            return "EPOCH_2"
+
+        # Dynamic ADR check: ADR-000 to ADR-010 are Epoca 1; ADR-011+ are Epoca 2
+        m_adr = re.search(r"adr-(\d+)", low)
+        if m_adr:
+            adr_num = int(m_adr.group(1))
+            return "EPOCH_2" if adr_num >= 11 else "EPOCH_1"
+
+        # Dynamic PRD check: PRD-001 to PRD-008 are Epoca 1; PRD-009+ are Epoca 2
+        m_prd = re.search(r"prd-(\d+)", low)
+        if m_prd:
+            prd_num = int(m_prd.group(1))
+            return "EPOCH_2" if prd_num >= 9 else "EPOCH_1"
+
+        # Dynamic Sprint check: Sprint 1-7 are Epoca 1; Sprint 8-12 are Epoca 2; Sprint 13+ Epoca 3
+        m_sp = re.search(r"sprint-(\d+)", low)
+        if m_sp:
+            sp_num = int(m_sp.group(1))
+            if sp_num >= 13:
+                return "EPOCH_3"
+            elif sp_num >= 8:
+                return "EPOCH_2"
+            elif sp_num >= 1:
+                return "EPOCH_1"
+
+        # Dynamic Memory session check
+        m_date = re.search(r"2026-10-(\d+)", low)
+        if m_date:
+            day = int(m_date.group(1))
+            return "EPOCH_2" if day > 20 else "EPOCH_1"
+
         if rel_path.startswith("Azienda/tasks/FTL-") and "archive_epoch_1" not in rel_path:
             return "EPOCH_2"
+
         if any(k in low for k in (
-            "sprint-1", "sprint-2", "sprint-3", "sprint-4", "sprint-5", "sprint-6", "sprint-7",
-            "prd-001", "prd-002", "prd-003", "prd-004", "prd-005", "prd-006", "prd-007", "prd-008",
-            "adr-000", "adr-001", "adr-002", "adr-003", "adr-004", "adr-005", "adr-006", "adr-007", "adr-008", "adr-009", "adr-010",
+            "piano_prosecuzione_strategico_epoca_2",
+            "epoch-2", "epoca-2", "epoca_2"
+        )):
+            return "EPOCH_2"
+
+        if any(k in low for k in (
             "q4-2026-okr", "district-pilot", "gtm-execution", "organic-launch",
             "competitor-benchmark", "design-partner", "sales-playbook", "pilot-loi", "pilot-pipeline",
             "audit-gdpr", "process_rules_v1", "governance-risk", "governance-triage",
             "brand-guidelines", "dpp-espr-launch", "editorial-plan", "go-live-launch", "landing-page",
-            "c-suite-kickoff", "free-tier-deployment", "fast-onboarding",
-            "2026-10-18.md", "2026-10-19.md", "2026-10-20.md", "dam/"
+            "c-suite-kickoff", "free-tier-deployment", "fast-onboarding", "dam/"
         )):
             return "EPOCH_1"
+
         if any(k in low for k in (
             "manifesto", "role_", "identity.md", "soul.md", "user.md", "memory.md", "dreams.md",
             "archivio_epoche", "entita"
         )):
             return "CORE"
+
         return "CORE"
 
     def extract_title(full_path):
@@ -2799,9 +2827,16 @@ function toggleDomainEntitiesFilter() {
 
 function renderKnowledgeHub() {
   const rawDocs = currentState.docs || [];
+  const hasQuery = Boolean(hubFilter.query && hubFilter.query.trim());
+
+  // When a search query is active, search across the entire knowledge base.
+  // Otherwise, filter by the active epoch selection.
   const allDocs = rawDocs.filter(d => {
+    if (hasQuery) {
+      return true;
+    }
     if (activeEpochFilter === 'EPOCH_2') {
-      return d.epoch === 'EPOCH_2';
+      return d.epoch === 'EPOCH_2' || d.epoch === 'CORE';
     }
     if (activeEpochFilter === 'EPOCH_1') {
       return d.epoch === 'EPOCH_1';
@@ -2861,9 +2896,14 @@ function renderKnowledgeHub() {
       }
     }
     if (hubFilter.query) {
-      const q = hubFilter.query.toLowerCase();
-      const matchPath = (d.path || '').toLowerCase().includes(q);
-      const matchTitle = (d.title || '').toLowerCase().includes(q);
+      const q = hubFilter.query.toLowerCase().trim();
+      const qNorm = q.replace(/[\s\-_]+/g, '');
+      const pathLow = (d.path || '').toLowerCase();
+      const titleLow = (d.title || '').toLowerCase();
+      const pathNorm = pathLow.replace(/[\s\-_]+/g, '');
+      const titleNorm = titleLow.replace(/[\s\-_]+/g, '');
+      const matchPath = pathLow.includes(q) || (qNorm.length > 2 && pathNorm.includes(qNorm));
+      const matchTitle = titleLow.includes(q) || (qNorm.length > 2 && titleNorm.includes(qNorm));
       const matchPillar = (d.pillar || '').toLowerCase().includes(q);
       const matchRole = (d.role || '').toLowerCase().includes(q);
       if (!matchPath && !matchTitle && !matchPillar && !matchRole) return false;
@@ -2882,7 +2922,7 @@ function renderKnowledgeHub() {
 
   const counterEl = document.getElementById('hub-doc-count');
   if (counterEl) {
-    if (activeEpochFilter === 'EPOCH_3') {
+    if (!hasQuery && activeEpochFilter === 'EPOCH_3') {
       counterEl.textContent = '0 Documenti (Default Vuoto)';
     } else {
       counterEl.textContent = `${filtered.length} di ${allDocs.length} Documenti`;
@@ -2891,17 +2931,19 @@ function renderKnowledgeHub() {
 
   const metaEl = document.getElementById('hub-results-meta');
   if (metaEl) {
-    if (activeEpochFilter === 'EPOCH_3') {
+    if (hasQuery) {
+      metaEl.textContent = `Risultati ricerca per "${hubFilter.query}": ${filtered.length} file trovati nell'archivio • Filtro Ruolo: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.founderOnly ? ' • 👑 Solo Direttive Founder' : ''}`;
+    } else if (activeEpochFilter === 'EPOCH_3') {
       metaEl.textContent = 'Epoca: ✨ Nuova Epoca (Epoca III) • Ambiente tabula rasa inizializzato a default vuoto per il Founder';
     } else {
-      metaEl.textContent = `Mostrando ${filtered.length} file • Epoca: ${activeEpochLabel}${hubFilter.entitiesOnly ? ' • 🏛️ Solo Entità di Dominio' : ''} • Filtro: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.founderOnly ? ' • 👑 Solo Direttive Founder' : ''}${hubFilter.query ? ' • Ricerca: "' + hubFilter.query + '"' : ''}`;
+      metaEl.textContent = `Mostrando ${filtered.length} file • Epoca: ${activeEpochLabel}${hubFilter.entitiesOnly ? ' • 🏛️ Solo Entità di Dominio' : ''} • Filtro: ${hubFilter.role} • Formato: ${hubFilter.ext === 'all' ? 'Tutti' : hubFilter.ext}${hubFilter.founderOnly ? ' • 👑 Solo Direttive Founder' : ''}`;
     }
   }
 
   const gridEl = document.getElementById('hub-docs-grid');
   if (!gridEl) return;
 
-  if (activeEpochFilter === 'EPOCH_3') {
+  if (!hasQuery && activeEpochFilter === 'EPOCH_3') {
     gridEl.innerHTML = `
       <div class="epoch-empty-default">
         <div class="icon">✨</div>
@@ -2922,8 +2964,8 @@ function renderKnowledgeHub() {
     gridEl.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--muted); background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed var(--border);">
         <div style="font-size: 28px; margin-bottom: 8px;">🔍</div>
-        <div style="font-size: 14px; font-weight: 600; color: #e2e8f0;">Nessun documento trovato per l'epoca selezionata e i filtri attivi</div>
-        <div style="font-size: 12px; margin-top: 4px;">Prova a modificare i filtri C-Level, il selettore Epoca o la parola chiave di ricerca.</div>
+        <div style="font-size: 14px; font-weight: 600; color: #e2e8f0;">Nessun documento trovato${hasQuery ? ' per "' + escapeHtml(hubFilter.query) + '"' : ''}</div>
+        <div style="font-size: 12px; margin-top: 4px;">Prova a verificare i filtri C-Level (${hubFilter.role}), il formato (${hubFilter.ext}) o la parola chiave di ricerca.</div>
       </div>
     `;
     return;

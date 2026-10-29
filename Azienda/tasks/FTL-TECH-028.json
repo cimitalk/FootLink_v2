@@ -1,0 +1,33 @@
+{
+  "task_id": "FTL-TECH-028",
+  "title": "Togliere banner modello",
+  "description": "Togliere il banner nella sezione 02 Prodotti (PLM & BOM) in cui c'è scritto :\"REGOLA DI DOMINIO INDEROGABILE (FOUNDER DIRECTIVE)\n“Il Modello è la costruzione, il Prodotto è lo stile. Sia la scala taglie che la forma/cartamodello si inseriscono e modificano soltanto a livello di modello e non di prodotto.”\nForma & Taglie Locked on Products\"",
+  "status": "done",
+  "priority": "high",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T19:07:34+02:00",
+  "updated_at": "2026-10-29T20:25:00+02:00",
+  "due_date": "2026-11-28T23:59:59+02:00",
+  "estimated_effort": "XS (<2h)",
+  "actual_effort": null,
+  "dependencies": [],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/frontend/src/components/ProductModelsManager.tsx",
+    "Azienda/adr/ADR-016-plm-pim-model-ux-refinement-and-context-bar-redesign.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L0",
+  "decision_record_id": "ADR-016",
+  "tags": [
+    "product",
+    "infra"
+  ],
+  "acceptance_criteria": [
+    "Il banner non è più visibile"
+  ],
+  "notes": "Iniziativa inserita dal Founder nel Control Center per triage e strutturazione CTO."
+}

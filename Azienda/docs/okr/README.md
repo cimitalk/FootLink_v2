@@ -13,6 +13,10 @@ Directory ufficiale dedicata ai deliverable strategici del **CEO** ([`Role_CEO_F
   [`epoch-2-masterplan-and-sprint-8-kickoff.md`](./epoch-2-masterplan-and-sprint-8-kickoff.md) — `FTL-CEO-017`, `FTL-CEO-018`, `FTL-CEO-019`  
   *Audit di profondità funzionale Orizzontale vs Verticale sui 9 moduli, Roadmap pluriennale Sprint 8–12, Tavola Rotonda C-Suite e lancio operativo del Motore Colori Intelligente (Pantone/TCX, Lab-Dip, Colorway BOM Matrix) e dell'Albo Fornitori & Terzisti Centralizzato a 360° (Qualifica ESG/LWG/EUDR, Scadenziario Certificazioni, Vendor Rating, Listini L6 & Where-Used BOM).*
 
+- **Verbale Esecutivo C-Suite: Chiusura Finale Sprint 8 ("La Ripartenza") & Rilascio Epoca II:**  
+  [`sprint-8-final-review-and-closure.md`](./sprint-8-final-review-and-closure.md) — `FTL-CEO-017` .. `FTL-CEO-034`, `FTL-TECH-021` .. `FTL-TECH-029`, `FTL-PROD-012` .. `FTL-PROD-014`, `FTL-GOV-008`, `FTL-REV-007`, `FTL-MKT-008`  
+  *Sancisce il completamento al 100% dello Sprint 8: motori verticali Colori e Fornitori, 6 ADR registrate (ADR-011..ADR-016), separazione ontologica Modello/Prodotto, rifiniture UX collaudate e 42/42 test Pytest passanti.*
+
 ---
 
 ## 📦 Archivio Consolidato Epoca I — Fondazione Orizzontale (Sprint 1 – Sprint 7)
