@@ -464,13 +464,13 @@ def sync_dependencies_and_readme():
     new_founder_tasks = [t for t in tasks if t["task_id"] not in known_sprints]
 
     def format_task_row(t):
-        tid = t["task_id"]
-        role = t["assignee_role"]
-        title = t["title"]
-        prio = prio_badges.get(t["priority"], t["priority"])
-        st = status_badges.get(t["status"], t["status"])
+        tid = t.get("task_id", "FTL-UNKNOWN")
+        role = t.get("assignee_role", t.get("role_owner", "CEO"))
+        title = t.get("title", "")
+        prio = prio_badges.get(t.get("priority", "high"), t.get("priority", "high"))
+        st = status_badges.get(t.get("status", "todo"), t.get("status", "todo"))
         deps = ", ".join(f"`{d}`" for d in (t.get("dependencies") or [])) or "—"
-        esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level')}`)"
+        esc = f"Sì (`{t.get('escalation_level')}`)" if t.get("requires_escalation") else f"No (`{t.get('escalation_level', 'L0')}`)"
         rel_link = f"./archive_epoch_1/{tid}.json" if tid in epoch1_ids else f"./{tid}.json"
         return f"| [`{tid}`]({rel_link}) | **{role}** | {title} | {prio} | {st} | {deps} | {esc} |"
 
@@ -584,12 +584,30 @@ def list_all_docs():
 
     def infer_role(rel_path):
         norm = os.path.normpath(rel_path)
+        low = norm.lower()
+
+        # Priorità assoluta: Mansionari ufficiali e directory di dipartimento
+        if "role_ux_lead" in low or "docs/ux/" in low or "ftl-ux" in low or "design-system-ergonomics" in low:
+            return "UX_LEAD"
+        if "role_ceo" in low:
+            return "CEO"
+        if "role_cgo" in low:
+            return "CGO"
+        if "role_cto" in low:
+            return "CTO"
+        if "role_cpo" in low:
+            return "CPO"
+        if "role_cro" in low:
+            return "CRO"
+        if "role_cmo" in low:
+            return "CMO"
+
         if norm in task_artifact_role:
             return task_artifact_role[norm]
         for k, r in task_artifact_role.items():
             if norm.endswith(k) or k.endswith(norm):
                 return r
-        low = norm.lower()
+
         if "entita/modelli" in low or "entita/prodotti" in low or "entita/distinte_basi" in low or "entita/template" in low:
             return "CPO"
         if "entita/fornitori" in low:
@@ -598,20 +616,18 @@ def list_all_docs():
             return "CMO"
         if "entita/" in low:
             return "CPO"
-        if "piano_prosecuzione_strategico" in low or "role_ceo" in low or "/okr/" in low or "ftl-ceo" in low:
+        if "piano_prosecuzione_strategico" in low or "/okr/" in low or "ftl-ceo" in low:
             return "CEO"
-        if "archivio_epoche" in low or "role_cgo" in low or "/adr/" in low or "/governance/" in low or "ftl-gov" in low or "portale_founder_control" in low:
+        if "archivio_epoche" in low or "/adr/" in low or "/governance/" in low or "ftl-gov" in low or "portale_founder_control" in low:
             return "CGO"
-        if "role_cto" in low or "/technical/" in low or "applicativo/" in low or "ftl-tech" in low or ".github/" in low:
+        if "/technical/" in low or "applicativo/" in low or "ftl-tech" in low or ".github/" in low:
             return "CTO"
-        if "role_cpo" in low or "/prd/" in low or "ftl-prod" in low:
+        if "/prd/" in low or "ftl-prod" in low:
             return "CPO"
-        if "role_cro" in low or "/finops/" in low or "ftl-rev" in low:
+        if "/finops/" in low or "ftl-rev" in low:
             return "CRO"
-        if "role_cmo" in low or "/marketing/" in low or "/dam/" in low or "ftl-mkt" in low:
+        if "/marketing/" in low or "/dam/" in low or "ftl-mkt" in low:
             return "CMO"
-        if "role_ux_lead" in low or "/ux/" in low or "ftl-ux" in low or "ergonomics" in low:
-            return "UX_LEAD"
         if "manifesto" in low:
             return "CEO"
         return "TUTTI"
@@ -622,6 +638,9 @@ def list_all_docs():
             return "EPOCH_3"
         if "archive_epoch_1/" in low or "memory/archive/" in low or "epoch-1" in low or "epoca-1" in low or "epoca_1" in low:
             return "EPOCH_1"
+
+        if "role_ux_lead" in low or "docs/ux/" in low or "ftl-ux" in low or "adr-020" in low or "adr-021" in low:
+            return "EPOCH_2"
 
         # Dynamic ADR check: ADR-000 to ADR-010 are Epoca 1; ADR-011+ are Epoca 2
         m_adr = re.search(r"adr-(\d+)", low)
@@ -1177,7 +1196,33 @@ INDEX_HTML = r"""<!DOCTYPE html>
   .role-CPO { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
   .role-CRO { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
   .role-CMO { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236,72,153,0.4); }
+  .role-UX_LEAD { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244,63,94,0.4); }
   .role-TUTTI, .role-GENERAL { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.4); }
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .team-card {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .team-card:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  }
+  .team-card.new-member {
+    border-color: rgba(244, 63, 94, 0.5);
+    background: linear-gradient(135deg, rgba(30, 27, 75, 0.6), rgba(15, 23, 42, 0.9));
+  }
   .doc-type-badge {
     font-size: 10px;
     font-weight: 700;
@@ -1825,6 +1870,135 @@ INDEX_HTML = r"""<!DOCTYPE html>
           <button class="btn btn-sm" style="background:rgba(168,85,247,0.18);border-color:#a855f7;color:#d8b4fe;" onclick="openDoc('Azienda/docs/okr/epoch-2-masterplan-and-sprint-8-kickoff.md', 'preview')" title="Apri il Master Plan Epoca II e Definizione Sprint 8">
             🎯 Master Plan Sprint 8
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Executive Team & Subagents Roster (C-Suite + UX/UI Lead) -->
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;">👥</span>
+          <div>
+            <h3 style="font-size:14px;color:#f8fafc;font-weight:800;letter-spacing:-0.2px;">EXECUTIVE TEAM &amp; ORGANIGRAMMA AGENTI (C-SUITE + UX/UI LEAD)</h3>
+            <p style="font-size:11.5px;color:var(--muted);margin-top:2px;">I 7 ruoli operativi della startup con sub-agenti specializzati di Google Antigravity e rispettive specifiche di ruolo approvate</p>
+          </div>
+        </div>
+        <span class="pill green" style="font-size:11px;">7 Ruoli Esecutivi Attivi</span>
+      </div>
+
+      <div class="team-grid">
+        <!-- CEO -->
+        <div class="team-card">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:18px;">👑</span>
+              <span class="pill green" style="font-size:9.5px;">footlink-ceo</span>
+            </div>
+            <strong style="font-size:13px;color:#f8fafc;display:block;">CEO — Chief Executive Officer</strong>
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">Strategia aziendale, allineamento OKR trimestrali, allocazione priorità e sintesi esecutiva.</p>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/docs/roles/Role_CEO_Footlink.md', 'preview')" style="font-size:10.5px;padding:3px 7px;">📜 Mansionario</button>
+            <button class="btn btn-sm" onclick="switchExecutiveView('knowledge');setDocFilterRole('CEO');" style="font-size:10.5px;padding:3px 7px;background:rgba(56,189,248,0.15);border-color:#38bdf8;color:#7dd3fc;">📚 Documenti</button>
+          </div>
+        </div>
+
+        <!-- CGO -->
+        <div class="team-card">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:18px;">⚖️</span>
+              <span class="pill green" style="font-size:9.5px;">footlink-cgo</span>
+            </div>
+            <strong style="font-size:13px;color:#f8fafc;display:block;">CGO — Chief Governance Officer</strong>
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">Governance, integrità del Manifesto, Task Object Schema v1.0, ADR e coordinamento sprint.</p>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/docs/roles/Role_CGO_Footlink.md', 'preview')" style="font-size:10.5px;padding:3px 7px;">📜 Mansionario</button>
+            <button class="btn btn-sm" onclick="switchExecutiveView('knowledge');setDocFilterRole('CGO');" style="font-size:10.5px;padding:3px 7px;background:rgba(168,85,247,0.15);border-color:#a855f7;color:#c084fc;">📚 Documenti</button>
+          </div>
+        </div>
+
+        <!-- CTO -->
+        <div class="team-card">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:18px;">💻</span>
+              <span class="pill green" style="font-size:9.5px;">footlink-cto</span>
+            </div>
+            <strong style="font-size:13px;color:#f8fafc;display:block;">CTO — Chief Technology Officer</strong>
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">Architettura tecnica, FastAPI, React Vite, PostgreSQL/SQLite, algoritmi e CI/CD pipeline.</p>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/docs/roles/Role_CTO_Footlink.md', 'preview')" style="font-size:10.5px;padding:3px 7px;">📜 Mansionario</button>
+            <button class="btn btn-sm" onclick="switchExecutiveView('knowledge');setDocFilterRole('CTO');" style="font-size:10.5px;padding:3px 7px;background:rgba(34,197,94,0.15);border-color:#22c55e;color:#86efac;">📚 Documenti</button>
+          </div>
+        </div>
+
+        <!-- CPO -->
+        <div class="team-card">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:18px;">📦</span>
+              <span class="pill green" style="font-size:9.5px;">footlink-cpo</span>
+            </div>
+            <strong style="font-size:13px;color:#f8fafc;display:block;">CPO — Chief Product Officer</strong>
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">Specifiche di prodotto PLM/PIM, distinte base BOM a 3 livelli, modelli di dominio e DPP UE.</p>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/docs/roles/Role_CPO_Footlink.md', 'preview')" style="font-size:10.5px;padding:3px 7px;">📜 Mansionario</button>
+            <button class="btn btn-sm" onclick="switchExecutiveView('knowledge');setDocFilterRole('CPO');" style="font-size:10.5px;padding:3px 7px;background:rgba(245,158,11,0.15);border-color:#f59e0b;color:#fbbf24;">📚 Documenti</button>
+          </div>
+        </div>
+
+        <!-- CRO -->
+        <div class="team-card">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:18px;">💰</span>
+              <span class="pill green" style="font-size:9.5px;">footlink-cro</span>
+            </div>
+            <strong style="font-size:13px;color:#f8fafc;display:block;">CRO — Chief Revenue Officer</strong>
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">FinOps, pricing di rete, terzisti a 0 € perpetuo, costing industriale e sostenibilità economica.</p>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/docs/roles/Role_CRO_Footlink.md', 'preview')" style="font-size:10.5px;padding:3px 7px;">📜 Mansionario</button>
+            <button class="btn btn-sm" onclick="switchExecutiveView('knowledge');setDocFilterRole('CRO');" style="font-size:10.5px;padding:3px 7px;background:rgba(239,68,68,0.15);border-color:#ef4444;color:#f87171;">📚 Documenti</button>
+          </div>
+        </div>
+
+        <!-- CMO -->
+        <div class="team-card">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:18px;">📢</span>
+              <span class="pill green" style="font-size:9.5px;">footlink-cmo</span>
+            </div>
+            <strong style="font-size:13px;color:#f8fafc;display:block;">CMO — Chief Marketing Officer</strong>
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">Brand identity Nike-inspired, posizionamento distretti, sito web ufficiale e contenuti DAM.</p>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="openDoc('Azienda/docs/roles/Role_CMO_Footlink.md', 'preview')" style="font-size:10.5px;padding:3px 7px;">📜 Mansionario</button>
+            <button class="btn btn-sm" onclick="switchExecutiveView('knowledge');setDocFilterRole('CMO');" style="font-size:10.5px;padding:3px 7px;background:rgba(236,72,153,0.15);border-color:#ec4899;color:#f472b6;">📚 Documenti</button>
+          </div>
+        </div>
+
+        <!-- UX_LEAD (NUOVO MEMBRO!) -->
+        <div class="team-card new-member" style="border-left:4px solid #f43f5e;">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:18px;">🎨</span>
+              <span class="pill" style="font-size:9.5px;background:rgba(244,63,94,0.2);color:#fb7185;border:1px solid rgba(244,63,94,0.4);font-weight:700;">✨ NUOVO MEMBRO (SPRINT 9)</span>
+            </div>
+            <strong style="font-size:13px;color:#f8fafc;display:block;">UX/UI LEAD — Ergonomics Officer</strong>
+            <p style="font-size:11px;color:#cbd5e1;margin-top:4px;">Ergonomia, regola Max-2-Levels, eliminazione ridondanze, design review gate e usabilità zero-training (&lt;90s).</p>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm btn-approve" onclick="openDoc('Azienda/docs/roles/Role_UX_Lead_Footlink.md', 'preview')" style="font-size:10.5px;padding:3px 7px;">📜 Mansionario</button>
+            <button class="btn btn-sm" onclick="switchExecutiveView('knowledge');setDocFilterRole('UX_LEAD');" style="font-size:10.5px;padding:3px 7px;background:rgba(244,63,94,0.22);border-color:#f43f5e;color:#fda4af;font-weight:700;">📚 Documenti</button>
+            <button class="btn btn-sm" onclick="openDoc('Azienda/docs/ux/design-system-ergonomics-guidelines-sprint-9.md', 'preview')" style="font-size:10.5px;padding:3px 7px;background:rgba(255,255,255,0.08);">📐 Linee Guida</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3350,15 +3524,16 @@ function renderKnowledgeHub() {
     }
     if (hubFilter.query) {
       const q = hubFilter.query.toLowerCase().trim();
-      const qNorm = q.replace(/[\s\-_]+/g, '');
+      const qNorm = q.replace(/[\s\-_/]+/g, '');
       const pathLow = (d.path || '').toLowerCase();
       const titleLow = (d.title || '').toLowerCase();
-      const pathNorm = pathLow.replace(/[\s\-_]+/g, '');
-      const titleNorm = titleLow.replace(/[\s\-_]+/g, '');
-      const matchPath = pathLow.includes(q) || (qNorm.length > 2 && pathNorm.includes(qNorm));
-      const matchTitle = titleLow.includes(q) || (qNorm.length > 2 && titleNorm.includes(qNorm));
+      const pathNorm = pathLow.replace(/[\s\-_/]+/g, '');
+      const titleNorm = titleLow.replace(/[\s\-_/]+/g, '');
+      const matchPath = pathLow.includes(q) || (qNorm.length >= 2 && pathNorm.includes(qNorm));
+      const matchTitle = titleLow.includes(q) || (qNorm.length >= 2 && titleNorm.includes(qNorm));
       const matchPillar = (d.pillar || '').toLowerCase().includes(q);
-      const matchRole = (d.role || '').toLowerCase().includes(q);
+      const roleStr = (d.role || '').toLowerCase();
+      const matchRole = roleStr.includes(q) || roleStr.replace('_', '').includes(qNorm) || (q === 'ux' && (roleStr === 'ux_lead' || pathLow.includes('/ux/')));
       if (!matchPath && !matchTitle && !matchPillar && !matchRole) return false;
     }
     return true;
@@ -3431,6 +3606,7 @@ function renderKnowledgeHub() {
     CPO: '🎯',
     CRO: '💰',
     CMO: '📢',
+    UX_LEAD: '🎨',
     TUTTI: '🏢',
     GENERAL: '📄'
   };
