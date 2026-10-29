@@ -63,6 +63,20 @@ Questo file conserva i fatti durevoli, le decisioni architetturali e lo stato ev
   - Deliverable rilasciati al 100%: 2 Motori Verticali (Colori Intelligenti, Albo Fornitori 360°), 6 ADR registrate (ADR-011 .. ADR-016), separazione ontologica Modello/Prodotto, rifiniture UX PLM/PIM, sequenza menù 01-08 e context bar corretta.
   - Piattaforma collaudata e pronta per il rilascio.
 
+### Sprint 9 — "Usabilità, Coerenza e Flessibilità Operativa" (Avviato il 29 Ottobre 2026 — In Corso)
+- **Direttiva Founder:** Focus prioritario su usabilità, coerenza e flessibilità delle funzionalità implementate finora.
+- **Approvazione Strategica, Perimetro e Avvio Operativo:** Deliberata l'integrazione del catalogo materiali nel Modulo 04 Fornitori e nel BOM Picker di Modulo 02 (senza creare moduli orizzontali superflui, nel pieno rispetto di `ADR-011`), formalizzata in [`ADR-017`](./adr/ADR-017-materials-catalog-bom-picker-bulk-swap-and-cross-module-ergonomics.md) e nel Piano di Sviluppo Esecutivo [`Azienda/docs/okr/sprint-9-c-suite-proposals-and-development-plan.md`](./docs/okr/sprint-9-c-suite-proposals-and-development-plan.md).
+- **WBS Sprint 9 (8 Task):**
+  - `FTL-CEO-035` (`done` — CEO): Direttiva Esecutiva Sprint 9.
+  - `FTL-GOV-009` (`done` — CGO): Governance Sprint 9, Triage Esecutivo `FTL-CEO-029` e Registrazione `ADR-017`.
+  - `FTL-PROD-015` (`todo` — CPO): PRD-010 (Catalogo Materiali, Inserimento Guidato BOM, Bulk Swap, Contextual Jumps).
+  - `FTL-TECH-030` (`todo` — CTO): Backend FastAPI & DB (Modello Dati Material, CRUD API, Endpoint Bulk Swap).
+  - `FTL-TECH-031` (`todo` — CTO): Frontend Full-Stack (MaterialsCatalogManager in Fornitori, BOM Picker in PLM, Bulk Swap e Jumps).
+  - `FTL-REV-008` (`todo` — CRO): Costing Industriale Flessibile, Simulatore Margini e Verifica Segregazione L6.
+  - `FTL-MKT-009` (`todo` — CMO): Lessico Calzaturiero di Lusso Unificato, Micro-interazioni d'Atelier e Preset Dimostrativi.
+  - `FTL-PROD-016` (`todo` — CPO): Collaudo Funzionale Integrato, Usabilità Zero-Training (<90s) e Regression Testing.
+- **Stato Baseline di Partenza:** 42/42 Test Pytest Passanti (100%), 0 Errori TypeScript/Vite, Spesa Monetaria Autonoma 0,00 € (L2).
+
 ---
 
 ## 📦 ARCHIVIO CONSOLIDATO EPOCA I — "FONDAZIONE & ESPANSIONE ORIZZONTALE" (Sprint 1–7: 17–20 Ottobre 2026)

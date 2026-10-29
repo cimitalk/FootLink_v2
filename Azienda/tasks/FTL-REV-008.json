@@ -1,0 +1,40 @@
+{
+  "task_id": "FTL-REV-008",
+  "title": "Motore di Costing Industriale Flessibile (Materiali + Terzisti), Simulatore Margini e Verifica Segregazione L6",
+  "description": "Specifiche economico-finanziarie e realizzazione del Simulatore di Costing Industriale dinamico integrato nella Distinta Base (BOM): aggregazione automatica costi materiali, costi lavorazione terzisti e percentuale overhead, calcolo istantaneo margine Wholesale e Retail, con audit rigoroso di segregazione L6 verso terzisti e consumatori.",
+  "status": "todo",
+  "priority": "high",
+  "assignee_role": "CRO",
+  "assignee_agent": "footlink-cro",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T21:12:17+01:00",
+  "updated_at": "2026-10-29T21:16:00+01:00",
+  "due_date": "2026-11-09T23:59:59+01:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": null,
+  "dependencies": [
+    "FTL-TECH-030"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/finops/sprint-9-industrial-costing-and-margin-simulator.md",
+    "Applicativo/frontend/src/components/BomThreeLevelTree.tsx"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L4",
+  "decision_record_id": "ADR-017",
+  "tags": [
+    "revenue",
+    "finops",
+    "costing",
+    "sprint-9"
+  ],
+  "acceptance_criteria": [
+    "Formula Costo Industriale certificata: Materiali + Terzisti + Incidenza Struttura",
+    "Simulazione margine lordo real-time su Wholesale e Retail",
+    "Segregazione L6 garantita: dati di costo oscurati al 100% per utenti Terzista e Consumatore DPP",
+    "Zero impatto monetario su budget startup (0,00 EUR)"
+  ],
+  "notes": "Essenziale per accelerare l'adozione delle PMI calzaturiere (Tier 2)."
+}

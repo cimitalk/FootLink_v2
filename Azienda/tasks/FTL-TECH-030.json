@@ -1,0 +1,43 @@
+{
+  "task_id": "FTL-TECH-030",
+  "title": "Backend FastAPI & DB: Modello Dati Material, API CRUD Materiali, Relazioni Fornitori e Endpoint Bulk Swap",
+  "description": "Implementazione a livello di database e API REST backend: tabella relazionale materials_catalog in database.py, modelli Pydantic in models.py, endpoint CRUD /api/v1/materials, integrazione con vendors_registry e endpoint transazionale POST /api/v1/plm-variants/{id}/bom/bulk-swap.",
+  "status": "todo",
+  "priority": "critical",
+  "assignee_role": "CTO",
+  "assignee_agent": "footlink-cto",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T21:12:17+01:00",
+  "updated_at": "2026-10-29T21:16:00+01:00",
+  "due_date": "2026-11-08T23:59:59+01:00",
+  "estimated_effort": "M (1-3gg)",
+  "actual_effort": null,
+  "dependencies": [
+    "FTL-PROD-015"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Applicativo/backend/app/models.py",
+    "Applicativo/backend/app/database.py",
+    "Applicativo/backend/app/main.py",
+    "Applicativo/backend/tests/test_materials_and_bulk_swap.py"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L3",
+  "decision_record_id": "ADR-017",
+  "tags": [
+    "technical",
+    "backend",
+    "api",
+    "sprint-9"
+  ],
+  "acceptance_criteria": [
+    "Modello SQLAlchemy Material e Pydantic MaterialSchema implementati",
+    "Seed iniziale di materiali di filiera (pelli, fodere, tessuti, suole, minuterie, scatole)",
+    "Endpoint CRUD /api/v1/materials con filtri per vendor_id e category",
+    "Endpoint POST /api/v1/plm-variants/{id}/bom/bulk-swap funzionante e testato",
+    "100% test pytest passanti su nuova suite"
+  ],
+  "notes": "Architettura modulare su stack FastAPI/Pydantic v2."
+}

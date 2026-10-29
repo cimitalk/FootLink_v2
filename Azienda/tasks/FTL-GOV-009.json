@@ -1,0 +1,37 @@
+{
+  "task_id": "FTL-GOV-009",
+  "title": "Governance Sprint 9, Triage Esecutivo FTL-CEO-029 e Registrazione ADR-017",
+  "description": "Supervisione di governance, formalizzazione dell'Architecture Decision Record ADR-017 sulla verticalizzazione dell'anagrafica materiali di filiera e monitoraggio dei flussi di lavoro C-Suite nel pieno rispetto delle regole dell'Epoca II (Zero Horizontal Bloat).",
+  "status": "done",
+  "priority": "critical",
+  "assignee_role": "CGO",
+  "assignee_agent": "footlink-cgo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T21:12:17+01:00",
+  "updated_at": "2026-10-29T21:16:00+01:00",
+  "due_date": "2026-11-05T23:59:59+01:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": "4h",
+  "dependencies": [
+    "FTL-CEO-035"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/adr/ADR-017-materials-catalog-bom-picker-bulk-swap-and-cross-module-ergonomics.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-017",
+  "tags": [
+    "governance",
+    "adr",
+    "sprint-9"
+  ],
+  "acceptance_criteria": [
+    "Registrazione e approvazione formale ADR-017",
+    "Triage e collegamento della direttiva backlog FTL-CEO-029",
+    "Conformità Task Object Schema v1.0 per tutti i task di Sprint 9"
+  ],
+  "notes": "ADR-017 redatta e approvata congiuntamente al Founder."
+}

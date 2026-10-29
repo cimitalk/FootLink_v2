@@ -1,0 +1,40 @@
+{
+  "task_id": "FTL-MKT-009",
+  "title": "Unificazione Lessico Calzaturiero di Lusso, Micro-interazioni Ergonomiche e Preset Dimostrativi di Fabbrica",
+  "description": "Audit lessicale su tutti gli 8 moduli operativi per allineare l'interfaccia alla terminologia autentica degli atelier di calzatura e pelletteria di alta gamma (Marche, Toscana, Veneto), introduzione di scorciatoie da tastiera d'atelier (Esc, /) e predisposizione di 3 template completi per dimostrazioni commerciali.",
+  "status": "todo",
+  "priority": "high",
+  "assignee_role": "CMO",
+  "assignee_agent": "footlink-cmo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T21:12:17+01:00",
+  "updated_at": "2026-10-29T21:16:00+01:00",
+  "due_date": "2026-11-09T23:59:59+01:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": null,
+  "dependencies": [
+    "FTL-PROD-015"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/marketing/sprint-9-luxury-atelier-lexicon-and-presets.md",
+    "Applicativo/frontend/src/mockSeedData.ts"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L5",
+  "decision_record_id": "ADR-017",
+  "tags": [
+    "marketing",
+    "brand",
+    "lexicon",
+    "sprint-9"
+  ],
+  "acceptance_criteria": [
+    "Audit terminologico completato su Modelli, BOM, Materiali e Colori",
+    "Guida al microcopy per il team di sviluppo (termini vietati vs raccomandati)",
+    "Scorciatoie tastiera documentate e validate con il CPO",
+    "3 preset di distinta base di riferimento configurati per demo commerciali"
+  ],
+  "notes": "Rafforza la reputazione di Footlink come PLM nativo per manifatture d'eccellenza."
+}

@@ -17,6 +17,10 @@ Directory ufficiale dedicata ai deliverable strategici del **CEO** ([`Role_CEO_F
   [`sprint-8-final-review-and-closure.md`](./sprint-8-final-review-and-closure.md) — `FTL-CEO-017` .. `FTL-CEO-034`, `FTL-TECH-021` .. `FTL-TECH-029`, `FTL-PROD-012` .. `FTL-PROD-014`, `FTL-GOV-008`, `FTL-REV-007`, `FTL-MKT-008`  
   *Sancisce il completamento al 100% dello Sprint 8: motori verticali Colori e Fornitori, 6 ADR registrate (ADR-011..ADR-016), separazione ontologica Modello/Prodotto, rifiniture UX collaudate e 42/42 test Pytest passanti.*
 
+- **Sprint 9 — Proposte C-Suite, Valutazione CEO/CGO e Piano di Sviluppo Esecutivo:**  
+  [`sprint-9-c-suite-proposals-and-development-plan.md`](./sprint-9-c-suite-proposals-and-development-plan.md) — `FTL-CEO-035`, `FTL-GOV-009`, `FTL-PROD-015`, `FTL-TECH-030`, `FTL-TECH-031`, `FTL-REV-008`, `FTL-MKT-009`, `FTL-PROD-016`  
+  *Definizione dello Sprint 9 su Direttiva Founder: focus su usabilità, coerenza e flessibilità. Integrazione anagrafica Materiali (`FTL-CEO-029`) con BOM Picker guidato, Bulk Material Swap, Costing Industriale flessibile e Contextual Jumps cross-modulo.*
+
 ---
 
 ## 📦 Archivio Consolidato Epoca I — Fondazione Orizzontale (Sprint 1 – Sprint 7)

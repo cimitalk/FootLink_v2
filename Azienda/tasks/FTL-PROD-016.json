@@ -1,0 +1,42 @@
+{
+  "task_id": "FTL-PROD-016",
+  "title": "Collaudo Funzionale Integrato Sprint 9, Benchmark Usabilità Zero-Training (<90s) e Test di Regressione",
+  "description": "Collaudo finale di fine sprint: verifica di usabilità sul catalogo materiali e sul BOM picker guidato, test funzionale del Bulk Material Swap su N varianti, collaudo dei Contextual Jumps cross-modulo, verifica di assenza di regressioni sui test Pytest esistenti ed audit di conformità Zero-Training.",
+  "status": "todo",
+  "priority": "critical",
+  "assignee_role": "CPO",
+  "assignee_agent": "footlink-cpo",
+  "created_by": "Founder (Control Center)",
+  "created_at": "2026-10-29T21:12:17+01:00",
+  "updated_at": "2026-10-29T21:16:00+01:00",
+  "due_date": "2026-11-12T23:59:59+01:00",
+  "estimated_effort": "S (2-8h)",
+  "actual_effort": null,
+  "dependencies": [
+    "FTL-TECH-031",
+    "FTL-REV-008",
+    "FTL-MKT-009"
+  ],
+  "blocked_by": [],
+  "output_artifacts": [
+    "Azienda/docs/prd/sprint-9-qa-usability-and-regression-report.md"
+  ],
+  "requires_escalation": false,
+  "escalation_reason": null,
+  "escalation_level": "L1",
+  "decision_record_id": "ADR-017",
+  "tags": [
+    "product",
+    "qa",
+    "usability",
+    "sprint-9"
+  ],
+  "acceptance_criteria": [
+    "Test scenario: creazione materiale in Fornitori e inserimento in distinta base in <60s",
+    "Test scenario: Bulk Material Swap eseguito con successo su 3 varianti",
+    "Test scenario: Contextual Jump da PIM e Collezioni verso PLM testato su 10 prodotti",
+    "100% test Pytest passanti e 0 errori TypeScript in build",
+    "Report di collaudo rilasciato in Azienda/docs/prd/"
+  ],
+  "notes": "Gate finale di chiusura dello Sprint 9 prima del rilascio."
+}
